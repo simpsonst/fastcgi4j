@@ -36,7 +36,7 @@ jars += $(SELECTED_JARS)
 include jardeps.mk
 -include jardeps-install.mk
 
-DOC_OVERVIEW=src/java-overview.html
+DOC_OVERVIEW=src/overview-java.html
 DOC_CLASSPATH += $(jars:%=$(JARDEPS_OUTDIR)/%.jar)
 DOC_SRC=$(call jardeps_srcdirs4jars,$(SELECTED_JARS))
 DOC_CORE=fastcgi4j$(DOC_CORE_SFX)
