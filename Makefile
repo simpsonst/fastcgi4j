@@ -15,14 +15,8 @@ trees_fastcgi4j_api += api
 SELECTED_JARS += fastcgi4j_app
 trees_fastcgi4j_app += app
 
-SELECTED_JARS += fastcgi4j_conn
-trees_fastcgi4j_conn += conn
-
-SELECTED_JARS += fastcgi4j_conn
+SELECTED_JARS += fastcgi4j_engine
 trees_fastcgi4j_engine += engine
-
-SELECTED_JARS += fastcgi4j_impl
-trees_fastcgi4j_impl += impl
 
 SELECTED_JARS += fastcgi4j_proto
 trees_fastcgi4j_proto += proto
@@ -32,6 +26,17 @@ trees_fastcgi4j_unix += unix
 
 jars += $(SELECTED_JARS)
 
+roots_api += $(found_api)
+roots_app += $(found_app)
+deps_app += api
+roots_engine += $(found_engine)
+deps_engine += api
+deps_engine += app
+deps_engine += proto
+roots_proto += $(found_proto)
+roots_unix += $(found_unix)
+deps_unix += app
+deps_unix += proto
 
 include jardeps.mk
 -include jardeps-install.mk
