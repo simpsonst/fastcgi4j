@@ -56,12 +56,27 @@ import uk.ac.lancs.scc.jardeps.Service;
  */
 @Service(EngineFactory.class)
 public class MultiplexGenericEngineFactory implements EngineFactory {
+    /**
+     * {@inheritDoc}
+     * 
+     * @default This implementation reads the attributes
+     * {@link Attribute#RESPONDER}, {@link Attribute#AUTHORIZER},
+     * {@link Attribute#FILTER}, {@link Attribute#MAX_CONN} (must be
+     * non-positive if set), {@link Attribute#MAX_SESS} (non-positive if
+     * set) and {@link Attribute#MAX_SESS_PER_CONN} (non-positive if
+     * set). All are optional, except that at least one role must be
+     * specified.
+     */
     @Override
     public Function<? super ConnectionSupply, ? extends Engine>
         test(EngineConfiguration config) {
+        /* Identify the roles. */
         Responder responder = config.get(Attribute.RESPONDER);
         Authorizer authorizer = config.get(Attribute.AUTHORIZER);
         Filter filter = config.get(Attribute.FILTER);
+        if (responder == null && authorizer == null && filter == null)
+            return null;
+
         Integer maxConn = config.get(Attribute.MAX_CONN);
         Integer maxSess = config.get(Attribute.MAX_SESS);
         Integer maxSessPerConn = config.get(Attribute.MAX_SESS_PER_CONN);
@@ -69,6 +84,8 @@ public class MultiplexGenericEngineFactory implements EngineFactory {
         if (maxSess != null && maxSess < 1) return null;
         if (maxSessPerConn != null && maxSessPerConn < 1) return null;
 
+        /* Create the factory for creating the engine from a connection
+         * supply. */
         return cs -> new MultiplexGenericEngine(cs, Charset.defaultCharset(),
                                                 responder, authorizer, filter,
                                                 maxConn != null ? maxConn : 0,
