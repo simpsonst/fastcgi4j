@@ -48,7 +48,9 @@ import uk.ac.lancs.scc.jardeps.Service;
 
 /**
  * Creates a connection supply from a Unix-domain stream server socket
- * on file descriptor 0.
+ * on file descriptor 0. This descriptor is available in Java as
+ * {@link FileDescriptor#in}, and is defined within FastCGI as the
+ * server socket which the application should accept new connections on.
  *
  * @author simpsons
  */
@@ -67,14 +69,25 @@ public class ForkedUnixConnectionFactory implements ConnectionFactory {
     @Override
     public ConnectionSupply getConnectionSupply() {
         try {
+            /* See if we've been told who to allow connection from. This
+             * only happens under FastCGI using an Internet-domain
+             * socket, so it's not for us. */
             Collection<InetAddress> inetPeers =
                 InvocationVariables.getAuthorizedInetPeers();
             if (inetPeers != null) return null;
 
+            /* Attempt to create a Unix-domain server socket from FD 0.
+             * If it is not a bound socket, a SocketException will be
+             * thrown, and caught as an IOException, and null is then
+             * returned, indicating that this process hsa not been
+             * invoked according to FastCGI with a Unix-domain
+             * socket. */
             AFUNIXServerSocket serverSocket =
                 AFUNIXServerSocket.newInstance(FileDescriptor.in, 1000, 1001);
             return new ForkedUnixConnectionSupply(serverSocket);
         } catch (IOException ex) {
+            /* If anything goes wrong, we just return null, as another
+             * factory might succeed. */
             return null;
         }
     }

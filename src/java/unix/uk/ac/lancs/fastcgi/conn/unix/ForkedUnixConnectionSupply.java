@@ -43,16 +43,29 @@ import uk.ac.lancs.fastcgi.engine.Connection;
 import uk.ac.lancs.fastcgi.engine.ConnectionSupply;
 
 /**
- *
+ * Supplies connections by accepting from a Unix-domain server socket.
+ * 
  * @author simpsons
  */
 class ForkedUnixConnectionSupply implements ConnectionSupply {
     private final AFUNIXServerSocket serverSocket;
 
+    /**
+     * Create a connection supply from a Unix-domain server socket.
+     * 
+     * @param serverSocket the server socket
+     */
     public ForkedUnixConnectionSupply(AFUNIXServerSocket serverSocket) {
         this.serverSocket = serverSocket;
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * @default This implementation invokes
+     * {@link AFUNIXServerSocket#accept()} to produce a
+     * {@link ForkedUnixConnection}.
+     */
     @Override
     public Connection nextConnection() throws IOException {
         AFUNIXSocket socket = serverSocket.accept();

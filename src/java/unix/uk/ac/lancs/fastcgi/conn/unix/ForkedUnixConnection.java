@@ -43,7 +43,8 @@ import org.newsclub.net.unix.AFUNIXSocket;
 import uk.ac.lancs.fastcgi.engine.Connection;
 
 /**
- *
+ * Provides a FastCGI connection backed by a Unix-domain socket.
+ * 
  * @author simpsons
  */
 class ForkedUnixConnection implements Connection {
