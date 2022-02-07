@@ -159,4 +159,10 @@ public final class Attribute<V> {
      * Specifies the implementation that post-processes responses.
      */
     public static Attribute<Filter> FILTER = of(Filter.class);
+
+    /**
+     * Specifies the initial buffer size for standard output.
+     */
+    public static final Attribute<Integer> BUFFER_SIZE =
+        of(Integer.class, 1024);
 }

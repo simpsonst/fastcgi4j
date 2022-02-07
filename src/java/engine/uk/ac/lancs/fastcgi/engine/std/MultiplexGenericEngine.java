@@ -105,6 +105,8 @@ class MultiplexGenericEngine implements Engine {
 
     private final int stderrBufferSize;
 
+    private final int stdoutBufferSize;
+
     private final Supplier<? extends Pipe> pipes =
         CachePipePool.start().create()::newPipe;
 
@@ -114,7 +116,7 @@ class MultiplexGenericEngine implements Engine {
                                   Responder responder, Authorizer authorizer,
                                   Filter filter, int maxConns,
                                   int maxReqsPerConn, int maxReqs,
-                                  int stderrBufferSize) {
+                                  int stdoutBufferSize, int stderrBufferSize) {
         this.connections = connections;
         this.charset = charset;
         this.responder = responder;
@@ -123,6 +125,7 @@ class MultiplexGenericEngine implements Engine {
         this.maxConns = maxConns;
         this.maxReqs = maxReqs;
         this.maxReqsPerConn = maxReqsPerConn;
+        this.stdoutBufferSize = stdoutBufferSize;
         this.stderrBufferSize = stderrBufferSize;
         AtomicInteger ctid = new AtomicInteger(0);
         ThreadFactory conntf =
@@ -570,7 +573,7 @@ class MultiplexGenericEngine implements Engine {
              */
             private BufferedOutputStream bufferedOut;
 
-            private int bufferSize = 1024 * 10;
+            private int bufferSize = stdoutBufferSize;
 
             @Override
             public boolean setBufferSize(int amount) {
