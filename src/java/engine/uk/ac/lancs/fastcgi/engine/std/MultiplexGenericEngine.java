@@ -39,8 +39,11 @@ package uk.ac.lancs.fastcgi.engine.std;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -65,7 +68,6 @@ import uk.ac.lancs.fastcgi.OverloadException;
 import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.ResponderContext;
 import uk.ac.lancs.fastcgi.SessionContext;
-import uk.ac.lancs.fastcgi.SessionException;
 import uk.ac.lancs.fastcgi.engine.Connection;
 import uk.ac.lancs.fastcgi.engine.ConnectionSupply;
 import uk.ac.lancs.fastcgi.engine.Engine;
@@ -331,10 +333,7 @@ class MultiplexGenericEngine implements Engine {
                 this.id = id;
             }
 
-            abstract void innerRun()
-                throws InterruptedException,
-                    SessionException,
-                    IOException;
+            abstract void innerRun() throws Exception;
 
             Thread thread;
 
@@ -362,7 +361,15 @@ class MultiplexGenericEngine implements Engine {
                         recordsOut.writeEndRequest(id, -2,
                                                    ProtocolStatuses.OVERLOADED);
                         completed = true;
-                    } catch (SessionException | RuntimeException | Error ex) {
+                    } catch (Exception | Error ex) {
+                        setStatus(501);
+                        setHeader("Content-Type", "text/plain; charset=UTF-8");
+                        try (PrintWriter out =
+                            new PrintWriter(new OutputStreamWriter(out(),
+                                                                   StandardCharsets.UTF_8))) {
+                            out.printf("Internal Server Error\n");
+                        }
+                        ex.printStackTrace(err());
                         recordsOut
                             .writeEndRequest(id, -2,
                                              ProtocolStatuses.REQUEST_COMPLETE);
@@ -698,10 +705,7 @@ class MultiplexGenericEngine implements Engine {
             }
 
             @Override
-            void innerRun()
-                throws InterruptedException,
-                    SessionException,
-                    IOException {
+            void innerRun() throws Exception {
                 responder.respond(this);
             }
 
@@ -736,10 +740,7 @@ class MultiplexGenericEngine implements Engine {
             }
 
             @Override
-            void innerRun()
-                throws InterruptedException,
-                    SessionException,
-                    IOException {
+            void innerRun() throws Exception {
                 filter.filter(this);
             }
 
@@ -792,10 +793,7 @@ class MultiplexGenericEngine implements Engine {
             }
 
             @Override
-            void innerRun()
-                throws InterruptedException,
-                    SessionException,
-                    IOException {
+            void innerRun() throws Exception {
                 authorizer.authorize(this);
             }
 
