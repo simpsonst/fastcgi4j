@@ -49,7 +49,8 @@ public final class RecordTypes {
     private RecordTypes() {}
 
     /**
-     * Indicates that a request is being opened by the server.
+     * Indicates that a request is being opened by the server. The value
+     * is {@value}.
      * 
      * @see <a href=
      * "http://www.mit.edu/~yandros/doc/specs/fcgi-spec.html#S5.1"><code>FCGI_BEGIN_REQUEST</code></a>
@@ -57,7 +58,8 @@ public final class RecordTypes {
     public static final byte BEGIN_REQUEST = 1;
 
     /**
-     * Indicates that a request is being aborted by the server.
+     * Indicates that a request is being aborted by the server. The
+     * value is {@value}.
      * 
      * @see <a href=
      * "http://www.mit.edu/~yandros/doc/specs/fcgi-spec.html#S5.4"><code>FCGI_ABORT_REQUEST</code></a>
@@ -65,8 +67,9 @@ public final class RecordTypes {
     public static final byte ABORT_REQUEST = 2;
 
     /**
-     * Indicates that the application is terminating a request. Values
-     * in {@link ProtocolStatuses} indicate the reason.
+     * Indicates that the application is terminating a request. The
+     * value is {@value}. Values in {@link ProtocolStatuses} indicate
+     * the reason.
      * 
      * @see <a href=
      * "http://www.mit.edu/~yandros/doc/specs/fcgi-spec.html#S5.5"><code>FCGI_END_REQUEST</code></a>
@@ -75,7 +78,7 @@ public final class RecordTypes {
 
     /**
      * Indicates that the content is part of the server-to-application
-     * parameters stream.
+     * parameters stream. The value is {@value}.
      * 
      * @see <a href=
      * "http://www.mit.edu/~yandros/doc/specs/fcgi-spec.html#S5.2"><code>FCGI_PARAMS</code></a>
@@ -84,7 +87,7 @@ public final class RecordTypes {
 
     /**
      * Indicates that the content is part of the server-to-application
-     * standard input.
+     * standard input. The value is {@value}.
      * 
      * @see <a href=
      * "http://www.mit.edu/~yandros/doc/specs/fcgi-spec.html#S5.3"><code>FCGI_STDIN</code></a>
@@ -93,7 +96,7 @@ public final class RecordTypes {
 
     /**
      * Indicates that the content is part of the application-to-server
-     * standard output.
+     * standard output. The value is {@value}.
      * 
      * @see <a href=
      * "http://www.mit.edu/~yandros/doc/specs/fcgi-spec.html#S5.3"><code>FCGI_STDOUT</code></a>
@@ -102,7 +105,7 @@ public final class RecordTypes {
 
     /**
      * Indicates that the content is part of the application-to-server
-     * standard error output.
+     * standard error output. The value is {@value}.
      * 
      * @see <a href=
      * "http://www.mit.edu/~yandros/doc/specs/fcgi-spec.html#S5.3"><code>FCGI_STDERR</code></a>
@@ -111,7 +114,7 @@ public final class RecordTypes {
 
     /**
      * Indicates that the content is part of the server-to-application
-     * extra data.
+     * extra data. The value is {@value}.
      * 
      * @see <a href=
      * "http://www.mit.edu/~yandros/doc/specs/fcgi-spec.html#S5.3"><code>FCGI_DATA</code></a>
@@ -120,8 +123,8 @@ public final class RecordTypes {
 
     /**
      * Indicates that the content is a list of application variable
-     * names requested by the server. See {@link ApplicationVariables}
-     * for standard variable names.
+     * names requested by the server. The value is {@value}. See
+     * {@link ApplicationVariables} for standard variable names.
      * 
      * @see <a href=
      * "http://www.mit.edu/~yandros/doc/specs/fcgi-spec.html#S4.1"><code>FCGI_GET_VALUES</code></a>
@@ -130,8 +133,8 @@ public final class RecordTypes {
 
     /**
      * Indicates that the content is a list of application variables and
-     * values. See {@link ApplicationVariables} for standard variable
-     * names.
+     * values. The value is {@value}. See {@link ApplicationVariables}
+     * for standard variable names.
      * 
      * @see <a href=
      * "http://www.mit.edu/~yandros/doc/specs/fcgi-spec.html#S4.1"><code>FCGI_GET_VALUES_RESULT</code></a>
@@ -140,7 +143,7 @@ public final class RecordTypes {
 
     /**
      * Indicates that a record type from the server was not understood
-     * by the application.
+     * by the application. The value is {@value}.
      * 
      * @see <a href=
      * "http://www.mit.edu/~yandros/doc/specs/fcgi-spec.html#S4.2"><code>FCGI_UNKNOWN_TYPE</code></a>

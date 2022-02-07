@@ -45,20 +45,23 @@ public final class ApplicationVariables {
     private ApplicationVariables() {}
 
     /**
-     * The name of the variable that specifies the maximum number of
-     * connections that the application will accept
+     * Identifies the variable that specifies the maximum number of
+     * connections that the application will accept. The value is
+     * {@value}.
      */
     public static final String MAX_CONNS = "FCGI_MAX_CONNS";
 
     /**
-     * The name of the variable that specifies the maximum number of
-     * concurrent requests that the application will accept
+     * Identifies the variable that specifies the maximum number of
+     * concurrent requests that the application will accept. The value
+     * is {@value}.
      */
     public static final String MAX_REQS = "FCGI_MAX_REQS";
 
     /**
-     * The name of the variable that specifies whether the application
-     * multiplexes requests on a single connection
+     * Identifies the variable that specifies whether the application
+     * multiplexes requests on a single connection. The value is
+     * {@value}.
      */
     public static final String MPXS_CONNS = "FCGI_MPXS_CONNS";
 }

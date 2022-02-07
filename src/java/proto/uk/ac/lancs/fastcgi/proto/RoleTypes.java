@@ -51,7 +51,7 @@ public final class RoleTypes {
 
     /**
      * Indicates that the application is expected to respond to the
-     * request as a responder.
+     * request as a responder. The value is {@value}.
      * 
      * @see <a href=
      * "http://www.mit.edu/~yandros/doc/specs/fcgi-spec.html#S6.2">Responder</a>
@@ -61,7 +61,7 @@ public final class RoleTypes {
 
     /**
      * Indicates that the application is expected to respond to the
-     * request as an authorizer.
+     * request as an authorizer. The value is {@value}.
      * 
      * @see <a href=
      * "http://www.mit.edu/~yandros/doc/specs/fcgi-spec.html#S6.3">Authorizer</a>
@@ -71,7 +71,7 @@ public final class RoleTypes {
 
     /**
      * Indicates that the application is expected to respond to the
-     * request as a filter.
+     * request as a filter. The value is {@value}.
      * 
      * @see <a href=
      * "http://www.mit.edu/~yandros/doc/specs/fcgi-spec.html#S6.4">Filter</a>

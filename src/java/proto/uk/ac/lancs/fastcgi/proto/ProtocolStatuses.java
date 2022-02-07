@@ -49,25 +49,26 @@ public final class ProtocolStatuses {
     private ProtocolStatuses() {}
 
     /**
-     * Indicates that the request is complete.
+     * Indicates that the request is complete. The value is {@value}.
      */
     public static final byte REQUEST_COMPLETE = 0;
 
     /**
      * Indicates that another request is open on this connection, and
-     * the application does not multiplex requests.
+     * the application does not multiplex requests. The value is
+     * {@value}.
      */
     public static final byte CANT_MPX_CONN = 1;
 
     /**
      * Indicates that the application currently can't handle another
-     * request.
+     * request. The value is {@value}.
      */
     public static final byte OVERLOADED = 2;
 
     /**
      * Indicates that the request's role cannot be fulfilled by the
-     * application.
+     * application. The value is {@value}.
      */
     public static final byte UNKNOWN_ROLE = 3;
 }

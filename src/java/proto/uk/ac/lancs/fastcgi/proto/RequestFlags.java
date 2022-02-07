@@ -50,7 +50,7 @@ public final class RequestFlags {
 
     /**
      * Specifies whether the application should expect more records
-     * after this request is complete.
+     * after this request is complete. The value is {@value}.
      */
     public static final int KEEP_CONN = 1;
 }
