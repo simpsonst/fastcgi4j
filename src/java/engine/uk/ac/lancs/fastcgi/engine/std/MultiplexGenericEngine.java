@@ -36,6 +36,7 @@
 
 package uk.ac.lancs.fastcgi.engine.std;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -526,6 +527,10 @@ class MultiplexGenericEngine implements Engine {
                 appStatus = exitCode;
             }
 
+            /**
+             * Converts output-stream operations into FCGI_STDOUT
+             * records.
+             */
             private final OutputStream out = new OutputStream() {
                 private boolean closed = false;
 
@@ -534,7 +539,6 @@ class MultiplexGenericEngine implements Engine {
                 @Override
                 public void write(int b) throws IOException {
                     if (closed) throw new IOException("closed");
-                    ensureResponseHeader();
                     buf1[0] = (byte) b;
                     recordsOut.writeStdout(id, buf1, 0, 1);
                 }
@@ -542,7 +546,6 @@ class MultiplexGenericEngine implements Engine {
                 @Override
                 public void close() throws IOException {
                     if (closed) return;
-                    ensureResponseHeader();
                     closed = true;
                     recordsOut.writeStdoutEnd(id);
                 }
@@ -551,14 +554,55 @@ class MultiplexGenericEngine implements Engine {
                 public void write(byte[] b, int off, int len)
                     throws IOException {
                     if (closed) throw new IOException("closed");
-                    ensureResponseHeader();
+
+                    /* TODO: For large values of len, break into
+                     * multiple calls. */
                     recordsOut.writeStdout(id, b, off, len);
+                }
+            };
+
+            /**
+             * Reduces calls on {@link #out} by buffering.
+             */
+            private BufferedOutputStream bufferedOut;
+
+            private int bufferSize = 1024 * 10;
+
+            /**
+             * Ensures that the response header has been transmitted.
+             * This object is presented to the application as its
+             * standard output.
+             */
+            private final OutputStream headeredOut = new OutputStream() {
+                @Override
+                public void write(byte[] b, int off, int len)
+                    throws IOException {
+                    ensureResponseHeader();
+                    bufferedOut.write(b, off, len);
+                }
+
+                @Override
+                public void write(int b) throws IOException {
+                    ensureResponseHeader();
+                    bufferedOut.write(b);
+                }
+
+                @Override
+                public void close() throws IOException {
+                    ensureResponseHeader();
+                    bufferedOut.close();
+                }
+
+                @Override
+                public void flush() throws IOException {
+                    ensureResponseHeader();
+                    bufferedOut.flush();
                 }
             };
 
             @Override
             public OutputStream out() {
-                return out;
+                return headeredOut;
             }
 
             private final PrintStream err = new PrintStream(new OutputStream() {
@@ -645,7 +689,13 @@ class MultiplexGenericEngine implements Engine {
 
             private void ensureResponseHeader() throws IOException {
                 if (statusCode < 0) return;
-                PrintStream pout = new PrintStream(out, false, charset);
+
+                assert bufferedOut == null;
+                bufferedOut = new BufferedOutputStream(out, bufferSize);
+
+                /* Don't autoclose this stream; we need the base to
+                 * remain open. */
+                PrintStream pout = new PrintStream(bufferedOut, false, charset);
                 try {
                     pout.printf("Status: %d %s%n", statusCode,
                                 getStatusMessage(statusCode));
@@ -659,8 +709,8 @@ class MultiplexGenericEngine implements Engine {
                     pout.println();
                 } finally {
                     pout.flush();
+                    statusCode = -1;
                 }
-                statusCode = -1;
             }
 
             private boolean started = false;
