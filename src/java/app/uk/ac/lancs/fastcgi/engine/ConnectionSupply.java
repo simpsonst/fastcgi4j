@@ -57,7 +57,8 @@ public interface ConnectionSupply {
     Connection nextConnection() throws IOException;
 
     /**
-     * Get the . Call this method only once.
+     * Get the connection supply using a given class loader. This method
+     * will yield the same result for the same argument.
      * 
      * @param loader the class loader to be used to find services
      * implementing {@link ConnectionFactory}; or {@code null} to use
@@ -69,13 +70,34 @@ public interface ConnectionSupply {
      * exists
      */
     static ConnectionSupply get(ClassLoader loader) {
-        for (ConnectionFactory cfact : ServiceLoader
-            .load(ConnectionFactory.class, loader)) {
-            var supply = cfact.getConnectionSupply();
-            if (supply != null) return supply;
-        }
+        return ConnectionSupplies.supplies.computeIfAbsent(loader, k -> {
+            for (ConnectionFactory cfact : ServiceLoader
+                .load(ConnectionFactory.class, k)) {
+                var supply = cfact.getConnectionSupply();
+                if (supply != null) return supply;
+            }
 
-        throw new UnsupportedOperationException("no service "
-            + "for connections");
+            throw new UnsupportedOperationException("no service "
+                + "for connections");
+        });
+    }
+
+    /**
+     * Get the connection supply using the caller's context class
+     * loader. This method calls {@link #get(ClassLoader)}, passing the
+     * result of {@link Thread#getContextClassLoader()} applied to the
+     * calling thread.
+     * 
+     * @param loader the class loader to be used to find services
+     * implementing {@link ConnectionFactory}; or {@code null} to use
+     * the context class loader of the calling thread
+     * 
+     * @return the connection supply
+     * 
+     * @throws UnsupportedOperationException if no suitable service
+     * exists
+     */
+    static ConnectionSupply get() {
+        return get(Thread.currentThread().getContextClassLoader());
     }
 }
