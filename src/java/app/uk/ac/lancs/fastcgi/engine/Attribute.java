@@ -55,6 +55,8 @@ public final class Attribute<V> {
     private final Supplier<? extends V> defaultValue;
 
     private Attribute(Class<V> type, Supplier<? extends V> defaultValue) {
+        assert type != null;
+        assert defaultValue != null;
         this.type = type;
         this.defaultValue = defaultValue;
     }
@@ -107,12 +109,12 @@ public final class Attribute<V> {
      * @constructor
      */
     public static <V> Attribute<V> of(Class<V> type) {
-        return of(type, (Supplier<? extends V>) null);
+        return of(type, (Supplier<? extends V>) () -> null);
     }
 
     V get(Map<? super Attribute<?>, Object> map) {
         Object value = map.get(this);
-        if (value == null) return null;
+        if (value == null) return defaultValue.get();
         return type.cast(value);
     }
 
