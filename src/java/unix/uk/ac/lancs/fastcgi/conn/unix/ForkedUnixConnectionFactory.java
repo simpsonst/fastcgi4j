@@ -39,7 +39,6 @@ package uk.ac.lancs.fastcgi.conn.unix;
 import java.io.FileDescriptor;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Collection;
 import org.newsclub.net.unix.AFUNIXServerSocket;
 import uk.ac.lancs.fastcgi.engine.ConnectionFactory;
@@ -75,8 +74,6 @@ public class ForkedUnixConnectionFactory implements ConnectionFactory {
             AFUNIXServerSocket serverSocket =
                 AFUNIXServerSocket.newInstance(FileDescriptor.in, 1000, 1001);
             return new ForkedUnixConnectionSupply(serverSocket);
-        } catch (UnknownHostException ex) {
-            return null;
         } catch (IOException ex) {
             return null;
         }
