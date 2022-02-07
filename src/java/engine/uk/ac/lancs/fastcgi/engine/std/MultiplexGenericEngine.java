@@ -586,7 +586,7 @@ class MultiplexGenericEngine implements Engine {
                 return err;
             }
 
-            private int statusCode = 200;
+            int statusCode = 200;
 
             private final Map<String, List<String>> outHeaders =
                 new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
@@ -595,20 +595,31 @@ class MultiplexGenericEngine implements Engine {
             public void setHeader(String name, String value) {
                 Objects.requireNonNull(name, "name");
                 Objects.requireNonNull(value, "value");
-                if (name.equalsIgnoreCase("status"))
+                name = name.trim();
+                setHeaderInternal(name, value);
+            }
+
+            void setHeaderInternal(String name, String value) {
+                if (name.equalsIgnoreCase(SessionContext.STATUS_FIELD))
                     throw new IllegalArgumentException("reserved name " + name);
                 if (statusCode < 0)
                     throw new IllegalStateException("header sent");
-                List<String> aval = new ArrayList<>();
+                List<String> aval =
+                    outHeaders.computeIfAbsent(name, k -> new ArrayList<>());
+                aval.clear();
                 aval.add(value);
-                outHeaders.put(name, aval);
             }
 
             @Override
             public void addHeader(String name, String value) {
                 Objects.requireNonNull(name, "name");
                 Objects.requireNonNull(value, "value");
-                if (name.equalsIgnoreCase("status"))
+                name = name.trim();
+                addHeaderInternal(name, value);
+            }
+
+            void addHeaderInternal(String name, String value) {
+                if (name.equalsIgnoreCase(SessionContext.STATUS_FIELD))
                     throw new IllegalArgumentException("reserved name " + name);
                 if (statusCode < 0)
                     throw new IllegalStateException("header sent");
@@ -786,6 +797,37 @@ class MultiplexGenericEngine implements Engine {
                     SessionException,
                     IOException {
                 authorizer.authorize(this);
+            }
+
+            @Override
+            public void addHeader(String name, String value) {
+                Objects.requireNonNull(name, "name");
+                Objects.requireNonNull(value, "value");
+                name = name.trim();
+                if (isVariable(name))
+                    throw new IllegalArgumentException("reserved name " + name);
+                addHeaderInternal(name, value);
+                if (statusCode == 200) statusCode = 401;
+            }
+
+            @Override
+            public void setHeader(String name, String value) {
+                Objects.requireNonNull(name, "name");
+                Objects.requireNonNull(value, "value");
+                name = name.trim();
+                if (isVariable(name))
+                    throw new IllegalArgumentException("reserved name " + name);
+                setHeaderInternal(name, value);
+                if (statusCode == 200) statusCode = 401;
+            }
+
+            @Override
+            public void setVariable(String name, String value) {
+                Objects.requireNonNull(name, "name");
+                Objects.requireNonNull(value, "value");
+                name = name.trim();
+                setHeaderInternal(AuthorizerContext.VARIABLE_PREFIX + name,
+                                  value);
             }
         }
     }
@@ -1023,5 +1065,15 @@ class MultiplexGenericEngine implements Engine {
         case 599:
             return "Network Connect Timeout Error";
         }
+    }
+
+    private static final int VARIABLE_PREFIX_LENGTH =
+        AuthorizerContext.VARIABLE_PREFIX.length();
+
+    private static boolean isVariable(CharSequence in) {
+        if (in.length() < VARIABLE_PREFIX_LENGTH) return false;
+        CharSequence prefix =
+            in.subSequence(0, VARIABLE_PREFIX_LENGTH).toString();
+        return AuthorizerContext.VARIABLE_PREFIX.equals(prefix);
     }
 }
