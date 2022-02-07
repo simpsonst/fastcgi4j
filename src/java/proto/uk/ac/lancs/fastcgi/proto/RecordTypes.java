@@ -40,8 +40,9 @@ package uk.ac.lancs.fastcgi.proto;
  * Holds constants for distinct record types.
  * 
  * @see <a href=
- * "http://www.mit.edu/~yandros/doc/specs/fcgi-spec.html#S8">Types and
- * Constants</a> of the FastCGI specification
+ * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S8">FastCGI
+ * Specification &mdash; Types and Constants</a> of the FastCGI
+ * specification
  * 
  * @author simpsons
  */
@@ -53,7 +54,8 @@ public final class RecordTypes {
      * is {@value}.
      * 
      * @see <a href=
-     * "http://www.mit.edu/~yandros/doc/specs/fcgi-spec.html#S5.1"><code>FCGI_BEGIN_REQUEST</code></a>
+     * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.1">FastCGI
+     * Specification &mdash; <code>FCGI_BEGIN_REQUEST</code></a>
      */
     public static final byte BEGIN_REQUEST = 1;
 
@@ -62,7 +64,8 @@ public final class RecordTypes {
      * value is {@value}.
      * 
      * @see <a href=
-     * "http://www.mit.edu/~yandros/doc/specs/fcgi-spec.html#S5.4"><code>FCGI_ABORT_REQUEST</code></a>
+     * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.4">FastCGI
+     * Specification &mdash; <code>FCGI_ABORT_REQUEST</code></a>
      */
     public static final byte ABORT_REQUEST = 2;
 
@@ -72,7 +75,8 @@ public final class RecordTypes {
      * the reason.
      * 
      * @see <a href=
-     * "http://www.mit.edu/~yandros/doc/specs/fcgi-spec.html#S5.5"><code>FCGI_END_REQUEST</code></a>
+     * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.5">FastCGI
+     * Specification &mdash; <code>FCGI_END_REQUEST</code></a>
      */
     public static final byte END_REQUEST = 3;
 
@@ -81,7 +85,8 @@ public final class RecordTypes {
      * parameters stream. The value is {@value}.
      * 
      * @see <a href=
-     * "http://www.mit.edu/~yandros/doc/specs/fcgi-spec.html#S5.2"><code>FCGI_PARAMS</code></a>
+     * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.2">FastCGI
+     * Specification &mdash; <code>FCGI_PARAMS</code></a>
      */
     public static final byte PARAMS = 4;
 
@@ -90,7 +95,8 @@ public final class RecordTypes {
      * standard input. The value is {@value}.
      * 
      * @see <a href=
-     * "http://www.mit.edu/~yandros/doc/specs/fcgi-spec.html#S5.3"><code>FCGI_STDIN</code></a>
+     * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.3">FastCGI
+     * Specification &mdash; <code>FCGI_STDIN</code></a>
      */
     public static final byte STDIN = 5;
 
@@ -99,7 +105,8 @@ public final class RecordTypes {
      * standard output. The value is {@value}.
      * 
      * @see <a href=
-     * "http://www.mit.edu/~yandros/doc/specs/fcgi-spec.html#S5.3"><code>FCGI_STDOUT</code></a>
+     * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.3">FastCGI
+     * Specification &mdash; <code>FCGI_STDOUT</code></a>
      */
     public static final byte STDOUT = 6;
 
@@ -108,7 +115,8 @@ public final class RecordTypes {
      * standard error output. The value is {@value}.
      * 
      * @see <a href=
-     * "http://www.mit.edu/~yandros/doc/specs/fcgi-spec.html#S5.3"><code>FCGI_STDERR</code></a>
+     * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.3">FastCGI
+     * Specification &mdash; <code>FCGI_STDERR</code></a>
      */
     public static final byte STDERR = 7;
 
@@ -117,7 +125,8 @@ public final class RecordTypes {
      * extra data. The value is {@value}.
      * 
      * @see <a href=
-     * "http://www.mit.edu/~yandros/doc/specs/fcgi-spec.html#S5.3"><code>FCGI_DATA</code></a>
+     * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.3">FastCGI
+     * Specification &mdash; <code>FCGI_DATA</code></a>
      */
     public static final byte DATA = 8;
 
@@ -127,7 +136,8 @@ public final class RecordTypes {
      * {@link ApplicationVariables} for standard variable names.
      * 
      * @see <a href=
-     * "http://www.mit.edu/~yandros/doc/specs/fcgi-spec.html#S4.1"><code>FCGI_GET_VALUES</code></a>
+     * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S4.1">FastCGI
+     * Specification &mdash; <code>FCGI_GET_VALUES</code></a>
      */
     public static final byte GET_VALUES = 9;
 
@@ -137,7 +147,8 @@ public final class RecordTypes {
      * for standard variable names.
      * 
      * @see <a href=
-     * "http://www.mit.edu/~yandros/doc/specs/fcgi-spec.html#S4.1"><code>FCGI_GET_VALUES_RESULT</code></a>
+     * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S4.1">FastCGI
+     * Specification &mdash; <code>FCGI_GET_VALUES_RESULT</code></a>
      */
     public static final byte GET_VALUES_RESULT = 10;
 
@@ -146,7 +157,8 @@ public final class RecordTypes {
      * by the application. The value is {@value}.
      * 
      * @see <a href=
-     * "http://www.mit.edu/~yandros/doc/specs/fcgi-spec.html#S4.2"><code>FCGI_UNKNOWN_TYPE</code></a>
+     * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S4.2">FastCGI
+     * Specification &mdash; <code>FCGI_UNKNOWN_TYPE</code></a>
      */
     public static final byte UNKNOWN_TYPE = 11;
 }

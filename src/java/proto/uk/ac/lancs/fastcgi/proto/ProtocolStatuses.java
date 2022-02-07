@@ -41,7 +41,8 @@ package uk.ac.lancs.fastcgi.proto;
  * session.
  * 
  * @see <a href=
- * "http://www.mit.edu/~yandros/doc/specs/fcgi-spec.html#S5.5"><code>FCGI_END_REQUEST</code></a>
+ * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.5">FastCGI
+ * Specification &mdash; <code>FCGI_END_REQUEST</code></a>
  * 
  * @author simpsons
  */

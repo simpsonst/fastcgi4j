@@ -40,6 +40,11 @@ package uk.ac.lancs.fastcgi.proto;
  * Identifies names of application variables.
  * 
  * @author simpsons
+ * 
+ * @see <a href=
+ * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S4.1">FastCGI
+ * Specification &mdash; <samp>FCGI_GET_VALUES</samp>,
+ * <samp>FCGI_GET_VALUES_RESULT</samp></a>
  */
 public final class ApplicationVariables {
     private ApplicationVariables() {}

@@ -41,7 +41,7 @@ package uk.ac.lancs.fastcgi.proto;
  * responding to a request.
  * 
  * @see <a href=
- * "http://www.mit.edu/~yandros/doc/specs/fcgi-spec.html#S6">Roles</a>
+ * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S6">Roles</a>
  * from the FastCGI specification
  * 
  * @author simpsons
@@ -54,8 +54,9 @@ public final class RoleTypes {
      * request as a responder. The value is {@value}.
      * 
      * @see <a href=
-     * "http://www.mit.edu/~yandros/doc/specs/fcgi-spec.html#S6.2">Responder</a>
-     * from the FastCGI specification
+     * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.2">FastCGI
+     * Specification &mdash; Responder</a> from the FastCGI
+     * specification
      */
     public static final int RESPONDER = 1;
 
@@ -64,8 +65,9 @@ public final class RoleTypes {
      * request as an authorizer. The value is {@value}.
      * 
      * @see <a href=
-     * "http://www.mit.edu/~yandros/doc/specs/fcgi-spec.html#S6.3">Authorizer</a>
-     * from the FastCGI specification
+     * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.3">FastCGI
+     * Specification &mdash; Authorizer</a> from the FastCGI
+     * specification
      */
     public static final int AUTHORIZER = 2;
 
@@ -74,8 +76,8 @@ public final class RoleTypes {
      * request as a filter. The value is {@value}.
      * 
      * @see <a href=
-     * "http://www.mit.edu/~yandros/doc/specs/fcgi-spec.html#S6.4">Filter</a>
-     * from the FastCGI specification
+     * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.4">FastCGI
+     * Specification &mdash; Filter</a> from the FastCGI specification
      */
     public static final int FILTER = 3;
 }
