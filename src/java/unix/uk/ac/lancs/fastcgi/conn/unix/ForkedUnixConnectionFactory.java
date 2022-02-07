@@ -76,6 +76,12 @@ public class ForkedUnixConnectionFactory implements ConnectionFactory {
                 InvocationVariables.getAuthorizedInetPeers();
             if (inetPeers != null) return null;
 
+            /* Check whether FD 0 has been provided. */
+            if (!FileDescriptor.in.valid()) {
+                System.err.printf("invalid FD%n");
+                return null;
+            }
+
             /* Attempt to create a Unix-domain server socket from FD 0.
              * If it is not a bound socket, a SocketException will be
              * thrown, and caught as an IOException, and null is then
