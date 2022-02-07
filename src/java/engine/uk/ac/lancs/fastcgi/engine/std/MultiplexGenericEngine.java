@@ -103,6 +103,8 @@ class MultiplexGenericEngine implements Engine {
 
     private final int maxReqs;
 
+    private final int stderrBufferSize;
+
     private final Supplier<? extends Pipe> pipes =
         CachePipePool.start().create()::newPipe;
 
@@ -111,7 +113,8 @@ class MultiplexGenericEngine implements Engine {
     public MultiplexGenericEngine(ConnectionSupply connections, Charset charset,
                                   Responder responder, Authorizer authorizer,
                                   Filter filter, int maxConns,
-                                  int maxReqsPerConn, int maxReqs) {
+                                  int maxReqsPerConn, int maxReqs,
+                                  int stderrBufferSize) {
         this.connections = connections;
         this.charset = charset;
         this.responder = responder;
@@ -120,6 +123,7 @@ class MultiplexGenericEngine implements Engine {
         this.maxConns = maxConns;
         this.maxReqs = maxReqs;
         this.maxReqsPerConn = maxReqsPerConn;
+        this.stderrBufferSize = stderrBufferSize;
         AtomicInteger ctid = new AtomicInteger(0);
         ThreadFactory conntf =
             (r) -> new Thread(conntg, r, "ct-" + ctid.getAndIncrement());
@@ -612,32 +616,33 @@ class MultiplexGenericEngine implements Engine {
                 return headeredOut;
             }
 
-            private final PrintStream err = new PrintStream(new OutputStream() {
-                private boolean closed = false;
+            private final PrintStream err =
+                new PrintStream(new BufferedOutputStream(new OutputStream() {
+                    private boolean closed = false;
 
-                private final byte[] buf1 = new byte[1];
+                    private final byte[] buf1 = new byte[1];
 
-                @Override
-                public void write(int b) throws IOException {
-                    if (closed) throw new IOException("closed");
-                    buf1[0] = (byte) b;
-                    recordsOut.writeStderr(id, buf1, 0, 1);
-                }
+                    @Override
+                    public void write(int b) throws IOException {
+                        if (closed) throw new IOException("closed");
+                        buf1[0] = (byte) b;
+                        recordsOut.writeStderr(id, buf1, 0, 1);
+                    }
 
-                @Override
-                public void close() throws IOException {
-                    if (closed) return;
-                    closed = true;
-                    recordsOut.writeStderrEnd(id);
-                }
+                    @Override
+                    public void close() throws IOException {
+                        if (closed) return;
+                        closed = true;
+                        recordsOut.writeStderrEnd(id);
+                    }
 
-                @Override
-                public void write(byte[] b, int off, int len)
-                    throws IOException {
-                    if (closed) throw new IOException("closed");
-                    recordsOut.writeStderr(id, b, off, len);
-                }
-            }, true, charset);
+                    @Override
+                    public void write(byte[] b, int off, int len)
+                        throws IOException {
+                        if (closed) throw new IOException("closed");
+                        recordsOut.writeStderr(id, b, off, len);
+                    }
+                }, stderrBufferSize), true, charset);
 
             @Override
             public PrintStream err() {

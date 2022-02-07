@@ -91,6 +91,7 @@ public class MultiplexGenericEngineFactory implements EngineFactory {
                                                 maxConn != null ? maxConn : 0,
                                                 maxSessPerConn != null ?
                                                     maxSessPerConn : 0,
-                                                maxSess != null ? maxSess : 0);
+                                                maxSess != null ? maxSess : 0,
+                                                1024 * 1);
     }
 }
