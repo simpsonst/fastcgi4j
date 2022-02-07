@@ -41,5 +41,9 @@ package uk.ac.lancs.fastcgi;
  * Responder role.
  * 
  * @author simpsons
+ * 
+ * @see <a href=
+ * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.2">FastCGI
+ * Specification &mdash; Responder</a>
  */
 public interface ResponderContext extends Requestable, SessionContext {}

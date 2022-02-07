@@ -22,6 +22,10 @@ package uk.ac.lancs.fastcgi;
  * Authorizer role.
  * 
  * @author simpsons
+ * 
+ * @see <a href=
+ * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.3">FastCGI
+ * Specification &mdash; Authorizer</a>
  */
 public interface AuthorizerContext extends SessionContext {
     /**
