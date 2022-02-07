@@ -124,7 +124,7 @@ public final class Attribute<V> {
      * to the server as <code>FCGI_MAX_CONNS</code> if set, so the
      * server should not open more connections than this.
      */
-    public static Attribute<Integer> MAX_CONN = of(Integer.class);
+    public static final Attribute<Integer> MAX_CONN = of(Integer.class);
 
     /**
      * Indicates how many concurrent sessions will be handled per
@@ -134,7 +134,8 @@ public final class Attribute<V> {
      * <code>FCGI_OVERLOADED</code> if it already has the specified
      * number open.
      */
-    public static Attribute<Integer> MAX_SESS_PER_CONN = of(Integer.class);
+    public static final Attribute<Integer> MAX_SESS_PER_CONN =
+        of(Integer.class);
 
     /**
      * Indicates how many concurrent sessions across all connections an
@@ -142,23 +143,23 @@ public final class Attribute<V> {
      * <code>FCGI_MAX_REQS</code> if set, so the server should queue
      * other sessions when the maximum is reached.
      */
-    public static Attribute<Integer> MAX_SESS = of(Integer.class);
+    public static final Attribute<Integer> MAX_SESS = of(Integer.class);
 
     /**
      * Specifies the implementation that handles full requests.
      */
-    public static Attribute<Responder> RESPONDER = of(Responder.class);
+    public static final Attribute<Responder> RESPONDER = of(Responder.class);
 
     /**
      * Specifies the implementation that authorizes requests, or
      * provides responses indicating why not.
      */
-    public static Attribute<Authorizer> AUTHORIZER = of(Authorizer.class);
+    public static final Attribute<Authorizer> AUTHORIZER = of(Authorizer.class);
 
     /**
      * Specifies the implementation that post-processes responses.
      */
-    public static Attribute<Filter> FILTER = of(Filter.class);
+    public static final Attribute<Filter> FILTER = of(Filter.class);
 
     /**
      * Specifies the initial buffer size for standard output.
