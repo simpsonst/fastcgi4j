@@ -83,8 +83,8 @@ public class MultiplexGenericEngineFactory implements EngineFactory {
         if (maxConn != null && maxConn < 1) return null;
         if (maxSess != null && maxSess < 1) return null;
         if (maxSessPerConn != null && maxSessPerConn < 1) return null;
-
         int outBufSize = config.get(Attribute.BUFFER_SIZE);
+        if (outBufSize < 0) return null;
 
         /* Create the factory for creating the engine from a connection
          * supply. */
