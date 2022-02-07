@@ -50,23 +50,20 @@ import uk.ac.lancs.scc.jardeps.Service;
 
 /**
  * Provides engines which can handle responders, authorizers and
- * filters, supporting multiplexed sessions on each connection.
+ * filters, supporting multiplexed sessions on each connection. This
+ * implementation reads the attributes {@link Attribute#RESPONDER},
+ * {@link Attribute#AUTHORIZER}, {@link Attribute#FILTER},
+ * {@link Attribute#MAX_CONN} (must be non-positive if set),
+ * {@link Attribute#MAX_SESS} (non-positive if set) and
+ * {@link Attribute#MAX_SESS_PER_CONN} (non-positive if set). All are
+ * optional, except that at least one role must be specified. The
+ * attribute {@link Attribute#BUFFER_SIZE} is also read, and is not
+ * optional.
  * 
  * @author simpsons
  */
 @Service(EngineFactory.class)
 public class MultiplexGenericEngineFactory implements EngineFactory {
-    /**
-     * {@inheritDoc}
-     * 
-     * @default This implementation reads the attributes
-     * {@link Attribute#RESPONDER}, {@link Attribute#AUTHORIZER},
-     * {@link Attribute#FILTER}, {@link Attribute#MAX_CONN} (must be
-     * non-positive if set), {@link Attribute#MAX_SESS} (non-positive if
-     * set) and {@link Attribute#MAX_SESS_PER_CONN} (non-positive if
-     * set). All are optional, except that at least one role must be
-     * specified.
-     */
     @Override
     public Function<? super ConnectionSupply, ? extends Engine>
         test(EngineConfiguration config) {
@@ -77,6 +74,7 @@ public class MultiplexGenericEngineFactory implements EngineFactory {
         if (responder == null && authorizer == null && filter == null)
             return null;
 
+        /* Get and validate performance parameters. */
         Integer maxConn = config.get(Attribute.MAX_CONN);
         Integer maxSess = config.get(Attribute.MAX_SESS);
         Integer maxSessPerConn = config.get(Attribute.MAX_SESS_PER_CONN);

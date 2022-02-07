@@ -83,6 +83,8 @@ import uk.ac.lancs.fastcgi.proto.app.RecordReader;
 import uk.ac.lancs.fastcgi.proto.app.RecordWriter;
 
 /**
+ * Handles FastCGI records and delivers to all role types, supporting
+ * multiple connections and multiple sessions per connection.
  *
  * @author simpsons
  */
@@ -112,6 +114,37 @@ class MultiplexGenericEngine implements Engine {
 
     private final ThreadGroup conntg = new ThreadGroup("connections");
 
+    /**
+     * Create an engine.
+     * 
+     * @param connections the supply of connections
+     * 
+     * @param charset the character encoding for handling parameters
+     * from the server, application variable names and values, and
+     * response headers
+     * 
+     * @param responder the object to handle responder requests; or
+     * {@code null} if not required
+     * 
+     * @param authorizer the object to handle authorizer requests; or
+     * {@code null} if not required
+     * 
+     * @param filter the object to handle filter requests; or
+     * {@code null} if not required
+     * 
+     * @param maxConns the maximum number of connections to offer to the
+     * server; or {@code null} if unlimited
+     * 
+     * @param maxReqsPerConn the maximum number of requests to handle
+     * simultaneously per connection; or {@code null} if unlimited
+     * 
+     * @param maxReqs the maximum number of simultaneous requests to
+     * offer to the server; or {@code null} if unlimited
+     * 
+     * @param stdoutBufferSize the default output buffer size
+     * 
+     * @param stderrBufferSize the standard error output buffer size
+     */
     public MultiplexGenericEngine(ConnectionSupply connections, Charset charset,
                                   Responder responder, Authorizer authorizer,
                                   Filter filter, int maxConns,
