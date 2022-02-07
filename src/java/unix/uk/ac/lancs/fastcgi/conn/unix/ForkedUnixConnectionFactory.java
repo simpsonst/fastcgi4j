@@ -44,7 +44,7 @@ import java.util.Collection;
 import org.newsclub.net.unix.AFUNIXServerSocket;
 import uk.ac.lancs.fastcgi.engine.ConnectionFactory;
 import uk.ac.lancs.fastcgi.engine.ConnectionSupply;
-import uk.ac.lancs.fastcgi.proto.ConnectionVariables;
+import uk.ac.lancs.fastcgi.proto.InvocationVariables;
 import uk.ac.lancs.scc.jardeps.Service;
 
 /**
@@ -61,7 +61,7 @@ public class ForkedUnixConnectionFactory implements ConnectionFactory {
      * This implementation returns {@code null} if there is any
      * indication that the process has not been invoked with a
      * Unix-domain socket on file descriptor 0. For example, if
-     * {@link ConnectionVariables#getAuthorizedInetPeers()} yields
+     * {@link InvocationVariables#getAuthorizedInetPeers()} yields
      * non-{@code null}, descriptor 0 is probably an Internet-domain
      * socket.
      */
@@ -69,7 +69,7 @@ public class ForkedUnixConnectionFactory implements ConnectionFactory {
     public ConnectionSupply getConnectionSupply() {
         try {
             Collection<InetAddress> inetPeers =
-                ConnectionVariables.getAuthorizedInetPeers();
+                InvocationVariables.getAuthorizedInetPeers();
             if (inetPeers != null) return null;
 
             AFUNIXServerSocket serverSocket =

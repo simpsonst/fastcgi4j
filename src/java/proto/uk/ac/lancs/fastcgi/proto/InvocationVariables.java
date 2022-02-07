@@ -50,9 +50,13 @@ import java.util.regex.Pattern;
  * the connection between server and application.
  * 
  * @author simpsons
+ * 
+ * @see <a href=
+ * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S2.3">FastCGI
+ * Specification &mdash; Environment variables</a>
  */
-public final class ConnectionVariables {
-    private ConnectionVariables() {}
+public final class InvocationVariables {
+    private InvocationVariables() {}
 
     /**
      * Holds the string identifying IP addresses of legitimate peers.
@@ -92,15 +96,15 @@ public final class ConnectionVariables {
                 computed = get();
             } catch (UnknownHostException e) {
                 ex = e;
-                Logger.getLogger(ConnectionVariables.class.getName())
+                Logger.getLogger(InvocationVariables.class.getName())
                     .log(Level.SEVERE, "parsing " + WEB_SERVER_ADDRS, e);
             } catch (Error e) {
                 error = e;
-                Logger.getLogger(ConnectionVariables.class.getName())
+                Logger.getLogger(InvocationVariables.class.getName())
                     .log(Level.SEVERE, "parsing " + WEB_SERVER_ADDRS, e);
             } catch (RuntimeException e) {
                 rte = e;
-                Logger.getLogger(ConnectionVariables.class.getName())
+                Logger.getLogger(InvocationVariables.class.getName())
                     .log(Level.SEVERE, "parsing " + WEB_SERVER_ADDRS, e);
             }
             EX = ex;
