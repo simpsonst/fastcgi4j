@@ -26,6 +26,9 @@ trees_fastcgi4j_unix += unix
 
 jars += $(SELECTED_JARS)
 
+jars += fastcgi4j_demos
+trees_fastcgi4j_demos += demos
+
 roots_api += $(found_api)
 roots_app += $(found_app)
 deps_app += api
@@ -37,6 +40,9 @@ roots_proto += $(found_proto)
 roots_unix += $(found_unix)
 deps_unix += app
 deps_unix += proto
+roots_demos += $(found_demos)
+deps_demos += api
+deps_demos += app
 
 include jardeps.mk
 -include jardeps-install.mk
