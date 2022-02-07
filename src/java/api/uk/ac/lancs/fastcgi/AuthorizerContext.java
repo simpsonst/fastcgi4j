@@ -23,4 +23,40 @@ package uk.ac.lancs.fastcgi;
  * 
  * @author simpsons
  */
-public interface AuthorizerContext extends SessionContext {}
+public interface AuthorizerContext extends SessionContext {
+    /**
+     * Set an authentication/authorization variable. The status is set
+     * to 200.
+     * 
+     * @param name the variable's name
+     * 
+     * @param value the variable's value
+     */
+    void setVariable(String name, String value);
+
+    /**
+     * {@inheritDoc} The status is set to 401 if currently 200.
+     * 
+     * @throws IllegalArgumentException if the name case-insensitively
+     * begins with {@value #VARIABLE_PREFIX} or matches
+     * {@value SessionContext#STATUS_FIELD}
+     */
+    @Override
+    void setHeader(String name, String value);
+
+    /**
+     * {@inheritDoc} The status is set to 401 if currently 200.
+     * 
+     * @throws IllegalArgumentException if the name case-insensitively
+     * begins with {@value #VARIABLE_PREFIX} or matches
+     * {@value SessionContext#STATUS_FIELD}
+     */
+    @Override
+    public void addHeader(String name, String value);
+
+    /**
+     * Specifies the prefix for special header names that configure the
+     * server on a successful authorization. The value is {@value}.
+     */
+    String VARIABLE_PREFIX = "Variable-";
+}

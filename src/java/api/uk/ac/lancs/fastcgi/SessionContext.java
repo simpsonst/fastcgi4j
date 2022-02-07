@@ -59,20 +59,33 @@ public interface SessionContext {
 
     /**
      * Set a response header field, replacing any existing values.
+     * Leading and trailing spaces are trimmed from the name.
      * 
      * @param name the header field name
      * 
      * @param value the new value
+     * 
+     * @throws IllegalArgumentException if the field name is
+     * {@value #STATUS_FIELD}
      */
     void setHeader(String name, String value);
 
     /**
+     * Specifies the header field name used to set the HTTP status code.
+     * The value is {@value}.
+     */
+    String STATUS_FIELD = "Status";
+
+    /**
      * Add a response header field, retaining earlier values as distinct
-     * fields.
+     * fields. Leading and trailing spaces are trimmed from the name.
      * 
      * @param name the header name
      * 
      * @param value the additional value
+     * 
+     * @throws IllegalArgumentException if the field name is
+     * {@value #STATUS_FIELD}
      */
     void addHeader(String name, String value);
 
