@@ -577,6 +577,9 @@ class MultiplexGenericEngine implements Engine {
 
             @Override
             public boolean setBufferSize(int amount) {
+                if (amount < 0)
+                    throw new IllegalArgumentException("-ve buffer size "
+                        + amount);
                 if (bufferedOut != null) return false;
                 bufferSize = amount;
                 return true;

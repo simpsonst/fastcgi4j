@@ -113,14 +113,19 @@ public interface SessionContext {
     OutputStream out();
 
     /**
-     * Try to set the buffer size for writing the response. Rather than
-     * an exception, the return value indicates failure, as it usually
-     * does not constitute a functional failure.
+     * Try to set the buffer size for writing the response. This cannot
+     * be set once output has started to be written. It might also be
+     * truncated to an implementation-defined limit. In these cases,
+     * rather than an exception, the return value indicates failure, as
+     * it usually does not constitute a functional failure. An exception
+     * is thrown if the argument is invalid.
      * 
      * @param amount the buffer size in bytes; 0 to disable buffering
      * 
-     * @return {@code true} if the buffer size was set; {@code false}
-     * otherwise
+     * @return {@code true} if the buffer size was set to the requested
+     * value; {@code false} otherwise
+     * 
+     * @throws IllegalArgumentException if the size is negative
      */
     boolean setBufferSize(int amount);
 
