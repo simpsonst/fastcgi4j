@@ -568,6 +568,13 @@ class MultiplexGenericEngine implements Engine {
 
             private int bufferSize = 1024 * 10;
 
+            @Override
+            public boolean setBufferSize(int amount) {
+                if (bufferedOut != null) return false;
+                bufferSize = amount;
+                return true;
+            }
+
             /**
              * Ensures that the response header has been transmitted.
              * This object is presented to the application as its

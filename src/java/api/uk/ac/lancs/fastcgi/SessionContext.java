@@ -113,6 +113,18 @@ public interface SessionContext {
     OutputStream out();
 
     /**
+     * Try to set the buffer size for writing the response. Rather than
+     * an exception, the return value indicates failure, as it usually
+     * does not constitute a functional failure.
+     * 
+     * @param amount the buffer size in bytes
+     * 
+     * @return {@code true} if the buffer size was set; {@code false}
+     * otherwise
+     */
+    boolean setBufferSize(int amount);
+
+    /**
      * Get the stream for writing error messages.
      * 
      * @return the error stream
