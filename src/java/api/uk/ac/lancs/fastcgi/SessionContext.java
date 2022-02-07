@@ -117,7 +117,7 @@ public interface SessionContext {
      * an exception, the return value indicates failure, as it usually
      * does not constitute a functional failure.
      * 
-     * @param amount the buffer size in bytes
+     * @param amount the buffer size in bytes; 0 to disable buffering
      * 
      * @return {@code true} if the buffer size was set; {@code false}
      * otherwise

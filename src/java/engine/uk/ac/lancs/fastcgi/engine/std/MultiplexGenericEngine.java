@@ -571,7 +571,7 @@ class MultiplexGenericEngine implements Engine {
             /**
              * Reduces calls on {@link #out} by buffering.
              */
-            private BufferedOutputStream bufferedOut;
+            private OutputStream bufferedOut;
 
             private int bufferSize = stdoutBufferSize;
 
@@ -706,7 +706,8 @@ class MultiplexGenericEngine implements Engine {
                 if (statusCode < 0) return;
 
                 assert bufferedOut == null;
-                bufferedOut = new BufferedOutputStream(out, bufferSize);
+                bufferedOut = bufferSize == 0 ? out :
+                    new BufferedOutputStream(out, bufferSize);
 
                 /* Don't autoclose this stream; we need the base to
                  * remain open. */
