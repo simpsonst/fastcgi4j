@@ -36,16 +36,17 @@
 
 package uk.ac.lancs.fastcgi;
 
-import uk.ac.lancs.fastcgi.proto.ProtocolStatuses;
-import uk.ac.lancs.fastcgi.proto.RecordTypes;
-
 /**
  * Indicates that the application is temporarily overloaded. This will
  * instruct the library to send a record of type
- * {@link RecordTypes#END_REQUEST} with a protocol status of
- * {@link ProtocolStatuses#OVERLOADED}.
+ * <code>FCGI_END_REQUEST</code> with a protocol status of
+ * <code>FCGI_OVERLOADED</code>.
  * 
  * @author simpsons
+ * 
+ * @see <a href=
+ * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.5">FastCGI
+ * Specification &mdash; <code>FCGI_END_REQUEST</code></a>
  */
 public class OverloadException extends SessionException {
 
