@@ -43,20 +43,55 @@ package uk.ac.lancs.fastcgi;
  * @author simpsons
  */
 public class SessionException extends Exception {
+    /**
+     * Create an exception.
+     */
     public SessionException() {}
 
+    /**
+     * Create an exception with a detail message.
+     * 
+     * @param message the detail message
+     */
     public SessionException(String message) {
         super(message);
     }
 
+    /**
+     * Create an exception with a detail message and a cause.
+     * 
+     * @param message the detail message
+     * 
+     * @param cause the cause of the exception
+     */
     public SessionException(String message, Throwable cause) {
         super(message, cause);
     }
 
+    /**
+     * Create an exception with a cause.
+     * 
+     * @param cause the cause of the exception
+     */
     public SessionException(Throwable cause) {
         super(cause);
     }
 
+    /**
+     * Create an exception with a detail message, a cause, suppression
+     * enabled or disabled, and writable stack trace enabled or
+     * disabled.
+     * 
+     * @param message the detail message
+     * 
+     * @param cause the cause; or {@code null} if there was no cause
+     * 
+     * @param enableSuppression whether or not suppression is enabled or
+     * disabled
+     * 
+     * @param writableStackTrace whether or not the stack trace should
+     * be writable
+     */
     protected SessionException(String message, Throwable cause,
                                boolean enableSuppression,
                                boolean writableStackTrace) {

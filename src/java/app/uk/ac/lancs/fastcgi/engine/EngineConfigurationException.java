@@ -37,7 +37,9 @@
 package uk.ac.lancs.fastcgi.engine;
 
 /**
- *
+ * Indicates that no engine could be provided to meet a requested
+ * configuration.
+ * 
  * @author simpsons
  */
 public class EngineConfigurationException extends RuntimeException {
@@ -46,28 +48,73 @@ public class EngineConfigurationException extends RuntimeException {
      */
     public final EngineConfiguration config;
 
+    /**
+     * Create an exception.
+     * 
+     * @param config the configuration that could not be met
+     */
     public EngineConfigurationException(EngineConfiguration config) {
         this.config = config;
     }
 
+    /**
+     * Create an exception with a detail message.
+     * 
+     * @param config the configuration that could not be met
+     * 
+     * @param message the detail message
+     */
     public EngineConfigurationException(EngineConfiguration config,
                                         String message) {
         super(message);
         this.config = config;
     }
 
+    /**
+     * Create an exception with a detail message and a cause.
+     * 
+     * @param config the configuration that could not be met
+     * 
+     * @param message the detail message
+     * 
+     * @param cause the cause of the exception
+     */
     public EngineConfigurationException(EngineConfiguration config,
                                         String message, Throwable cause) {
         super(message, cause);
         this.config = config;
     }
 
+    /**
+     * Create an exception with a cause.
+     * 
+     * @param config the configuration that could not be met
+     * 
+     * @param cause the cause of the exception
+     */
     public EngineConfigurationException(EngineConfiguration config,
                                         Throwable cause) {
         super(cause);
         this.config = config;
     }
 
+    /**
+     * Create an exception with a detail message, a cause, suppression
+     * enabled or disabled, and writable stack trace enabled or
+     * disabled.
+     * 
+     * @param config the configuration that could not be met
+     * 
+     * @param message the detail message
+     * 
+     * @param cause the cause; or {@code null} if there was no cause
+     * 
+     * @param enableSuppression whether or not suppression is enabled or
+     * disabled
+     * 
+     * @param writableStackTrace whether or not the stack trace should
+     * be writable
+     */
     protected EngineConfigurationException(EngineConfiguration config,
                                            String message, Throwable cause,
                                            boolean enableSuppression,
