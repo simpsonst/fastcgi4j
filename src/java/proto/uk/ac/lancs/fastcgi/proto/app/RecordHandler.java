@@ -131,6 +131,9 @@ public interface RecordHandler {
     /**
      * Report a bad record.
      * 
+     * @param reasons flags identifying the reasons for rejecting the
+     * record
+     * 
      * @param version the record type version
      * 
      * @param type the record type
@@ -139,5 +142,41 @@ public interface RecordHandler {
      * 
      * @param id the request id
      */
-    void bad(int version, int type, int length, int id) throws IOException;
+    void bad(int reasons, int version, int type, int length, int id)
+        throws IOException;
+
+    /**
+     * Indicates that the type was not recognized. This can contribute
+     * to the value of the first argument to
+     * {@link #bad(int, int, int, int, int)}.
+     */
+    int UNKNOWN_TYPE = 1;
+
+    /**
+     * Indicates that the type was recognized, but the version is too
+     * high. This can contribute to the value of the first argument to
+     * {@link #bad(int, int, int, int, int)}.
+     */
+    int TOO_NEW = 2;
+
+    /**
+     * Indicates that the version number was invalid (e.g., 0). This can
+     * contribute to the value of the first argument to
+     * {@link #bad(int, int, int, int, int)}.
+     */
+    int BAD_VERSION = 4;
+
+    /**
+     * Indicates that the message has an unexpected length. This can
+     * contribute to the value of the first argument to
+     * {@link #bad(int, int, int, int, int)}.
+     */
+    int BAD_LENGTH = 8;
+
+    /**
+     * Indicates that the request id had an unexpected value for the
+     * type. This can contribute to the value of the first argument to
+     * {@link #bad(int, int, int, int, int)}.
+     */
+    int BAD_REQ_ID = 16;
 }

@@ -356,8 +356,13 @@ class MultiplexGenericEngine implements Engine {
         }
 
         @Override
-        public void bad(int version, int type, int length, int id)
+        public void bad(int reasons, int version, int type, int length, int id)
             throws IOException {
+            if ((reasons & RecordHandler.UNKNOWN_TYPE) != 0) {
+                recordsOut.writeUnknown(type);
+                return;
+            }
+            if (id == 0) return;
             SessionHandler sess = sessions.get(id);
             if (sess != null) sess.abortRequest();
         }

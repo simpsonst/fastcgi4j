@@ -101,18 +101,25 @@ public class RecordReader {
         final int rid = unser(buf, 2, 2);
         int clen = unser(buf, 4, 2);
         int plen = unser(buf, 6, 1);
+        int reasons = 0;
         switch (rtype) {
         case RecordTypes.ABORT_REQUEST:
-            if (rver != 1 || clen != 0 || rid == 0) {
-                handler.bad(rver, rtype, clen, rid);
+            if (rver < 1) reasons |= RecordHandler.BAD_VERSION;
+            if (clen != 0) reasons |= RecordHandler.BAD_LENGTH;
+            if (rid == 0) reasons |= RecordHandler.BAD_REQ_ID;
+            if (reasons != 0) {
+                handler.bad(reasons, rver, rtype, clen, rid);
                 break;
             }
             handler.abortRequest(rid);
             break;
 
         case RecordTypes.BEGIN_REQUEST:
-            if (rver != 1 || clen != 8 || rid == 0) {
-                handler.bad(rver, rtype, clen, rid);
+            if (rver < 1) reasons |= RecordHandler.BAD_VERSION;
+            if (clen != 8) reasons |= RecordHandler.BAD_LENGTH;
+            if (rid == 0) reasons |= RecordHandler.BAD_REQ_ID;
+            if (reasons != 0) {
+                handler.bad(reasons, rver, rtype, clen, rid);
                 break;
             }
             if (!require(clen)) return false;
@@ -122,8 +129,10 @@ public class RecordReader {
             break;
 
         case RecordTypes.GET_VALUES:
-            if (rver != 1 || rid == 0) {
-                handler.bad(rver, rtype, clen, rid);
+            if (rver < 1) reasons |= RecordHandler.BAD_VERSION;
+            if (rid == 0) reasons |= RecordHandler.BAD_REQ_ID;
+            if (reasons != 0) {
+                handler.bad(reasons, rver, rtype, clen, rid);
                 break;
             }
             Map<String, String> vars = new HashMap<>();
@@ -165,8 +174,10 @@ public class RecordReader {
             break;
 
         case RecordTypes.PARAMS: {
-            if (rver != 1 || rid == 0) {
-                handler.bad(rver, rtype, clen, rid);
+            if (rver < 1) reasons |= RecordHandler.BAD_VERSION;
+            if (rid == 0) reasons |= RecordHandler.BAD_REQ_ID;
+            if (reasons != 0) {
+                handler.bad(reasons, rver, rtype, clen, rid);
                 break;
             }
             if (clen == 0) {
@@ -180,8 +191,10 @@ public class RecordReader {
         }
 
         case RecordTypes.STDIN: {
-            if (rver != 1 || rid == 0) {
-                handler.bad(rver, rtype, clen, rid);
+            if (rver < 1) reasons |= RecordHandler.BAD_VERSION;
+            if (rid == 0) reasons |= RecordHandler.BAD_REQ_ID;
+            if (reasons != 0) {
+                handler.bad(reasons, rver, rtype, clen, rid);
                 break;
             }
             if (clen == 0) {
@@ -195,8 +208,10 @@ public class RecordReader {
         }
 
         case RecordTypes.DATA: {
-            if (rver != 1 || rid == 0) {
-                handler.bad(rver, rtype, clen, rid);
+            if (rver < 1) reasons |= RecordHandler.BAD_VERSION;
+            if (rid == 0) reasons |= RecordHandler.BAD_REQ_ID;
+            if (reasons != 0) {
+                handler.bad(reasons, rver, rtype, clen, rid);
                 break;
             }
             if (clen == 0) {
@@ -211,7 +226,7 @@ public class RecordReader {
 
         default:
             if (!require(clen)) return false;
-            handler.bad(rver, rtype, clen, rid);
+            handler.bad(RecordHandler.UNKNOWN_TYPE, rver, rtype, clen, rid);
             break;
         }
 
