@@ -57,6 +57,16 @@ DOC_OVERVIEW=src/java/overview.html
 DOC_CLASSPATH += $(jars:%=$(JARDEPS_OUTDIR)/%.jar)
 DOC_SRC=$(call jardeps_srcdirs4jars,$(SELECTED_JARS))
 DOC_CORE=fastcgi4j$(DOC_CORE_SFX)
+DOC_PKGS += uk.ac.lancs.fastcgi
+DOC_PKGS += uk.ac.lancs.fastcgi.engine
+DOC_PKGS += uk.ac.lancs.fastcgi.engine.util
+DOC_PKGS += uk.ac.lancs.fastcgi.engine.std
+DOC_PKGS += uk.ac.lancs.fastcgi.proto
+DOC_PKGS += uk.ac.lancs.fastcgi.proto.ap
+DOC_PKGS += uk.ac.lancs.fastcgi.conn
+ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_UNIX))),)
+DOC_PKGS += uk.ac.lancs.fastcgi.conn.unix
+endif
 
 all:: installed-jars
 installed-jars:: $(SELECTED_JARS:%=out/%.jar)
