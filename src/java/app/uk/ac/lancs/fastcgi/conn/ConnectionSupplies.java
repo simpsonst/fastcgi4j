@@ -34,27 +34,16 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-import uk.ac.lancs.fastcgi.Responder;
-import uk.ac.lancs.fastcgi.engine.Attribute;
-import uk.ac.lancs.fastcgi.conn.ConnectionSupply;
-import uk.ac.lancs.fastcgi.engine.Engine;
-import uk.ac.lancs.scc.jardeps.Application;
+package uk.ac.lancs.fastcgi.conn;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Provides a responder that yields MD5 sums of the request content.
- * 
+ *
  * @author simpsons
  */
-@Application
-public class MD5SumApp {
-    @SuppressWarnings("empty-statement")
-    public static void main(String[] args) throws Exception {
-        ConnectionSupply conns = ConnectionSupply.get();
-        Responder rsper = new MD5SumResponder();
-        Engine engine = Engine.start().with(Attribute.MAX_CONN, 10)
-            .with(Attribute.MAX_SESS_PER_CONN, 10)
-            .with(Attribute.RESPONDER, rsper).build().apply(conns);
-        while (engine.process())
-            ;
-    }
+final class ConnectionSupplies {
+    static final Map<ClassLoader, ConnectionSupply> supplies =
+        new ConcurrentHashMap<>();
 }

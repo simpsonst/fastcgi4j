@@ -34,16 +34,9 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-package uk.ac.lancs.fastcgi.engine;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 /**
- *
+ * Defines how an application receives connections from the server.
+ * 
  * @author simpsons
  */
-final class ConnectionSupplies {
-    static final Map<ClassLoader, ConnectionSupply> supplies =
-        new ConcurrentHashMap<>();
-}
+package uk.ac.lancs.fastcgi.conn;

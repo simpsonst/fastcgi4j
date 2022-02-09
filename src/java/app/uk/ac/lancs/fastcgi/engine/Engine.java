@@ -36,6 +36,7 @@
 
 package uk.ac.lancs.fastcgi.engine;
 
+import uk.ac.lancs.fastcgi.conn.ConnectionSupply;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;

@@ -42,7 +42,7 @@ import uk.ac.lancs.fastcgi.Authorizer;
 import uk.ac.lancs.fastcgi.Filter;
 import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.engine.Attribute;
-import uk.ac.lancs.fastcgi.engine.ConnectionSupply;
+import uk.ac.lancs.fastcgi.conn.ConnectionSupply;
 import uk.ac.lancs.fastcgi.engine.Engine;
 import uk.ac.lancs.fastcgi.engine.EngineConfiguration;
 import uk.ac.lancs.fastcgi.engine.EngineFactory;

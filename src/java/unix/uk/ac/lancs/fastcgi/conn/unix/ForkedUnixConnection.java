@@ -40,7 +40,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import org.newsclub.net.unix.AFUNIXSocket;
-import uk.ac.lancs.fastcgi.engine.Connection;
+import uk.ac.lancs.fastcgi.conn.Connection;
 
 /**
  * Provides a FastCGI connection backed by a Unix-domain socket.

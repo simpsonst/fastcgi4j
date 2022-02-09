@@ -41,8 +41,8 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Collection;
 import org.newsclub.net.unix.AFUNIXServerSocket;
-import uk.ac.lancs.fastcgi.engine.ConnectionFactory;
-import uk.ac.lancs.fastcgi.engine.ConnectionSupply;
+import uk.ac.lancs.fastcgi.conn.ConnectionFactory;
+import uk.ac.lancs.fastcgi.conn.ConnectionSupply;
 import uk.ac.lancs.fastcgi.proto.InvocationVariables;
 import uk.ac.lancs.scc.jardeps.Service;
 

@@ -39,8 +39,8 @@ package uk.ac.lancs.fastcgi.conn.unix;
 import java.io.IOException;
 import org.newsclub.net.unix.AFUNIXServerSocket;
 import org.newsclub.net.unix.AFUNIXSocket;
-import uk.ac.lancs.fastcgi.engine.Connection;
-import uk.ac.lancs.fastcgi.engine.ConnectionSupply;
+import uk.ac.lancs.fastcgi.conn.Connection;
+import uk.ac.lancs.fastcgi.conn.ConnectionSupply;
 
 /**
  * Supplies connections by accepting from a Unix-domain server socket.

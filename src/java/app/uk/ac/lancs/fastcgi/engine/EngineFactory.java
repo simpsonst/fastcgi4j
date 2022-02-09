@@ -36,6 +36,7 @@
 
 package uk.ac.lancs.fastcgi.engine;
 
+import uk.ac.lancs.fastcgi.conn.ConnectionSupply;
 import java.util.function.Function;
 
 /**
