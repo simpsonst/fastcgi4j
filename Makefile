@@ -2,8 +2,12 @@ all::
 
 PREFIX=/usr/local
 
+ENABLE_UNIX ?= yes
+
 -include fastcgi4j-env.mk
 -include $(subst $(jardeps_space),\$(jardeps_space),$(CURDIR))/config.mk
+
+lc=$(subst A,a,$(subst B,b,$(subst C,c,$(subst D,d,$(subst E,e,$(subst F,f,$(subst G,g,$(subst H,h,$(subst I,i,$(subst J,j,$(subst K,k,$(subst L,l,$(subst M,m,$(subst N,n,$(subst O,o,$(subst P,p,$(subst Q,q,$(subst R,r,$(subst S,s,$(subst T,t,$(subst U,u,$(subst V,v,$(subst W,w,$(subst X,x,$(subst Y,y,$(subst Z,z,$1))))))))))))))))))))))))))
 
 JARDEPS_SRCDIR=src/java
 JARDEPS_DEPDIR=src
@@ -21,8 +25,10 @@ trees_fastcgi4j_engine += engine
 SELECTED_JARS += fastcgi4j_proto
 trees_fastcgi4j_proto += proto
 
+ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_UNIX))),)
 SELECTED_JARS += fastcgi4j_unix
 trees_fastcgi4j_unix += unix
+endif
 
 jars += $(SELECTED_JARS)
 
