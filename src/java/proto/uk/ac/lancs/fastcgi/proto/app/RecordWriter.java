@@ -114,6 +114,8 @@ public class RecordWriter {
      * @param values the name-value pairs to be written
      * 
      * @throws IOException if an I/O error occurred
+     * 
+     * @see RecordTypes#GET_VALUES_RESULT
      */
     public void writeValues(Map<? extends String, ? extends String> values)
         throws IOException {
@@ -152,6 +154,8 @@ public class RecordWriter {
      * @param type the unknown record type
      * 
      * @throws IOException if an I/O error occurred
+     * 
+     * @see RecordTypes#UNKNOWN_TYPE
      */
     public void writeUnknown(int type) throws IOException {
         buf.clear();
@@ -182,6 +186,8 @@ public class RecordWriter {
      * {@link ProtocolStatuses}
      * 
      * @throws IOException if an I/O error occurred
+     * 
+     * @see RecordTypes#END_REQUEST
      */
     public void writeEndRequest(int id, int appStatus, int protoStatus)
         throws IOException {
@@ -258,6 +264,8 @@ public class RecordWriter {
      * @return the number of bytes written
      * 
      * @throws IOException if an I/O error occurred
+     * 
+     * @see RecordTypes#STDOUT
      */
     public int writeStdout(int id, byte[] buf, int off, int len)
         throws IOException {
@@ -271,6 +279,8 @@ public class RecordWriter {
      * @param id the request id
      * 
      * @throws IOException if an I/O error occurred
+     * 
+     * @see RecordTypes#STDOUT
      */
     public void writeStdoutEnd(int id) throws IOException {
         writeEnd(RecordTypes.STDOUT, id);
@@ -294,6 +304,8 @@ public class RecordWriter {
      * @return the number of bytes written
      * 
      * @throws IOException if an I/O error occurred
+     * 
+     * @see RecordTypes#STDERR
      */
     public int writeStderr(int id, byte[] buf, int off, int len)
         throws IOException {
@@ -307,6 +319,8 @@ public class RecordWriter {
      * @param id the request id
      * 
      * @throws IOException if an I/O error occurred
+     * 
+     * @see RecordTypes#STDERR
      */
     public void writeStderrEnd(int id) throws IOException {
         writeEnd(RecordTypes.STDERR, id);
