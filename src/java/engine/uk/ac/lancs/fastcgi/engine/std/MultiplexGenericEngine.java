@@ -302,7 +302,8 @@ class MultiplexGenericEngine implements Engine {
             if (sess == null) {
                 /* No mapping was recorded, meaning that we don't
                  * recognize the role. */
-                recordsOut.writeUnknown(role);
+                recordsOut.writeEndRequest(id, -3,
+                                           ProtocolStatuses.UNKNOWN_ROLE);
                 return;
             }
             if (sess.start()) {
