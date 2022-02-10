@@ -360,7 +360,7 @@ class MultiplexGenericEngine implements Engine {
         public void bad(int reasons, int version, int type, int length, int id)
             throws IOException {
             if ((reasons & RecordHandler.UNKNOWN_TYPE) != 0) {
-                recordsOut.writeUnknown(type);
+                recordsOut.writeUnknownType(type);
                 return;
             }
             if (id == 0) return;

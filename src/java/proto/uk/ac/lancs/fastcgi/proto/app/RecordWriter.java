@@ -157,7 +157,7 @@ public class RecordWriter {
      * 
      * @see RecordTypes#UNKNOWN_TYPE
      */
-    public void writeUnknown(int type) throws IOException {
+    public void writeUnknownType(int type) throws IOException {
         buf.clear();
 
         buf.put((byte) 1); // version
