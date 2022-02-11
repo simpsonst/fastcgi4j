@@ -58,7 +58,7 @@ public class RecordWriter {
      * 
      * @param out the destination for serialized records
      * 
-     * @param charset the character encoding for writeing name-value
+     * @param charset the character encoding for writing name-value
      * pairs
      */
     public RecordWriter(OutputStream out, Charset charset) {
