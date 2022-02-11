@@ -62,7 +62,7 @@ DOC_PKGS += uk.ac.lancs.fastcgi.engine
 DOC_PKGS += uk.ac.lancs.fastcgi.engine.util
 DOC_PKGS += uk.ac.lancs.fastcgi.engine.std
 DOC_PKGS += uk.ac.lancs.fastcgi.proto
-DOC_PKGS += uk.ac.lancs.fastcgi.proto.ap
+DOC_PKGS += uk.ac.lancs.fastcgi.proto.app
 DOC_PKGS += uk.ac.lancs.fastcgi.conn
 ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_UNIX))),)
 DOC_PKGS += uk.ac.lancs.fastcgi.conn.unix
