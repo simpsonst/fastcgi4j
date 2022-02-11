@@ -41,6 +41,7 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.Map;
+import uk.ac.lancs.fastcgi.proto.ProtocolStatuses;
 import uk.ac.lancs.fastcgi.proto.RecordTypes;
 
 /**

@@ -43,9 +43,15 @@ import uk.ac.lancs.fastcgi.Filter;
 import uk.ac.lancs.fastcgi.Responder;
 
 /**
- * Identifies a typed attribute that an engine is required to have.
+ * Identifies a typed attribute that an engine is required or preferred
+ * to have. A number of common attributes are defined in this class.
+ * Specific engine implementations may define more.
  * 
  * @param <V> the value type
+ * 
+ * @see Engine.Builder#with(Attribute, Object)
+ * 
+ * @see Engine.Builder#trying(Attribute, Object)
  * 
  * @author simpsons
  */

@@ -40,10 +40,15 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- *
+ * Holds static resources for this package.
+ * 
  * @author simpsons
  */
 final class ConnectionSupplies {
+    /**
+     * Provides lazy initialization of per-class-loader connection
+     * supplies.
+     */
     static final Map<ClassLoader, ConnectionSupply> supplies =
         new ConcurrentHashMap<>();
 }

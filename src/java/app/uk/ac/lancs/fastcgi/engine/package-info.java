@@ -39,15 +39,16 @@
  * implementations of FastCGI.
  * 
  * <p>
- * An application should first obtain a {@link ConnectionSupply}. If
- * this fails with {@link UnsupportedOperationException}, then the
- * application is not being invoked using FastCGI, or not using a
- * supported transport.
+ * An application should first obtain a
+ * {@link uk.ac.lancs.fastcgi.conn.ConnectionSupply}. If this fails with
+ * {@link UnsupportedOperationException}, then the application is not
+ * being invoked using FastCGI, or not using a supported transport.
  * 
  * <p>
  * The application should then instantiate a role implementation, such
- * as {@link Responder}, {@link Authorizer} or {@link Filter}. It may
- * provide one of each.
+ * as {@link uk.ac.lancs.fastcgi.Responder},
+ * {@link uk.ac.lancs.fastcgi.Authorizer} or
+ * {@link uk.ac.lancs.fastcgi.Filter}. It may provide one of each.
  * 
  * <p>
  * An engine can be built by specifying various required and optional

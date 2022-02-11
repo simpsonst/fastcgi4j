@@ -73,26 +73,37 @@ public final class CachePipePool {
     private final int ramThreshold;
 
     /**
-     * When the amount of RAM used reaches this amount, start creating
-     * file chunks.
+     * The default threshold in bytes to switch to caching stream data
+     * in file chunks, namely {@value}, overridden by
+     * {@link Builder#ramThreshold(int)}
      */
     public static final int RAM_THRESHOLD = 1 * 1024 * 1024;
 
     /**
-     * The default prefix for chunk files, namely {@value}
+     * The default prefix for chunk files, namely {@value}, overridden
+     * by the first argument to {@link Builder#format(String, String)}
      */
     public static final String PREFIX = "fastcgi-";
 
     /**
-     * The default suffix for chunk files, namely {@value}
+     * The default suffix for chunk files, namely {@value}, overridden
+     * by the second argument to {@link Builder#format(String, String)}
      */
     public static final String SUFFIX = ".chunk";
 
+    /**
+     * The default size in bytes for chunk files, namely {@value},
+     * overridden by {@link Builder#maxFileSize(long)}
+     */
     public static final long MAX_FILE_SIZE = 1 * 1024 * 1024;
 
+    /**
+     * The default size in bytes of each memory chunk, namely {@value},
+     * overridden by {@link Builder#memChunkSize(int)}
+     */
     public static final int MEM_CHUNK_SIZE = 1024;
 
-    public static final String TMPDIR_SYSPROP = "java.io.tmpdir";
+    private static final String TMPDIR_SYSPROP = "java.io.tmpdir";
 
     /**
      * Start building a pool.
@@ -214,9 +225,9 @@ public final class CachePipePool {
         }
 
         /**
-         * Create
+         * Create a pool with the current configuration.
          * 
-         * @return
+         * @return a pool with the required configuration
          */
         public CachePipePool create() {
             return new CachePipePool(dir, prefix, suffix, maxFileSize,

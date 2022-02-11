@@ -37,7 +37,20 @@
 package uk.ac.lancs.fastcgi.conn;
 
 /**
- *
+ * Determines whether FastCGI connections are arriving over a specific
+ * mechanism, and presents them to the application. Implementations
+ * should read FastCGI-defined environment variables or look at file
+ * descriptor 0 to determine how to receive FastCGI connections. An
+ * implementation should need only test for one mechanism, returning
+ * {@code null} if not recognized. Implementations should be declared as
+ * services for this interface in line with
+ * {@link java.util.ServiceLoader}, so they can be enabled simply by
+ * adding to the class path.
+ * 
+ * @see <a href=
+ * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S2">FastCGI
+ * Specification &mdash; Initial Process State</a>
+ * 
  * @author simpsons
  */
 public interface ConnectionFactory {

@@ -117,7 +117,7 @@ public final class InvocationVariables {
     /**
      * Get the set of IP addresses of legitimate peers as a set of
      * structured data. This reads from the environment variable
-     * {@value WEB_SERVER_ADDRS}. The result is cached, so only the
+     * {@value #WEB_SERVER_ADDRS}. The result is cached, so only the
      * first call will actually do anything. An exception in the first
      * call is preserved for other calls, so its stack trace will not be
      * correct.

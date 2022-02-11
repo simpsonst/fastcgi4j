@@ -52,6 +52,9 @@ public interface RecordHandler {
      * @param id the request id, which should always be zero
      * 
      * @param names the names of the requested variables
+     * 
+     * @throws IOException if an I/O error occurred in transmitting the
+     * record
      */
     void getValues(Collection<? extends String> names) throws IOException;
 
@@ -61,6 +64,9 @@ public interface RecordHandler {
      * @param id the request id
      * 
      * @param role the role of the application in serving this request
+     * 
+     * @throws IOException if an I/O error occurred in transmitting the
+     * record
      */
     void beginRequest(int id, int role, int flags) throws IOException;
 
@@ -68,6 +74,9 @@ public interface RecordHandler {
      * Abort a request.
      * 
      * @param id the request id
+     * 
+     * @throws IOException if an I/O error occurred in transmitting the
+     * record
      */
     void abortRequest(int id) throws IOException;
 
@@ -80,6 +89,9 @@ public interface RecordHandler {
      * @param len the number of bytes
      * 
      * @param in a stream of the bytes
+     * 
+     * @throws IOException if an I/O error occurred in transmitting the
+     * record
      */
     void params(int id, int len, InputStream in) throws IOException;
 
@@ -87,6 +99,9 @@ public interface RecordHandler {
      * Indicate that parameter data is complete.
      * 
      * @param id the request id
+     * 
+     * @throws IOException if an I/O error occurred in transmitting the
+     * record
      */
     void paramsEnd(int id) throws IOException;
 
@@ -99,6 +114,9 @@ public interface RecordHandler {
      * @param len the number of bytes
      * 
      * @param in a stream of the bytes
+     * 
+     * @throws IOException if an I/O error occurred in transmitting the
+     * record
      */
     void stdin(int id, int len, InputStream in) throws IOException;
 
@@ -106,6 +124,9 @@ public interface RecordHandler {
      * Indicate that standard input is complete.
      * 
      * @param id the request id
+     * 
+     * @throws IOException if an I/O error occurred in transmitting the
+     * record
      */
     void stdinEnd(int id) throws IOException;
 
@@ -118,6 +139,9 @@ public interface RecordHandler {
      * @param len the number of bytes
      * 
      * @param in a stream of the bytes
+     * 
+     * @throws IOException if an I/O error occurred in transmitting the
+     * record
      */
     void data(int id, int len, InputStream in) throws IOException;
 
@@ -125,6 +149,9 @@ public interface RecordHandler {
      * Indicate that extra data is complete.
      * 
      * @param id the request id
+     * 
+     * @throws IOException if an I/O error occurred in transmitting the
+     * record
      */
     void dataEnd(int id) throws IOException;
 
@@ -141,6 +168,9 @@ public interface RecordHandler {
      * @param length the content length
      * 
      * @param id the request id
+     * 
+     * @throws IOException if an I/O error occurred in transmitting the
+     * record
      */
     void bad(int reasons, int version, int type, int length, int id)
         throws IOException;

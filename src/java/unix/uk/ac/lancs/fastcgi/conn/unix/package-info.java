@@ -35,6 +35,8 @@
  */
 
 /**
- * Provides connection supplies working with Unix-domain sockets.
+ * Provides connection supplies working with Unix-domain sockets based
+ * on <a href=
+ * "https://github.com/kohlschutter/junixsocket"><samp>junixsocket</samp></a>.
  */
 package uk.ac.lancs.fastcgi.conn.unix;
