@@ -34,15 +34,15 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-package uk.ac.lancs.fastcgi.conn.unix;
+package uk.ac.lancs.fastcgi.transport.junixsocket;
 
 import java.io.FileDescriptor;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Collection;
 import org.newsclub.net.unix.AFUNIXServerSocket;
-import uk.ac.lancs.fastcgi.conn.ConnectionFactory;
-import uk.ac.lancs.fastcgi.conn.ConnectionSupply;
+import uk.ac.lancs.fastcgi.transport.ConnectionFactory;
+import uk.ac.lancs.fastcgi.transport.ConnectionSupply;
 import uk.ac.lancs.fastcgi.proto.InvocationVariables;
 import uk.ac.lancs.scc.jardeps.Service;
 

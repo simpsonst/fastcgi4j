@@ -34,28 +34,41 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
+package uk.ac.lancs.fastcgi.transport.junixsocket;
+
+import java.io.IOException;
+import org.newsclub.net.unix.AFUNIXServerSocket;
+import org.newsclub.net.unix.AFUNIXSocket;
+import uk.ac.lancs.fastcgi.transport.Connection;
+import uk.ac.lancs.fastcgi.transport.ConnectionSupply;
+
 /**
- * Defines how an application receives connections from the server. The
- * aim is to provide a {@link ConnectionSupply} according to the FastCGI
- * initial process state. This can then be used to complete an
- * {@link uk.ac.lancs.fastcgi.engine.Engine} which processes
- * connections.
- * 
- * <p>
- * This package provides the framework for locating implementations
- * using {@link ConnectionSupply#get()}, using the
- * {@link java.util.ServiceLoader} mechanism, but provides no
- * implementations of its own. Implementations of
- * {@link ConnectionFactory} should examine the environment and yield a
- * non-{@code null} result only if they recognize it. The first factory
- * to do so, in the arbitrary order provided by the service loader,
- * &lsquo;wins&rsquo;.
+ * Supplies connections by accepting from a Unix-domain server socket.
  * 
  * @author simpsons
- * 
- * @see <a href=
- * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S2">FastCGI
- * Specification &mdash; Initial Process State</a>
  */
-package uk.ac.lancs.fastcgi.conn;
+class ForkedUnixConnectionSupply implements ConnectionSupply {
+    private final AFUNIXServerSocket serverSocket;
 
+    /**
+     * Create a connection supply from a Unix-domain server socket.
+     * 
+     * @param serverSocket the server socket
+     */
+    public ForkedUnixConnectionSupply(AFUNIXServerSocket serverSocket) {
+        this.serverSocket = serverSocket;
+    }
+
+    /**
+     * {@inheritDoc}
+     * 
+     * @default This implementation invokes
+     * {@link AFUNIXServerSocket#accept()} to produce a
+     * {@link ForkedUnixConnection}.
+     */
+    @Override
+    public Connection nextConnection() throws IOException {
+        AFUNIXSocket socket = serverSocket.accept();
+        return new ForkedUnixConnection(socket);
+    }
+}

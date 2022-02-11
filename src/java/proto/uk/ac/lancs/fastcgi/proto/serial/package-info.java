@@ -35,8 +35,9 @@
  */
 
 /**
- * Provides connection supplies working with Unix-domain sockets based
- * on <a href=
- * "https://github.com/kohlschutter/junixsocket"><samp>junixsocket</samp></a>.
+ * Contains classes for serializing records to the server from the
+ * application, and deserializing records from the server to the
+ * application. In other words, these classes are used by a FastCGI
+ * application to talk to the server.
  */
-package uk.ac.lancs.fastcgi.conn.unix;
+package uk.ac.lancs.fastcgi.proto.serial;

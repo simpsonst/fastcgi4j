@@ -34,7 +34,7 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-package uk.ac.lancs.fastcgi.conn;
+package uk.ac.lancs.fastcgi.transport;
 
 import java.io.IOException;
 import java.util.ServiceLoader;

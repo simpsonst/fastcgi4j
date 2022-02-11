@@ -69,8 +69,8 @@ import uk.ac.lancs.fastcgi.OverloadException;
 import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.ResponderContext;
 import uk.ac.lancs.fastcgi.SessionContext;
-import uk.ac.lancs.fastcgi.conn.Connection;
-import uk.ac.lancs.fastcgi.conn.ConnectionSupply;
+import uk.ac.lancs.fastcgi.transport.Connection;
+import uk.ac.lancs.fastcgi.transport.ConnectionSupply;
 import uk.ac.lancs.fastcgi.engine.Engine;
 import uk.ac.lancs.fastcgi.engine.util.CachePipePool;
 import uk.ac.lancs.fastcgi.engine.util.Pipe;
@@ -78,9 +78,9 @@ import uk.ac.lancs.fastcgi.proto.ApplicationVariables;
 import uk.ac.lancs.fastcgi.proto.ProtocolStatuses;
 import uk.ac.lancs.fastcgi.proto.RequestFlags;
 import uk.ac.lancs.fastcgi.proto.RoleTypes;
-import uk.ac.lancs.fastcgi.proto.app.RecordHandler;
-import uk.ac.lancs.fastcgi.proto.app.RecordReader;
-import uk.ac.lancs.fastcgi.proto.app.RecordWriter;
+import uk.ac.lancs.fastcgi.proto.serial.RecordHandler;
+import uk.ac.lancs.fastcgi.proto.serial.RecordReader;
+import uk.ac.lancs.fastcgi.proto.serial.RecordWriter;
 
 /**
  * Handles FastCGI records and delivers to all role types, supporting

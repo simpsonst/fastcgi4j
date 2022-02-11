@@ -40,9 +40,9 @@
  * 
  * <p>
  * An application should first obtain a
- * {@link uk.ac.lancs.fastcgi.conn.ConnectionSupply}. If this fails with
- * {@link UnsupportedOperationException}, then the application is not
- * being invoked using FastCGI, or not using a supported transport.
+ * {@link uk.ac.lancs.fastcgi.transport.ConnectionSupply}. If this fails
+ * with {@link UnsupportedOperationException}, then the application is
+ * not being invoked using FastCGI, or not using a supported transport.
  * 
  * <p>
  * The application should then instantiate a role implementation, such

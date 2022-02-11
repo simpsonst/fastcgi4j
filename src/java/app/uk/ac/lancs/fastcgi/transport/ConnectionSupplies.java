@@ -34,41 +34,21 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-package uk.ac.lancs.fastcgi.conn.unix;
+package uk.ac.lancs.fastcgi.transport;
 
-import java.io.IOException;
-import org.newsclub.net.unix.AFUNIXServerSocket;
-import org.newsclub.net.unix.AFUNIXSocket;
-import uk.ac.lancs.fastcgi.conn.Connection;
-import uk.ac.lancs.fastcgi.conn.ConnectionSupply;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Supplies connections by accepting from a Unix-domain server socket.
+ * Holds static resources for this package.
  * 
  * @author simpsons
  */
-class ForkedUnixConnectionSupply implements ConnectionSupply {
-    private final AFUNIXServerSocket serverSocket;
-
+final class ConnectionSupplies {
     /**
-     * Create a connection supply from a Unix-domain server socket.
-     * 
-     * @param serverSocket the server socket
+     * Provides lazy initialization of per-class-loader connection
+     * supplies.
      */
-    public ForkedUnixConnectionSupply(AFUNIXServerSocket serverSocket) {
-        this.serverSocket = serverSocket;
-    }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @default This implementation invokes
-     * {@link AFUNIXServerSocket#accept()} to produce a
-     * {@link ForkedUnixConnection}.
-     */
-    @Override
-    public Connection nextConnection() throws IOException {
-        AFUNIXSocket socket = serverSocket.accept();
-        return new ForkedUnixConnection(socket);
-    }
+    static final Map<ClassLoader, ConnectionSupply> supplies =
+        new ConcurrentHashMap<>();
 }

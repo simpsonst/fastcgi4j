@@ -34,40 +34,38 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-package uk.ac.lancs.fastcgi.conn;
+package uk.ac.lancs.fastcgi.transport.junixsocket;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import org.newsclub.net.unix.AFUNIXSocket;
+import uk.ac.lancs.fastcgi.transport.Connection;
 
 /**
- * Provides bidirectional byte-stream communication with the server.
+ * Provides a FastCGI connection backed by a Unix-domain socket.
  * 
  * @author simpsons
  */
-public interface Connection {
-    /**
-     * Get the stream of bytes from the server.
-     * 
-     * @return the stream of bytes from the server
-     * 
-     * @throws IOException if an I/O error occurs
-     */
-    InputStream getInput() throws IOException;
+class ForkedUnixConnection implements Connection {
+    private final AFUNIXSocket socket;
 
-    /**
-     * Get the stream of bytes to the server.
-     * 
-     * @return the stream of bytes to the server
-     * 
-     * @throws IOException if an I/O error occurs
-     */
-    OutputStream getOutput() throws IOException;
+    public ForkedUnixConnection(AFUNIXSocket socket) {
+        this.socket = socket;
+    }
 
-    /**
-     * Close the connection.
-     * 
-     * @throws IOException if an I/O error occurs
-     */
-    void close() throws IOException;
+    @Override
+    public InputStream getInput() throws IOException {
+        return socket.getInputStream();
+    }
+
+    @Override
+    public OutputStream getOutput() throws IOException {
+        return socket.getOutputStream();
+    }
+
+    @Override
+    public void close() throws IOException {
+        socket.close();
+    }
 }

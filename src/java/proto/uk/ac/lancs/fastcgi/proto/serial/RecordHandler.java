@@ -34,7 +34,7 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-package uk.ac.lancs.fastcgi.proto.app;
+package uk.ac.lancs.fastcgi.proto.serial;
 
 import java.io.IOException;
 import java.io.InputStream;

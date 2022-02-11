@@ -34,38 +34,31 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-package uk.ac.lancs.fastcgi.conn.unix;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import org.newsclub.net.unix.AFUNIXSocket;
-import uk.ac.lancs.fastcgi.conn.Connection;
+package uk.ac.lancs.fastcgi.transport;
 
 /**
- * Provides a FastCGI connection backed by a Unix-domain socket.
+ * Determines whether FastCGI connections are arriving over a specific
+ * mechanism, and presents them to the application. Implementations
+ * should read FastCGI-defined environment variables or look at file
+ * descriptor 0 to determine how to receive FastCGI connections. An
+ * implementation should need only test for one mechanism, returning
+ * {@code null} if not recognized. Implementations should be declared as
+ * services for this interface in line with
+ * {@link java.util.ServiceLoader}, so they can be enabled simply by
+ * adding to the class path.
+ * 
+ * @see <a href=
+ * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S2">FastCGI
+ * Specification &mdash; Initial Process State</a>
  * 
  * @author simpsons
  */
-class ForkedUnixConnection implements Connection {
-    private final AFUNIXSocket socket;
-
-    public ForkedUnixConnection(AFUNIXSocket socket) {
-        this.socket = socket;
-    }
-
-    @Override
-    public InputStream getInput() throws IOException {
-        return socket.getInputStream();
-    }
-
-    @Override
-    public OutputStream getOutput() throws IOException {
-        return socket.getOutputStream();
-    }
-
-    @Override
-    public void close() throws IOException {
-        socket.close();
-    }
+public interface ConnectionFactory {
+    /**
+     * Get a supply of connections that a FastCGI engine can use.
+     * 
+     * @return a supply of connections; or {@code null} if none can be
+     * provided by the implementation
+     */
+    ConnectionSupply getConnectionSupply();
 }

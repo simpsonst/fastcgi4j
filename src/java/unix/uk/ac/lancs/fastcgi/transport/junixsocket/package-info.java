@@ -34,21 +34,9 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-package uk.ac.lancs.fastcgi.conn;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 /**
- * Holds static resources for this package.
- * 
- * @author simpsons
+ * Provides connection supplies working with Unix-domain sockets based
+ * on <a href=
+ * "https://github.com/kohlschutter/junixsocket"><samp>junixsocket</samp></a>.
  */
-final class ConnectionSupplies {
-    /**
-     * Provides lazy initialization of per-class-loader connection
-     * supplies.
-     */
-    static final Map<ClassLoader, ConnectionSupply> supplies =
-        new ConcurrentHashMap<>();
-}
+package uk.ac.lancs.fastcgi.transport.junixsocket;
