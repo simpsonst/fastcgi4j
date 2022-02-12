@@ -34,21 +34,10 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-package uk.ac.lancs.fastcgi;
-
-import java.io.InputStream;
-
 /**
- * Presents the context of a FastCGI session to an application in a role
- * which receives a request body.
- *
+ * Provides the interfaces that an application implements to process a
+ * FastCGI session.
+ * 
  * @author simpsons
  */
-public interface Requestable {
-    /**
-     * Get the stream for reading the request body.
-     * 
-     * @return the input stream providing the request body
-     */
-    InputStream in();
-}
+package uk.ac.lancs.fastcgi.role;

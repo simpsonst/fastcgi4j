@@ -38,9 +38,9 @@ package uk.ac.lancs.fastcgi.engine.std;
 
 import java.nio.charset.Charset;
 import java.util.function.Function;
-import uk.ac.lancs.fastcgi.Authorizer;
-import uk.ac.lancs.fastcgi.Filter;
-import uk.ac.lancs.fastcgi.Responder;
+import uk.ac.lancs.fastcgi.role.Authorizer;
+import uk.ac.lancs.fastcgi.role.Filter;
+import uk.ac.lancs.fastcgi.role.Responder;
 import uk.ac.lancs.fastcgi.engine.Attribute;
 import uk.ac.lancs.fastcgi.transport.ConnectionSupply;
 import uk.ac.lancs.fastcgi.engine.Engine;

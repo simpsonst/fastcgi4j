@@ -46,9 +46,9 @@
  * 
  * <p>
  * The application should then instantiate a role implementation, such
- * as {@link uk.ac.lancs.fastcgi.Responder},
- * {@link uk.ac.lancs.fastcgi.Authorizer} or
- * {@link uk.ac.lancs.fastcgi.Filter}. It may provide one of each.
+ * as {@link uk.ac.lancs.fastcgi.role.Responder},
+ * {@link uk.ac.lancs.fastcgi.role.Authorizer} or
+ * {@link uk.ac.lancs.fastcgi.role.Filter}. It may provide one of each.
  * 
  * <p>
  * An engine can be built by specifying various required and optional

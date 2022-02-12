@@ -5,11 +5,37 @@
   switched between Unix- and Internet-domain sockets, or be called by
   a reverse proxy.
 
+  <p>
+    If you're concerned merely with application logic of responding to
+    requests, you only need to concern yourself with {@link
+    uk.ac.lancs.fastcgi.role} and {@link uk.ac.lancs.fastcgi}.  These
+    define the role types and their contexts.
+  </p>
+
+  <p>
+    If you're writing an application, you need classes from {@link
+    uk.ac.lancs.fastcgi.transport} to work out how to receive
+    transport connections from the server.  You'll also need {@link
+    uk.ac.lancs.fastcgi.engine}, whose classes translate between
+    transport connections and your role implementations.  The choice
+    of engine determines what roles you support, and the degree of
+    concurrency permitted.
+  </p>
+
+  <p>
+    Other packages provide implementations of transports and engines,
+    and will likely be of use only to those providing their own
+    implementations.
+  </p>
+
   @see <a href="https://fastcgi-archives.github.io/FastCGI_Specification.html">FastCGI
     Specification</a>
 
-  @see <a href="https://github.com/kohlschutter/junixsocket">junixsocket
-  &mdash; Unix Domain Sockets in Java (AF_UNIX)</a>
+  @see <a href="https://github.com/kohlschutter/junixsocket"><samp>junixsocket</samp>
+    &mdash; Unix Domain Sockets in Java (AF_UNIX)</a> (GitHub)
+
+  @see <a href="https://github.com/simpsonst/fastcgi4j"><samp>fastcgi4j</samp></a>
+  (GitHub)
 
   @title FastCGI for Java
 
@@ -26,6 +52,8 @@
   @group impl Implementations
 
   @package api uk.ac.lancs.fastcgi
+
+  @package api uk.ac.lancs.fastcgi.role
 
   @package api uk.ac.lancs.fastcgi.transport
 

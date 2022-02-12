@@ -48,7 +48,7 @@ import java.io.InputStream;
  * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.4">FastCGI
  * Specification &mdash; Filter</a>
  */
-public interface FilterContext extends Requestable {
+public interface FilterContext extends RequestableContext {
     /**
      * Get the stream for reading the file data.
      * 

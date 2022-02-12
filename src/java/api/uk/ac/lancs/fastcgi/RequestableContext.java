@@ -36,30 +36,19 @@
 
 package uk.ac.lancs.fastcgi;
 
-import java.io.IOException;
+import java.io.InputStream;
 
 /**
- * Responds to complete FastCGI requests.
- * 
+ * Presents the context of a FastCGI session to an application in a role
+ * which receives a request body.
+ *
  * @author simpsons
  */
-public interface Responder {
+public interface RequestableContext {
     /**
-     * Respond to a complete request.
+     * Get the stream for reading the request body.
      * 
-     * @param session the FastCGI session context
-     * 
-     * @throws InterruptedException if the application was interrupted
-     * (usually by the server or the remote client aborting the session)
-     * 
-     * @throws SessionException if the application is temporarily unable
-     * to respond to the request
-     * 
-     * @throws IOException if an I/O error occurs in processing any of
-     * the streams of the session context
-     * 
-     * @throws Exception if something else goes wrong, to be logged by
-     * the library
+     * @return the input stream providing the request body
      */
-    void respond(ResponderContext session) throws Exception;
+    InputStream in();
 }

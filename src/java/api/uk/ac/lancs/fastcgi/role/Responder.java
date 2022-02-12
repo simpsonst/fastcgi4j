@@ -34,9 +34,38 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
+package uk.ac.lancs.fastcgi.role;
+
+import java.io.IOException;
+import uk.ac.lancs.fastcgi.ResponderContext;
+import uk.ac.lancs.fastcgi.SessionException;
+
 /**
- * Supports the definition of roles in FastCGI session.
+ * Responds to complete FastCGI requests.
  * 
  * @author simpsons
+ * 
+ * @see <a href=
+ * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.2">FastCGI
+ * Specification &mdash; Responder</a>
  */
-package uk.ac.lancs.fastcgi;
+public interface Responder {
+    /**
+     * Respond to a complete request.
+     * 
+     * @param session the FastCGI session context
+     * 
+     * @throws InterruptedException if the application was interrupted
+     * (usually by the server or the remote client aborting the session)
+     * 
+     * @throws SessionException if the application is temporarily unable
+     * to respond to the request
+     * 
+     * @throws IOException if an I/O error occurs in processing any of
+     * the streams of the session context
+     * 
+     * @throws Exception if something else goes wrong, to be logged by
+     * the library
+     */
+    void respond(ResponderContext session) throws Exception;
+}

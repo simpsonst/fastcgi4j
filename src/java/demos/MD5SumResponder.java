@@ -38,7 +38,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import uk.ac.lancs.fastcgi.Responder;
+import uk.ac.lancs.fastcgi.role.Responder;
 import uk.ac.lancs.fastcgi.ResponderContext;
 
 /**

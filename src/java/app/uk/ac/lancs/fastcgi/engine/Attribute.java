@@ -38,9 +38,9 @@ package uk.ac.lancs.fastcgi.engine;
 
 import java.util.Map;
 import java.util.function.Supplier;
-import uk.ac.lancs.fastcgi.Authorizer;
-import uk.ac.lancs.fastcgi.Filter;
-import uk.ac.lancs.fastcgi.Responder;
+import uk.ac.lancs.fastcgi.role.Authorizer;
+import uk.ac.lancs.fastcgi.role.Filter;
+import uk.ac.lancs.fastcgi.role.Responder;
 
 /**
  * Identifies a typed attribute that an engine is required or preferred

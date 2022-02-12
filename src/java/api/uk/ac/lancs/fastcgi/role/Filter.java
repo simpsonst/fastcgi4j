@@ -15,20 +15,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package uk.ac.lancs.fastcgi;
+package uk.ac.lancs.fastcgi.role;
 
 import java.io.IOException;
+import uk.ac.lancs.fastcgi.FilterContext;
+import uk.ac.lancs.fastcgi.SessionException;
 
 /**
- * Responds as an authorizer to FastCGI requests.
+ * Augments a session by post-processing a partial response.
  * 
  * @author simpsons
+ * 
+ * @see <a href=
+ * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.4">FastCGI
+ * Specification &mdash; Filter</a>
  */
-public interface Authorizer {
+public interface Filter {
     /**
-     * Determine whether a session is authorized.
+     * Filter a session.
      * 
-     * @param session the session to check
+     * @param session the FastCGI session context
      * 
      * @throws InterruptedException if the application was interrupted
      * (usually by the server or the remote client aborting the session)
@@ -42,5 +48,5 @@ public interface Authorizer {
      * @throws Exception if something else goes wrong, to be logged by
      * the library
      */
-    void authorize(AuthorizerContext session) throws Exception;
+    void filter(FilterContext session) throws Exception;
 }
