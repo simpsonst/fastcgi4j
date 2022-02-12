@@ -103,7 +103,11 @@ public final class CachePipePool implements PipePool {
      */
     public static final int MEM_CHUNK_SIZE = 1024;
 
-    private static final String TMPDIR_SYSPROP = "java.io.tmpdir";
+    /**
+     * The {@linkplain System#getProperties() system property} whose
+     * value is the default directory for chunk files
+     */
+    public static final String TMPDIR_SYSPROP = "java.io.tmpdir";
 
     /**
      * Start building a pool.
@@ -135,7 +139,7 @@ public final class CachePipePool implements PipePool {
         /**
          * Set the directory for creating temporary files. The default
          * is specified by the {@linkplain System#getProperties() system
-         * property} {@value #TMPDIR_SYSPROP}.
+         * property} named by {@link #TMPDIR_SYSPROP}.
          * 
          * @param dir the new directory
          * 
@@ -150,7 +154,8 @@ public final class CachePipePool implements PipePool {
         }
 
         /**
-         * Set the prefix and suffix of chunk files.
+         * Set the prefix and suffix of chunk files. The defaults are
+         * defined by {@link #PREFIX} and {@link #SUFFIX}.
          * 
          * @param prefix the prefix of all chunk files
          * 
@@ -172,7 +177,7 @@ public final class CachePipePool implements PipePool {
          * Set the RAM threshold. The pool keeps track of the number of
          * RAM chunks currently in use. While the number of bytes used
          * by them exceeds this threshold, file chunks will be created
-         * instead.
+         * instead. The default is given by {@link #RAM_THRESHOLD}.
          * 
          * @param ramThreshold the RAM threshold in bytes
          * 
@@ -191,7 +196,7 @@ public final class CachePipePool implements PipePool {
         /**
          * Set the maximum size of file chunks. When a chunk file has
          * this many bytes written to it, a new chunk is created and
-         * used instead.
+         * used instead. The default is given by {@link #MAX_FILE_SIZE}.
          * 
          * @param maxFileSize the chunk file size in bytes
          * 
@@ -209,7 +214,8 @@ public final class CachePipePool implements PipePool {
 
         /**
          * Set the size of RAM chunks. Each new chunk keeps a buffer no
-         * bigger than this.
+         * bigger than this. The default is given by
+         * {@link #MEM_CHUNK_SIZE}.
          * 
          * @param memChunkSize the RAM chunk size
          * 
