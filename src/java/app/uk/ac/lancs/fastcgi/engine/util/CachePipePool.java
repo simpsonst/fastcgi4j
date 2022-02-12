@@ -57,7 +57,7 @@ import java.util.logging.Logger;
  *
  * @author simpsons
  */
-public final class CachePipePool {
+public final class CachePipePool implements PipePool {
     private final Path dir;
 
     private final String prefix;
@@ -280,11 +280,7 @@ public final class CachePipePool {
             ref.action.run();
     }
 
-    /**
-     * Create a new pipe.
-     * 
-     * @return the new pipe
-     */
+    @Override
     public Pipe newPipe() {
         final QueuedEnumeration<InputStream> queue = new QueuedEnumeration<>();
         final SequenceInputStream inputStream = new SequenceInputStream(queue);

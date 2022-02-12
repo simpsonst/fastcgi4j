@@ -34,23 +34,18 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-/**
- * Provides utilities to FastCGI engines.
- * 
- * <ul>
- * 
- * <li>{@link CachePipePool} supports an engine that permits multiple
- * concurrent sessions on a single transport connection. Such an engine
- * must consume the content of a
- * {@link uk.ac.lancs.fastcgi.proto.RecordTypes#STDIN} or
- * {@link uk.ac.lancs.fastcgi.proto.RecordTypes#DATA} record as soon as
- * it arrives, whether the application is ready to consume it or not.
- * Otherwise, the engine will not be able to receive the next record,
- * which could be for a different session. This class allows the engine
- * to deposit the content in a cache, which the application can read
- * from independently.
- * 
- * </ul>
- */
 package uk.ac.lancs.fastcgi.engine.util;
 
+/**
+ * Provides pipes on demand with a common resource-usage policy.
+ *
+ * @author simpsons
+ */
+public interface PipePool {
+    /**
+     * Create a new pipe.
+     *
+     * @return the new pipe
+     */
+    Pipe newPipe();
+}
