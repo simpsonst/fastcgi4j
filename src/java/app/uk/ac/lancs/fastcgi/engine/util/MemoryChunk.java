@@ -105,7 +105,6 @@ class MemoryChunk implements Chunk {
     @Override
     public synchronized void complete() throws IOException {
         complete = true;
-        // System.err.printf("completed %s%n", this);
         notify();
     }
 
@@ -137,7 +136,6 @@ class MemoryChunk implements Chunk {
 
     synchronized int read(byte[] b, int off, int len) throws IOException {
         check();
-        // System.err.printf("reading from %s%n", this);
         try {
             while (!complete && reason == null && readPos == writePos) {
                 try {
