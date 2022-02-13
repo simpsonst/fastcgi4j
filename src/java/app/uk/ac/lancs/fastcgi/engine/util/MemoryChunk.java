@@ -64,73 +64,100 @@ class MemoryChunk implements Chunk {
 
     private Throwable reason = null;
 
+    private void check() {
+        assert readPos <= writePos;
+        assert readPos >= 0;
+        assert readPos <= array.length;
+        assert writePos >= 0;
+        assert writePos <= array.length;
+    }
+
     @Override
-    public int write(byte[] buf, int off, int len) throws IOException {
-        synchronized (this) {
-            if (len < array.length - writePos) {
-                System.arraycopy(buf, off, array, writePos, len);
-                writePos += len;
-                memoryUsage.addAndGet(len);
-                notify();
-                return len;
+    public synchronized int write(byte[] buf, int off, int len)
+        throws IOException {
+        check();
+        try {
+            final int rem = array.length - writePos;
+            final int amount;
+            if (len > rem) {
+                /* We don't have enough space in our buffer. Try
+                 * shifting the current content to the start of the
+                 * buffer. */
+                System.arraycopy(array, readPos, array, 0, writePos - readPos);
+                writePos -= readPos;
+                readPos = 0;
+                amount = Integer.min(len, array.length - writePos);
+            } else {
+                /* Just use what we have left. */
+                amount = Integer.min(len, rem);
             }
 
-            System.arraycopy(array, readPos, array, 0, writePos - readPos);
-            writePos -= readPos;
-            readPos = 0;
-
-            int amount = Integer.min(len, array.length - writePos);
             System.arraycopy(buf, off, array, writePos, amount);
             writePos += amount;
             memoryUsage.addAndGet(amount);
             notify();
             return amount;
+        } finally {
+            check();
         }
     }
 
     @Override
     public synchronized void complete() throws IOException {
         complete = true;
+        // System.err.printf("completed %s%n", this);
         notify();
     }
 
-    public synchronized void close() throws IOException {
+    synchronized void close() throws IOException {
         array = null;
     }
 
-    public synchronized int available() throws IOException {
+    synchronized int available() throws IOException {
         return writePos - readPos;
     }
 
-    public synchronized int read() throws IOException {
-        while (!complete && reason == null && readPos == writePos) {
-            try {
-                wait();
-            } catch (InterruptedException ex) {
-                throw new InterruptedIOException();
+    synchronized int read() throws IOException {
+        check();
+        try {
+            while (!complete && reason == null && readPos == writePos) {
+                try {
+                    wait();
+                } catch (InterruptedException ex) {
+                    throw new InterruptedIOException();
+                }
             }
+            if (reason != null) throw new StreamAbortedException(reason);
+            if (readPos == writePos) return -1;
+            return array[readPos++] & 0xff;
+        } finally {
+            check();
         }
-        if (reason != null) throw new StreamAbortedException(reason);
-        if (readPos == writePos) return -1;
-        return array[readPos++] & 0xff;
     }
 
-    public synchronized int read(byte[] b, int off, int len)
-        throws IOException {
-        while (!complete && reason == null && readPos == writePos) {
-            try {
-                wait();
-            } catch (InterruptedException ex) {
-                throw new InterruptedIOException();
+    synchronized int read(byte[] b, int off, int len) throws IOException {
+        check();
+        // System.err.printf("reading from %s%n", this);
+        try {
+            while (!complete && reason == null && readPos == writePos) {
+                try {
+                    wait();
+                } catch (InterruptedException ex) {
+                    throw new InterruptedIOException();
+                }
             }
+            if (reason != null) throw new StreamAbortedException(reason);
+            if (readPos == writePos) return -1;
+            int amount = Integer.min(len, writePos - readPos);
+            if (amount == 0) return 0;
+            assert amount > 0;
+            System.arraycopy(array, readPos, b, off, amount);
+            readPos += amount;
+            memoryUsage.addAndGet(-amount);
+            return amount;
+        } finally {
+            check();
         }
-        if (reason != null) throw new StreamAbortedException(reason);
-        if (readPos == writePos) return -1;
-        int amount = Integer.min(len, writePos - readPos);
-        System.arraycopy(array, readPos, b, off, amount);
-        readPos += amount;
-        memoryUsage.addAndGet(-amount);
-        return amount;
     }
 
     @Override

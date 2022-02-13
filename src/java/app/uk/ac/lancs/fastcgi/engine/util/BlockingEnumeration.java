@@ -50,7 +50,7 @@ import java.util.Objects;
  * 
  * @author simpsons
  */
-final class QueuedEnumeration<E> implements Enumeration<E> {
+final class BlockingEnumeration<E> implements Enumeration<E> {
     private final List<E> queue = new ArrayList<>();
 
     private Exception closer = null;
@@ -70,9 +70,9 @@ final class QueuedEnumeration<E> implements Enumeration<E> {
 
     private boolean hasMoreElementsInternal() {
         assert Thread.holdsLock(this);
-        boolean r = false;
+        boolean empty = true;
         boolean interrupted = false;
-        while (closer == null && (r = queue.isEmpty())) {
+        while ((empty = queue.isEmpty()) && closer == null) {
             try {
                 wait();
             } catch (InterruptedException ex) {
@@ -80,7 +80,7 @@ final class QueuedEnumeration<E> implements Enumeration<E> {
             }
         }
         if (interrupted) Thread.currentThread().interrupt();
-        return r;
+        return !empty;
     }
 
     /**
@@ -97,7 +97,9 @@ final class QueuedEnumeration<E> implements Enumeration<E> {
     @Override
     public synchronized E nextElement() {
         if (!hasMoreElementsInternal()) throw new NoSuchElementException();
-        return queue.remove(0);
+        E result = queue.remove(0);
+        System.err.printf("served %s%n", result);
+        return result;
     }
 
     /**

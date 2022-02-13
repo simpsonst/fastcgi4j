@@ -68,13 +68,14 @@ class FileChunk implements Chunk {
     @Override
     public synchronized int write(byte[] buf, int off, int len)
         throws IOException {
-        if (file == null) return len;
         long remaining = maxFileSize - writePos;
         if (remaining == 0) return 0;
         int amount = (int) Long.min(remaining, len);
         file.seek(writePos);
         file.write(buf, off, amount);
+        long exp = writePos + amount;
         writePos = file.getFilePointer();
+        assert writePos == exp;
         notify();
         return amount;
     }
@@ -85,7 +86,7 @@ class FileChunk implements Chunk {
         notify();
     }
 
-    public synchronized int read() throws IOException {
+    synchronized int read() throws IOException {
         while (!complete && reason == null && readPos == writePos) {
             try {
                 wait();
@@ -101,16 +102,15 @@ class FileChunk implements Chunk {
         return r;
     }
 
-    public synchronized void close() throws IOException {
+    synchronized void close() throws IOException {
         file.close();
     }
 
-    public synchronized int available() throws IOException {
+    synchronized int available() throws IOException {
         return (int) Long.max(writePos - readPos, Integer.MAX_VALUE);
     }
 
-    public synchronized int read(byte[] b, int off, int len)
-        throws IOException {
+    synchronized int read(byte[] b, int off, int len) throws IOException {
         while (!complete && reason == null && readPos == writePos) {
             try {
                 wait();
@@ -121,6 +121,7 @@ class FileChunk implements Chunk {
         if (reason != null) throw new StreamAbortedException(reason);
         if (readPos == writePos) return -1;
         int amount = (int) Long.min(len, writePos - readPos);
+        file.seek(readPos);
         file.readFully(b, off, amount);
         readPos += amount;
         return amount;

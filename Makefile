@@ -35,6 +35,8 @@ jars += $(SELECTED_JARS)
 jars += fastcgi4j_demos
 trees_fastcgi4j_demos += demos
 
+jars += tests
+
 roots_api += $(found_api)
 roots_app += $(found_app)
 deps_app += api
@@ -49,6 +51,9 @@ deps_unix += proto
 roots_demos += $(found_demos)
 deps_demos += api
 deps_demos += app
+roots_tests += $(found_tests)
+deps_tests += api
+deps_tests += app
 
 include jardeps.mk
 -include jardeps-install.mk
@@ -85,3 +90,12 @@ tidy::
 	@$(FIND) . -name "*~" -delete
 
 clean:: tidy
+
+test_suite += uk.ac.lancs.fastcgi.engine.util.TestCachePipePool
+
+jtests: $(jars:%=$(JARDEPS_OUTDIR)/%.jar)
+	@for class in $(test_suite) ; do \
+	  $(PRINTF) 'Testing %s\n' "$$class"; \
+	  $(JAVA) -ea -cp $(subst $(jardeps_space),:,$(jars:%=$(JARDEPS_OUTDIR)/%.jar):$(CLASSPATH)) \
+	  junit.textui.TestRunner $${class} ; \
+	done

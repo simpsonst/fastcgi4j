@@ -40,7 +40,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
-import java.io.SequenceInputStream;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.nio.file.Files;
@@ -288,95 +287,127 @@ public final class CachePipePool implements PipePool {
 
     @Override
     public Pipe newPipe() {
-        final QueuedEnumeration<InputStream> queue = new QueuedEnumeration<>();
-        final SequenceInputStream inputStream = new SequenceInputStream(queue);
+        return new MyPipe();
+    }
 
-        return new Pipe() {
-            private Chunk lastChunk;
+    private class MyPipe implements Pipe {
+        // final BlockingEnumeration<InputStream> queue;
 
-            private Chunk getLastChunk() throws IOException {
-                if (lastChunk != null) return lastChunk;
-                if (memoryUsage.get() >= ramThreshold) {
-                    /* Create a temporary random-access file. */
-                    Path path = Files.createTempFile(dir, prefix, suffix);
-                    RandomAccessFile file =
-                        new RandomAccessFile(path.toFile(), "rw");
+        final LazyAbortableSequenceInputStream sequence;
 
-                    /* When the file handle is garbage-collected, delete
-                     * the file. */
-                    path.toFile().deleteOnExit();
-                    new ActionReference<RandomAccessFile>(file, () -> {
-                        try {
-                            Files.deleteIfExists(path);
-                        } catch (IOException ex) {
-                            Logger.getLogger(CachePipePool.class.getName())
-                                .log(Level.SEVERE, null, ex);
-                        }
-                    });
+        public MyPipe() {
+            /* Create an enumeration initially with one empty input
+             * stream. When passed to SequenceInputStream, it will be
+             * called straight away, and would block if the enumeration
+             * was empty. */
+            // queue = new BlockingEnumeration<>();
+            // queue.submit(new EmptyInputStream());
+            // inputStream = new SequenceInputStream(queue);
+            sequence = new LazyAbortableSequenceInputStream(false);
+        }
 
-                    /* Get rid of old files now. */
-                    clearActions();
+        private Chunk lastChunk;
 
-                    lastChunk = new FileChunk(file, maxFileSize);
-                } else {
-                    lastChunk = new MemoryChunk(memChunkSize, memoryUsage);
-                }
-                queue.submit(lastChunk.getStream());
-                return lastChunk;
-            }
+        private Throwable abortedReason;
 
-            private void clearLastChunk() throws IOException {
-                lastChunk.complete();
-                lastChunk = null;
-            }
+        private boolean closed;
 
-            private final OutputStream outputStream = new OutputStream() {
-                @Override
-                public void close() throws IOException {
-                    clearLastChunk();
-                    queue.complete();
-                }
+        private Chunk getLastChunk() throws IOException {
+            if (lastChunk != null) return lastChunk;
+            if (memoryUsage.get() >= ramThreshold) {
+                /* Create a temporary random-access file. */
+                Path path = Files.createTempFile(dir, prefix, suffix);
+                RandomAccessFile file =
+                    new RandomAccessFile(path.toFile(), "rw");
 
-                @Override
-                public void write(byte[] b, int off, int len)
-                    throws IOException {
-                    while (len > 0) {
-                        Chunk chunk = getLastChunk();
-                        int done = chunk.write(b, off, len);
-                        if (done == 0) clearLastChunk();
-                        off += done;
-                        len -= done;
+                /* When the file handle is garbage-collected, delete the
+                 * file. */
+                path.toFile().deleteOnExit();
+                new ActionReference<RandomAccessFile>(file, () -> {
+                    try {
+                        Files.deleteIfExists(path);
+                    } catch (IOException ex) {
+                        Logger.getLogger(CachePipePool.class.getName())
+                            .log(Level.SEVERE, null, ex);
                     }
-                }
+                });
 
-                private final byte[] buf = new byte[1];
+                /* Get rid of old files now. */
+                clearActions();
 
-                @Override
-                public void write(int b) throws IOException {
-                    buf[0] = (byte) b;
-                    write(buf, 0, 1);
-                }
-            };
+                lastChunk = new FileChunk(file, maxFileSize);
+            } else {
+                lastChunk = new MemoryChunk(memChunkSize, memoryUsage);
+            }
+            sequence.submit(lastChunk.getStream());
+            return lastChunk;
+        }
 
+        private void clearLastChunk() throws IOException {
+            lastChunk.complete();
+            lastChunk = null;
+        }
+
+        private final OutputStream outputStream = new OutputStream() {
             @Override
-            public OutputStream getOutputStream() {
-                return outputStream;
+            public void flush() throws IOException {
+                if (abortedReason != null)
+                    throw new IOException("stream aborted", abortedReason);
+                if (closed) throw new IOException("closed");
             }
 
             @Override
-            public void abort(Throwable reason) {
-                if (lastChunk == null) {
-                    lastChunk = new MemoryChunk(1, memoryUsage);
-                    queue.submit(lastChunk.getStream());
-                    queue.complete();
-                }
-                lastChunk.abort(reason);
+            public void close() throws IOException {
+                if (abortedReason != null) return;
+                if (closed) return;
+                closed = true;
+                if (lastChunk != null) clearLastChunk();
+                sequence.complete();
             }
 
             @Override
-            public InputStream getInputStream() {
-                return inputStream;
+            public void write(byte[] b, int off, int len) throws IOException {
+                if (abortedReason != null)
+                    throw new IOException("stream aborted", abortedReason);
+                if (closed) throw new IOException("closed");
+                while (len > 0) {
+                    Chunk chunk = getLastChunk();
+                    int done = chunk.write(b, off, len);
+                    if (done == 0) clearLastChunk();
+                    off += done;
+                    len -= done;
+                }
+            }
+
+            private final byte[] buf = new byte[1];
+
+            @Override
+            public void write(int b) throws IOException {
+                if (abortedReason != null)
+                    throw new IOException("stream aborted", abortedReason);
+                if (closed) throw new IOException("closed");
+                buf[0] = (byte) b;
+                write(buf, 0, 1);
             }
         };
+
+        @Override
+        public OutputStream getOutputStream() {
+            return outputStream;
+        }
+
+        @Override
+        public void abort(Throwable reason) {
+            if (closed) return;
+            if (abortedReason != null) return;
+            abortedReason = reason;
+            sequence.abort(reason);
+            if (lastChunk != null) lastChunk.abort(reason);
+        }
+
+        @Override
+        public InputStream getInputStream() {
+            return sequence;
+        }
     }
 }
