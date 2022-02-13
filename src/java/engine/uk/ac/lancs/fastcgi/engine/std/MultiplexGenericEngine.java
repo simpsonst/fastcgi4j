@@ -61,16 +61,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import uk.ac.lancs.fastcgi.role.Authorizer;
 import uk.ac.lancs.fastcgi.AuthorizerContext;
-import uk.ac.lancs.fastcgi.role.Filter;
 import uk.ac.lancs.fastcgi.FilterContext;
 import uk.ac.lancs.fastcgi.OverloadException;
-import uk.ac.lancs.fastcgi.role.Responder;
 import uk.ac.lancs.fastcgi.ResponderContext;
+import uk.ac.lancs.fastcgi.SessionAbortedException;
 import uk.ac.lancs.fastcgi.SessionContext;
-import uk.ac.lancs.fastcgi.transport.Connection;
-import uk.ac.lancs.fastcgi.transport.ConnectionSupply;
 import uk.ac.lancs.fastcgi.engine.Engine;
 import uk.ac.lancs.fastcgi.engine.util.CachePipePool;
 import uk.ac.lancs.fastcgi.engine.util.Pipe;
@@ -81,6 +77,11 @@ import uk.ac.lancs.fastcgi.proto.RoleTypes;
 import uk.ac.lancs.fastcgi.proto.serial.RecordHandler;
 import uk.ac.lancs.fastcgi.proto.serial.RecordReader;
 import uk.ac.lancs.fastcgi.proto.serial.RecordWriter;
+import uk.ac.lancs.fastcgi.role.Authorizer;
+import uk.ac.lancs.fastcgi.role.Filter;
+import uk.ac.lancs.fastcgi.role.Responder;
+import uk.ac.lancs.fastcgi.transport.Connection;
+import uk.ac.lancs.fastcgi.transport.ConnectionSupply;
 
 /**
  * Handles FastCGI records and delivers to all role types, supporting
@@ -821,8 +822,10 @@ class MultiplexGenericEngine implements Engine {
 
             @Override
             public void abortRequest() throws IOException {
+                SessionAbortedException ex =
+                    new SessionAbortedException("id=" + id);
+                stdinPipe.abort(ex);
                 super.abortRequest();
-                stdinPipe.getOutputStream().close();
             }
 
             @Override
@@ -856,9 +859,11 @@ class MultiplexGenericEngine implements Engine {
 
             @Override
             public void abortRequest() throws IOException {
+                SessionAbortedException ex =
+                    new SessionAbortedException("id=" + id);
+                stdinPipe.abort(ex);
+                dataPipe.abort(ex);
                 super.abortRequest();
-                stdinPipe.getOutputStream().close();
-                dataPipe.getOutputStream().close();
             }
 
             @Override
