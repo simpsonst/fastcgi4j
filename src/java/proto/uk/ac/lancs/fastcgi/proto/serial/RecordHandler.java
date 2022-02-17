@@ -107,7 +107,7 @@ public interface RecordHandler {
 
     /**
      * Receive a stream of standard-input data. The stream must be
-     * consumed before returning.
+     * consumed before returning, if it is to be used at all.
      * 
      * @param id the request id
      * 
@@ -132,7 +132,7 @@ public interface RecordHandler {
 
     /**
      * Receive a stream of extra data. The stream must be consumed
-     * before returning.
+     * before returning, if it is to be used at all.
      * 
      * @param id the request id
      * 
