@@ -36,37 +36,49 @@
 
 package uk.ac.lancs.fastcgi.transport.inet;
 
+import java.io.FileDescriptor;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.Collection;
-import java.util.Set;
-import uk.ac.lancs.fastcgi.transport.Connection;
+import uk.ac.lancs.fastcgi.proto.InvocationVariables;
+import uk.ac.lancs.fastcgi.transport.ConnectionFactory;
 import uk.ac.lancs.fastcgi.transport.ConnectionSupply;
+import uk.ac.lancs.fastcgi.transport.TransportConfigurationException;
+import uk.ac.lancs.scc.jardeps.Service;
 
 /**
- *
+ * Recognizes stand-alone and forked Internet-domain transports. If the
+ * environment variable {@value InvocationVariables#WEB_SERVER_ADDRS} is
+ * not set, the transport is not recognized. If
+ * {@value InvocationVariables#INET_BIND_ADDR} is set, stand-alone mode
+ * is assumed, and a socket is bound to that address. Otherwise,
+ * {@link FileDescriptor#in} is assumed to be an Internet-domain socket,
+ * and the process has been forked by the server.
+ * 
  * @author simpsons
  */
-class ForkedInetConnectionSupply implements ConnectionSupply {
-    private final Collection<InetAddress> allowedPeers;
-
-    private final ServerSocket socket;
-
-    public ForkedInetConnectionSupply(ServerSocket socket,
-                                      Collection<? extends InetAddress> allowedPeers) {
-        this.socket = socket;
-        this.allowedPeers = Set.copyOf(allowedPeers);
-    }
-
+@Service(ConnectionFactory.class)
+public class InetConnectionFactory implements ConnectionFactory {
     @Override
-    public Connection nextConnection() throws IOException {
-        do {
-            Socket sock = socket.accept();
-            InetAddress peer = sock.getInetAddress();
-            if (allowedPeers.contains(peer))
-                return new ForkedInetConnection(sock);
-        } while (true);
+    public ConnectionSupply getConnectionSupply() {
+        try {
+            Collection<InetAddress> allowedPeers =
+                InvocationVariables.getAuthorizedInetPeers();
+            if (allowedPeers == null) return null;
+            InetSocketAddress bindAddress =
+                InvocationVariables.getInetBindAddress();
+            final ServerSocket ss;
+            if (bindAddress == null) {
+                ss = FDServerSocket.newInstance(FileDescriptor.in);
+            } else {
+                ss = new ServerSocket(bindAddress.getPort(), 5,
+                                      bindAddress.getAddress());
+            }
+            return new InetConnectionSupply(ss, allowedPeers);
+        } catch (IOException ex) {
+            throw new TransportConfigurationException(ex);
+        }
     }
 }

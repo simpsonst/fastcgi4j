@@ -36,30 +36,35 @@
 
 package uk.ac.lancs.fastcgi.transport.inet;
 
-import java.io.FileDescriptor;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.util.Collection;
-import uk.ac.lancs.fastcgi.proto.InvocationVariables;
-import uk.ac.lancs.fastcgi.transport.ConnectionFactory;
-import uk.ac.lancs.fastcgi.transport.ConnectionSupply;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
+import uk.ac.lancs.fastcgi.transport.Connection;
 
 /**
  *
  * @author simpsons
  */
-public class ForkedInetConnectionFactory implements ConnectionFactory {
+class InetConnection implements Connection {
+    private final Socket socket;
+
+    public InetConnection(Socket socket) {
+        this.socket = socket;
+    }
+
     @Override
-    public ConnectionSupply getConnectionSupply() {
-        try {
-            Collection<InetAddress> allowedPeers =
-                InvocationVariables.getAuthorizedInetPeers();
-            if (allowedPeers == null) return null;
-            ServerSocket ss = FDServerSocket.newInstance(FileDescriptor.in);
-            return new ForkedInetConnectionSupply(ss, allowedPeers);
-        } catch (IOException ex) {
-            return null;
-        }
+    public InputStream getInput() throws IOException {
+        return socket.getInputStream();
+    }
+
+    @Override
+    public OutputStream getOutput() throws IOException {
+        return socket.getOutputStream();
+    }
+
+    @Override
+    public void close() throws IOException {
+        socket.close();
     }
 }

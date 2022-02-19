@@ -40,10 +40,11 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- *
+ * Yields exactly zero bytes.
+ * 
  * @author simpsons
  */
-public class EmptyInputStream extends InputStream {
+class EmptyInputStream extends InputStream {
     @Override
     public void close() throws IOException {}
 

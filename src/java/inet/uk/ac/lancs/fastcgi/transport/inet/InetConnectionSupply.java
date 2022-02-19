@@ -37,34 +37,36 @@
 package uk.ac.lancs.fastcgi.transport.inet;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Collection;
+import java.util.Set;
 import uk.ac.lancs.fastcgi.transport.Connection;
+import uk.ac.lancs.fastcgi.transport.ConnectionSupply;
 
 /**
  *
  * @author simpsons
  */
-class ForkedInetConnection implements Connection {
-    private final Socket socket;
+class InetConnectionSupply implements ConnectionSupply {
+    private final Collection<InetAddress> allowedPeers;
 
-    public ForkedInetConnection(Socket socket) {
+    private final ServerSocket socket;
+
+    public InetConnectionSupply(ServerSocket socket,
+                                      Collection<? extends InetAddress> allowedPeers) {
         this.socket = socket;
+        this.allowedPeers = Set.copyOf(allowedPeers);
     }
 
     @Override
-    public InputStream getInput() throws IOException {
-        return socket.getInputStream();
-    }
-
-    @Override
-    public OutputStream getOutput() throws IOException {
-        return socket.getOutputStream();
-    }
-
-    @Override
-    public void close() throws IOException {
-        socket.close();
+    public Connection nextConnection() throws IOException {
+        do {
+            Socket sock = socket.accept();
+            InetAddress peer = sock.getInetAddress();
+            if (allowedPeers.contains(peer))
+                return new InetConnection(sock);
+        } while (true);
     }
 }

@@ -37,6 +37,7 @@
 package uk.ac.lancs.fastcgi.proto;
 
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.HashSet;
@@ -59,8 +60,8 @@ public final class InvocationVariables {
     private InvocationVariables() {}
 
     /**
-     * Holds the string identifying IP addresses of legitimate peers.
-     * The value is {@value}.
+     * Specifies the name of the environment variable identifying IP
+     * addresses of legitimate peers. The value is {@value}.
      */
     public static final String WEB_SERVER_ADDRS = "FCGI_WEB_SERVER_ADDRS";
 
@@ -137,5 +138,57 @@ public final class InvocationVariables {
         if (LazyAuthorizedInetPeers.RTE != null)
             throw LazyAuthorizedInetPeers.RTE;
         return LazyAuthorizedInetPeers.CACHE;
+    }
+
+    /**
+     * Specifies the name of the environment variable instructing the
+     * application process to bind to an Internet-domain socket address.
+     * The value is {@value}.
+     */
+    public static final String INET_BIND_ADDR = "FASTCGI4J_INET_BIND";
+
+    private static final String DECIMAL_OCTET =
+        "(?:(?:[12][0-9]|[1-9])?[0-9]|25[0-5])";
+
+    private static final String DECIMAL_IPV4 =
+        "(?:" + DECIMAL_OCTET + "\\.){3}" + DECIMAL_OCTET;
+
+    private static final String HOST_NAME = "(?:)";
+
+    private static final String DOMAIN_NAME =
+        "(?:" + HOST_NAME + "\\.)*" + HOST_NAME;
+
+    private static final Pattern SOCK_ADDR =
+        Pattern.compile("^(\\[[0-9a-fA-F:]+\\]|[-0-9a-zA-Z.]+):([0-9]+)$");
+
+    /**
+     * Get the address that a stand-alone application process should
+     * bind to.
+     * 
+     * @return the address to bind to; or {@code null} if this process
+     * should not be running stand-alone
+     * 
+     * @throws IllegalArgumentException if the bind address does not end
+     * with a colon-delimited port number
+     * 
+     * @throws NumberFormatException if the text after the last colon is
+     * not a decimal integer
+     * 
+     * @throws UnknownHostException if the text before the last colon
+     * cannot be parsed as a host name or IP address
+     */
+    public static InetSocketAddress getInetBindAddress()
+        throws UnknownHostException {
+        String value = System.getenv(INET_BIND_ADDR);
+        if (value == null) return null;
+        int colon = value.lastIndexOf(':');
+        if (colon < 0)
+            throw new IllegalArgumentException("no port in " + value);
+
+        String portText = value.substring(colon + 1);
+        String hostText = value.substring(0, colon);
+        int port = Integer.parseInt(portText);
+        InetAddress host = InetAddress.getByName(hostText);
+        return new InetSocketAddress(host, port);
     }
 }

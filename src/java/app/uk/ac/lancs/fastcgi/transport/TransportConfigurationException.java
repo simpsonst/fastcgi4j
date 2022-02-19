@@ -37,32 +37,64 @@
 package uk.ac.lancs.fastcgi.transport;
 
 /**
- * Determines whether FastCGI connections are arriving over a specific
- * mechanism, and presents them to the application. Implementations
- * should read FastCGI-defined environment variables or look at file
- * descriptor 0 to determine how to receive FastCGI connections. An
- * implementation should need only test for one mechanism, returning
- * {@code null} if not recognized. Implementations should be declared as
- * services for this interface in line with
- * {@link java.util.ServiceLoader}, so they can be enabled simply by
- * adding to the class path.
- * 
- * @see <a href=
- * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S2">FastCGI
- * Specification &mdash; Initial Process State</a>
+ * Indicates that a transport was exclusively identified, but has not
+ * been configured correctly.
  * 
  * @author simpsons
  */
-public interface ConnectionFactory {
+public class TransportConfigurationException extends RuntimeException {
     /**
-     * Get a supply of connections that a FastCGI engine can use.
-     * 
-     * @return a supply of connections; or {@code null} if none can be
-     * provided by the implementation
-     * 
-     * @throws TransportConfigurationException if a supported transport
-     * was positively recognized but cannot be implemented because
-     * configuration and environment are incompatible
+     * Create an exception.
      */
-    ConnectionSupply getConnectionSupply();
+    public TransportConfigurationException() {}
+
+    /**
+     * Create an exception with a detail message.
+     * 
+     * @param message the detail message
+     */
+    public TransportConfigurationException(String message) {
+        super(message);
+    }
+
+    /**
+     * Create an exception with a detail message and a cause.
+     * 
+     * @param message the detail message
+     * 
+     * @param cause the cause of the exception
+     */
+    public TransportConfigurationException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    /**
+     * Create an exception with a cause.
+     * 
+     * @param cause the cause of the exception
+     */
+    public TransportConfigurationException(Throwable cause) {
+        super(cause);
+    }
+
+    /**
+     * Create an exception with a detail message, a cause, suppression
+     * enabled or disabled, and writable stack trace enabled or
+     * disabled.
+     * 
+     * @param message the detail message
+     * 
+     * @param cause the cause; or {@code null} if there was no cause
+     * 
+     * @param enableSuppression whether or not suppression is enabled or
+     * disabled
+     * 
+     * @param writableStackTrace whether or not the stack trace should
+     * be writable
+     */
+    protected TransportConfigurationException(String message, Throwable cause,
+                                              boolean enableSuppression,
+                                              boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
 }

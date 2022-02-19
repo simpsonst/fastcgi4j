@@ -39,11 +39,13 @@ package uk.ac.lancs.fastcgi.transport.junixsocket;
 import java.io.FileDescriptor;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.SocketException;
 import java.util.Collection;
 import org.newsclub.net.unix.AFUNIXServerSocket;
+import uk.ac.lancs.fastcgi.proto.InvocationVariables;
 import uk.ac.lancs.fastcgi.transport.ConnectionFactory;
 import uk.ac.lancs.fastcgi.transport.ConnectionSupply;
-import uk.ac.lancs.fastcgi.proto.InvocationVariables;
+import uk.ac.lancs.fastcgi.transport.TransportConfigurationException;
 import uk.ac.lancs.scc.jardeps.Service;
 
 /**
@@ -77,24 +79,21 @@ public class ForkedUnixConnectionFactory implements ConnectionFactory {
             if (inetPeers != null) return null;
 
             /* Check whether FD 0 has been provided. */
-            if (!FileDescriptor.in.valid()) {
-                System.err.printf("invalid FD%n");
-                return null;
-            }
+            if (!FileDescriptor.in.valid())
+                throw new TransportConfigurationException("STDIN is invalid");
 
             /* Attempt to create a Unix-domain server socket from FD 0.
              * If it is not a bound socket, a SocketException will be
-             * thrown, and caught as an IOException, and null is then
-             * returned, indicating that this process hsa not been
-             * invoked according to FastCGI with a Unix-domain
-             * socket. */
+             * thrown and caught, and null is then returned, indicating
+             * that this process hsa not been invoked according to
+             * FastCGI with a Unix-domain socket. */
             AFUNIXServerSocket serverSocket =
                 AFUNIXServerSocket.newInstance(FileDescriptor.in, 1000, 1001);
             return new ForkedUnixConnectionSupply(serverSocket);
-        } catch (IOException ex) {
-            /* If anything goes wrong, we just return null, as another
-             * factory might succeed. */
+        } catch (SocketException ex) {
             return null;
+        } catch (IOException ex) {
+            throw new TransportConfigurationException(ex);
         }
     }
 }
