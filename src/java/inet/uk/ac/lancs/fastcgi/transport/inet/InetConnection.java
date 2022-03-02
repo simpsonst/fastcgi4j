@@ -73,7 +73,6 @@ class InetConnection implements Connection {
 
     @Override
     public String description() {
-        return descrPrefix + "#" + socket.getLocalSocketAddress() + "#"
-            + socket.getRemoteSocketAddress();
+        return descrPrefix + "#" + socket.getRemoteSocketAddress();
     }
 }
