@@ -20,6 +20,11 @@
     transport connections and your role implementations.  The choice
     of engine determines what roles you support, and the degree of
     concurrency permitted.
+
+    Alternatively, you can run {@link
+    uk.ac.lancs.fastcgi.app.FastCGIApplication} as an application, and
+    it will determine engine configuration from command-line
+    arguments.
   </p>
 
   <p>
@@ -70,5 +75,7 @@
   @package impl uk.ac.lancs.fastcgi.transport.inet
 
   @package impl uk.ac.lancs.fastcgi.engine.std
+
+  @package impl uk.ac.lancs.fastcgi.app
 
 </body>

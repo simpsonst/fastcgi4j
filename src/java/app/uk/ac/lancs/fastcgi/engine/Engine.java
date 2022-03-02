@@ -36,14 +36,16 @@
 
 package uk.ac.lancs.fastcgi.engine;
 
-import uk.ac.lancs.fastcgi.transport.ConnectionSupply;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.function.Function;
+import uk.ac.lancs.fastcgi.transport.ConnectionSupply;
 
 /**
  * Processes FastCGI requests from the server and responses from the
@@ -73,6 +75,68 @@ public interface Engine {
 
         private final Map<Attribute<?>, Object> optAttrs = new HashMap<>();
 
+        private Properties props;
+
+        /**
+         * Specify the properties from which attributes shall be
+         * extracted.
+         * 
+         * @see #withProperty(Attribute, String)
+         * 
+         * @see #tryingProperty(Attribute, String)
+         * 
+         * @param <V> the attribute value type
+         * 
+         * @param props the properties from which attributes will be
+         * extracted
+         * 
+         * @return this builder
+         */
+        public <V> Builder using(Properties props) {
+            this.props = props;
+            return this;
+        }
+
+        /**
+         * Include a required attribute of the engine from properties.
+         * The property value is extracted from the set provided to the
+         * most call to {@link #using(Properties)}. If the property is
+         * not defined, no value is set.
+         * 
+         * @param <V> the attribute value type
+         * 
+         * @param key the attribute key
+         * 
+         * @param propName the property name
+         * 
+         * @return this builder
+         */
+        public <V> Builder withProperty(Attribute<V> key, String propName) {
+            V value = key.parse(props, propName);
+            if (value == null) return this;
+            return with(key, value);
+        }
+
+        /**
+         * Include a preferred attribute of the engine from properties.
+         * The property value is extracted from the set provided to the
+         * most call to {@link #using(Properties)}. If the property is
+         * not defined, no value is set.
+         * 
+         * @param <V> the attribute value type
+         * 
+         * @param key the attribute key
+         * 
+         * @param propName the property name
+         * 
+         * @return this builder
+         */
+        public <V> Builder tryingProperty(Attribute<V> key, String propName) {
+            V value = key.parse(props, propName);
+            if (value == null) return this;
+            return trying(key, value);
+        }
+
         /**
          * Include a required attribute of the engine.
          * 
@@ -85,8 +149,26 @@ public interface Engine {
          * @return this builder
          */
         public <V> Builder with(Attribute<V> key, V value) {
+            Objects.requireNonNull(key, "key");
+            Objects.requireNonNull(value, "value");
             attrs.put(key, value);
             return this;
+        }
+
+        /**
+         * Include a required attribute of the engine.
+         * 
+         * @param <V> the attribute value type
+         * 
+         * @param key the attribute key
+         * 
+         * @param text the text from which a value shall be parsed
+         * 
+         * @return this builder
+         */
+        public <V> Builder withText(Attribute<V> key, String text) {
+            V value = key.parse(text);
+            return with(key, value);
         }
 
         /**
@@ -101,12 +183,31 @@ public interface Engine {
          * @return this builder
          */
         public <V> Builder trying(Attribute<V> key, V value) {
+            Objects.requireNonNull(key, "key");
+            Objects.requireNonNull(value, "value");
             optAttrs.put(key, value);
             return this;
         }
 
         /**
-         * Exclude an attribute not required of the engine.
+         * Include a preferred attribute of the engine.
+         * 
+         * @param <V> the attribute value type
+         * 
+         * @param key the attribute key
+         * 
+         * @param text the text from which a value shall be parsed
+         * 
+         * @return this builder
+         */
+        public <V> Builder tryingText(Attribute<V> key, String text) {
+            V value = key.parse(text);
+            return trying(key, value);
+        }
+
+        /**
+         * Exclude an attribute neither required nor preferred of the
+         * engine.
          * 
          * @param key the attribute key
          * 

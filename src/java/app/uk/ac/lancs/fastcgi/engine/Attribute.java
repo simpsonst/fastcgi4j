@@ -37,15 +37,23 @@
 package uk.ac.lancs.fastcgi.engine;
 
 import java.util.Map;
+import java.util.Properties;
+import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import uk.ac.lancs.fastcgi.role.Authorizer;
 import uk.ac.lancs.fastcgi.role.Filter;
 import uk.ac.lancs.fastcgi.role.Responder;
 
 /**
  * Identifies a typed attribute that an engine is required or preferred
- * to have. A number of common attributes are defined in this class.
- * Specific engine implementations may define more.
+ * to have. An attribute has a value type, an optional default value or
+ * supplier of such, and an optional parser.
+ * 
+ * <p>
+ * A number of common attributes are defined in this class. Specific
+ * engine implementations may define more.
  * 
  * @param <V> the value type
  * 
@@ -58,70 +66,139 @@ import uk.ac.lancs.fastcgi.role.Responder;
 public final class Attribute<V> {
     private final Class<V> type;
 
-    private final Supplier<? extends V> defaultValue;
+    private final Supplier<? extends V> defaultValueSupplier;
 
-    private Attribute(Class<V> type, Supplier<? extends V> defaultValue) {
+    private final Function<? super String, ? extends V> parser;
+
+    private Attribute(Class<V> type, Supplier<? extends V> defaultValueSupplier,
+                      Function<? super String, ? extends V> parser) {
         assert type != null;
-        assert defaultValue != null;
         this.type = type;
-        this.defaultValue = defaultValue;
+        this.defaultValueSupplier = defaultValueSupplier;
+        this.parser = parser;
     }
 
     /**
-     * Create an attribute key with a default value.
+     * Prepare to define an attribute.
      * 
      * @param <V> the attribute value type
      * 
      * @param type the attribute value type
      * 
-     * @param defaultValue the default attribute value
-     * 
-     * @return the required key
+     * @return a builder which can take on other properties
      * 
      * @constructor
      */
-    public static <V> Attribute<V> of(Class<V> type, V defaultValue) {
-        return new Attribute<>(type, () -> defaultValue);
+    public static <V> Builder<V> of(Class<V> type) {
+        return new Builder<>(type);
     }
 
     /**
-     * Create an attribute key with a means to obtain the default value.
+     * Prepare to define an integer attribute. The value type is
+     * {@link Integer}, and {@link Integer#parseInt(String)} is set as
+     * the parser.
      * 
-     * @param <V> the attribute value type
-     * 
-     * @param type the attribute value type
-     * 
-     * @param defaultValueSupplier a supplier for the default attribute
-     * value
-     * 
-     * @return the required key
+     * @return a builder which can take on other properties
      * 
      * @constructor
      */
-    public static <V> Attribute<V>
-        of(Class<V> type, Supplier<? extends V> defaultValueSupplier) {
-        return new Attribute<>(type, defaultValueSupplier);
+    public static Builder<Integer> ofInt() {
+        return of(Integer.class).withParser(Integer::parseInt);
     }
 
     /**
-     * Create an attribute key with no default value.
+     * Prepare to define a string attribute. The value type is
+     * {@link String}, and an identity function is set as the parser.
      * 
-     * @param <V> the attribute value type
-     * 
-     * @param type the attribute value type
-     * 
-     * @return the required key
+     * @return a builder which can take on other properties
      * 
      * @constructor
      */
-    public static <V> Attribute<V> of(Class<V> type) {
-        return of(type, (Supplier<? extends V>) () -> null);
+    public static Builder<String> ofString() {
+        return of(String.class).withParser(s -> s);
+    }
+
+    /**
+     * Allows an attribute to be defined in stages.
+     * 
+     * @param <V> the attribute value type
+     */
+    public static class Builder<V> {
+        final Class<V> type;
+
+        Supplier<? extends V> defaultValueSupplier = null;
+
+        Function<? super String, ? extends V> parser = null;
+
+        Builder(Class<V> type) {
+            this.type = type;
+        }
+
+        /**
+         * Specify the parser for the attribute.
+         * 
+         * @param parser a function parsing a string as the value type
+         * 
+         * @return this object
+         */
+        public Builder<V>
+            withParser(Function<? super String, ? extends V> parser) {
+            this.parser = parser;
+            return this;
+        }
+
+        /**
+         * Set the supplier of the default value of the new attribute.
+         * 
+         * @param defaultValueSupplier a supplier for the default
+         * attribute value
+         * 
+         * @return this object
+         */
+        public Builder<V>
+            withDefault(Supplier<? extends V> defaultValueSupplier) {
+            this.defaultValueSupplier = defaultValueSupplier;
+            return this;
+        }
+
+        /**
+         * Set the default value.
+         * 
+         * @param defaultValue the default value
+         * 
+         * @return this object
+         */
+        public Builder<V> withDefault(V defaultValue) {
+            return withDefault(() -> defaultValue);
+        }
+
+        /**
+         * Define an attribute with the current properties.
+         * 
+         * @return the new attribute
+         * 
+         * @constructor
+         */
+        public Attribute<V> define() {
+            return new Attribute<>(type, defaultValueSupplier, parser);
+        }
     }
 
     V get(Map<? super Attribute<?>, Object> map) {
         Object value = map.get(this);
-        if (value == null) return defaultValue.get();
-        return type.cast(value);
+        if (value != null) return type.cast(value);
+        if (defaultValueSupplier == null) return null;
+        return defaultValueSupplier.get();
+    }
+
+    V parse(String text) {
+        if (text != null) return parser.apply(text);
+        if (defaultValueSupplier == null) return null;
+        return defaultValueSupplier.get();
+    }
+
+    V parse(Properties props, String name) {
+        return parse(props.getProperty(name));
     }
 
     /**
@@ -130,7 +207,7 @@ public final class Attribute<V> {
      * to the server as <code>FCGI_MAX_CONNS</code> if set, so the
      * server should not open more connections than this.
      */
-    public static final Attribute<Integer> MAX_CONN = of(Integer.class);
+    public static final Attribute<Integer> MAX_CONN = ofInt().define();
 
     /**
      * Indicates how many concurrent sessions will be handled per
@@ -140,8 +217,7 @@ public final class Attribute<V> {
      * <code>FCGI_OVERLOADED</code> if it already has the specified
      * number open.
      */
-    public static final Attribute<Integer> MAX_SESS_PER_CONN =
-        of(Integer.class);
+    public static final Attribute<Integer> MAX_SESS_PER_CONN = ofInt().define();
 
     /**
      * Indicates how many concurrent sessions across all connections an
@@ -149,27 +225,46 @@ public final class Attribute<V> {
      * <code>FCGI_MAX_REQS</code> if set, so the server should queue
      * other sessions when the maximum is reached.
      */
-    public static final Attribute<Integer> MAX_SESS = of(Integer.class);
+    public static final Attribute<Integer> MAX_SESS = ofInt().define();
 
     /**
      * Specifies the implementation that handles full requests.
      */
-    public static final Attribute<Responder> RESPONDER = of(Responder.class);
+    public static final Attribute<Responder> RESPONDER =
+        of(Responder.class).define();
 
     /**
      * Specifies the implementation that authorizes requests, or
      * provides responses indicating why not.
      */
-    public static final Attribute<Authorizer> AUTHORIZER = of(Authorizer.class);
+    public static final Attribute<Authorizer> AUTHORIZER =
+        of(Authorizer.class).define();
 
     /**
      * Specifies the implementation that post-processes responses.
      */
-    public static final Attribute<Filter> FILTER = of(Filter.class);
+    public static final Attribute<Filter> FILTER = of(Filter.class).define();
 
     /**
      * Specifies the initial buffer size for standard output.
      */
-    public static final Attribute<Integer> BUFFER_SIZE =
-        of(Integer.class, 1024);
+    public static final Attribute<Integer> BUFFER_SIZE = of(Integer.class)
+        .withParser(Attribute::parseMemCap).withDefault(1024).define();
+
+    private static final Pattern MEMCAP_PATTERN =
+        Pattern.compile("^([0-9]+)([kKmMgG])?");
+
+    private static int parseMemCap(String text) {
+        Matcher m = MEMCAP_PATTERN.matcher(text);
+        if (!m.matches()) throw new NumberFormatException(text);
+        int base = Integer.parseInt(m.group(1));
+        String ptxt = m.group(2);
+        int power =
+            ptxt == null ? 0 : (1 + "kKmKgG".indexOf(ptxt.charAt(0)) / 2);
+        while (power > 0) {
+            base *= 1024;
+            power--;
+        }
+        return base;
+    }
 }
