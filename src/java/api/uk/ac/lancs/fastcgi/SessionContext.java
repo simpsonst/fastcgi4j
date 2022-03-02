@@ -58,6 +58,16 @@ public interface SessionContext {
     void exit(int exitCode);
 
     /**
+     * Get diagnostics for this session. Applications should not
+     * normally need this, except to annotate diagnostic messages so
+     * they can be cross-referenced with other system-/library-generated
+     * messages.
+     * 
+     * @return the session diagnostics
+     */
+    Diagnostics diagnostics();
+
+    /**
      * Set a response header field, replacing any existing values.
      * Leading and trailing spaces are trimmed from the name.
      * 

@@ -70,4 +70,25 @@ public interface Connection {
      * @throws IOException if an I/O error occurs
      */
     void close() throws IOException;
+
+    /**
+     * Get a diagnostic description of this connection.
+     * 
+     * @return the connection description
+     */
+    String description();
+
+    /**
+     * Identify the implementation of this connection as an overarching
+     * package.
+     * 
+     * @return the package identifying the implementation
+     * 
+     * @default By default, this method calls {@link Object#getClass()}
+     * on its receiver, and then {@link Class#getPackage()} on the
+     * class, yielding the result.
+     */
+    default Package implementation() {
+        return this.getClass().getPackage();
+    }
 }

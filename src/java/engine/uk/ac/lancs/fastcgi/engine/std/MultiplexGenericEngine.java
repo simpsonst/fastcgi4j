@@ -61,6 +61,7 @@ import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import uk.ac.lancs.fastcgi.AuthorizerContext;
+import uk.ac.lancs.fastcgi.Diagnostics;
 import uk.ac.lancs.fastcgi.FilterContext;
 import uk.ac.lancs.fastcgi.OverloadException;
 import uk.ac.lancs.fastcgi.ResponderContext;
@@ -380,7 +381,15 @@ class MultiplexGenericEngine implements Engine {
 
         private abstract class AbstractHandler
             implements SessionHandler, SessionContext {
+
             final int id;
+
+            final Diagnostics diags;
+
+            @Override
+            public Diagnostics diagnostics() {
+                return diags;
+            }
 
             Map<String, String> params = new HashMap<>();
 
@@ -388,6 +397,9 @@ class MultiplexGenericEngine implements Engine {
 
             public AbstractHandler(int id) {
                 this.id = id;
+                this.diags =
+                    new Diagnostics(conn.implementation(), conn.description(),
+                                    Integer.toString(ConnHandler.this.id), id);
             }
 
             abstract void innerRun() throws Exception;

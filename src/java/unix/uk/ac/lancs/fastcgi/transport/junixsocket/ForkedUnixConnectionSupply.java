@@ -69,6 +69,6 @@ class ForkedUnixConnectionSupply implements ConnectionSupply {
     @Override
     public Connection nextConnection() throws IOException {
         AFUNIXSocket socket = serverSocket.accept();
-        return new ForkedUnixConnection(socket);
+        return new ForkedUnixConnection("unix-forked", socket);
     }
 }

@@ -34,46 +34,65 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-package uk.ac.lancs.fastcgi.transport.inet;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.Socket;
-import uk.ac.lancs.fastcgi.transport.Connection;
+package uk.ac.lancs.fastcgi;
 
 /**
- *
+ * Provides diagnostic information for a FastCGI session.
+ * 
  * @author simpsons
  */
-class InetConnection implements Connection {
-    private final Socket socket;
+public final class Diagnostics {
+    /**
+     * Holds a string describing how the server and application
+     * communicate.
+     */
+    public final String connectionDescription;
 
-    private final String descrPrefix;
+    /**
+     * Holds an internal identifier for the transport connection.
+     */
+    public final String connectionId;
 
-    public InetConnection(String descrPrefix, Socket socket) {
-        this.descrPrefix = descrPrefix;
-        this.socket = socket;
+    /**
+     * Holds the FastCGI request identifier.
+     */
+    public final int requestId;
+
+    /**
+     * Identifies the implementation. An overarching package should be
+     * specified.
+     */
+    public final Package implementation;
+
+    /**
+     * Get a string representation of this object. This takes the form
+     * <samp><var >{@linkplain #connectionDescription}</var>/<var
+     * >{@linkplain #connectionId}</var>.<var
+     * >{@linkplain #requestId}</var></samp>.
+     * 
+     * @return the requested string representation
+     */
+    @Override
+    public String toString() {
+        return connectionDescription + "/" + connectionId + "." + requestId;
     }
 
-    @Override
-    public InputStream getInput() throws IOException {
-        return socket.getInputStream();
-    }
-
-    @Override
-    public OutputStream getOutput() throws IOException {
-        return socket.getOutputStream();
-    }
-
-    @Override
-    public void close() throws IOException {
-        socket.close();
-    }
-
-    @Override
-    public String description() {
-        return descrPrefix + "#" + socket.getLocalSocketAddress() + "#"
-            + socket.getRemoteSocketAddress();
+    /**
+     * Create diagnostics.
+     * 
+     * @param implementation the implementation
+     * 
+     * @param connectionDescription the connection description
+     * 
+     * @param connectionId the internal connection identifier
+     * 
+     * @param requestId the FastCGI request identifier
+     */
+    public Diagnostics(Package implementation, String connectionDescription,
+                       String connectionId, int requestId) {
+        this.implementation = implementation;
+        this.connectionDescription = connectionDescription;
+        this.connectionId = connectionId;
+        this.requestId = requestId;
     }
 }

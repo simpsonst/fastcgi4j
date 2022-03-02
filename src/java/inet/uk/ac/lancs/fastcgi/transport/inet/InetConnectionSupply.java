@@ -54,8 +54,11 @@ class InetConnectionSupply implements ConnectionSupply {
 
     private final ServerSocket socket;
 
-    public InetConnectionSupply(ServerSocket socket,
+    private final String descrPrefix;
+
+    public InetConnectionSupply(String descrPrefix, ServerSocket socket,
                                 Collection<? extends InetAddress> allowedPeers) {
+        this.descrPrefix = descrPrefix;
         this.socket = socket;
         this.allowedPeers = Set.copyOf(allowedPeers);
     }
@@ -65,7 +68,8 @@ class InetConnectionSupply implements ConnectionSupply {
         do {
             Socket sock = socket.accept();
             InetAddress peer = sock.getInetAddress();
-            if (allowedPeers.contains(peer)) return new InetConnection(sock);
+            if (allowedPeers.contains(peer))
+                return new InetConnection(descrPrefix, sock);
         } while (true);
     }
 }

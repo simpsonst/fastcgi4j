@@ -50,7 +50,10 @@ import uk.ac.lancs.fastcgi.transport.Connection;
 class ForkedUnixConnection implements Connection {
     private final AFUNIXSocket socket;
 
-    public ForkedUnixConnection(AFUNIXSocket socket) {
+    private final String descr;
+
+    public ForkedUnixConnection(String descr, AFUNIXSocket socket) {
+        this.descr = descr;
         this.socket = socket;
     }
 
@@ -67,5 +70,10 @@ class ForkedUnixConnection implements Connection {
     @Override
     public void close() throws IOException {
         socket.close();
+    }
+
+    @Override
+    public String description() {
+        return descr;
     }
 }

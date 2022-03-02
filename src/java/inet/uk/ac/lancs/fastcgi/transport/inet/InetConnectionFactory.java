@@ -70,13 +70,16 @@ public class InetConnectionFactory implements ConnectionFactory {
             InetSocketAddress bindAddress =
                 InvocationVariables.getInetBindAddress();
             final ServerSocket ss;
+            final String descr;
             if (bindAddress == null) {
                 ss = FDServerSocket.newInstance(FileDescriptor.in);
+                descr = "inet-forked";
             } else {
                 ss = new ServerSocket(bindAddress.getPort(), 5,
                                       bindAddress.getAddress());
+                descr = "inet-standalone";
             }
-            return new InetConnectionSupply(ss, allowedPeers);
+            return new InetConnectionSupply(descr, ss, allowedPeers);
         } catch (IOException ex) {
             throw new TransportConfigurationException(ex);
         }
