@@ -47,6 +47,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -243,8 +244,22 @@ class MultiplexGenericEngine implements Engine {
         @Override
         public void beginRequest(int id, int role, int flags)
             throws IOException {
-            if ((flags & RequestFlags.KEEP_CONN) != 0) keepGoing = false;
+            if (!keepGoing) {
+                /* We're not accepting new requests on this connection.
+                 * TODO: There really needs to be more status codes. */
+                recordsOut.writeEndRequest(id, -3, ProtocolStatuses.OVERLOADED);
+                return;
+            }
 
+            if ((flags & RequestFlags.KEEP_CONN) != 0) {
+                /* The server tells us we're not going to use this
+                 * connection any more for new requests. */
+                keepGoing = false;
+                /* Proceed with this one, though! */
+            }
+
+            /* Detect temporary overload based on the configured maximum
+             * requests per connection. */
             if (maxReqsPerConn > 0 && sessions.size() >= maxReqsPerConn) {
                 recordsOut.writeEndRequest(id, -3,
                                            maxReqsPerConn == 1 ?
@@ -253,15 +268,18 @@ class MultiplexGenericEngine implements Engine {
                 return;
             }
 
-            SessionHandler sess = sessions.computeIfAbsent(id, k -> {
-                Supplier<HandlerContext> ctxt =
-                    () -> new HandlerContext(this.id, id, conn.implementation(),
-                                             conn.description(),
-                                             this::abortConnection,
-                                             () -> sessions.remove(id),
-                                             recordsOut, executor, charset,
-                                             paramBufs, stdoutBufferSize,
-                                             stderrBufferSize);
+            /* Package components required by all roles. */
+            Supplier<HandlerContext> ctxt =
+                () -> new HandlerContext(this.id, id, conn.implementation(),
+                                         conn.description(),
+                                         this::abortConnection,
+                                         () -> sessions.remove(id), recordsOut,
+                                         executor, charset, paramBufs,
+                                         stdoutBufferSize, stderrBufferSize);
+
+            /* Create the session if there isn't one with the specified
+             * id, and the role type is recognized. */
+            Function<Integer, SessionHandler> handlerMaker = k -> {
                 switch (role) {
                 case RoleTypes.RESPONDER:
                     if (responder == null) return null;
@@ -281,7 +299,9 @@ class MultiplexGenericEngine implements Engine {
                     /* No mapping is to be recorded. */
                     return null;
                 }
-            });
+            };
+            SessionHandler sess = sessions.computeIfAbsent(id, handlerMaker);
+
             if (sess == null) {
                 /* No mapping was recorded, meaning that we don't
                  * recognize the role. */
@@ -289,6 +309,7 @@ class MultiplexGenericEngine implements Engine {
                                            ProtocolStatuses.UNKNOWN_ROLE);
                 return;
             }
+
             if (sess.start()) {
                 /* There must be no existing session. */
                 keepGoing = false;
