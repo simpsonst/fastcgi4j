@@ -66,7 +66,7 @@ public final class Diagnostics {
 
     /**
      * Get a string representation of this object. This takes the form
-     * <samp><var >{@linkplain #connectionDescription}</var>/<var
+     * <samp><var >{@linkplain #connectionDescription}</var>&#64;<var
      * >{@linkplain #connectionId}</var>.<var
      * >{@linkplain #requestId}</var></samp>.
      * 
@@ -74,7 +74,7 @@ public final class Diagnostics {
      */
     @Override
     public String toString() {
-        return connectionDescription + "/" + connectionId + "." + requestId;
+        return connectionDescription + "@" + connectionId + "." + requestId;
     }
 
     /**
