@@ -38,8 +38,8 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import uk.ac.lancs.fastcgi.role.Responder;
 import uk.ac.lancs.fastcgi.ResponderContext;
+import uk.ac.lancs.fastcgi.role.Responder;
 
 /**
  * Responds by echoing all headers, and displaying a hex MD5 sum of the
