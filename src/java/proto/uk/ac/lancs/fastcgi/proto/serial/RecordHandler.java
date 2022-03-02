@@ -53,8 +53,8 @@ public interface RecordHandler {
      * 
      * @param names the names of the requested variables
      * 
-     * @throws IOException if an I/O error occurred in transmitting the
-     * record
+     * @throws IOException if an I/O error occurs in transmitting a
+     * responding record
      */
     void getValues(Collection<? extends String> names) throws IOException;
 
@@ -65,8 +65,8 @@ public interface RecordHandler {
      * 
      * @param role the role of the application in serving this request
      * 
-     * @throws IOException if an I/O error occurred in transmitting the
-     * record
+     * @throws IOException if an I/O error occurs in transmitting a
+     * responding record
      */
     void beginRequest(int id, int role, int flags) throws IOException;
 
@@ -75,14 +75,16 @@ public interface RecordHandler {
      * 
      * @param id the request id
      * 
-     * @throws IOException if an I/O error occurred in transmitting the
-     * record
+     * @throws IOException if an I/O error occurs in transmitting a
+     * responding record
      */
     void abortRequest(int id) throws IOException;
 
     /**
-     * Receive a stream of parameter data. The stream must be consumed
-     * before returning.
+     * Receive a stream of parameter data.
+     * 
+     * @default A recommended implementation is to call
+     * {@link ParamReader#consume(InputStream)}.
      * 
      * @param id the request id
      * 
@@ -90,24 +92,26 @@ public interface RecordHandler {
      * 
      * @param in a stream of the bytes
      * 
-     * @throws IOException if an I/O error occurred in transmitting the
-     * record
+     * @throws IOException if an I/O error occurs in receiving the
+     * record content
      */
     void params(int id, int len, InputStream in) throws IOException;
 
     /**
      * Indicate that parameter data is complete.
      * 
+     * @default A recommended implementation is to call
+     * {@link ParamReader#complete()}.
+     * 
      * @param id the request id
      * 
-     * @throws IOException if an I/O error occurred in transmitting the
-     * record
+     * @throws IOException if an I/O error occurred in transmitting a
+     * responding record
      */
     void paramsEnd(int id) throws IOException;
 
     /**
-     * Receive a stream of standard-input data. The stream must be
-     * consumed before returning, if it is to be used at all.
+     * Receive a stream of standard-input data.
      * 
      * @param id the request id
      * 
@@ -125,14 +129,13 @@ public interface RecordHandler {
      * 
      * @param id the request id
      * 
-     * @throws IOException if an I/O error occurred in transmitting the
-     * record
+     * @throws IOException if an I/O error occurred in transmitting a
+     * responding record
      */
     void stdinEnd(int id) throws IOException;
 
     /**
-     * Receive a stream of extra data. The stream must be consumed
-     * before returning, if it is to be used at all.
+     * Receive a stream of extra data.
      * 
      * @param id the request id
      * 

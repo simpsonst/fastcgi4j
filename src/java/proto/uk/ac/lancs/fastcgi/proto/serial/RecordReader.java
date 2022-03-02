@@ -94,13 +94,17 @@ public class RecordReader {
      * @throws IOException if an I/O error occurred
      */
     public boolean processRecord() throws IOException {
+        if (false) System.err.printf("Awaiting next record...%n");
         /* Read in the header. */
         if (!require(8)) return false;
+        if (false) System.err.printf("  Got header%n");
         final int rver = unser(buf, 0, 1);
         final int rtype = unser(buf, 1, 1);
         final int rid = unser(buf, 2, 2);
         int clen = unser(buf, 4, 2);
         int plen = unser(buf, 6, 1);
+        if (false) System.err.printf("ver=%d type=%d rid=%d clen=%d plen=%d%n",
+                                     rver, rtype, rid, clen, plen);
         int reasons = 0;
         switch (rtype) {
         case RecordTypes.ABORT_REQUEST:
@@ -125,6 +129,9 @@ public class RecordReader {
             if (!require(clen)) return false;
             int role = unser(buf, 0, 2);
             int flags = unser(buf, 2, 1);
+            if (false)
+                System.err.printf("beginning req %d in role %d with flags %x%n",
+                                  rid, role, flags);
             handler.beginRequest(rid, role, flags);
             break;
 
@@ -184,9 +191,11 @@ public class RecordReader {
                 handler.paramsEnd(rid);
                 break;
             }
-            Slice out = new Slice(clen);
+            FixedLengthInputStream out = new FixedLengthInputStream(clen, in);
+            if (false) System.err
+                .printf("Receiving %d bytes of params on req %d%n", clen, rid);
             handler.params(rid, clen, out);
-            if (out.check() > 0) return false;
+            out.skipRemaining();
             break;
         }
 
@@ -201,9 +210,9 @@ public class RecordReader {
                 handler.stdinEnd(rid);
                 break;
             }
-            Slice out = new Slice(clen);
+            FixedLengthInputStream out = new FixedLengthInputStream(clen, in);
             handler.stdin(rid, clen, out);
-            if (out.check() > 0) return false;
+            out.skipRemaining();
             break;
         }
 
@@ -218,9 +227,9 @@ public class RecordReader {
                 handler.dataEnd(rid);
                 break;
             }
-            Slice out = new Slice(clen);
+            FixedLengthInputStream out = new FixedLengthInputStream(clen, in);
             handler.data(rid, clen, out);
-            if (out.check() > 0) return false;
+            out.skipRemaining();
             break;
         }
 
@@ -254,67 +263,5 @@ public class RecordReader {
             r |= buf[off++] & 0xff;
         }
         return r;
-    }
-
-    private class Slice extends InputStream {
-        private int rem;
-
-        private IOException ex;
-
-        public Slice(int rem) {
-            this.rem = rem;
-        }
-
-        @Override
-        public int read() throws IOException {
-            if (ex != null) throw ex;
-            try {
-                if (rem == 0) return -1;
-                int c = in.read();
-                if (c >= 0) rem--;
-                return c;
-            } catch (IOException ex) {
-                this.ex = ex;
-                throw ex;
-            }
-        }
-
-        @Override
-        public int read(byte[] b, int off, int len) throws IOException {
-            if (ex != null) throw ex;
-            try {
-                if (len > rem) len = rem;
-                int got = in.read(b, off, len);
-                if (got > 0) rem -= got;
-                return got;
-            } catch (IOException ex) {
-                this.ex = ex;
-                throw ex;
-            }
-        }
-
-        @Override
-        public void close() throws IOException {
-            if (ex == null) try {
-                while (rem > 0) {
-                    long got = skip(rem);
-                    rem -= got;
-                    if (got == 0 && rem > 0) {
-                        int c = read();
-                        if (c < 0) break;
-                        rem--;
-                    }
-                }
-            } catch (IOException ex) {
-                this.ex = ex;
-                throw ex;
-            }
-        }
-
-        public int check() throws IOException {
-            if (ex != null) throw ex;
-            close();
-            return rem;
-        }
     }
 }

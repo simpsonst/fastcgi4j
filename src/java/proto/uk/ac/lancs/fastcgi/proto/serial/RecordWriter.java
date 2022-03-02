@@ -114,12 +114,12 @@ public class RecordWriter {
      * 
      * @param values the name-value pairs to be written
      * 
-     * @throws IOException if an I/O error occurred
+     * @throws RecordIOException if an I/O error occurred
      * 
      * @see RecordTypes#GET_VALUES_RESULT
      */
     public void writeValues(Map<? extends String, ? extends String> values)
-        throws IOException {
+        throws RecordIOException {
         buf.clear();
 
         /* Write the header, leaving length fields empty. */
@@ -145,7 +145,11 @@ public class RecordWriter {
         buf.put(6, (byte) pad);
 
         assert buf.position() % 8 == 0;
-        out.write(buf.array(), 0, buf.position());
+        try {
+            out.write(buf.array(), 0, buf.position());
+        } catch (IOException ex) {
+            throw new RecordIOException("writeValues", ex);
+        }
     }
 
     /**
@@ -154,11 +158,11 @@ public class RecordWriter {
      * 
      * @param type the unknown record type
      * 
-     * @throws IOException if an I/O error occurred
+     * @throws RecordIOException if an I/O error occurred
      * 
      * @see RecordTypes#UNKNOWN_TYPE
      */
-    public void writeUnknownType(int type) throws IOException {
+    public void writeUnknownType(int type) throws RecordIOException {
         buf.clear();
 
         buf.put((byte) 1); // version
@@ -172,7 +176,11 @@ public class RecordWriter {
         buf.put(padding, 0, 7); // reserved
 
         assert buf.position() % 8 == 0;
-        out.write(buf.array(), 0, buf.position());
+        try {
+            out.write(buf.array(), 0, buf.position());
+        } catch (IOException ex) {
+            throw new RecordIOException("writeUnknownType", ex);
+        }
     }
 
     /**
@@ -186,12 +194,12 @@ public class RecordWriter {
      * @param protoStatus the reason for closing the request; see
      * {@link ProtocolStatuses}
      * 
-     * @throws IOException if an I/O error occurred
+     * @throws RecordIOException if an I/O error occurred
      * 
      * @see RecordTypes#END_REQUEST
      */
     public void writeEndRequest(int id, int appStatus, int protoStatus)
-        throws IOException {
+        throws RecordIOException {
         buf.clear();
 
         buf.put((byte) 1); // version
@@ -206,11 +214,16 @@ public class RecordWriter {
         buf.put(padding, 0, 3);
 
         assert buf.position() % 8 == 0;
-        out.write(buf.array(), 0, buf.position());
+        try {
+            out.write(buf.array(), 0, buf.position());
+        } catch (IOException ex) {
+            throw new RecordIOException("writeEndRequest", ex);
+        }
     }
 
-    private int write(byte rt, int id, byte[] buf, int off, int len)
-        throws IOException {
+    private int write(String label, byte rt, int id, byte[] buf, int off,
+                      int len)
+        throws RecordIOException {
         if (len == 0) return 0;
         final int amount = Integer.min(len, 65535 & ~7);
         final int pad = ((amount + 7) & ~7) - amount;
@@ -227,14 +240,28 @@ public class RecordWriter {
         this.buf.putShort((short) amount); // content length
         this.buf.put((byte) pad); // padding length
         this.buf.put((byte) 0); // reserved
-        out.write(this.buf.array(), 0, this.buf.position());
+        try {
+            out.write(this.buf.array(), 0, this.buf.position());
+        } catch (IOException ex) {
+            throw new RecordIOException("write" + label + ":hdr", ex);
+        }
 
-        out.write(buf, off, amount);
-        if (pad > 0) out.write(padding, 0, pad);
+        try {
+            out.write(buf, off, amount);
+        } catch (IOException ex) {
+            throw new RecordIOException("write" + label + ":data", ex);
+        }
+
+        try {
+            if (pad > 0) out.write(padding, 0, pad);
+        } catch (IOException ex) {
+            throw new RecordIOException("write" + label + ":pad", ex);
+        }
         return amount;
     }
 
-    private void writeEnd(byte rt, int id) throws IOException {
+    private void writeEnd(String label, byte rt, int id)
+        throws RecordIOException {
         this.buf.clear();
 
         this.buf.put((byte) 1); // version
@@ -244,7 +271,11 @@ public class RecordWriter {
         this.buf.put((byte) 0); // padding length
         this.buf.put((byte) 0); // reserved
 
-        out.write(this.buf.array(), 0, this.buf.position());
+        try {
+            out.write(this.buf.array(), 0, this.buf.position());
+        } catch (IOException ex) {
+            throw new RecordIOException("write" + label + ":hdr0", ex);
+        }
     }
 
     /**
@@ -264,13 +295,13 @@ public class RecordWriter {
      * 
      * @return the number of bytes written
      * 
-     * @throws IOException if an I/O error occurred
+     * @throws RecordIOException if an I/O error occurred
      * 
      * @see RecordTypes#STDOUT
      */
     public int writeStdout(int id, byte[] buf, int off, int len)
-        throws IOException {
-        return write(RecordTypes.STDOUT, id, buf, off, len);
+        throws RecordIOException {
+        return write("Stdout", RecordTypes.STDOUT, id, buf, off, len);
     }
 
     /**
@@ -279,12 +310,12 @@ public class RecordWriter {
      * 
      * @param id the request id
      * 
-     * @throws IOException if an I/O error occurred
+     * @throws RecordIOException if an I/O error occurred
      * 
      * @see RecordTypes#STDOUT
      */
-    public void writeStdoutEnd(int id) throws IOException {
-        writeEnd(RecordTypes.STDOUT, id);
+    public void writeStdoutEnd(int id) throws RecordIOException {
+        writeEnd("Stdout", RecordTypes.STDOUT, id);
     }
 
     /**
@@ -304,13 +335,13 @@ public class RecordWriter {
      * 
      * @return the number of bytes written
      * 
-     * @throws IOException if an I/O error occurred
+     * @throws RecordIOException if an I/O error occurred
      * 
      * @see RecordTypes#STDERR
      */
     public int writeStderr(int id, byte[] buf, int off, int len)
-        throws IOException {
-        return write(RecordTypes.STDERR, id, buf, off, len);
+        throws RecordIOException {
+        return write("Stderr", RecordTypes.STDERR, id, buf, off, len);
     }
 
     /**
@@ -319,11 +350,11 @@ public class RecordWriter {
      * 
      * @param id the request id
      * 
-     * @throws IOException if an I/O error occurred
+     * @throws RecordIOException if an I/O error occurred
      * 
      * @see RecordTypes#STDERR
      */
-    public void writeStderrEnd(int id) throws IOException {
-        writeEnd(RecordTypes.STDERR, id);
+    public void writeStderrEnd(int id) throws RecordIOException {
+        writeEnd("Stderr", RecordTypes.STDERR, id);
     }
 }

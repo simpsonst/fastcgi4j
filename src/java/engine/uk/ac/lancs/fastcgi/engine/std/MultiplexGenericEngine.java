@@ -46,7 +46,6 @@ import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -74,7 +73,9 @@ import uk.ac.lancs.fastcgi.proto.ApplicationVariables;
 import uk.ac.lancs.fastcgi.proto.ProtocolStatuses;
 import uk.ac.lancs.fastcgi.proto.RequestFlags;
 import uk.ac.lancs.fastcgi.proto.RoleTypes;
+import uk.ac.lancs.fastcgi.proto.serial.ParamReader;
 import uk.ac.lancs.fastcgi.proto.serial.RecordHandler;
+import uk.ac.lancs.fastcgi.proto.serial.RecordIOException;
 import uk.ac.lancs.fastcgi.proto.serial.RecordReader;
 import uk.ac.lancs.fastcgi.proto.serial.RecordWriter;
 import uk.ac.lancs.fastcgi.role.Authorizer;
@@ -226,7 +227,7 @@ class MultiplexGenericEngine implements Engine {
         private final Map<Integer, SessionHandler> sessions =
             new ConcurrentHashMap<>();
 
-        private boolean keepGoing = true;
+        private volatile boolean keepGoing = true;
 
         @Override
         public void run() {
@@ -237,6 +238,8 @@ class MultiplexGenericEngine implements Engine {
                 }
                 conn.close();
             } catch (IOException ex) {
+                /* There was an error reading to or writing from the
+                 * connection. */
                 logger.log(Level.SEVERE, "connection " + id, ex);
             }
         }
@@ -369,6 +372,12 @@ class MultiplexGenericEngine implements Engine {
             if (sess != null) sess.abortRequest();
         }
 
+        private void abortConnection() {
+            keepGoing = false;
+            sessions.forEach((k, v) -> v
+                .transportFailure(new IOException("transport failure")));
+        }
+
         private abstract class AbstractHandler
             implements SessionHandler, SessionContext {
             final int id;
@@ -400,6 +409,8 @@ class MultiplexGenericEngine implements Engine {
                                 this.thread = null;
                             }
                         }
+                    } catch (RecordIOException ex) {
+                        ex.unpack();
                     } catch (InterruptedException ex) {
                         recordsOut
                             .writeEndRequest(id, -1,
@@ -410,12 +421,22 @@ class MultiplexGenericEngine implements Engine {
                                                    ProtocolStatuses.OVERLOADED);
                         completed = true;
                     } catch (Exception | Error ex) {
-                        setStatus(501);
-                        setHeader("Content-Type", "text/plain; charset=UTF-8");
-                        try (PrintWriter out =
-                            new PrintWriter(new OutputStreamWriter(out(),
-                                                                   StandardCharsets.UTF_8))) {
-                            out.printf("Internal Server Error\n");
+                        try {
+                            setStatus(501);
+                            setHeader("Content-Type",
+                                      "text/plain; charset=UTF-8");
+                            /* TODO: Clear other headers. */
+                            try (PrintWriter out =
+                                new PrintWriter(new OutputStreamWriter(out(),
+                                                                       StandardCharsets.UTF_8))) {
+                                out.printf("Internal Server Error\n");
+                                /* TODO: Provide a more detailed and
+                                 * run-time configurable error. Use
+                                 * XSLT. */
+                            }
+                        } catch (IllegalStateException ise) {
+                            err().printf("Could not send error response; "
+                                + "response body partially sent%n");
                         }
                         ex.printStackTrace(err());
                         recordsOut
@@ -431,126 +452,51 @@ class MultiplexGenericEngine implements Engine {
                         }
                     }
                 } catch (IOException ex) {
-                    /* There is some problem with the I/O on this whole
-                     * connection, so abort it. */
-                    keepGoing = false;
+                    /* The application was unable to write a record, so
+                     * we have to terminate all handlers on this
+                     * connection. */
+                    abortConnection();
                 } finally {
                     sessions.remove(id);
                 }
             }
 
-            @Override
-            public synchronized void abortRequest() throws IOException {
+            protected synchronized void terminate() {
                 if (thread == null)
                     sessions.remove(id);
                 else
                     thread.interrupt();
             }
 
-            byte[] paramCache = getBuffer();
-
-            int paramLen = 0;
-
-            /**
-             * Attempt to fill the parameter buffer.
-             * 
-             * @param in the byte source
-             * 
-             * @return {@code false} if the stream has reported EOF;
-             * {@code true} otherwise
-             * 
-             * @throws IOException if an I/O error occurs reading from
-             * the stream
-             */
-            boolean recordParam(InputStream in) throws IOException {
-                assert paramLen <= paramCache.length;
-                if (paramLen == paramCache.length) {
-                    paramLen += 128;
-                    paramLen *= 2;
-                    paramCache = Arrays.copyOf(paramCache, paramLen);
-                }
-
-                int got =
-                    in.read(paramCache, paramLen, paramCache.length - paramLen);
-                if (got >= 0) {
-                    paramLen += got;
-                    return true;
-                }
-                return false;
+            @Override
+            public void abortRequest() throws IOException {
+                terminate();
             }
 
-            /**
-             * Attempt to decode one parameter at the start of the
-             * buffer. If a parameter is decoded, its bytes are removed
-             * from the buffer, and the trailing bytes are moved to the
-             * head of the buffer.
-             * 
-             * @return {@code true} if the method should be called
-             * again; {@code false} otherwise, e.g., if there are
-             * insufficient bytes to determine whether a complete
-             * parameter has loaded
-             */
-            boolean decodeParam() {
-                if (paramLen < 2) return false;
-                final int nameLen, valueLen, nameStart;
-                if (paramCache[0] > 127) {
-                    if (paramLen < 5) return false;
-                    if (paramCache[4] > 127) {
-                        if (paramLen < 8) return false;
-                        valueLen = getInt(paramCache, 4);
-                        nameStart = 8;
-                    } else {
-                        valueLen = paramCache[4] & 0xff;
-                        nameStart = 5;
-                    }
-                    nameLen = getInt(paramCache, 0);
-                } else {
-                    if (paramCache[1] > 127) {
-                        if (paramLen < 5) return false;
-                        valueLen = getInt(paramCache, 1);
-                        nameStart = 5;
-                    } else {
-                        valueLen = paramCache[1] & 0xff;
-                        nameStart = 1;
-                    }
-                    nameLen = paramCache[0] & 0xff;
-                }
-                final int end = nameStart + nameLen + valueLen;
-                if (paramLen < end) return false;
-                final String name =
-                    new String(paramCache, nameStart, nameLen, charset);
-                final int valueStart = nameStart + nameLen;
-                final String value =
-                    new String(paramCache, valueStart, valueLen, charset);
-                params.put(name, value);
-                System.arraycopy(paramCache, end, paramCache, 0,
-                                 paramLen - end);
-                paramLen -= end;
-                return paramLen >= 2;
+            @Override
+            public void transportFailure(IOException ex) {
+                terminate();
             }
+
+            ParamReader paramReader =
+                new ParamReader(params, charset, getBuffer(),
+                                MultiplexGenericEngine.this::returnParamBuf);
 
             @Override
             @SuppressWarnings("empty-statement")
             public void params(int len, InputStream in) throws IOException {
-                while (recordParam(in))
-                    while (decodeParam())
-                        ;
+                assert len > 0;
+                paramReader.consume(in);
             }
 
             @Override
             public void paramsEnd() throws IOException {
-                /* Detect a duplicate call, and save away the parameter
-                 * buffer for later use. */
-                if (paramCache == null)
-                    throw new IOException("parameters ended twice on request "
-                        + id);
-                returnParamBuf(paramCache);
-                paramCache = null;
-
-                /* Check that we have no excess parameter data. */
-                if (paramLen > 0)
-                    throw new IOException("trailing parameter bytes on request "
-                        + id + ": " + paramLen);
+                try {
+                    paramReader.complete();
+                } catch (IllegalStateException ex) {
+                    ex.printStackTrace(err());
+                }
+                paramReader = null;
 
                 /* Freeze the parameters, */
                 params = Map.copyOf(params);
@@ -829,6 +775,12 @@ class MultiplexGenericEngine implements Engine {
             }
 
             @Override
+            public void transportFailure(IOException ex) {
+                stdinPipe.abort(ex);
+                super.transportFailure(ex);
+            }
+
+            @Override
             public void stdin(int len, InputStream in) throws IOException {
                 in.transferTo(stdinPipe.getOutputStream());
             }
@@ -864,6 +816,13 @@ class MultiplexGenericEngine implements Engine {
                 stdinPipe.abort(ex);
                 dataPipe.abort(ex);
                 super.abortRequest();
+            }
+
+            @Override
+            public void transportFailure(IOException ex) {
+                stdinPipe.abort(ex);
+                dataPipe.abort(ex);
+                super.transportFailure(ex);
             }
 
             @Override
@@ -968,6 +927,8 @@ class MultiplexGenericEngine implements Engine {
         void data(int len, InputStream in) throws IOException;
 
         void dataEnd() throws IOException;
+
+        void transportFailure(IOException ex);
     }
 
     private static final Logger logger =
