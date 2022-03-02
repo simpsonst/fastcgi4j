@@ -57,6 +57,15 @@ import uk.ac.lancs.scc.jardeps.Service;
  * {@link FileDescriptor#in} is assumed to be an Internet-domain socket,
  * and the process has been forked by the server.
  * 
+ * <p>
+ * Each connection's description begins with
+ * {@value #FORKED_DESCRIPTION} if the process was invoked with the
+ * server socket already created on descriptor 0, or
+ * {@value #STANDALONE_DESCRIPTION} if the process has created the
+ * server socket itself. This prefix is combined with the peer address
+ * in the form <samp><var>prefix</var>#<var>address</var></samp> to
+ * complete the connection description.
+ * 
  * @author simpsons
  */
 @Service(ConnectionFactory.class)
@@ -73,15 +82,19 @@ public class InetConnectionFactory implements ConnectionFactory {
             final String descr;
             if (bindAddress == null) {
                 ss = FDServerSocket.newInstance(FileDescriptor.in);
-                descr = "inet-forked";
+                descr = FORKED_DESCRIPTION;
             } else {
                 ss = new ServerSocket(bindAddress.getPort(), 5,
                                       bindAddress.getAddress());
-                descr = "inet-standalone";
+                descr = STANDALONE_DESCRIPTION;
             }
             return new InetConnectionSupply(descr, ss, allowedPeers);
         } catch (IOException ex) {
             throw new TransportConfigurationException(ex);
         }
     }
+
+    private static final String FORKED_DESCRIPTION = "inet-forked";
+
+    private static final String STANDALONE_DESCRIPTION = "inet-standalone";
 }
