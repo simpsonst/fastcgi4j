@@ -67,29 +67,176 @@ import uk.ac.lancs.fastcgi.proto.serial.RecordWriter;
  * @author simpsons
  */
 abstract class AbstractHandler implements SessionHandler, SessionContext {
+    /**
+     * Holds the session id (or request id in FastCGI parlance).
+     */
     final int id;
 
+    /**
+     * Holds the diagnostic structure to help cross-referencing of
+     * error/log messages.
+     */
     final Diagnostics diags;
 
+    /**
+     * Holds the action to take if an error is detected on the transport
+     * connection, thus jeopardizing all other sessions on the same
+     * connection.
+     */
     final Runnable connAbort;
 
+    /**
+     * Holds the action to take when the session is to receive no more
+     * application records.
+     */
     final Runnable cleanUp;
 
+    /**
+     * Holds the means to write records to the transport connection.
+     */
     final RecordWriter recordsOut;
 
+    /**
+     * Used to invoke the application-specific behaviour.
+     */
     final Executor executor;
 
+    /**
+     * Specifies the character encoding for transmitted and received
+     * name-value pairs, and for CGI response header fields.
+     */
     final Charset charset;
 
-    @Override
-    public Diagnostics diagnostics() {
-        return diags;
-    }
-
+    /**
+     * Holds the accumulated request parameters. Once complete, the map
+     * is frozen, and only then is the application behaviour invoked.
+     */
     Map<String, String> params = new HashMap<>();
 
+    /**
+     * Holds context while parsing records that provide request
+     * parameters. Each decoded parameter is written to {@link #params}.
+     */
+    ParamReader paramReader;
+
+    /**
+     * Holds the 'exit' status of the application for this
+     * session/request.
+     */
     int appStatus = 0;
 
+    /**
+     * Holds the CGI/HTTP response code for this session/request. This
+     * is not transmitted until the standard output is written to,
+     * flushed or closed.
+     */
+    int statusCode = 200;
+
+    /**
+     * Holds the CGI/HTTP response headers. Names are case-insensitive.
+     * This is not transmitted until the standard output is written to,
+     * flushed or closed.
+     */
+    private final Map<String, List<String>> outHeaders =
+        new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+
+    /**
+     * Holds the thread being used to execute the application.
+     */
+    private Thread thread;
+
+    /**
+     * Records whether the handler has started. This is used to detect
+     * when the server attempts to begin a request that is already in
+     * progress.
+     */
+    private boolean started = false;
+
+    /**
+     * Provides the standard error output to the application handling
+     * this request.
+     */
+    private final PrintStream err;
+
+    /**
+     * Reduces calls on {@link #out} by buffering.
+     */
+    private OutputStream bufferedOut;
+
+    /**
+     * Holds the buffer size to be used for standard output, including
+     * the CGI response headers. After first use of the stream, this
+     * field has no effect.
+     */
+    private int bufferSize;
+
+    /**
+     * Converts output-stream operations into FCGI_STDOUT records.
+     */
+    private final OutputStream out = new OutputStream() {
+        private boolean closed = false;
+
+        private final byte[] buf1 = new byte[1];
+
+        @Override
+        public void write(int b) throws IOException {
+            if (closed) throw new IOException("closed");
+            buf1[0] = (byte) b;
+            recordsOut.writeStdout(id, buf1, 0, 1);
+        }
+
+        @Override
+        public void close() throws IOException {
+            if (closed) return;
+            closed = true;
+            recordsOut.writeStdoutEnd(id);
+        }
+
+        @Override
+        public void write(byte[] b, int off, int len) throws IOException {
+            if (closed) throw new IOException("closed");
+
+            /* TODO: For large values of len, break into multiple
+             * calls. */
+            recordsOut.writeStdout(id, b, off, len);
+        }
+    };
+
+    /**
+     * Ensures that the response header has been transmitted. This
+     * object is presented to the application as its standard output.
+     */
+    private final OutputStream headeredOut = new OutputStream() {
+        @Override
+        public void write(byte[] b, int off, int len) throws IOException {
+            ensureResponseHeader();
+            bufferedOut.write(b, off, len);
+        }
+
+        @Override
+        public void write(int b) throws IOException {
+            ensureResponseHeader();
+            bufferedOut.write(b);
+        }
+
+        @Override
+        public void close() throws IOException {
+            ensureResponseHeader();
+            bufferedOut.close();
+        }
+
+        @Override
+        public void flush() throws IOException {
+            ensureResponseHeader();
+            bufferedOut.flush();
+        }
+    };
+
+    /**
+     * Create a request handler.
+     * 
+     * @param ctxt the set of resources needed by all request handlers
+     */
     public AbstractHandler(HandlerContext ctxt) {
         this.id = ctxt.id;
         this.diags = new Diagnostics(ctxt.impl, ctxt.connDescr,
@@ -131,10 +278,46 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
         }, ctxt.stderrBufferSize), true, charset);
     }
 
+    @Override
+    public Diagnostics diagnostics() {
+        return diags;
+    }
+
+    /**
+     * Invoke the role-specific behaviour. This will normally involve
+     * invoking a specific role interface as defined in
+     * {@link uk.ac.lancs.fastcgi.role} to implement
+     * application-specific behaviour.
+     * 
+     * @throws RecordIOException if the invoking thread encounters an
+     * I/O error in accessing the connection. For example, an attempt to
+     * write a record could fail.
+     * 
+     * @throws InterruptedException if the invoking thread was
+     * interrupted. This can happen if another session detects failure
+     * in the transport connection, for example. The request is
+     * terminated with exit status {@code -2} and
+     * {@link ProtocolStatuses#OVERLOADED}.
+     * 
+     * @throws OverloadException if the application deems itself too
+     * busy to handle new (or even current) requests. The request is
+     * terminated with exit status {@code -1} and
+     * {@link ProtocolStatuses#REQUEST_COMPLETE}.
+     * 
+     * @throws Throwable if any other abnormal event occurs. An attempt
+     * is made to send an HTTP 501 Server Error response with diagnostic
+     * information. The request is then terminated with exit status
+     * {@code -2} and {@link ProtocolStatuses#REQUEST_COMPLETE}.
+     */
     abstract void innerRun() throws Exception;
 
-    Thread thread;
-
+    /**
+     * Run the application-specific behaviour of this handler. This
+     * wraps an invocation of {@link #innerRun()} such that the
+     * executing thread is recorded (allowing it to be interrupted on
+     * error), and that various exceptions are caught and handled
+     * appropriately.
+     */
     void run() {
         synchronized (this) {
             this.thread = Thread.currentThread();
@@ -161,30 +344,39 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
                 completed = true;
             } catch (Exception | Error ex) {
                 try {
-                    setStatus(501);
-                    setHeader("Content-Type", "text/plain; charset=UTF-8");
-                    /* TODO: Clear other headers. */
-                    try (PrintWriter out =
-                        new PrintWriter(new OutputStreamWriter(out(),
-                                                               StandardCharsets.UTF_8))) {
-                        out.printf("Internal Server Error\n");
-                        /* TODO: Provide a more detailed and run-time
-                         * configurable error. Use XSLT. */
+                    try {
+                        setStatus(501);
+                        setHeader("Content-Type", "text/plain; charset=UTF-8");
+                        /* TODO: Clear other headers. */
+                        try (PrintWriter out =
+                            new PrintWriter(new OutputStreamWriter(out(),
+                                                                   StandardCharsets.UTF_8))) {
+                            out.printf("Internal Server Error\n");
+                            /* TODO: Provide a more detailed and
+                             * run-time configurable error. Use XSLT. */
+                        }
+                    } catch (IllegalStateException ise) {
+                        err().printf("Could not send error response; "
+                            + "response body partially sent%n");
                     }
-                } catch (IllegalStateException ise) {
-                    err().printf("Could not send error response; "
-                        + "response body partially sent%n");
+                    ex.printStackTrace(err());
+                    recordsOut
+                        .writeEndRequest(id, -2,
+                                         ProtocolStatuses.REQUEST_COMPLETE);
+                    completed = true;
+                } catch (RecordIOException ex2) {
+                    ex2.unpack();
                 }
-                ex.printStackTrace(err());
-                recordsOut.writeEndRequest(id, -2,
-                                           ProtocolStatuses.REQUEST_COMPLETE);
-                completed = true;
             } finally {
                 if (!completed) {
-                    ensureResponseHeader();
-                    recordsOut
-                        .writeEndRequest(id, appStatus,
-                                         ProtocolStatuses.REQUEST_COMPLETE);
+                    try {
+                        ensureResponseHeader();
+                        recordsOut
+                            .writeEndRequest(id, appStatus,
+                                             ProtocolStatuses.REQUEST_COMPLETE);
+                    } catch (RecordIOException ex2) {
+                        ex2.unpack();
+                    }
                 }
             }
         } catch (IOException ex) {
@@ -212,8 +404,6 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
     public void transportFailure(IOException ex) {
         terminate();
     }
-
-    ParamReader paramReader;
 
     @Override
     @SuppressWarnings("empty-statement")
@@ -251,45 +441,6 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
         appStatus = exitCode;
     }
 
-    /**
-     * Converts output-stream operations into FCGI_STDOUT records.
-     */
-    private final OutputStream out = new OutputStream() {
-        private boolean closed = false;
-
-        private final byte[] buf1 = new byte[1];
-
-        @Override
-        public void write(int b) throws IOException {
-            if (closed) throw new IOException("closed");
-            buf1[0] = (byte) b;
-            recordsOut.writeStdout(id, buf1, 0, 1);
-        }
-
-        @Override
-        public void close() throws IOException {
-            if (closed) return;
-            closed = true;
-            recordsOut.writeStdoutEnd(id);
-        }
-
-        @Override
-        public void write(byte[] b, int off, int len) throws IOException {
-            if (closed) throw new IOException("closed");
-
-            /* TODO: For large values of len, break into multiple
-             * calls. */
-            recordsOut.writeStdout(id, b, off, len);
-        }
-    };
-
-    /**
-     * Reduces calls on {@link #out} by buffering.
-     */
-    private OutputStream bufferedOut;
-
-    private int bufferSize;
-
     @Override
     public boolean setBufferSize(int amount) {
         if (amount < 0)
@@ -299,52 +450,15 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
         return true;
     }
 
-    /**
-     * Ensures that the response header has been transmitted. This
-     * object is presented to the application as its standard output.
-     */
-    private final OutputStream headeredOut = new OutputStream() {
-        @Override
-        public void write(byte[] b, int off, int len) throws IOException {
-            ensureResponseHeader();
-            bufferedOut.write(b, off, len);
-        }
-
-        @Override
-        public void write(int b) throws IOException {
-            ensureResponseHeader();
-            bufferedOut.write(b);
-        }
-
-        @Override
-        public void close() throws IOException {
-            ensureResponseHeader();
-            bufferedOut.close();
-        }
-
-        @Override
-        public void flush() throws IOException {
-            ensureResponseHeader();
-            bufferedOut.flush();
-        }
-    };
-
     @Override
     public OutputStream out() {
         return headeredOut;
     }
 
-    private final PrintStream err;
-
     @Override
     public PrintStream err() {
         return err;
     }
-
-    int statusCode = 200;
-
-    private final Map<String, List<String>> outHeaders =
-        new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
     @Override
     public void setHeader(String name, String value) {
@@ -414,8 +528,6 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
         }
     }
 
-    private boolean started = false;
-
     @Override
     public boolean start() {
         if (started) return true;
@@ -443,6 +555,13 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
         /* Ignored by default, as we don't expect this record type. */
     }
 
+    /**
+     * Convert an HTTP status code into its human-readable equivalent.
+     * 
+     * @param code the code to convert
+     * 
+     * @return the equivalent message; or {@code "UNKNOWN"}.
+     */
     private static String getStatusMessage(int code) {
         switch (code) {
         default:
