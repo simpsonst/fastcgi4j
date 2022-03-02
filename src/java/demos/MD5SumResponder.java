@@ -67,7 +67,7 @@ public class MD5SumResponder implements Responder {
             }
             out.printf("Digest: ");
             for (int i = 0; i < dig.length; i++) {
-                out.printf("%02d", dig[i] & 0xff);
+                out.printf("%02x", dig[i] & 0xff);
             }
             out.printf("\n");
         }
