@@ -55,7 +55,7 @@ class InetConnectionSupply implements ConnectionSupply {
     private final ServerSocket socket;
 
     public InetConnectionSupply(ServerSocket socket,
-                                      Collection<? extends InetAddress> allowedPeers) {
+                                Collection<? extends InetAddress> allowedPeers) {
         this.socket = socket;
         this.allowedPeers = Set.copyOf(allowedPeers);
     }
@@ -65,8 +65,7 @@ class InetConnectionSupply implements ConnectionSupply {
         do {
             Socket sock = socket.accept();
             InetAddress peer = sock.getInetAddress();
-            if (allowedPeers.contains(peer))
-                return new InetConnection(sock);
+            if (allowedPeers.contains(peer)) return new InetConnection(sock);
         } while (true);
     }
 }
