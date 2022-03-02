@@ -70,6 +70,7 @@ public class MD5SumResponder implements Responder {
                 out.printf("%02x", dig[i] & 0xff);
             }
             out.printf("\n");
+            out.printf("Diagnostics: %s\n", ctxt.diagnostics());
         }
     }
 }
