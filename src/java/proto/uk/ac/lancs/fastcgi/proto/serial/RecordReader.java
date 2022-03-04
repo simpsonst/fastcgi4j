@@ -84,6 +84,15 @@ public class RecordReader {
         return true;
     }
 
+    private void skip(int amount) throws IOException {
+        while (amount > 0) {
+            /* We can cast the result to int because we only supply an
+             * int. */
+            int got = (int) in.skip(amount);
+            amount -= got;
+        }
+    }
+
     /**
      * Read and process at most one record. If EOF is encountered before
      * reading a complete record, {@code false} is returned.
@@ -112,6 +121,7 @@ public class RecordReader {
             if (clen != 0) reasons |= RecordHandler.BAD_LENGTH;
             if (rid == 0) reasons |= RecordHandler.BAD_REQ_ID;
             if (reasons != 0) {
+                skip(clen);
                 handler.bad(reasons, rver, rtype, clen, rid);
                 break;
             }
@@ -123,6 +133,7 @@ public class RecordReader {
             if (clen != 8) reasons |= RecordHandler.BAD_LENGTH;
             if (rid == 0) reasons |= RecordHandler.BAD_REQ_ID;
             if (reasons != 0) {
+                skip(clen);
                 handler.bad(reasons, rver, rtype, clen, rid);
                 break;
             }
@@ -139,6 +150,7 @@ public class RecordReader {
             if (rver < 1) reasons |= RecordHandler.BAD_VERSION;
             if (rid == 0) reasons |= RecordHandler.BAD_REQ_ID;
             if (reasons != 0) {
+                skip(clen);
                 handler.bad(reasons, rver, rtype, clen, rid);
                 break;
             }
@@ -184,6 +196,7 @@ public class RecordReader {
             if (rver < 1) reasons |= RecordHandler.BAD_VERSION;
             if (rid == 0) reasons |= RecordHandler.BAD_REQ_ID;
             if (reasons != 0) {
+                skip(clen);
                 handler.bad(reasons, rver, rtype, clen, rid);
                 break;
             }
@@ -203,6 +216,7 @@ public class RecordReader {
             if (rver < 1) reasons |= RecordHandler.BAD_VERSION;
             if (rid == 0) reasons |= RecordHandler.BAD_REQ_ID;
             if (reasons != 0) {
+                skip(clen);
                 handler.bad(reasons, rver, rtype, clen, rid);
                 break;
             }
@@ -220,6 +234,7 @@ public class RecordReader {
             if (rver < 1) reasons |= RecordHandler.BAD_VERSION;
             if (rid == 0) reasons |= RecordHandler.BAD_REQ_ID;
             if (reasons != 0) {
+                skip(clen);
                 handler.bad(reasons, rver, rtype, clen, rid);
                 break;
             }
