@@ -99,6 +99,10 @@ final class MemoryChunk implements Chunk {
     @Override
     public synchronized int write(byte[] buf, int off, int len) {
         if (complete) throw new IllegalStateException("complete");
+
+        /* Short-circuit the no-op. */
+        if (len == 0) return 0;
+
         if (array == null) return len;
         check();
         try {
@@ -225,6 +229,9 @@ final class MemoryChunk implements Chunk {
      * @throws IOException if the input stream has been closed
      */
     synchronized int read(byte[] b, int off, int len) throws IOException {
+        /* Short-circuit the no-op. */
+        if (len == 0) return 0;
+
         check();
         try {
             /* Wait until there's no reason to block. */

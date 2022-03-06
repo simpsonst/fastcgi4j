@@ -90,6 +90,9 @@ final class FileChunk implements Chunk {
          * when they've already said there's no more. */
         if (complete) throw new IllegalStateException("complete");
 
+        /* Short-circuit the no-op. */
+        if (len == 0) return 0;
+
         /* The consumer has already indicated they're not longer
          * interested in the content, so we can absorb it. */
         if (file == null) return len;
@@ -209,6 +212,9 @@ final class FileChunk implements Chunk {
      * @throws IOException if the input stream has been closed
      */
     synchronized int read(byte[] b, int off, int len) throws IOException {
+        /* Short-circuit the no-op. */
+        if (len == 0) return 0;
+
         /* Wait until there's no reason to block. */
         boolean interrupted = false;
         while (file != null && !complete && reason == null &&
