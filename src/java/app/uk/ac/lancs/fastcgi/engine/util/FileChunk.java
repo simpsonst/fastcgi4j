@@ -163,6 +163,7 @@ final class FileChunk implements Chunk {
         /* At least one byte is available, so seek and provide it. */
         file.seek(readPos);
         int r = file.read();
+        assert r >= 0;
         readPos++;
         return r;
     }
