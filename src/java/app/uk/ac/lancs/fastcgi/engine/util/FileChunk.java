@@ -48,7 +48,7 @@ import uk.ac.lancs.fastcgi.StreamAbortedException;
 class FileChunk implements Chunk {
     private final long maxFileSize;
 
-    private final RandomAccessFile file;
+    private RandomAccessFile file;
 
     private long readPos = 0;
 
@@ -67,6 +67,7 @@ class FileChunk implements Chunk {
     @Override
     public synchronized int write(byte[] buf, int off, int len)
         throws IOException {
+        if (file == null) return len;
         long remaining = maxFileSize - writePos;
         if (remaining == 0) return 0;
         int amount = (int) Long.min(remaining, len);
@@ -87,14 +88,18 @@ class FileChunk implements Chunk {
 
     synchronized int read() throws IOException {
         boolean interrupted = false;
-        while (!complete && reason == null && readPos == writePos) {
+        while (file != null && !complete && reason == null &&
+            readPos == writePos) {
             try {
                 wait();
             } catch (InterruptedException ex) {
                 interrupted = true;
             }
         }
+
         if (interrupted) Thread.currentThread().interrupt();
+
+        if (file == null) throw new IOException("closed");
         if (reason != null) throw new StreamAbortedException(reason);
         if (readPos == writePos) return -1;
         file.seek(readPos);
@@ -104,23 +109,32 @@ class FileChunk implements Chunk {
     }
 
     synchronized void close() throws IOException {
-        file.close();
+        try {
+            file.close();
+        } finally {
+            file = null;
+        }
     }
 
     synchronized int available() throws IOException {
+        if (file == null) return 0;
         return (int) Long.max(writePos - readPos, Integer.MAX_VALUE);
     }
 
     synchronized int read(byte[] b, int off, int len) throws IOException {
         boolean interrupted = false;
-        while (!complete && reason == null && readPos == writePos) {
+        while (file != null && !complete && reason == null &&
+            readPos == writePos) {
             try {
                 wait();
             } catch (InterruptedException ex) {
                 interrupted = true;
             }
         }
+
         if (interrupted) Thread.currentThread().interrupt();
+
+        if (file == null) throw new IOException("closed");
         if (reason != null) throw new StreamAbortedException(reason);
         if (readPos == writePos) return -1;
         int amount = (int) Long.min(len, writePos - readPos);
