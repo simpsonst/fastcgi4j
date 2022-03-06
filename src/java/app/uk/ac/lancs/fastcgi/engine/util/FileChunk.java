@@ -58,8 +58,7 @@ final class FileChunk implements Chunk {
 
     private Throwable reason = null;
 
-    public FileChunk(RandomAccessFile file, long maxFileSize)
-        throws IOException {
+    public FileChunk(RandomAccessFile file, long maxFileSize) {
         this.file = file;
         this.maxFileSize = maxFileSize;
     }
@@ -82,7 +81,7 @@ final class FileChunk implements Chunk {
     }
 
     @Override
-    public synchronized void complete() throws IOException {
+    public synchronized void complete() {
         complete = true;
         notify();
     }
@@ -117,7 +116,7 @@ final class FileChunk implements Chunk {
         }
     }
 
-    synchronized int available() throws IOException {
+    synchronized int available() {
         if (file == null) return 0;
         return (int) Long.max(writePos - readPos, Integer.MAX_VALUE);
     }
