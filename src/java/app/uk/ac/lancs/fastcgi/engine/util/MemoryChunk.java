@@ -74,6 +74,7 @@ final class MemoryChunk implements Chunk {
     @Override
     public synchronized int write(byte[] buf, int off, int len)
         throws IOException {
+        if (complete) throw new IllegalStateException("complete");
         if (array == null) return len;
         check();
         try {
