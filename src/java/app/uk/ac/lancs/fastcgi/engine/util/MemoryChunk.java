@@ -66,8 +66,6 @@ final class MemoryChunk implements Chunk {
     private void check() {
         assert readPos <= writePos;
         assert readPos >= 0;
-        assert readPos <= array.length;
-        assert writePos >= 0;
         assert writePos <= array.length;
     }
 
