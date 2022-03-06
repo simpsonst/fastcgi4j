@@ -45,7 +45,7 @@ import uk.ac.lancs.fastcgi.StreamAbortedException;
  *
  * @author simpsons
  */
-class FileChunk implements Chunk {
+final class FileChunk implements Chunk {
     private final long maxFileSize;
 
     private RandomAccessFile file;

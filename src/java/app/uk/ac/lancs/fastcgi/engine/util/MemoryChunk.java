@@ -45,7 +45,7 @@ import uk.ac.lancs.fastcgi.StreamAbortedException;
  *
  * @author simpsons
  */
-class MemoryChunk implements Chunk {
+final class MemoryChunk implements Chunk {
     private final AtomicLong memoryUsage;
 
     private byte[] array;
