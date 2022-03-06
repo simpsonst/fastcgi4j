@@ -105,9 +105,7 @@ final class FileChunk implements Chunk {
         file.write(buf, off, amount);
 
         /* Remember our new file position. */
-        long exp = writePos + amount;
-        writePos = file.getFilePointer();
-        assert writePos == exp;
+        writePos += amount;
 
         /* Let the reader know there's data, and the caller how much was
          * consumed. */
