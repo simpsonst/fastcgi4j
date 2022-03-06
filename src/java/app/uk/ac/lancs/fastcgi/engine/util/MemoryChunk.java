@@ -74,6 +74,7 @@ class MemoryChunk implements Chunk {
     @Override
     public synchronized int write(byte[] buf, int off, int len)
         throws IOException {
+        if (array == null) return len;
         check();
         try {
             final int rem = array.length - writePos;
@@ -119,14 +120,18 @@ class MemoryChunk implements Chunk {
         check();
         try {
             boolean interrupted = false;
-            while (!complete && reason == null && readPos == writePos) {
+            while (array != null && !complete && reason == null &&
+                readPos == writePos) {
                 try {
                     wait();
                 } catch (InterruptedException ex) {
                     interrupted = true;
                 }
             }
+
             if (interrupted) Thread.currentThread().interrupt();
+
+            if (array == null) throw new IOException("closed");
             if (reason != null) throw new StreamAbortedException(reason);
             if (readPos == writePos) return -1;
             return array[readPos++] & 0xff;
@@ -139,14 +144,18 @@ class MemoryChunk implements Chunk {
         check();
         try {
             boolean interrupted = false;
-            while (!complete && reason == null && readPos == writePos) {
+            while (array != null && !complete && reason == null &&
+                readPos == writePos) {
                 try {
                     wait();
                 } catch (InterruptedException ex) {
                     interrupted = true;
                 }
             }
+
             if (interrupted) Thread.currentThread().interrupt();
+
+            if (array == null) throw new IOException("closed");
             if (reason != null) throw new StreamAbortedException(reason);
             if (readPos == writePos) return -1;
             int amount = Integer.min(len, writePos - readPos);
