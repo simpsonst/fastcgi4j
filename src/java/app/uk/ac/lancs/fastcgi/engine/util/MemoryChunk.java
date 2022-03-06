@@ -139,6 +139,11 @@ final class MemoryChunk implements Chunk {
      */
     synchronized void close() {
         array = null;
+
+        /* The memory is no longer in use, so account for it as if it
+         * had been delivered. */
+        memoryUsage.addAndGet(readPos - writePos);
+        readPos = writePos;
     }
 
     /**
@@ -190,6 +195,7 @@ final class MemoryChunk implements Chunk {
             if (readPos == writePos) return -1;
 
             /* At least one byte is available, so provide it. */
+            memoryUsage.addAndGet(-1);
             return array[readPos++] & 0xff;
         } finally {
             check();
