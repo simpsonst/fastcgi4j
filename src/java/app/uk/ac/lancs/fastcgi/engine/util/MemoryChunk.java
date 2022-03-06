@@ -143,7 +143,6 @@ class MemoryChunk implements Chunk {
                 try {
                     wait();
                 } catch (InterruptedException ex) {
-                    if (interrupted) Thread.currentThread().interrupt();
                     interrupted = true;
                 }
             }
