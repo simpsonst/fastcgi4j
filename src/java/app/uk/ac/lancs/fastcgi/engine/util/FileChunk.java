@@ -67,6 +67,7 @@ class FileChunk implements Chunk {
     @Override
     public synchronized int write(byte[] buf, int off, int len)
         throws IOException {
+        if (complete) throw new IllegalStateException("complete");
         if (file == null) return len;
         long remaining = maxFileSize - writePos;
         if (remaining == 0) return 0;
