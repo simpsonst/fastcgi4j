@@ -93,8 +93,8 @@ final class FileChunk implements Chunk {
         /* Short-circuit the no-op. */
         if (len == 0) return 0;
 
-        /* The consumer has already indicated they're not longer
-         * interested in the content, so we can absorb it. */
+        /* If the consumer has already indicated they're not longer
+         * interested in the content, we can absorb it. */
         if (file == null) return len;
 
         /* How much space have we got left? Indicate if we can't take

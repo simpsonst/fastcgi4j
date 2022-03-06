@@ -98,14 +98,20 @@ final class MemoryChunk implements Chunk {
      */
     @Override
     public synchronized int write(byte[] buf, int off, int len) {
+        /* The content provider should not be supplying more content
+         * when they've already said there's no more. */
         if (complete) throw new IllegalStateException("complete");
 
         /* Short-circuit the no-op. */
         if (len == 0) return 0;
 
+        /* If the consumer has already indicated they're not longer
+         * interested in the content, we can absorb it. */
         if (array == null) return len;
+
         check();
         try {
+            /* How much space is at the end of the array? */
             final int rem = array.length - writePos;
             final int amount;
             if (len > rem) {
@@ -121,6 +127,7 @@ final class MemoryChunk implements Chunk {
                 amount = Integer.min(len, rem);
             }
 
+            /* Consume some of the supplied content. */
             System.arraycopy(buf, off, array, writePos, amount);
             writePos += amount;
             memoryUsage.addAndGet(amount);
