@@ -147,6 +147,7 @@ class MemoryChunk implements Chunk {
                     interrupted = true;
                 }
             }
+            if (interrupted) Thread.currentThread().interrupt();
             if (reason != null) throw new StreamAbortedException(reason);
             if (readPos == writePos) return -1;
             int amount = Integer.min(len, writePos - readPos);
