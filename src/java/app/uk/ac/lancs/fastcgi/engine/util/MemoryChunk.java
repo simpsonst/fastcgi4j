@@ -42,7 +42,14 @@ import java.util.concurrent.atomic.AtomicLong;
 import uk.ac.lancs.fastcgi.StreamAbortedException;
 
 /**
- *
+ * Stores content in a byte array. A maximum size is configured. When
+ * there are insufficient bytes at the end of the array for a write
+ * operation, but there are free bytes at the start because of prior
+ * read operations, the contents are shifted to the start of the array
+ * for re-use of the space. Changes to the amount of space used are
+ * recorded in an atomic counter, allowing the user to decide when to
+ * switch to backing store for new chunks.
+ * 
  * @author simpsons
  */
 final class MemoryChunk implements Chunk {
@@ -50,6 +57,15 @@ final class MemoryChunk implements Chunk {
 
     private byte[] array;
 
+    /**
+     * Create a chunk storing content in a byte array.
+     * 
+     * @param memChunkSize the maximum number of bytes to be permitted
+     * in the chunk simultaneously
+     * 
+     * @param memoryUsage a counter to be updated as bytes are added and
+     * removed
+     */
     public MemoryChunk(int memChunkSize, AtomicLong memoryUsage) {
         this.memoryUsage = memoryUsage;
         this.array = new byte[memChunkSize];
@@ -69,6 +85,17 @@ final class MemoryChunk implements Chunk {
         assert writePos <= array.length;
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * If there is space at the start of the buffer because bytes there
+     * have already been read, the array contents may be shifted to the
+     * start, to make more space at the end. As a result, a sufficiently
+     * fast reader might prevent the array from filling up, and so
+     * obviate the creation of a new chunk. Therefore, the total number
+     * of bytes handled by the chunk may be more than the configured
+     * limit.
+     */
     @Override
     public synchronized int write(byte[] buf, int off, int len) {
         if (complete) throw new IllegalStateException("complete");
@@ -106,14 +133,40 @@ final class MemoryChunk implements Chunk {
         notify();
     }
 
+    /**
+     * Close the input stream. {@link #array} is set to {@code null} to
+     * mark this. Closing twice is not an error.
+     */
     synchronized void close() {
         array = null;
     }
 
+    /**
+     * Compute the available bytes.
+     * 
+     * @return the number of available bytes, i.e., the difference
+     * between the read and write positions
+     */
     synchronized int available() {
         return writePos - readPos;
     }
 
+    /**
+     * Read a single byte. The thread's monitor is claimed until the
+     * input stream has been closed, or the content has been marked as
+     * complete, or a reason for abortion has been specified, or some
+     * bytes are available. If interrupted while waiting for more bytes,
+     * this method continues waiting for the terminating condition, but
+     * will re-interrupt the thread as soon as it is met.
+     * 
+     * @return the byte read, as an unsigned value; or {@code -1} on
+     * end-of-file
+     * 
+     * @throws StreamAbortedException if the stream has been aborted
+     * with {@link #abort(Throwable)}
+     * 
+     * @throws IOException if the input stream has been closed
+     */
     synchronized int read() throws IOException {
         check();
         try {
@@ -127,6 +180,7 @@ final class MemoryChunk implements Chunk {
                 }
             }
 
+            /* Re-transmit the interruption. */
             if (interrupted) Thread.currentThread().interrupt();
 
             if (array == null) throw new IOException("closed");
@@ -138,6 +192,28 @@ final class MemoryChunk implements Chunk {
         }
     }
 
+    /**
+     * Read several bytes into an array. The thread's monitor is claimed
+     * until the input stream has been closed, or the content has been
+     * marked as complete, or a reason for abortion has been specified,
+     * or some bytes are available. If interrupted while waiting for
+     * more bytes, this method continues waiting for the terminating
+     * condition, but will re-interrupt the thread as soon as it is met.
+     *
+     * 
+     * @param b the array to store the bytes
+     * 
+     * @param off the index into the array of the first byte
+     * 
+     * @param len the maximum number of bytes to read
+     * 
+     * @return the number of bytes read; or {@code -1} on end-of-file
+     * 
+     * @throws StreamAbortedException if the stream has been aborted
+     * with {@link #abort(Throwable)}
+     * 
+     * @throws IOException if the input stream has been closed
+     */
     synchronized int read(byte[] b, int off, int len) throws IOException {
         check();
         try {
@@ -151,6 +227,7 @@ final class MemoryChunk implements Chunk {
                 }
             }
 
+            /* Re-transmit the interruption. */
             if (interrupted) Thread.currentThread().interrupt();
 
             if (array == null) throw new IOException("closed");

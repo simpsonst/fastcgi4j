@@ -40,17 +40,31 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
+ * Keeps a pool of redundant byte arrays.
+ * 
  * @author simpsons
  */
 class BufferPool {
     private final List<byte[]> paramBufs = new ArrayList<>();
 
+    /**
+     * Get a buffer. One from the pool is chosen, removed and returned.
+     * A new small one is created and returned if there isn't one in the
+     * pool.
+     * 
+     * @return a free byte array as a buffer
+     */
     public synchronized byte[] getBuffer() {
         if (paramBufs.isEmpty()) return new byte[128];
         return paramBufs.remove(paramBufs.size() - 1);
     }
 
+    /**
+     * Add a byte array to the pool. The caller must not retain the
+     * reference to the pool subsequently.
+     * 
+     * @param buf the array to be added to the pool
+     */
     public synchronized void returnParamBuf(byte[] buf) {
         paramBufs.add(buf);
     }

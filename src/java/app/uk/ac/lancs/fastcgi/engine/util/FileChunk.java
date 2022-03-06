@@ -42,6 +42,7 @@ import java.io.RandomAccessFile;
 import uk.ac.lancs.fastcgi.StreamAbortedException;
 
 /**
+ * Stores content in a file.
  *
  * @author simpsons
  */
@@ -58,11 +59,30 @@ final class FileChunk implements Chunk {
 
     private Throwable reason = null;
 
+    /**
+     * Create a chunk stored in a file.
+     * 
+     * @param file the handle for reading and writing to and from the
+     * stream
+     * 
+     * @param maxFileSize the maximum number of bytes to allow to be
+     * written
+     */
     public FileChunk(RandomAccessFile file, long maxFileSize) {
         this.file = file;
         this.maxFileSize = maxFileSize;
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * This method claims the monitor, seeks to the end of the file, and
+     * writes up to the requested amount, ensuring that the configured
+     * maximum size is not exceeded.
+     * 
+     * @throws IllegalStateException if the chunk has been completed
+     * using {@link #complete()}
+     */
     @Override
     public synchronized int write(byte[] buf, int off, int len)
         throws IOException {
@@ -80,12 +100,33 @@ final class FileChunk implements Chunk {
         return amount;
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * The content is marked as complete.
+     */
     @Override
     public synchronized void complete() {
         complete = true;
         notify();
     }
 
+    /**
+     * Read a single byte. The thread's monitor is claimed until the
+     * input stream has been closed, or the content has been marked as
+     * complete, or a reason for abortion has been specified, or some
+     * bytes are available. If interrupted while waiting for more bytes,
+     * this method continues waiting for the terminating condition, but
+     * will re-interrupt the thread as soon as it is met.
+     * 
+     * @return the byte read, as an unsigned value; or {@code -1} on
+     * end-of-file
+     * 
+     * @throws StreamAbortedException if the stream has been aborted
+     * with {@link #abort(Throwable)}
+     * 
+     * @throws IOException if the input stream has been closed
+     */
     synchronized int read() throws IOException {
         boolean interrupted = false;
         while (file != null && !complete && reason == null &&
@@ -97,6 +138,7 @@ final class FileChunk implements Chunk {
             }
         }
 
+        /* Re-transmit the interruption. */
         if (interrupted) Thread.currentThread().interrupt();
 
         if (file == null) throw new IOException("closed");
@@ -108,6 +150,12 @@ final class FileChunk implements Chunk {
         return r;
     }
 
+    /**
+     * Close the input stream. The underlying stream is closed, and its
+     * handle is discarded to mark this.
+     * 
+     * @throws IOException if closing the underlying file fails
+     */
     synchronized void close() throws IOException {
         try {
             file.close();
@@ -121,6 +169,27 @@ final class FileChunk implements Chunk {
         return (int) Long.max(writePos - readPos, Integer.MAX_VALUE);
     }
 
+    /**
+     * Read several bytes into an array. The thread's monitor is claimed
+     * until the input stream has been closed, or the content has been
+     * marked as complete, or a reason for abortion has been specified,
+     * or some bytes are available. If interrupted while waiting for
+     * more bytes, this method continues waiting for the terminating
+     * condition, but will re-interrupt the thread as soon as it is met.
+     * 
+     * @param b the array to store the bytes
+     * 
+     * @param off the index into the array of the first byte
+     * 
+     * @param len the maximum number of bytes to read
+     * 
+     * @return the number of bytes read; or {@code -1} on end-of-file
+     * 
+     * @throws StreamAbortedException if the stream has been aborted
+     * with {@link #abort(Throwable)}
+     * 
+     * @throws IOException if the input stream has been closed
+     */
     synchronized int read(byte[] b, int off, int len) throws IOException {
         boolean interrupted = false;
         while (file != null && !complete && reason == null &&
@@ -132,6 +201,7 @@ final class FileChunk implements Chunk {
             }
         }
 
+        /* Re-transmit the interruption. */
         if (interrupted) Thread.currentThread().interrupt();
 
         if (file == null) throw new IOException("closed");

@@ -44,24 +44,57 @@ import java.io.InputStream;
  * @author simpsons
  */
 class EmptyInputStream extends InputStream {
+    /**
+     * Close the stream. In fact, this method has nothing to do.
+     */
     @Override
     public void close() {}
 
+    /**
+     * Get the number of bytes available on this stream.
+     * 
+     * @return the number of available bytes, which is zero
+     */
     @Override
     public int available() {
         return 0;
     }
 
+    /**
+     * Skip bytes on this stream. As there are none, none are skipped.
+     * 
+     * @param n the maximum number of bytes to skip
+     * 
+     * @return the number of bytes skipped, which is zero
+     */
     @Override
     public long skip(long n) {
         return 0;
     }
 
+    /**
+     * Read bytes from this stream into an array.
+     * 
+     * @param b the array to write bytes into
+     * 
+     * @param off the index of the first byte to overwrite
+     * 
+     * @param len the maximum number of bytes to read
+     * 
+     * @return {@code -1}, indicating that there are no more bytes to
+     * read
+     */
     @Override
     public int read(byte[] b, int off, int len) {
         return -1;
     }
 
+    /**
+     * Read a byte from this stream.
+     * 
+     * @return {@code -1}, indicating that there are no more bytes to
+     * read
+     */
     @Override
     public int read() {
         return -1;
