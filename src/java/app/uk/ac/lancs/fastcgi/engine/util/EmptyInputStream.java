@@ -36,7 +36,6 @@
 
 package uk.ac.lancs.fastcgi.engine.util;
 
-import java.io.IOException;
 import java.io.InputStream;
 
 /**
@@ -46,25 +45,25 @@ import java.io.InputStream;
  */
 class EmptyInputStream extends InputStream {
     @Override
-    public void close() throws IOException {}
+    public void close() {}
 
     @Override
-    public int available() throws IOException {
+    public int available() {
         return 0;
     }
 
     @Override
-    public long skip(long n) throws IOException {
+    public long skip(long n) {
         return 0;
     }
 
     @Override
-    public int read(byte[] b, int off, int len) throws IOException {
+    public int read(byte[] b, int off, int len) {
         return -1;
     }
 
     @Override
-    public int read() throws IOException {
+    public int read() {
         return -1;
     }
 }
