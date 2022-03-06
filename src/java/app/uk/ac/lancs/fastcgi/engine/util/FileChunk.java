@@ -86,16 +86,31 @@ final class FileChunk implements Chunk {
     @Override
     public synchronized int write(byte[] buf, int off, int len)
         throws IOException {
+        /* The content provider should not be supplying more content
+         * when they've already said there's no more. */
         if (complete) throw new IllegalStateException("complete");
+
+        /* The consumer has already indicated they're not longer
+         * interested in the content, so we can absorb it. */
         if (file == null) return len;
+
+        /* How much space have we got left? Indicate if we can't take
+         * any more. */
         long remaining = maxFileSize - writePos;
         if (remaining == 0) return 0;
+
+        /* Decide how much to actually accept, and copy to the file. */
         int amount = (int) Long.min(remaining, len);
         file.seek(writePos);
         file.write(buf, off, amount);
+
+        /* Remember our new file position. */
         long exp = writePos + amount;
         writePos = file.getFilePointer();
         assert writePos == exp;
+
+        /* Let the reader know there's data, and the caller how much was
+         * consumed. */
         notify();
         return amount;
     }
@@ -128,6 +143,7 @@ final class FileChunk implements Chunk {
      * @throws IOException if the input stream has been closed
      */
     synchronized int read() throws IOException {
+        /* Wait until there's no reason to block. */
         boolean interrupted = false;
         while (file != null && !complete && reason == null &&
             readPos == writePos) {
@@ -141,9 +157,12 @@ final class FileChunk implements Chunk {
         /* Re-transmit the interruption. */
         if (interrupted) Thread.currentThread().interrupt();
 
+        /* Detect errors and end-of-file. */
         if (file == null) throw new IOException("closed");
         if (reason != null) throw new StreamAbortedException(reason);
         if (readPos == writePos) return -1;
+
+        /* At least one byte is available, so seek and provide it. */
         file.seek(readPos);
         int r = file.read();
         readPos++;
@@ -191,6 +210,7 @@ final class FileChunk implements Chunk {
      * @throws IOException if the input stream has been closed
      */
     synchronized int read(byte[] b, int off, int len) throws IOException {
+        /* Wait until there's no reason to block. */
         boolean interrupted = false;
         while (file != null && !complete && reason == null &&
             readPos == writePos) {
@@ -204,9 +224,13 @@ final class FileChunk implements Chunk {
         /* Re-transmit the interruption. */
         if (interrupted) Thread.currentThread().interrupt();
 
+        /* Detect errors and end-of-file. */
         if (file == null) throw new IOException("closed");
         if (reason != null) throw new StreamAbortedException(reason);
         if (readPos == writePos) return -1;
+
+        /* At least one byte is available. Work out how much to provide,
+         * transfer it, and report how much was moved. */
         int amount = (int) Long.min(len, writePos - readPos);
         file.seek(readPos);
         file.readFully(b, off, amount);

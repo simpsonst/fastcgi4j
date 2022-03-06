@@ -170,6 +170,7 @@ final class MemoryChunk implements Chunk {
     synchronized int read() throws IOException {
         check();
         try {
+            /* Wait until there's no reason to block. */
             boolean interrupted = false;
             while (array != null && !complete && reason == null &&
                 readPos == writePos) {
@@ -183,9 +184,12 @@ final class MemoryChunk implements Chunk {
             /* Re-transmit the interruption. */
             if (interrupted) Thread.currentThread().interrupt();
 
+            /* Detect errors and end-of-file. */
             if (array == null) throw new IOException("closed");
             if (reason != null) throw new StreamAbortedException(reason);
             if (readPos == writePos) return -1;
+
+            /* At least one byte is available, so provide it. */
             return array[readPos++] & 0xff;
         } finally {
             check();
@@ -217,6 +221,7 @@ final class MemoryChunk implements Chunk {
     synchronized int read(byte[] b, int off, int len) throws IOException {
         check();
         try {
+            /* Wait until there's no reason to block. */
             boolean interrupted = false;
             while (array != null && !complete && reason == null &&
                 readPos == writePos) {
@@ -230,9 +235,13 @@ final class MemoryChunk implements Chunk {
             /* Re-transmit the interruption. */
             if (interrupted) Thread.currentThread().interrupt();
 
+            /* Detect errors and end-of-file. */
             if (array == null) throw new IOException("closed");
             if (reason != null) throw new StreamAbortedException(reason);
             if (readPos == writePos) return -1;
+
+            /* At least one byte is available, so work out how much to
+             * provide, and transfer it. */
             int amount = Integer.min(len, writePos - readPos);
             if (amount == 0) return 0;
             assert amount > 0;
