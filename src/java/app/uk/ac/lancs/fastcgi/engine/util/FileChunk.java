@@ -38,7 +38,6 @@ package uk.ac.lancs.fastcgi.engine.util;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InterruptedIOException;
 import java.io.RandomAccessFile;
 import uk.ac.lancs.fastcgi.StreamAbortedException;
 
@@ -87,13 +86,15 @@ class FileChunk implements Chunk {
     }
 
     synchronized int read() throws IOException {
+        boolean interrupted = false;
         while (!complete && reason == null && readPos == writePos) {
             try {
                 wait();
             } catch (InterruptedException ex) {
-                throw new InterruptedIOException();
+                interrupted = true;
             }
         }
+        if (interrupted) Thread.currentThread().interrupt();
         if (reason != null) throw new StreamAbortedException(reason);
         if (readPos == writePos) return -1;
         file.seek(readPos);
@@ -111,13 +112,15 @@ class FileChunk implements Chunk {
     }
 
     synchronized int read(byte[] b, int off, int len) throws IOException {
+        boolean interrupted = false;
         while (!complete && reason == null && readPos == writePos) {
             try {
                 wait();
             } catch (InterruptedException ex) {
-                throw new InterruptedIOException();
+                interrupted = true;
             }
         }
+        if (interrupted) Thread.currentThread().interrupt();
         if (reason != null) throw new StreamAbortedException(reason);
         if (readPos == writePos) return -1;
         int amount = (int) Long.min(len, writePos - readPos);

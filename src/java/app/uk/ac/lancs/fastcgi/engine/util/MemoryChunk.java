@@ -38,7 +38,6 @@ package uk.ac.lancs.fastcgi.engine.util;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InterruptedIOException;
 import java.util.concurrent.atomic.AtomicLong;
 import uk.ac.lancs.fastcgi.StreamAbortedException;
 
@@ -119,13 +118,15 @@ class MemoryChunk implements Chunk {
     synchronized int read() throws IOException {
         check();
         try {
+            boolean interrupted = false;
             while (!complete && reason == null && readPos == writePos) {
                 try {
                     wait();
                 } catch (InterruptedException ex) {
-                    throw new InterruptedIOException();
+                    interrupted = true;
                 }
             }
+            if (interrupted) Thread.currentThread().interrupt();
             if (reason != null) throw new StreamAbortedException(reason);
             if (readPos == writePos) return -1;
             return array[readPos++] & 0xff;
@@ -137,11 +138,13 @@ class MemoryChunk implements Chunk {
     synchronized int read(byte[] b, int off, int len) throws IOException {
         check();
         try {
+            boolean interrupted = false;
             while (!complete && reason == null && readPos == writePos) {
                 try {
                     wait();
                 } catch (InterruptedException ex) {
-                    throw new InterruptedIOException();
+                    if (interrupted) Thread.currentThread().interrupt();
+                    interrupted = true;
                 }
             }
             if (reason != null) throw new StreamAbortedException(reason);
