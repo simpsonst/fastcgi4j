@@ -232,9 +232,10 @@ final class FileChunk implements Chunk {
          * transfer it, and report how much was moved. */
         int amount = (int) Long.min(len, writePos - readPos);
         file.seek(readPos);
-        file.readFully(b, off, amount);
-        readPos += amount;
-        return amount;
+        int got = file.read(b, off, amount);
+        assert got >= 0;
+        readPos += got;
+        return got;
     }
 
     @Override
