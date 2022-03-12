@@ -67,6 +67,15 @@ roots_tests += $(found_tests)
 deps_tests += api
 deps_tests += app
 
+hidden_libraries += main
+main_libname = fastcgi4j
+main_mod += native
+
+SHAREDIR ?= $(PREFIX)/share/fastcgi4j
+LIBEXECDIR ?= $(PREFIX)/libexec/fastcgi4j
+
+include binodeps.mk
+
 include jardeps.mk
 -include jardeps-install.mk
 
@@ -88,6 +97,8 @@ ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_UNIX))),)
 DOC_PKGS += uk.ac.lancs.fastcgi.transport.junixsocket
 DOC_PKGS += uk.ac.lancs.fastcgi.transport.native_unix
 endif
+
+$(BINODEPS_OBJDIR)/native.lo: | tmp/tree-unix.compiled
 
 all:: installed-jars
 installed-jars:: $(SELECTED_JARS:%=out/%.jar)
