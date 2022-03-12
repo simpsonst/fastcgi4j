@@ -34,46 +34,11 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-package uk.ac.lancs.fastcgi.transport.junixsocket;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import org.newsclub.net.unix.AFUNIXSocket;
-import uk.ac.lancs.fastcgi.transport.Connection;
-
 /**
- * Provides a FastCGI connection backed by a Unix-domain socket.
+ * Provides access to file descriptor 0 in a server-forked environment
+ * using native calls, whether Unix- or Internet-domain sockets are
+ * used.
  * 
  * @author simpsons
  */
-class ForkedUnixConnection implements Connection {
-    private final AFUNIXSocket socket;
-
-    private final String descr;
-
-    public ForkedUnixConnection(String descr, AFUNIXSocket socket) {
-        this.descr = descr;
-        this.socket = socket;
-    }
-
-    @Override
-    public InputStream getInput() throws IOException {
-        return socket.getInputStream();
-    }
-
-    @Override
-    public OutputStream getOutput() throws IOException {
-        return socket.getOutputStream();
-    }
-
-    @Override
-    public void close() throws IOException {
-        socket.close();
-    }
-
-    @Override
-    public String description() {
-        return descr;
-    }
-}
+package uk.ac.lancs.fastcgi.transport.native_unix;

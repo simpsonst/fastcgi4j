@@ -57,7 +57,7 @@ import uk.ac.lancs.scc.jardeps.Service;
  * @author simpsons
  */
 @Service(ConnectionFactory.class)
-public class ForkedUnixConnectionFactory implements ConnectionFactory {
+public class ForkedAFUNIXConnectionFactory implements ConnectionFactory {
     /**
      * {@inheritDoc}
      * 
@@ -89,7 +89,7 @@ public class ForkedUnixConnectionFactory implements ConnectionFactory {
              * FastCGI with a Unix-domain socket. */
             AFUNIXServerSocket serverSocket =
                 AFUNIXServerSocket.newInstance(FileDescriptor.in, 1000, 1001);
-            return new ForkedUnixConnectionSupply(serverSocket);
+            return new ForkedAFUNIXConnectionSupply(serverSocket);
         } catch (SocketException ex) {
             return null;
         } catch (IOException ex) {

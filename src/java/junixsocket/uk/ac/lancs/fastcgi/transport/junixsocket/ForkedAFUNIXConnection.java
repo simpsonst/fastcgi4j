@@ -37,38 +37,43 @@
 package uk.ac.lancs.fastcgi.transport.junixsocket;
 
 import java.io.IOException;
-import org.newsclub.net.unix.AFUNIXServerSocket;
+import java.io.InputStream;
+import java.io.OutputStream;
 import org.newsclub.net.unix.AFUNIXSocket;
 import uk.ac.lancs.fastcgi.transport.Connection;
-import uk.ac.lancs.fastcgi.transport.ConnectionSupply;
 
 /**
- * Supplies connections by accepting from a Unix-domain server socket.
+ * Provides a FastCGI connection backed by a Unix-domain socket.
  * 
  * @author simpsons
  */
-class ForkedUnixConnectionSupply implements ConnectionSupply {
-    private final AFUNIXServerSocket serverSocket;
+class ForkedAFUNIXConnection implements Connection {
+    private final AFUNIXSocket socket;
 
-    /**
-     * Create a connection supply from a Unix-domain server socket.
-     * 
-     * @param serverSocket the server socket
-     */
-    public ForkedUnixConnectionSupply(AFUNIXServerSocket serverSocket) {
-        this.serverSocket = serverSocket;
+    private final String descr;
+
+    public ForkedAFUNIXConnection(String descr, AFUNIXSocket socket) {
+        this.descr = descr;
+        this.socket = socket;
     }
 
-    /**
-     * {@inheritDoc}
-     * 
-     * @default This implementation invokes
-     * {@link AFUNIXServerSocket#accept()} to produce a
-     * {@link ForkedUnixConnection}.
-     */
     @Override
-    public Connection nextConnection() throws IOException {
-        AFUNIXSocket socket = serverSocket.accept();
-        return new ForkedUnixConnection("unix-forked", socket);
+    public InputStream getInput() throws IOException {
+        return socket.getInputStream();
+    }
+
+    @Override
+    public OutputStream getOutput() throws IOException {
+        return socket.getOutputStream();
+    }
+
+    @Override
+    public void close() throws IOException {
+        socket.close();
+    }
+
+    @Override
+    public String description() {
+        return descr;
     }
 }

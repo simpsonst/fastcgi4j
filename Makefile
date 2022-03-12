@@ -31,6 +31,9 @@ trees_fastcgi4j_inet += inet
 ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_UNIX))),)
 SELECTED_JARS += fastcgi4j_unix
 trees_fastcgi4j_unix += unix
+
+SELECTED_JARS += fastcgi4j_junixsocket
+trees_fastcgi4j_junixsocket += junixsocket
 endif
 
 jars += $(SELECTED_JARS)
@@ -51,6 +54,9 @@ roots_proto += $(found_proto)
 roots_unix += $(found_unix)
 deps_unix += app
 deps_unix += proto
+roots_junixsocket += $(found_junixsocket)
+deps_junixsocket += app
+deps_junixsocket += proto
 roots_inet += $(found_inet)
 deps_inet += app
 deps_inet += proto
@@ -80,6 +86,7 @@ DOC_PKGS += uk.ac.lancs.fastcgi.transport
 DOC_PKGS += uk.ac.lancs.fastcgi.transport.inet
 ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_UNIX))),)
 DOC_PKGS += uk.ac.lancs.fastcgi.transport.junixsocket
+DOC_PKGS += uk.ac.lancs.fastcgi.transport.native_unix
 endif
 
 all:: installed-jars
