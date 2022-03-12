@@ -67,7 +67,9 @@ roots_tests += $(found_tests)
 deps_tests += api
 deps_tests += app
 
+ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_UNIX))),)
 hidden_libraries += main
+endif
 main_libname = fastcgi4j
 main_mod += native
 
@@ -100,7 +102,7 @@ endif
 
 $(BINODEPS_OBJDIR)/native.lo: | tmp/tree-unix.compiled
 
-all:: installed-jars
+all:: installed-jars installed-libraries
 installed-jars:: $(SELECTED_JARS:%=out/%.jar)
 installed-jars:: $(SELECTED_JARS:%=out/%-src.zip)
 
@@ -109,7 +111,7 @@ install-jar-%::
 
 install-jars:: $(SELECTED_JARS:%=install-jar-%)
 
-install:: install-jars
+install:: install-jars install-hidden-libraries
 
 tidy::
 	@$(PRINTF) 'Deleting trash\n'
