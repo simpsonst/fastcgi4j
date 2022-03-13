@@ -181,7 +181,7 @@ public class FastCGIApplication {
      */
     public static void main(String[] args) throws Exception {
         class MyConfig implements FastCGIConfiguration {
-            Properties props = System.getProperties();
+            Properties props = new Properties(System.getProperties());
 
             Responder responder;
 
