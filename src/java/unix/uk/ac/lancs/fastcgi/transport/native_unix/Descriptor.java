@@ -237,4 +237,8 @@ class Descriptor {
 
     static final Logger logger =
         Logger.getLogger(Descriptor.class.getPackageName());
+
+    static {
+        System.loadLibrary("fastcgi4j");
+    }
 }
