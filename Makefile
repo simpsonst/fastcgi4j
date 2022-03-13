@@ -99,8 +99,10 @@ DOC_PKGS += uk.ac.lancs.fastcgi.proto
 DOC_PKGS += uk.ac.lancs.fastcgi.proto.serial
 DOC_PKGS += uk.ac.lancs.fastcgi.transport
 DOC_PKGS += uk.ac.lancs.fastcgi.transport.inet
-ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_UNIX))),)
+ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_JUNIXSOCKET))),)
 DOC_PKGS += uk.ac.lancs.fastcgi.transport.junixsocket
+endif
+ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_UNIX))),)
 DOC_PKGS += uk.ac.lancs.fastcgi.transport.native_unix
 endif
 
