@@ -115,56 +115,39 @@ public class FastCGIApplication {
      * <dd>Load a Java properties file, and place it atop a stack used
      * to define engine attributes. The previous stack element is used
      * for defaults. Subsequent arguments modify properties at the top
-     * of the stack. The default stack element is the system properties.
+     * of the stack. The default stack consists of an empty element atop
+     * the system properties.
      * 
      * <dt><kbd>+f</kbd>
      * 
      * <dd>Push an empty set of properties onto the stack.
      * 
      * <dt><kbd>-c <var>num</var></kbd>
-     * <dt><kbd>-Duk.ac.lancs.fastcgi.nconn=<var>num</var></kbd>
+     * <dt><kbd>+c</kbd> (to reset)
      * 
-     * <dd>Limit the number of concurrent transport connections.
-     * 
-     * <dt><kbd>+c</kbd>
-     * <dt><kbd>-Uuk.ac.lancs.fastcgi.nconn</kbd>
-     * 
-     * <dd>Remove the limit on the number of concurrent transport
-     * connections.
+     * <dd>Limit the number of concurrent transport connections. The
+     * equivalent property is <samp>uk.ac.lancs.fastcgi.nconn</samp>.
      * 
      * <dt><kbd>-s <var>num</var></kbd>
-     * <dt><kbd>-Duk.ac.lancs.fastcgi.nsess=<var>num</var></kbd>
+     * <dt><kbd>+s</kbd> (to reset)
      * 
-     * <dd>Limit the number of concurrent sessions.
-     * 
-     * <dt><kbd>+s</kbd>
-     * <dt><kbd>-Uuk.ac.lancs.fastcgi.nsess</kbd>
-     * 
-     * <dd>Remove the limit on the number of concurrent sessions.
+     * <dd>Limit the number of concurrent sessions. The equivalent
+     * property is <samp>uk.ac.lancs.fastcgi.nsess</samp>.
      * 
      * <dt><kbd>-p <var>num</var></kbd>
-     * <dt><kbd>-Duk.ac.lancs.fastcgi.nspc=<var>num</var></kbd>
+     * <dt><kbd>+p</kbd> (to reset)
      * 
      * <dd>Limit the number of concurrent sessions per transport
-     * connection.
-     * 
-     * <dt><kbd>+p</kbd>
-     * <dt><kbd>-Uuk.ac.lancs.fastcgi.nspc</kbd>
-     * 
-     * <dd>Remove the limit on the number of concurrent sessions per
-     * transport connection.
+     * connection. The equivalent property is
+     * <samp>uk.ac.lancs.fastcgi.nspc</samp>.
      * 
      * <dt><kbd>-b <var>cap</var></kbd>
-     * <dt><kbd>-Duk.ac.lancs.fastcgi.buffer=<var>cap</var></kbd>
+     * <dt><kbd>+b</kbd> (to reset)
      * 
      * <dd>Set the default standard output buffer capacity. This must be
      * an integer followed by an optional scale, one of
-     * <samp>kKmMgG</samp>, e.g., <samp>100k</samp>.
-     * 
-     * <dt><kbd>+b</kbd>
-     * <dt><kbd>-Uuk.ac.lancs.fastcgi.buffer</kbd>
-     * 
-     * <dd>Unset the default standard output buffer capacity.
+     * <samp>kKmMgG</samp>, e.g., <samp>100k</samp>. The equivalent
+     * property is <samp>uk.ac.lancs.fastcgi.buffer</samp>.
      * 
      * <dt><kbd>-D<var>name</var>=<var>value</var></kbd>
      * 
