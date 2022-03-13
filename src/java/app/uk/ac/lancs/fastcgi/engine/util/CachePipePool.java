@@ -40,8 +40,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
-import java.lang.ref.ReferenceQueue;
-import java.lang.ref.WeakReference;
+import java.lang.ref.Cleaner;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -57,6 +56,8 @@ import java.util.logging.Logger;
  * @author simpsons
  */
 public final class CachePipePool implements PipePool {
+    private static final Cleaner cleaner = Cleaner.create();
+
     private final Path dir;
 
     private final String prefix;
@@ -263,28 +264,6 @@ public final class CachePipePool implements PipePool {
         this.ramThreshold = ramThreshold;
     }
 
-    private static class ActionReference<T> extends WeakReference<T> {
-        private final Runnable action;
-
-        public ActionReference(T referent, Runnable action) {
-            super(referent, oldChunks);
-            this.action = action;
-        }
-    }
-
-    private static final ReferenceQueue<Object> oldChunks =
-        new ReferenceQueue<>();
-
-    private static ActionReference<?> nextRef() {
-        return (ActionReference<?>) oldChunks.poll();
-    }
-
-    private static void clearActions() {
-        ActionReference<?> ref;
-        while ((ref = nextRef()) != null)
-            ref.action.run();
-    }
-
     @Override
     public Pipe newPipe() {
         return new MyPipe();
@@ -323,7 +302,7 @@ public final class CachePipePool implements PipePool {
                 /* When the file handle is garbage-collected, delete the
                  * file. */
                 path.toFile().deleteOnExit();
-                new ActionReference<RandomAccessFile>(file, () -> {
+                cleaner.register(file, () -> {
                     try {
                         Files.deleteIfExists(path);
                     } catch (IOException ex) {
@@ -331,9 +310,6 @@ public final class CachePipePool implements PipePool {
                             .log(Level.SEVERE, null, ex);
                     }
                 });
-
-                /* Get rid of old files now. */
-                clearActions();
 
                 lastChunk = new FileChunk(file, maxFileSize);
             } else {
