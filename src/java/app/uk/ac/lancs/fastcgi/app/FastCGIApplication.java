@@ -45,6 +45,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import java.util.ServiceLoader;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import uk.ac.lancs.fastcgi.engine.Attribute;
@@ -175,6 +176,13 @@ public class FastCGIApplication {
      * <dd>Remove the configuration property <var>name</var> from the
      * top of the stack.
      * 
+     * <dt><kbd>--seek</kbd>
+     * 
+     * <dd>Do not look for <var>class-name</var>. Instead, seek the
+     * first service of type {@link FastCGIApplication} as per
+     * {@link ServiceLoader}. Abort if more than one service is found,
+     * or no service is found.
+     * 
      * </dl>
      * 
      * @throws Exception if an error occurs, duh
@@ -182,6 +190,8 @@ public class FastCGIApplication {
     public static void main(String[] args) throws Exception {
         class MyConfig implements FastCGIConfiguration {
             Properties props = new Properties(System.getProperties());
+
+            boolean seek = false;
 
             Responder responder;
 
@@ -226,6 +236,12 @@ public class FastCGIApplication {
                 List<String> appArgs = new ArrayList<>();
                 for (int i = 0; i < args.length; i++) {
                     final String arg = args[i];
+
+                    if ("--seek".equals(arg)) {
+                        seek = true;
+                        continue;
+                    }
+
                     if ("+f".equals(arg)) {
                         props = new Properties(props);
                         continue;
@@ -301,6 +317,11 @@ public class FastCGIApplication {
                         System.exit(1);
                     }
 
+                    if (seek) {
+                        appArgs = Arrays.asList(args).subList(i, args.length);
+                        break;
+                    }
+
                     if (className == null) {
                         className = arg;
                         appArgs =
@@ -310,10 +331,23 @@ public class FastCGIApplication {
                 }
 
                 /* Instantiate and initialize the main class. */
-                Class<?> clazz = Class.forName(className);
-                FastCGIApplication app =
-                    clazz.asSubclass(FastCGIApplication.class).getConstructor()
-                        .newInstance();
+                FastCGIApplication app = null;
+                if (seek) {
+                    for (FastCGIApplication cand : ServiceLoader
+                        .load(FastCGIApplication.class)) {
+                        if (app != null)
+                            throw new IllegalArgumentException("multiple"
+                                + " applications found");
+                        app = cand;
+                    }
+                    if (app == null) throw new IllegalArgumentException("no"
+                        + " application found");
+                } else {
+                    Class<?> clazz = Class.forName(className);
+                    app = clazz.asSubclass(FastCGIApplication.class)
+                        .getConstructor().newInstance();
+                }
+                assert app != null;
                 app.init(this, appArgs.toArray(n -> new String[n]));
 
                 /* Allow the application to implement roles directly. */
