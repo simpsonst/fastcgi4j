@@ -41,9 +41,9 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 /**
@@ -67,54 +67,6 @@ public final class InvocationVariables {
 
     private static final Pattern COMMA = Pattern.compile(",");
 
-    private static final class LazyAuthorizedInetPeers {
-        static final Collection<InetAddress> CACHE;
-
-        static final UnknownHostException EX;
-
-        static final Error ERROR;
-
-        static final RuntimeException RTE;
-
-        private static Collection<InetAddress> get()
-            throws UnknownHostException {
-            String text = System.getenv(WEB_SERVER_ADDRS);
-            if (text == null) return null;
-            Collection<InetAddress> result = new HashSet<>();
-            for (String item : COMMA.split(text)) {
-                InetAddress addr = InetAddress.getByName(item);
-                result.add(addr);
-            }
-            return Set.copyOf(result);
-        }
-
-        static {
-            Collection<InetAddress> computed = null;
-            UnknownHostException ex = null;
-            Error error = null;
-            RuntimeException rte = null;
-            try {
-                computed = get();
-            } catch (UnknownHostException e) {
-                ex = e;
-                Logger.getLogger(InvocationVariables.class.getName())
-                    .log(Level.SEVERE, "parsing " + WEB_SERVER_ADDRS, e);
-            } catch (Error e) {
-                error = e;
-                Logger.getLogger(InvocationVariables.class.getName())
-                    .log(Level.SEVERE, "parsing " + WEB_SERVER_ADDRS, e);
-            } catch (RuntimeException e) {
-                rte = e;
-                Logger.getLogger(InvocationVariables.class.getName())
-                    .log(Level.SEVERE, "parsing " + WEB_SERVER_ADDRS, e);
-            }
-            EX = ex;
-            RTE = rte;
-            ERROR = error;
-            CACHE = computed;
-        }
-    }
-
     /**
      * Get the set of IP addresses of legitimate peers as a set of
      * structured data. This reads from the environment variable
@@ -128,17 +80,146 @@ public final class InvocationVariables {
      * 
      * @throws UnknownHostException if an element of the variable's
      * value could not be parsed
+     * 
+     * @see #getAuthorizedStandaloneInetPeers()
      */
     public static Collection<InetAddress> getAuthorizedInetPeers()
         throws UnknownHostException {
-        if (LazyAuthorizedInetPeers.EX != null)
-            throw LazyAuthorizedInetPeers.EX;
-        if (LazyAuthorizedInetPeers.ERROR != null)
-            throw LazyAuthorizedInetPeers.ERROR;
-        if (LazyAuthorizedInetPeers.RTE != null)
-            throw LazyAuthorizedInetPeers.RTE;
-        return LazyAuthorizedInetPeers.CACHE;
+        return getPermittedPeers(WEB_SERVER_ADDRS);
     }
+
+    /**
+     * Get the set of IP addresses of legitimate peers as a set of
+     * structured data. This reads from the environment variable
+     * {@value #INET_SERVER_ADDRS}, which is only to be used when
+     * operating in stand-alone mode. The result is cached, so only the
+     * first call will actually do anything. An exception in the first
+     * call is preserved for other calls, so its stack trace will not be
+     * correct.
+     * 
+     * @return an unmodifiable set of IP addresses; or {@code null} if
+     * the variable is not set
+     * 
+     * @throws UnknownHostException if an element of the variable's
+     * value could not be parsed
+     * 
+     * @see #getAuthorizedInetPeers()
+     */
+    public static Collection<InetAddress> getAuthorizedStandaloneInetPeers()
+        throws UnknownHostException {
+        return getPermittedPeers(INET_SERVER_ADDRS);
+    }
+
+    /**
+     * Convert a comma-separated string into a set of Internet
+     * addresses. Each item is converted with
+     * {@link InetAddress#getByName(String)}.
+     * 
+     * @param text the text to be converted
+     * 
+     * @return the set of Internet addresses
+     * 
+     * @throws UnknownHostException if an item did not parse as an IP
+     * address, nor resolve as a host name
+     */
+    private static Collection<InetAddress> parsePeers(String text)
+        throws UnknownHostException {
+        Collection<InetAddress> result = new HashSet<>();
+        for (String item : COMMA.split(text)) {
+            InetAddress addr = InetAddress.getByName(item);
+            result.add(addr);
+        }
+        return Set.copyOf(result);
+    }
+
+    /**
+     * Read an environment variable, and parse its value as a
+     * comma-separated string of Internet addresses.
+     * 
+     * @param varName the variable name
+     * 
+     * @return the set of Internet addresses in the variable's value
+     * 
+     * @throws UnknownHostException if an item did not parse as an IP
+     * address, nor resolve as a host name
+     */
+    private static Collection<InetAddress> parsePeersEnvironment(String varName)
+        throws UnknownHostException {
+        String text = System.getenv(varName);
+        return parsePeers(text);
+    }
+
+    /**
+     * Get the set of Internet addresses from an environment variable,
+     * and package the result or an exception.
+     * 
+     * @param varName the variable name
+     * 
+     * @return the packaged result or exception
+     */
+    private static PeersResult parsePeersEnvironmentResult(String varName) {
+        try {
+            Collection<InetAddress> value = parsePeersEnvironment(varName);
+            return () -> value;
+        } catch (UnknownHostException ex) {
+            return () -> {
+                throw ex;
+            };
+        }
+    }
+
+    /**
+     * Holds a set of Internet addresses, or the exception thrown when
+     * attempting to obtain them.
+     */
+    private interface PeersResult {
+        /**
+         * Get the set of addresses.
+         * 
+         * @return the set of addresses
+         * 
+         * @throws UnknownHostException if an item from which the
+         * addresses were to be generated did not parse as an IP
+         * address, nor resolve as a host name
+         */
+        Collection<InetAddress> get() throws UnknownHostException;
+    }
+
+    /**
+     * Holds lazily computed sets of Internet addresses, indexed by the
+     * variable name from which they are derived. Use only with
+     * {@link Map#computeIfAbsent(Object, java.util.function.Function)}
+     * to ensure consistency.
+     */
+    private static final Map<String, PeersResult> permittedPeers =
+        new ConcurrentHashMap<>();
+
+    /**
+     * Get a set of Internet addresses parsed from the comma-separated
+     * value of an environment variable, caching the value.
+     * 
+     * @param varName the variable name
+     * 
+     * @return the set of Internet addresses
+     * 
+     * @throws UnknownHostException if an item from which the addresses
+     * were to be generated did not parse as an IP address, nor resolve
+     * as a host name
+     */
+    private static Collection<InetAddress> getPermittedPeers(String varName)
+        throws UnknownHostException {
+        PeersResult result = permittedPeers
+            .computeIfAbsent(varName,
+                             InvocationVariables::parsePeersEnvironmentResult);
+        return result.get();
+    }
+
+    /**
+     * Specifies the name of the environment variable identifying IP
+     * addresses of legitimate peers when running in stand-alone more.
+     * The value is {@value}.
+     */
+    public static final String INET_SERVER_ADDRS = "FASTCGI4J_WEB_SERVER_ADDRS";
 
     /**
      * Specifies the name of the environment variable instructing the
