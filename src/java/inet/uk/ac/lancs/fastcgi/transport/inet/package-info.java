@@ -35,7 +35,8 @@
  */
 
 /**
- * Provides transports for FastCGI over Internet-domain sockets.
+ * Provides transports for FastCGI over Internet-domain sockets in
+ * stand-alone mode.
  * 
  * @author simpsons
  */

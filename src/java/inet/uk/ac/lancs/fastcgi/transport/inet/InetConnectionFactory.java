@@ -36,7 +36,6 @@
 
 package uk.ac.lancs.fastcgi.transport.inet;
 
-import java.io.FileDescriptor;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -49,22 +48,18 @@ import uk.ac.lancs.fastcgi.transport.TransportConfigurationException;
 import uk.ac.lancs.scc.jardeps.Service;
 
 /**
- * Recognizes stand-alone and forked Internet-domain transports. If the
- * environment variable {@value InvocationVariables#WEB_SERVER_ADDRS} is
- * not set, the transport is not recognized. If
- * {@value InvocationVariables#INET_BIND_ADDR} is set, stand-alone mode
- * is assumed, and a socket is bound to that address. Otherwise,
- * {@link FileDescriptor#in} is assumed to be an Internet-domain socket,
- * and the process has been forked by the server.
+ * Recognizes stand-alone Internet-domain transports. The environment
+ * variable {@value InvocationVariables#INET_BIND_ADDR} must be set,
+ * specifying the address to bind to. The environment variable
+ * {@value InvocationVariables#WEB_SERVER_ADDRS} also must be set,
+ * listing valid peer addresses.
  * 
  * <p>
- * Each connection's description begins with
- * {@value #FORKED_DESCRIPTION} if the process was invoked with the
- * server socket already created on descriptor 0, or
- * {@value #STANDALONE_DESCRIPTION} if the process has created the
- * server socket itself. This prefix is combined with the peer address
- * in the form <samp><var>prefix</var>#<var>address</var></samp> to
- * complete the connection description.
+ * Each connection's description begins
+ * {@value #STANDALONE_DESCRIPTION}. This prefix is combined with the
+ * peer address in the form
+ * <samp><var>prefix</var>#<var>address</var></samp> to complete the
+ * connection description.
  * 
  * @author simpsons
  */
@@ -73,28 +68,27 @@ public class InetConnectionFactory implements ConnectionFactory {
     @Override
     public ConnectionSupply getConnectionSupply() {
         try {
-            Collection<InetAddress> allowedPeers =
-                InvocationVariables.getAuthorizedInetPeers();
-            if (allowedPeers == null) return null;
+            /* What do we bind to? If not set, it's not our
+             * transport. */
             InetSocketAddress bindAddress =
                 InvocationVariables.getInetBindAddress();
+            if (bindAddress == null) return null;
+
+            /* We must know what peers are permitted. */
+            Collection<InetAddress> allowedPeers =
+                InvocationVariables.getAuthorizedStandaloneInetPeers();
+            if (allowedPeers == null) return null;
+
             final ServerSocket ss;
             final String descr;
-            if (bindAddress == null) {
-                ss = FDServerSocket.newInstance(FileDescriptor.in);
-                descr = FORKED_DESCRIPTION;
-            } else {
-                ss = new ServerSocket(bindAddress.getPort(), 5,
-                                      bindAddress.getAddress());
-                descr = STANDALONE_DESCRIPTION;
-            }
+            ss = new ServerSocket(bindAddress.getPort(), 5,
+                                  bindAddress.getAddress());
+            descr = STANDALONE_DESCRIPTION;
             return new InetConnectionSupply(descr, ss, allowedPeers);
         } catch (IOException ex) {
             throw new TransportConfigurationException(ex);
         }
     }
-
-    private static final String FORKED_DESCRIPTION = "inet-forked";
 
     private static final String STANDALONE_DESCRIPTION = "inet-standalone";
 }
