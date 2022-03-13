@@ -30,11 +30,14 @@ trees_fastcgi4j_inet += inet
 
 ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_UNIX))),)
 SELECTED_JARS += fastcgi4j_unix
-trees_fastcgi4j_unix += unix
-
-SELECTED_JARS += fastcgi4j_junixsocket
-trees_fastcgi4j_junixsocket += junixsocket
 endif
+
+ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_JUNIXSOCKET))),)
+SELECTED_JARS += fastcgi4j_junixsocket
+endif
+
+trees_fastcgi4j_unix += unix
+trees_fastcgi4j_junixsocket += junixsocket
 
 jars += $(SELECTED_JARS)
 
