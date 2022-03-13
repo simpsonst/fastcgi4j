@@ -72,6 +72,7 @@ hidden_libraries += main
 endif
 main_libname = fastcgi4j
 main_mod += native
+scripts += fastcgi4j
 
 SHAREDIR ?= $(PREFIX)/share/fastcgi4j
 LIBEXECDIR ?= $(PREFIX)/libexec/fastcgi4j
@@ -111,7 +112,7 @@ install-jar-%::
 
 install-jars:: $(SELECTED_JARS:%=install-jar-%)
 
-install:: install-jars install-hidden-libraries
+install:: install-jars install-hidden-libraries install-scripts
 
 tidy::
 	@$(PRINTF) 'Deleting trash\n'

@@ -1,0 +1,320 @@
+#!/bin/bash
+
+SELF="$0"
+HERE="$(realpath -Lqs "$0")"
+HERE="${HERE%/bin/*}"
+
+function split_path () {
+    local text="$1"
+
+    local t
+    while t="${text%%:*}"
+	  text="${text#"$t"}"
+	  [ -n "$t" ] ; do
+	text="${text#:}"
+	echo "$t"
+    done
+}
+
+## Split colon-separated paths into arrays.
+readarray -t CLASSDIRS \
+	  < <(split_path "${CLASSDIRS:-/usr/share/java:/usr/local/share/java}")
+readarray -t CLASSPATH < <(split_path "$CLASSPATH")
+readarray -t LD_LIBRARY_PATH < <(split_path "$LD_LIBRARY_PATH")
+
+JVM=java
+JVMARGS=()
+unset dryrun
+unset bindaddr
+peers=()
+unset seek
+
+function add_library () {
+    local stem="$1"
+    local dir
+    for dir in "${CLASSDIRS[@]}" ; do
+	if [ -r "$dir/$stem.jar" ] ; then
+	    CLASSPATH+=("$dir/$stem.jar")
+	    return
+	fi
+	if [ -d "$dir/$stem" ] ; then
+	    CLASSPATH+=("$dir/$stem/")
+	    return
+	fi
+    done
+    printf >&2 '%s: can'"'"'t find %s.jar\n' "$SELF" "$tem"
+    return 1
+}
+
+function change_dir () {
+    local dir="$1"
+    if ! cd "$dir" ; then
+	printf >&2 '%s: can'"'"'t change to %s\n' "$SELF" "$dir"
+	return 1
+    fi
+}
+
+
+function show_help () {
+    echo <<EOF
+Usage: $SELF [options] [handler|--] [args...]
+-n
+	Dry run.  Print command and environment, then exit.
+-C DIR
+-CDIR
+	Change to directory DIR.
+-L DIR
+-LDIR
+	Add DIR to jar search path
++L
+	Reset search path.
+-l LIB
+-lLIB
+	Search for LIB.jar in search path, and add to classpath.
++l
+	Reset classpath.
+-JARG
+	Add ARG to JVM arguments.
+--jvm PROG
+	Use PROG as java command.
+--seek
+	Seek FastCGIApplication service instead of taking first
+	application argument (handler) as class name.  Also enabled if
+	the first unrecognized argument cannot be a class name.
+--
+	As --seek, but remaining arguments are passed to application.
+--jar FILE
+	Add FILE to the classpath.
+--bind HOST:PORT
+	Run stand-alone, bound to HOST:PORT.
+--peer HOST
+	Add HOST to set of permitted peers in stand-alone mode.
+-f FILE
+	Load properties in FILE, and push onto stack.
++f
+	Push empty properties onto stack.
+-c NUM
+	Set maximum number of concurrent connections.
++c
+	Set unlimited concurrent connections.
+-s NUM
+	Set maximum number of concurrent sessions.
++s
+	Set unlimited concurrent sessions.
+-p NUM
+	Set maximum number of concurrent sessions per connection.
++p
+	Set unlimited concurrent sessions per connection.
+-b NUMx
+	Set output buffer capacity to NUM bytes (with kKmMgG
+	multiplier).
++b
+	Set default output buffer capacity.
+EOF
+}
+
+
+while [ $# -gt 0 ] ; do
+    arg="$1"
+    case "$arg" in
+	(-h|--help)
+	    show_help >&2
+	    exit
+	    ;;
+
+	(-D*|-U*|-ea*)
+	    JVMARGS+=("$arg")
+	    ;;
+
+	(-n)
+	    dryrun=yes
+	    ;;
+
+	(--bind=*)
+	    bindaddr="${arg#--bind=}"
+	    ;;
+
+	(--bind)
+	    shift
+	    bindaddr="$1"
+	    ;;
+
+	(--peer=*)
+	    peers+=("${arg#--peer=}")
+	    ;;
+
+	(--peer)
+	    shift
+	    peers+=("$1")
+	    ;;
+
+	(--seek)
+	    seek=yes
+	    ;;
+
+	(--jvm=*)
+	    JVM="${arg#--jvm=}"
+	    ;;
+
+	(--jvm)
+	    shift
+	    JVM="$1"
+	    ;;
+
+	(-f)
+	    shift
+	    APPARGS+=(-f "$1")
+	    ;;
+	(+f)
+	    APPARGS+=(+f)
+	    ;;
+	(-c)
+	    shift
+	    APPARGS+=(-Duk.ac.lancs.fastcgi.nconn="$1")
+	    ;;
+	(+c)
+	    APPARGS+=(-Uuk.ac.lancs.fastcgi.nconn)
+	    ;;
+
+	(-s)
+	    shift
+	    APPARGS+=(-Duk.ac.lancs.fastcgi.nsess="$1")
+	    ;;
+	(+s)
+	    APPARGS+=(-Uuk.ac.lancs.fastcgi.nsess)
+	    ;;
+
+	(-p)
+	    shift
+	    APPARGS+=(-Duk.ac.lancs.fastcgi.nspc="$1")
+	    ;;
+	(+p)
+	    APPARGS+=(-Uuk.ac.lancs.fastcgi.nspc)
+	    ;;
+
+	(-b)
+	    shift
+	    APPARGS+=(-Duk.ac.lancs.fastcgi.buffer="$1")
+	    ;;
+	(+b)
+	    APPARGS+=(-Uuk.ac.lancs.fastcgi.buffer)
+	    ;;
+
+	(-J*)
+	    JVMARGS+=("${arg#-J}")
+	    ;;
+
+	(-C)
+	    shift
+	    change_dir "$1" || exit 1
+	    ;;
+
+	(-C*)
+	    change_dir "${arg#"-C"}" || exit 1
+	    ;;
+
+	(+L)
+	    CLASSDIRS=()
+	    ;;
+
+	(-L)
+	    shift
+	    CLASSDIRS+=("$(realpath -Lqs "$1")")
+	    ;;
+
+	(-L*)
+	    CLASSDIRS+=("$(realpath -Lqs "${arg#"-L"}")")
+	    ;;
+
+	(+l)
+	    CLASSPATH=()
+	    ;;
+
+	(-l)
+	    shift
+	    add_library "$1" || exit 1
+	    ;;
+
+	(-l*)
+	    add_library "${arg#"-l"}" || exit 1
+	    ;;
+
+	(--jar)
+	    shift
+	    CLASSPATH+=("$(realpath -Lqs "$1")")
+	    ;;
+
+	(--)
+	    seek=yes
+	    shift
+	    break
+	    ;;
+
+	(*)
+	    if ! [[ "$arg" =~ ^[[:alpha:]][[:alnum:]]*(_[[:alnum:]]+)*(\.[[:alpha:]][[:alnum:]]*(_[[:alnum:]]+)*)*$ ]]
+	    then
+		seek=yes
+	    fi
+	    break
+	    ;;
+    esac
+
+    shift
+done
+
+# if [ -z "$PROGRAM" ] ; then
+#     show_help >&2
+#     exit 1
+# fi
+
+## Ensure we have our native library available to the JVM.
+LD_LIBRARY_PATH=("$HERE/libexec/fastcgi4j" "${LD_LIBRARY_PATH[@]}")
+
+## Ensure our Java libraries are available.
+FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_api.jar")
+FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_app.jar")
+FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_engine.jar")
+FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_proto.jar")
+CLASSPATH=("${FASTCGI_CLASSPATH[@]}" "${CLASSPATH[@]}")
+CLASSPATH+=("$HERE/share/java/fastcgi4j_inet.jar")
+CLASSPATH+=("$HERE/share/java/fastcgi4j_unix.jar")
+
+if [ -n "$seek" ] ; then
+    APPARGS+=(--seek)
+fi
+
+if [ -n "$bindaddr" ] ; then
+    export FASTCGI4J_INET_BIND="$bindaddr"
+    export FASTCGI4J_WEB_SERVER_ADDRS="$(printf ':%s' "${peers[@]}")"
+    FASTCGI4J_WEB_SERVER_ADDRS="${FASTCGI4J_WEB_SERVER_ADDRS:1}"
+fi
+
+if [ -n "$dryrun" ] ; then
+    printf 'Lib path:'
+    printf ' %s' "${LD_LIBRARY_PATH[@]}"
+    printf '\n'
+    if [ -n "$bindaddr" ] ; then
+	printf 'Bind address: %s\n' "$FASTCGI4J_INET_BIND"
+	printf 'Stand-alone peers: %s\n' "$FASTCGI4J_WEB_SERVER_ADDRS"
+    fi
+    printf 'Forked peers: %s\n' "$FCGI_WEB_SERVER_ADDRS"
+fi
+
+## Convert arrays back into colon-separated strings.
+CLASSPATH="$(printf ':%s' "${CLASSPATH[@]}")"
+CLASSPATH="${CLASSPATH:1}"
+LD_LIBRARY_PATH="$(printf ':%s' "${LD_LIBRARY_PATH[@]}")"
+LD_LIBRARY_PATH="${LD_LIBRARY_PATH:1}"
+export LD_LIBRARY_PATH
+
+CMD=("$JVM" "${JVMARGS[@]}" --class-path "${CLASSPATH}" \
+	    uk.ac.lancs.fastcgi.app.FastCGIApplication "${APPARGS[@]}" "$@")
+
+if [ -n "$dryrun" ] ; then
+    printf 'Command:'
+    printf ' %q' "${CMD[@]}"
+    printf '\n'
+    exit 0
+fi
+
+exec "${CMD[@]}"
