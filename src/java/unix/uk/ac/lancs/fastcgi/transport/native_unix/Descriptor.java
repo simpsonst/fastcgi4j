@@ -238,9 +238,10 @@ class Descriptor {
     static final Logger logger =
         Logger.getLogger(Descriptor.class.getPackageName());
 
+    private static final String LIBRARY_PROP =
+        "uk.ac.lancs.fastcgi.transport.native_unix.library";
+
     static {
-        System.err.printf("Here I am!%n");
-        System.load(System
-            .getProperty("uk.ac.lancs.fastcgi.transport.native_unix.library"));
+        System.load(System.getProperty(LIBRARY_PROP));
     }
 }

@@ -44,7 +44,9 @@ import uk.ac.lancs.scc.jardeps.Service;
 
 /**
  * Recognizes Unix-domain and Internet-domain transports on file
- * descriptor 0.
+ * descriptor 0. This requires a {@linkplain System#getProperties()
+ * system property} {@value Descriptor#LIBRARY_PROP} giving the name of
+ * the supporting native library.
  * 
  * @author simpsons
  */
