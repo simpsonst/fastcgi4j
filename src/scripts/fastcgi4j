@@ -301,9 +301,6 @@ done
 #     exit 1
 # fi
 
-## Ensure we have our native library available to the JVM.
-LD_LIBRARY_PATH=("$HERE/libexec/fastcgi4j" "${LD_LIBRARY_PATH[@]}")
-
 ## Ensure our Java libraries are available.
 FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_api.jar")
 FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_app.jar")
@@ -341,8 +338,10 @@ LD_LIBRARY_PATH="$(printf ':%s' "${LD_LIBRARY_PATH[@]}")"
 LD_LIBRARY_PATH="${LD_LIBRARY_PATH:1}"
 export LD_LIBRARY_PATH
 
-CMD=("$JVM" "${JVMARGS[@]}" --class-path "${CLASSPATH}" \
-	    uk.ac.lancs.fastcgi.app.FastCGIApplication "${APPARGS[@]}" "$@")
+CMD=("$JVM" "${JVMARGS[@]}"
+     -Duk.ac.lancs.fastcgi.transport.native_unix.library="$HERE/libexec/fastcgi4j/libfastcgi4j.so"
+     --class-path "${CLASSPATH}"
+     uk.ac.lancs.fastcgi.app.FastCGIApplication "${APPARGS[@]}" "$@")
 
 if [ -n "$dryrun" ] ; then
     printf 'Command:'

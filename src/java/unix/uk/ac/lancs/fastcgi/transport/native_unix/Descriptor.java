@@ -239,6 +239,8 @@ class Descriptor {
         Logger.getLogger(Descriptor.class.getPackageName());
 
     static {
-        System.loadLibrary("fastcgi4j");
+        System.err.printf("Here I am!%n");
+        System.load(System
+            .getProperty("uk.ac.lancs.fastcgi.transport.native_unix.library"));
     }
 }
