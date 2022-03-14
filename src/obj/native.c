@@ -234,7 +234,7 @@ JNIEXPORT jint JNICALL
 Java_uk_ac_lancs_fastcgi_transport_native_1unix_Descriptor_getAddressSize
 (JNIEnv *env, jclass jc)
 {
-  return sizeof(struct sockaddr);
+  return MAX_SOCKADDR_LEN;
 }
 
 /*
