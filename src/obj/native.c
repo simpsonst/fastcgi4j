@@ -298,10 +298,10 @@ Java_uk_ac_lancs_fastcgi_transport_native_1unix_Descriptor_readSocket__I_3BII
   if (rc == 0) return -1;
 
   jbyte *dst = (*env)->GetByteArrayElements(env, b, NULL);
-  for (jint i = 0; i < len; i++)
+  for (jint i = 0; i < rc; i++)
     dst[i + off] = buf[i];
   (*env)->ReleaseByteArrayElements(env, b, dst, 0);
-  return -1;
+  return rc;
 }
 
 /*
@@ -320,5 +320,5 @@ Java_uk_ac_lancs_fastcgi_transport_native_1unix_Descriptor_readSocket__I
     return -1;
   }
   if (rc == 0) return -1;
-  return b;
+  return (unsigned) b;
 }
