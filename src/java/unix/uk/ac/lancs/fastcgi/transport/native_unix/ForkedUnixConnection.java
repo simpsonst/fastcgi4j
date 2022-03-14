@@ -45,7 +45,7 @@ import uk.ac.lancs.fastcgi.transport.Connection;
  *
  * @author simpsons
  */
-public class ForkedUnixConnection implements Connection {
+class ForkedUnixConnection implements Connection {
     private final String descr;
 
     private final Descriptor fd;
