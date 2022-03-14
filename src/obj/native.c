@@ -137,6 +137,7 @@ Java_uk_ac_lancs_fastcgi_transport_native_1unix_Descriptor_getInternetAddress
     struct sockaddr sa;
     struct sockaddr_in in;
     struct sockaddr_in6 in6;
+    struct sockaddr_un un;
     char buf[MAX_SOCKADDR_LEN];
   } u;
 
@@ -165,6 +166,10 @@ Java_uk_ac_lancs_fastcgi_transport_native_1unix_Descriptor_getInternetAddress
     ptr = (void *) &u.in6.sin6_addr;
     len = 16;
     break;
+
+  case AF_UNIX:
+    //fprintf(stderr, "bound path: %s\n", u.un.sun_path);
+    return NULL;
 
   default:
     /* It's not recognized, so we say nothing. */
