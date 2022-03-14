@@ -34,10 +34,10 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-import uk.ac.lancs.fastcgi.role.Responder;
 import uk.ac.lancs.fastcgi.engine.Attribute;
-import uk.ac.lancs.fastcgi.transport.ConnectionSupply;
 import uk.ac.lancs.fastcgi.engine.Engine;
+import uk.ac.lancs.fastcgi.role.Responder;
+import uk.ac.lancs.fastcgi.transport.ConnectionSupply;
 import uk.ac.lancs.scc.jardeps.Application;
 
 /**
