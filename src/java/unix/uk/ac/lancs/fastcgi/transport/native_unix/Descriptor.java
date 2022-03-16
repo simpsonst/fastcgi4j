@@ -85,7 +85,7 @@ class Descriptor {
     }
 
     public void close() throws IOException {
-        closeSocket(fd());
+        cleanable.clean();
     }
 
     public int read(byte[] b, int off, int len) throws IOException {
