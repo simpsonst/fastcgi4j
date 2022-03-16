@@ -47,7 +47,7 @@ import java.util.logging.Logger;
  * @author simpsons
  */
 class Descriptor {
-    class State implements Runnable {
+    static class State implements Runnable {
         int fd;
 
         public State(int fd) {
