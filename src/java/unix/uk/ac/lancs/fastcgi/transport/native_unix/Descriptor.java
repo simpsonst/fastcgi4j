@@ -43,17 +43,31 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
+ * Holds a Unix file descriptor. The descriptor is closed when the
+ * object is garbage-collected. Several native methods implement base
+ * operations on a file descriptor.
+ * 
  * @author simpsons
  */
 class Descriptor {
+    /**
+     * Holds a file descriptor, and closes it when run.
+     */
     static class State implements Runnable {
         int fd;
 
+        /**
+         * Retain a file descriptor to be closed later.
+         * 
+         * @param fd the file descriptor to retain
+         */
         public State(int fd) {
             this.fd = fd;
         }
 
+        /**
+         * Close the descriptor, and make it invalid for good measure.
+         */
         @Override
         public void run() {
             try {
@@ -66,14 +80,36 @@ class Descriptor {
         }
     }
 
+    /**
+     * Get the internal file descriptor.
+     * 
+     * @return the descriptor
+     */
     int fd() {
         return state.fd;
     }
 
+    /**
+     * Holds the state that must persist after we have been
+     * garbage-collected so that internal resources can be properly
+     * released.
+     */
     private final State state;
 
+    /**
+     * Ensures that the descriptor is closed when we get
+     * garbage-collected.
+     */
     private final Cleaner.Cleanable cleanable;
 
+    /**
+     * Retain a file descriptor.
+     * 
+     * @param descriptor the internal descriptor value
+     * 
+     * @throws IllegalArgumentException if a negative file descriptor is
+     * supplied
+     */
     public Descriptor(int descriptor) {
         if (descriptor < 0)
             throw new IllegalArgumentException("-ve fd " + descriptor);
@@ -81,26 +117,86 @@ class Descriptor {
         this.cleanable = cleaner.register(this, state);
     }
 
+    /**
+     * Determine whether the descriptor is valid. It should normally
+     * only become invalid after being closed.
+     * 
+     * @return {@code true} if the descriptor is valid; {@code false}
+     * otherwise
+     */
     public boolean isValid() {
         return fd() >= 0;
     }
 
+    /**
+     * Close the descriptor.
+     * 
+     * @throws IOException if an I/O error occurs
+     */
     public void close() throws IOException {
         cleanable.clean();
     }
 
+    /**
+     * Read bytes from the descriptor into an array. This simply calls
+     * {@link #readSocket(int, byte[], int, int)}, passing the result of
+     * {@link #fd()} as the first argument.
+     * 
+     * @param b the destination array
+     * 
+     * @param off the index of the first array element to store a byte
+     * from the descriptor
+     * 
+     * @param len the maximum number of bytes to read
+     * 
+     * @return the number of bytes read; or {@code -1} on end-of-file
+     * 
+     * @throws IOException if an I/O error occurs
+     */
     public int read(byte[] b, int off, int len) throws IOException {
         return readSocket(fd(), b, off, len);
     }
 
+    /**
+     * Read at most one byte from the descriptor. This simply calls
+     * {@link #readSocket(int)}, passing the result of {@link #fd()} as
+     * the argument.
+     * 
+     * @return the byte read, as an unsigned value; or {@code -1} on
+     * end-of-file
+     * 
+     * @throws IOException if an I/O error occurs
+     */
     public int read() throws IOException {
         return readSocket(fd());
     }
 
+    /**
+     * Write a single byte to the descriptor. This simply calls
+     * {@link #writeSocket(int, int)}, passing the result of
+     * {@link #fd()} as the first argument.
+     * 
+     * @param b the byte to be written, as an unsigned value
+     * 
+     * @throws IOException if an I/O error occurs
+     */
     public void write(int b) throws IOException {
         writeSocket(fd(), b);
     }
 
+    /**
+     * Write an array of bytes to the descriptor. This simply calls
+     * {@link #writeSocket(int, byte[], int, int)}, passing the result
+     * of {@link #fd()} as the first argument.
+     * 
+     * @param b the array containing the bytes
+     * 
+     * @param off the index of the first element to write
+     * 
+     * @param len the number of bytes to write
+     * 
+     * @throws IOException if an I/O error occurs
+     */
     public void write(byte[] b, int off, int len) throws IOException {
         writeSocket(fd(), b, off, len);
     }
@@ -234,11 +330,20 @@ class Descriptor {
      */
     static native int readSocket(int descriptor) throws IOException;
 
+    /**
+     * Ensures descriptors are closed when the containing object is
+     * garbage-collected.
+     */
     static final Cleaner cleaner = Cleaner.create();
 
     static final Logger logger =
         Logger.getLogger(Descriptor.class.getPackageName());
 
+    /**
+     * Identifies the {@linkplain System#getProperties() system
+     * property} whose value specifies the location of the native
+     * implementation.
+     */
     private static final String LIBRARY_PROP =
         "uk.ac.lancs.fastcgi.transport.native_unix.library";
 
