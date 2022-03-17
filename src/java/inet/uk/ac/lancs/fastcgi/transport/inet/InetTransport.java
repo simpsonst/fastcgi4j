@@ -34,41 +34,42 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-package uk.ac.lancs.fastcgi.transport.junixsocket;
+package uk.ac.lancs.fastcgi.transport.inet;
 
 import java.io.IOException;
-import org.newsclub.net.unix.AFUNIXServerSocket;
-import org.newsclub.net.unix.AFUNIXSocket;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.Collection;
+import java.util.Set;
 import uk.ac.lancs.fastcgi.transport.Connection;
-import uk.ac.lancs.fastcgi.transport.ConnectionSupply;
+import uk.ac.lancs.fastcgi.transport.Transport;
 
 /**
- * Supplies connections by accepting from a Unix-domain server socket.
- * 
+ *
  * @author simpsons
  */
-class ForkedAFUNIXConnectionSupply implements ConnectionSupply {
-    private final AFUNIXServerSocket serverSocket;
+class InetTransport implements Transport {
+    private final Collection<InetAddress> allowedPeers;
 
-    /**
-     * Create a connection supply from a Unix-domain server socket.
-     * 
-     * @param serverSocket the server socket
-     */
-    public ForkedAFUNIXConnectionSupply(AFUNIXServerSocket serverSocket) {
-        this.serverSocket = serverSocket;
+    private final ServerSocket socket;
+
+    private final String descrPrefix;
+
+    public InetTransport(String descrPrefix, ServerSocket socket,
+                                Collection<? extends InetAddress> allowedPeers) {
+        this.descrPrefix = descrPrefix;
+        this.socket = socket;
+        this.allowedPeers = Set.copyOf(allowedPeers);
     }
 
-    /**
-     * {@inheritDoc}
-     * 
-     * @default This implementation invokes
-     * {@link AFUNIXServerSocket#accept()} to produce a
-     * {@link ForkedUnixConnection}.
-     */
     @Override
     public Connection nextConnection() throws IOException {
-        AFUNIXSocket socket = serverSocket.accept();
-        return new ForkedAFUNIXConnection("unix-forked", socket);
+        do {
+            Socket sock = socket.accept();
+            InetAddress peer = sock.getInetAddress();
+            if (allowedPeers.contains(peer))
+                return new InetConnection(descrPrefix, sock);
+        } while (true);
     }
 }

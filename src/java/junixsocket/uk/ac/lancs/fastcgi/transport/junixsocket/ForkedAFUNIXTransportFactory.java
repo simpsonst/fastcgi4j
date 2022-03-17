@@ -43,10 +43,10 @@ import java.net.SocketException;
 import java.util.Collection;
 import org.newsclub.net.unix.AFUNIXServerSocket;
 import uk.ac.lancs.fastcgi.proto.InvocationVariables;
-import uk.ac.lancs.fastcgi.transport.ConnectionFactory;
-import uk.ac.lancs.fastcgi.transport.ConnectionSupply;
 import uk.ac.lancs.fastcgi.transport.TransportConfigurationException;
 import uk.ac.lancs.scc.jardeps.Service;
+import uk.ac.lancs.fastcgi.transport.Transport;
+import uk.ac.lancs.fastcgi.transport.TransportFactory;
 
 /**
  * Creates a connection supply from a Unix-domain stream server socket
@@ -56,8 +56,8 @@ import uk.ac.lancs.scc.jardeps.Service;
  *
  * @author simpsons
  */
-@Service(ConnectionFactory.class)
-public class ForkedAFUNIXConnectionFactory implements ConnectionFactory {
+@Service(TransportFactory.class)
+public class ForkedAFUNIXTransportFactory implements TransportFactory {
     /**
      * {@inheritDoc}
      * 
@@ -69,7 +69,7 @@ public class ForkedAFUNIXConnectionFactory implements ConnectionFactory {
      * socket.
      */
     @Override
-    public ConnectionSupply getConnectionSupply() {
+    public Transport getConnectionSupply() {
         try {
             /* See if we've been told who to allow connection from. This
              * only happens under FastCGI using an Internet-domain
@@ -89,7 +89,7 @@ public class ForkedAFUNIXConnectionFactory implements ConnectionFactory {
              * FastCGI with a Unix-domain socket. */
             AFUNIXServerSocket serverSocket =
                 AFUNIXServerSocket.newInstance(FileDescriptor.in, 1000, 1001);
-            return new ForkedAFUNIXConnectionSupply(serverSocket);
+            return new ForkedAFUNIXTransport(serverSocket);
         } catch (SocketException ex) {
             return null;
         } catch (IOException ex) {

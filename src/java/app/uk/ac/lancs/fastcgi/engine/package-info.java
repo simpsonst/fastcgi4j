@@ -40,9 +40,9 @@
  * 
  * <p>
  * An application should first obtain a
- * {@link uk.ac.lancs.fastcgi.transport.ConnectionSupply}. If this fails
- * with {@link UnsupportedOperationException}, then the application is
- * not being invoked using FastCGI, or not using a supported transport.
+ * {@link uk.ac.lancs.fastcgi.transport.Transport}. If this fails with
+ * {@link UnsupportedOperationException}, then the application is not
+ * being invoked using FastCGI, or not using a supported transport.
  * 
  * <p>
  * The application should then instantiate a role implementation, such
@@ -61,7 +61,7 @@
  * otherwise. The application should then shutdown gracefully.
  * 
  * <pre>
- * ConnectionSupply conns = ConnectionSupply.get();
+ * Transport conns = Transport.get();
  * Responder myResponder = <var>...</var>;
  * Engine engine = Engine.start()
  *     .with(Attribute.MAX_CONN, 10)

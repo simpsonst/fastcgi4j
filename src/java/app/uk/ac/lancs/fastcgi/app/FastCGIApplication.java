@@ -53,8 +53,8 @@ import uk.ac.lancs.fastcgi.engine.Engine;
 import uk.ac.lancs.fastcgi.role.Authorizer;
 import uk.ac.lancs.fastcgi.role.Filter;
 import uk.ac.lancs.fastcgi.role.Responder;
-import uk.ac.lancs.fastcgi.transport.ConnectionSupply;
 import uk.ac.lancs.scc.jardeps.Application;
+import uk.ac.lancs.fastcgi.transport.Transport;
 
 /**
  * Acts as an entry point for FastCGI applications. Such an application
@@ -343,7 +343,7 @@ public class FastCGIApplication {
 
                 /* Prepare to receive connections, and build the
                  * engine. */
-                ConnectionSupply conns = ConnectionSupply.get();
+                Transport conns = Transport.get();
                 var builder = Engine.start();
 
                 /* Indicate which roles the application supports. */

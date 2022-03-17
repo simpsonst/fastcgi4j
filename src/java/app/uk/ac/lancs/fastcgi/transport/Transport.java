@@ -44,7 +44,7 @@ import java.util.ServiceLoader;
  *
  * @author simpsons
  */
-public interface ConnectionSupply {
+public interface Transport {
     /**
      * Get the next connection. This call blocks until a connection is
      * available, or there are no more connections.
@@ -61,7 +61,7 @@ public interface ConnectionSupply {
      * will yield the same result for the same argument.
      * 
      * @param loader the class loader to be used to find services
-     * implementing {@link ConnectionFactory}; or {@code null} to use
+     * implementing {@link TransportFactory}; or {@code null} to use
      * the context class loader of the calling thread
      * 
      * @return the connection supply
@@ -69,10 +69,10 @@ public interface ConnectionSupply {
      * @throws UnsupportedOperationException if no suitable service
      * exists
      */
-    static ConnectionSupply get(ClassLoader loader) {
-        return ConnectionSupplies.supplies.computeIfAbsent(loader, k -> {
-            for (ConnectionFactory cfact : ServiceLoader
-                .load(ConnectionFactory.class, k)) {
+    static Transport get(ClassLoader loader) {
+        return Transports.supplies.computeIfAbsent(loader, k -> {
+            for (TransportFactory cfact : ServiceLoader
+                .load(TransportFactory.class, k)) {
                 var supply = cfact.getConnectionSupply();
                 if (supply != null) return supply;
             }
@@ -89,7 +89,7 @@ public interface ConnectionSupply {
      * calling thread.
      * 
      * @param loader the class loader to be used to find services
-     * implementing {@link ConnectionFactory}; or {@code null} to use
+     * implementing {@link TransportFactory}; or {@code null} to use
      * the context class loader of the calling thread
      * 
      * @return the connection supply
@@ -97,7 +97,7 @@ public interface ConnectionSupply {
      * @throws UnsupportedOperationException if no suitable service
      * exists
      */
-    static ConnectionSupply get() {
+    static Transport get() {
         return get(Thread.currentThread().getContextClassLoader());
     }
 }

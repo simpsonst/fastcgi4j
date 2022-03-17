@@ -42,11 +42,11 @@ import uk.ac.lancs.fastcgi.role.Authorizer;
 import uk.ac.lancs.fastcgi.role.Filter;
 import uk.ac.lancs.fastcgi.role.Responder;
 import uk.ac.lancs.fastcgi.engine.Attribute;
-import uk.ac.lancs.fastcgi.transport.ConnectionSupply;
 import uk.ac.lancs.fastcgi.engine.Engine;
 import uk.ac.lancs.fastcgi.engine.EngineConfiguration;
 import uk.ac.lancs.fastcgi.engine.EngineFactory;
 import uk.ac.lancs.scc.jardeps.Service;
+import uk.ac.lancs.fastcgi.transport.Transport;
 
 /**
  * Provides engines which can handle responders, authorizers and
@@ -65,7 +65,7 @@ import uk.ac.lancs.scc.jardeps.Service;
 @Service(EngineFactory.class)
 public class MultiplexGenericEngineFactory implements EngineFactory {
     @Override
-    public Function<? super ConnectionSupply, ? extends Engine>
+    public Function<? super Transport, ? extends Engine>
         test(EngineConfiguration config) {
         /* Identify the roles. */
         Responder responder = config.get(Attribute.RESPONDER);

@@ -65,7 +65,7 @@ import uk.ac.lancs.fastcgi.role.Authorizer;
 import uk.ac.lancs.fastcgi.role.Filter;
 import uk.ac.lancs.fastcgi.role.Responder;
 import uk.ac.lancs.fastcgi.transport.Connection;
-import uk.ac.lancs.fastcgi.transport.ConnectionSupply;
+import uk.ac.lancs.fastcgi.transport.Transport;
 
 /**
  * Handles FastCGI records and delivers to all role types, supporting
@@ -76,7 +76,7 @@ import uk.ac.lancs.fastcgi.transport.ConnectionSupply;
 class MultiplexGenericEngine implements Engine {
     private final Charset charset;
 
-    private final ConnectionSupply connections;
+    private final Transport connections;
 
     private final Responder responder;
 
@@ -130,7 +130,7 @@ class MultiplexGenericEngine implements Engine {
      * 
      * @param stderrBufferSize the standard error output buffer size
      */
-    public MultiplexGenericEngine(ConnectionSupply connections, Charset charset,
+    public MultiplexGenericEngine(Transport connections, Charset charset,
                                   Responder responder, Authorizer authorizer,
                                   Filter filter, int maxConns,
                                   int maxReqsPerConn, int maxReqs,

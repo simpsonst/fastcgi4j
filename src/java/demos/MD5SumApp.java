@@ -37,8 +37,8 @@
 import uk.ac.lancs.fastcgi.engine.Attribute;
 import uk.ac.lancs.fastcgi.engine.Engine;
 import uk.ac.lancs.fastcgi.role.Responder;
-import uk.ac.lancs.fastcgi.transport.ConnectionSupply;
 import uk.ac.lancs.scc.jardeps.Application;
+import uk.ac.lancs.fastcgi.transport.Transport;
 
 /**
  * Provides a responder that yields MD5 sums of the request content.
@@ -49,7 +49,7 @@ import uk.ac.lancs.scc.jardeps.Application;
 public class MD5SumApp {
     @SuppressWarnings("empty-statement")
     public static void main(String[] args) throws Exception {
-        ConnectionSupply conns = ConnectionSupply.get();
+        Transport conns = Transport.get();
         Responder rsper = new MD5SumResponder();
         Engine engine = Engine.start().with(Attribute.MAX_CONN, 10)
             .with(Attribute.MAX_SESS_PER_CONN, 10)

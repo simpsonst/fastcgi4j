@@ -36,8 +36,8 @@
 
 package uk.ac.lancs.fastcgi.engine;
 
-import uk.ac.lancs.fastcgi.transport.ConnectionSupply;
 import java.util.function.Function;
+import uk.ac.lancs.fastcgi.transport.Transport;
 
 /**
  * Creates engines from configuration.
@@ -54,6 +54,6 @@ public interface EngineFactory {
      * @return a supplier of the engine if it can be created, given a
      * supplier of connections; or {@code null} otherwise
      */
-    Function<? super ConnectionSupply, ? extends Engine>
+    Function<? super Transport, ? extends Engine>
         test(EngineConfiguration config);
 }

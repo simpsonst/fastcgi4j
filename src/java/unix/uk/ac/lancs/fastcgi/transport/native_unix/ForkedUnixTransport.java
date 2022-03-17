@@ -43,7 +43,7 @@ import java.net.UnknownHostException;
 import java.util.Collection;
 import uk.ac.lancs.fastcgi.proto.InvocationVariables;
 import uk.ac.lancs.fastcgi.transport.Connection;
-import uk.ac.lancs.fastcgi.transport.ConnectionSupply;
+import uk.ac.lancs.fastcgi.transport.Transport;
 
 /**
  * Supplies connections based on a FastCGI transport provided by
@@ -51,14 +51,14 @@ import uk.ac.lancs.fastcgi.transport.ConnectionSupply;
  * 
  * @author simpsons
  */
-class ForkedUnixConnectionSupply implements ConnectionSupply {
+class ForkedUnixTransport implements Transport {
     private final Descriptor fd;
 
     private final Collection<InetAddress> permittedCallers;
 
     private final String descr;
 
-    private ForkedUnixConnectionSupply(int descriptor, String descr,
+    private ForkedUnixTransport(int descriptor, String descr,
                                        Collection<InetAddress> permittedCallers) {
         this.fd = new Descriptor(descriptor);
         this.permittedCallers = permittedCallers;
@@ -80,7 +80,7 @@ class ForkedUnixConnectionSupply implements ConnectionSupply {
      * 
      * @constructor
      */
-    static ForkedUnixConnectionSupply create() throws UnknownHostException {
+    static ForkedUnixTransport create() throws UnknownHostException {
         byte[] addr = new byte[Descriptor.getAddressSize()];
         int[] addrLen = new int[1];
         int descriptor = Descriptor.checkDescriptor(addrLen, addr);
@@ -93,7 +93,7 @@ class ForkedUnixConnectionSupply implements ConnectionSupply {
         } else {
             permittedCallers = null;
         }
-        return new ForkedUnixConnectionSupply(descriptor, "forked",
+        return new ForkedUnixTransport(descriptor, "forked",
                                               permittedCallers);
     }
 

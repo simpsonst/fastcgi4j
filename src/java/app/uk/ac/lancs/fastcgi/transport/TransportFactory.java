@@ -34,30 +34,35 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-package uk.ac.lancs.fastcgi.transport.native_unix;
-
-import java.net.UnknownHostException;
-import uk.ac.lancs.fastcgi.transport.ConnectionFactory;
-import uk.ac.lancs.fastcgi.transport.ConnectionSupply;
-import uk.ac.lancs.fastcgi.transport.TransportConfigurationException;
-import uk.ac.lancs.scc.jardeps.Service;
+package uk.ac.lancs.fastcgi.transport;
 
 /**
- * Recognizes Unix-domain and Internet-domain transports on file
- * descriptor 0. This requires a {@linkplain System#getProperties()
- * system property} {@value Descriptor#LIBRARY_PROP} giving the name of
- * the supporting native library.
+ * Determines whether FastCGI connections are arriving over a specific
+ * mechanism, and presents them to the application. Implementations
+ * should read FastCGI-defined environment variables or look at file
+ * descriptor 0 to determine how to receive FastCGI connections. An
+ * implementation should need only test for one mechanism, returning
+ * {@code null} if not recognized. Implementations should be declared as
+ * services for this interface in line with
+ * {@link java.util.ServiceLoader}, so they can be enabled simply by
+ * adding to the class path.
+ * 
+ * @see <a href=
+ * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S2">FastCGI
+ * Specification &mdash; Initial Process State</a>
  * 
  * @author simpsons
  */
-@Service(ConnectionFactory.class)
-public class ForkedUnixConnectionFactory implements ConnectionFactory {
-    @Override
-    public ConnectionSupply getConnectionSupply() {
-        try {
-            return ForkedUnixConnectionSupply.create();
-        } catch (UnknownHostException ex) {
-            throw new TransportConfigurationException(ex);
-        }
-    }
+public interface TransportFactory {
+    /**
+     * Get a supply of connections that a FastCGI engine can use.
+     * 
+     * @return a supply of connections; or {@code null} if none can be
+     * provided by the implementation
+     * 
+     * @throws TransportConfigurationException if a supported transport
+     * was positively recognized but cannot be implemented because
+     * configuration and environment are incompatible
+     */
+    Transport getConnectionSupply();
 }

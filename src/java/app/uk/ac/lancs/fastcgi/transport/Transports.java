@@ -34,42 +34,21 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-package uk.ac.lancs.fastcgi.transport.inet;
+package uk.ac.lancs.fastcgi.transport;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.Collection;
-import java.util.Set;
-import uk.ac.lancs.fastcgi.transport.Connection;
-import uk.ac.lancs.fastcgi.transport.ConnectionSupply;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- *
+ * Holds static resources for this package.
+ * 
  * @author simpsons
  */
-class InetConnectionSupply implements ConnectionSupply {
-    private final Collection<InetAddress> allowedPeers;
-
-    private final ServerSocket socket;
-
-    private final String descrPrefix;
-
-    public InetConnectionSupply(String descrPrefix, ServerSocket socket,
-                                Collection<? extends InetAddress> allowedPeers) {
-        this.descrPrefix = descrPrefix;
-        this.socket = socket;
-        this.allowedPeers = Set.copyOf(allowedPeers);
-    }
-
-    @Override
-    public Connection nextConnection() throws IOException {
-        do {
-            Socket sock = socket.accept();
-            InetAddress peer = sock.getInetAddress();
-            if (allowedPeers.contains(peer))
-                return new InetConnection(descrPrefix, sock);
-        } while (true);
-    }
+final class Transports {
+    /**
+     * Provides lazy initialization of per-class-loader connection
+     * supplies.
+     */
+    static final Map<ClassLoader, Transport> supplies =
+        new ConcurrentHashMap<>();
 }

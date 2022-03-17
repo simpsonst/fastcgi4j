@@ -34,35 +34,41 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-package uk.ac.lancs.fastcgi.transport;
+package uk.ac.lancs.fastcgi.transport.junixsocket;
+
+import java.io.IOException;
+import org.newsclub.net.unix.AFUNIXServerSocket;
+import org.newsclub.net.unix.AFUNIXSocket;
+import uk.ac.lancs.fastcgi.transport.Connection;
+import uk.ac.lancs.fastcgi.transport.Transport;
 
 /**
- * Determines whether FastCGI connections are arriving over a specific
- * mechanism, and presents them to the application. Implementations
- * should read FastCGI-defined environment variables or look at file
- * descriptor 0 to determine how to receive FastCGI connections. An
- * implementation should need only test for one mechanism, returning
- * {@code null} if not recognized. Implementations should be declared as
- * services for this interface in line with
- * {@link java.util.ServiceLoader}, so they can be enabled simply by
- * adding to the class path.
- * 
- * @see <a href=
- * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S2">FastCGI
- * Specification &mdash; Initial Process State</a>
+ * Supplies connections by accepting from a Unix-domain server socket.
  * 
  * @author simpsons
  */
-public interface ConnectionFactory {
+class ForkedAFUNIXTransport implements Transport {
+    private final AFUNIXServerSocket serverSocket;
+
     /**
-     * Get a supply of connections that a FastCGI engine can use.
+     * Create a connection supply from a Unix-domain server socket.
      * 
-     * @return a supply of connections; or {@code null} if none can be
-     * provided by the implementation
-     * 
-     * @throws TransportConfigurationException if a supported transport
-     * was positively recognized but cannot be implemented because
-     * configuration and environment are incompatible
+     * @param serverSocket the server socket
      */
-    ConnectionSupply getConnectionSupply();
+    public ForkedAFUNIXTransport(AFUNIXServerSocket serverSocket) {
+        this.serverSocket = serverSocket;
+    }
+
+    /**
+     * {@inheritDoc}
+     * 
+     * @default This implementation invokes
+     * {@link AFUNIXServerSocket#accept()} to produce a
+     * {@link ForkedUnixConnection}.
+     */
+    @Override
+    public Connection nextConnection() throws IOException {
+        AFUNIXSocket socket = serverSocket.accept();
+        return new ForkedAFUNIXConnection("unix-forked", socket);
+    }
 }

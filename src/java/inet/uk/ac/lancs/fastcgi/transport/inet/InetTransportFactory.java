@@ -42,10 +42,10 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.Collection;
 import uk.ac.lancs.fastcgi.proto.InvocationVariables;
-import uk.ac.lancs.fastcgi.transport.ConnectionFactory;
-import uk.ac.lancs.fastcgi.transport.ConnectionSupply;
 import uk.ac.lancs.fastcgi.transport.TransportConfigurationException;
 import uk.ac.lancs.scc.jardeps.Service;
+import uk.ac.lancs.fastcgi.transport.Transport;
+import uk.ac.lancs.fastcgi.transport.TransportFactory;
 
 /**
  * Recognizes stand-alone Internet-domain transports. The environment
@@ -63,10 +63,10 @@ import uk.ac.lancs.scc.jardeps.Service;
  * 
  * @author simpsons
  */
-@Service(ConnectionFactory.class)
-public class InetConnectionFactory implements ConnectionFactory {
+@Service(TransportFactory.class)
+public class InetTransportFactory implements TransportFactory {
     @Override
-    public ConnectionSupply getConnectionSupply() {
+    public Transport getConnectionSupply() {
         try {
             /* What do we bind to? If not set, it's not our
              * transport. */
@@ -84,7 +84,7 @@ public class InetConnectionFactory implements ConnectionFactory {
             ss = new ServerSocket(bindAddress.getPort(), 5,
                                   bindAddress.getAddress());
             descr = STANDALONE_DESCRIPTION;
-            return new InetConnectionSupply(descr, ss, allowedPeers);
+            return new InetTransport(descr, ss, allowedPeers);
         } catch (IOException ex) {
             throw new TransportConfigurationException(ex);
         }

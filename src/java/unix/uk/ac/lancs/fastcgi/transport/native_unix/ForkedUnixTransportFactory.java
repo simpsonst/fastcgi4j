@@ -34,21 +34,30 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-package uk.ac.lancs.fastcgi.transport;
+package uk.ac.lancs.fastcgi.transport.native_unix;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.net.UnknownHostException;
+import uk.ac.lancs.fastcgi.transport.TransportConfigurationException;
+import uk.ac.lancs.scc.jardeps.Service;
+import uk.ac.lancs.fastcgi.transport.Transport;
+import uk.ac.lancs.fastcgi.transport.TransportFactory;
 
 /**
- * Holds static resources for this package.
+ * Recognizes Unix-domain and Internet-domain transports on file
+ * descriptor 0. This requires a {@linkplain System#getProperties()
+ * system property} {@value Descriptor#LIBRARY_PROP} giving the name of
+ * the supporting native library.
  * 
  * @author simpsons
  */
-final class ConnectionSupplies {
-    /**
-     * Provides lazy initialization of per-class-loader connection
-     * supplies.
-     */
-    static final Map<ClassLoader, ConnectionSupply> supplies =
-        new ConcurrentHashMap<>();
+@Service(TransportFactory.class)
+public class ForkedUnixTransportFactory implements TransportFactory {
+    @Override
+    public Transport getConnectionSupply() {
+        try {
+            return ForkedUnixTransport.create();
+        } catch (UnknownHostException ex) {
+            throw new TransportConfigurationException(ex);
+        }
+    }
 }

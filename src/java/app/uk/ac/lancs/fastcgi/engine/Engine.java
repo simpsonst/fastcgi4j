@@ -45,7 +45,7 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.function.Function;
-import uk.ac.lancs.fastcgi.transport.ConnectionSupply;
+import uk.ac.lancs.fastcgi.transport.Transport;
 
 /**
  * Processes FastCGI requests from the server and responses from the
@@ -231,7 +231,7 @@ public interface Engine {
          * @throws UnsupportedOperationException if no connection
          * supplier could be found
          */
-        public Function<? super ConnectionSupply, ? extends Engine> build() {
+        public Function<? super Transport, ? extends Engine> build() {
             ClassLoader ctxtLoader =
                 Thread.currentThread().getContextClassLoader();
             return build(ctxtLoader);
@@ -255,7 +255,7 @@ public interface Engine {
          * @throws UnsupportedOperationException if no connection
          * supplier could be found
          */
-        public Function<? super ConnectionSupply, ? extends Engine>
+        public Function<? super Transport, ? extends Engine>
             build(ClassLoader loader) {
             class MyConfig implements EngineConfiguration {
                 @Override
