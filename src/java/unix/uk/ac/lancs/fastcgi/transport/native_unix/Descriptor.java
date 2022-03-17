@@ -58,9 +58,10 @@ class Descriptor {
         public void run() {
             try {
                 closeSocket(fd);
-                fd = -1;
             } catch (IOException ex) {
                 logger.log(Level.SEVERE, null, ex);
+            } finally {
+                fd = -1;
             }
         }
     }
