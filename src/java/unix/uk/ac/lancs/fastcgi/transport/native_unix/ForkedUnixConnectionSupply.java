@@ -46,7 +46,9 @@ import uk.ac.lancs.fastcgi.transport.Connection;
 import uk.ac.lancs.fastcgi.transport.ConnectionSupply;
 
 /**
- *
+ * Supplies connections based on a FastCGI transport provided by
+ * executing the process with file descriptor 0 as a server socket.
+ * 
  * @author simpsons
  */
 class ForkedUnixConnectionSupply implements ConnectionSupply {
@@ -63,6 +65,21 @@ class ForkedUnixConnectionSupply implements ConnectionSupply {
         this.descr = descr;
     }
 
+    /**
+     * Detect a forked FastCGI transport on file descriptor 0. The
+     * transport is returned if detected. If {@code null} is returned,
+     * no such transport is present, and another kind should be sought.
+     * 
+     * @return a transport based on file descriptor 0; or {@code null}
+     * if no such transport is detected
+     * 
+     * @throws UnknownHostException if a forked Internet-domain
+     * transport is detected, but the environment variable
+     * {@value InvocationVariables#WEB_SERVER_ADDRS} contains an
+     * unresolved hostname or unparsed IP address
+     * 
+     * @constructor
+     */
     static ForkedUnixConnectionSupply create() throws UnknownHostException {
         byte[] addr = new byte[Descriptor.getAddressSize()];
         int[] addrLen = new int[1];
