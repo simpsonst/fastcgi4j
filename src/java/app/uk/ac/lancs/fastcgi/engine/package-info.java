@@ -61,13 +61,13 @@
  * otherwise. The application should then shutdown gracefully.
  * 
  * <pre>
- * Transport conns = Transport.get();
+ * Transport transport = Transport.get();
  * Responder myResponder = <var>...</var>;
  * Engine engine = Engine.start()
  *     .with(Attribute.MAX_CONN, 10)
  *     .with(Attribute.RESPONDER, myResponder)
  *     .build()
- *     .apply(conns);
+ *     .apply(transport);
  * while (engine.process())
  *   ;
  * </pre>

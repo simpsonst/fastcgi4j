@@ -73,7 +73,7 @@ public interface Transport {
         return Transports.supplies.computeIfAbsent(loader, k -> {
             for (TransportFactory cfact : ServiceLoader
                 .load(TransportFactory.class, k)) {
-                var supply = cfact.getConnectionSupply();
+                var supply = cfact.getTransport();
                 if (supply != null) return supply;
             }
 

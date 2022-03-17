@@ -53,7 +53,7 @@ import uk.ac.lancs.fastcgi.transport.TransportFactory;
 @Service(TransportFactory.class)
 public class ForkedUnixTransportFactory implements TransportFactory {
     @Override
-    public Transport getConnectionSupply() {
+    public Transport getTransport() {
         try {
             return ForkedUnixTransport.create();
         } catch (UnknownHostException ex) {

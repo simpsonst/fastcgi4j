@@ -66,7 +66,7 @@ import uk.ac.lancs.fastcgi.transport.TransportFactory;
 @Service(TransportFactory.class)
 public class InetTransportFactory implements TransportFactory {
     @Override
-    public Transport getConnectionSupply() {
+    public Transport getTransport() {
         try {
             /* What do we bind to? If not set, it's not our
              * transport. */

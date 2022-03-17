@@ -69,7 +69,7 @@ public class ForkedAFUNIXTransportFactory implements TransportFactory {
      * socket.
      */
     @Override
-    public Transport getConnectionSupply() {
+    public Transport getTransport() {
         try {
             /* See if we've been told who to allow connection from. This
              * only happens under FastCGI using an Internet-domain

@@ -64,5 +64,5 @@ public interface TransportFactory {
      * was positively recognized but cannot be implemented because
      * configuration and environment are incompatible
      */
-    Transport getConnectionSupply();
+    Transport getTransport();
 }
