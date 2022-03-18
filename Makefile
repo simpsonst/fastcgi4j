@@ -1,6 +1,9 @@
 all::
 
 PREFIX=/usr/local
+SED ?= sed
+FIND ?= find
+XARGS ?= xargs
 
 ENABLE_UNIX ?= yes
 
@@ -133,3 +136,13 @@ jtests: $(jars:%=$(JARDEPS_OUTDIR)/%.jar)
 	  $(JAVA) -ea -cp $(subst $(jardeps_space),:,$(jars:%=$(JARDEPS_OUTDIR)/%.jar):$(CLASSPATH)) \
 	  junit.textui.TestRunner $${class} ; \
 	done
+
+
+
+# Set this to the comma-separated list of years that should appear in
+# the licence.  Do not use characters other than [-0-9,] - no spaces.
+YEARS=2022
+
+update-licence:
+	$(FIND) . -name ".git" -prune -or -type f -print0 | $(XARGS) -0 \
+	$(SED) -i 's/Copyright (c)\s[-0-9,]\+\Lancaster University/Copyright (c) $(YEARS), Lancaster University/g'
