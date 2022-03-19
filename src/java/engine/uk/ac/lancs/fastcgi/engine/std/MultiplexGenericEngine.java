@@ -61,9 +61,9 @@ import uk.ac.lancs.fastcgi.proto.RoleTypes;
 import uk.ac.lancs.fastcgi.proto.serial.RecordHandler;
 import uk.ac.lancs.fastcgi.proto.serial.RecordReader;
 import uk.ac.lancs.fastcgi.proto.serial.RecordWriter;
-import uk.ac.lancs.fastcgi.role.Authorizer;
-import uk.ac.lancs.fastcgi.role.Filter;
-import uk.ac.lancs.fastcgi.role.Responder;
+import uk.ac.lancs.fastcgi.Authorizer;
+import uk.ac.lancs.fastcgi.Filter;
+import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.transport.Connection;
 import uk.ac.lancs.fastcgi.transport.Transport;
 

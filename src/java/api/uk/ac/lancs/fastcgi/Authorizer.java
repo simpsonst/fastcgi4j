@@ -15,11 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package uk.ac.lancs.fastcgi.role;
+package uk.ac.lancs.fastcgi;
 
 import java.io.IOException;
-import uk.ac.lancs.fastcgi.AuthorizerContext;
-import uk.ac.lancs.fastcgi.SessionException;
+import uk.ac.lancs.fastcgi.context.AuthorizerContext;
+import uk.ac.lancs.fastcgi.context.SessionException;
 
 /**
  * Responds as an authorizer to FastCGI requests.

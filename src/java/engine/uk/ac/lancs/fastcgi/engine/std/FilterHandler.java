@@ -38,10 +38,10 @@ package uk.ac.lancs.fastcgi.engine.std;
 
 import java.io.IOException;
 import java.io.InputStream;
-import uk.ac.lancs.fastcgi.FilterContext;
-import uk.ac.lancs.fastcgi.SessionAbortedException;
+import uk.ac.lancs.fastcgi.context.FilterContext;
+import uk.ac.lancs.fastcgi.context.SessionAbortedException;
 import uk.ac.lancs.fastcgi.engine.util.Pipe;
-import uk.ac.lancs.fastcgi.role.Filter;
+import uk.ac.lancs.fastcgi.Filter;
 
 /**
  * Handles Filter sessions.

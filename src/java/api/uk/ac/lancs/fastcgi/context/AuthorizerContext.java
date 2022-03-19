@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package uk.ac.lancs.fastcgi;
+package uk.ac.lancs.fastcgi.context;
 
 /**
  * Presents the context of a FastCGI session to an application in the

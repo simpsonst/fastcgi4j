@@ -34,10 +34,20 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
+package uk.ac.lancs.fastcgi.context;
+
 /**
- * Provides the interfaces that an application implements to process a
- * FastCGI session.
+ * Indicates that the application is temporarily overloaded. This will
+ * instruct the library to send a record of type
+ * <code>FCGI_END_REQUEST</code> with a protocol status of
+ * <code>FCGI_OVERLOADED</code>.
  * 
  * @author simpsons
+ * 
+ * @see <a href=
+ * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.5">FastCGI
+ * Specification &mdash; <code>FCGI_END_REQUEST</code></a>
  */
-package uk.ac.lancs.fastcgi.role;
+public class OverloadException extends SessionException {
+
+}

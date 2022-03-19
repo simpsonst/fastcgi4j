@@ -34,7 +34,7 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-package uk.ac.lancs.fastcgi;
+package uk.ac.lancs.fastcgi.context;
 
 import java.io.OutputStream;
 import java.io.PrintStream;

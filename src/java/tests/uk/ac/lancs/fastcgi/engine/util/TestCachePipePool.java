@@ -49,7 +49,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import junit.framework.TestCase;
 import org.junit.Test;
-import uk.ac.lancs.fastcgi.StreamAbortedException;
+import uk.ac.lancs.fastcgi.context.StreamAbortedException;
 
 /**
  *

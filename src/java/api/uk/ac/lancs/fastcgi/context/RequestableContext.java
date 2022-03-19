@@ -34,65 +34,21 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-package uk.ac.lancs.fastcgi;
+package uk.ac.lancs.fastcgi.context;
+
+import java.io.InputStream;
 
 /**
- * Provides diagnostic information for a FastCGI session.
- * 
+ * Presents the context of a FastCGI session to an application in a role
+ * which receives a request body.
+ *
  * @author simpsons
  */
-public final class Diagnostics {
+public interface RequestableContext {
     /**
-     * Holds a string describing how the server and application
-     * communicate.
-     */
-    public final String connectionDescription;
-
-    /**
-     * Holds an internal identifier for the transport connection.
-     */
-    public final String connectionId;
-
-    /**
-     * Holds the FastCGI request identifier.
-     */
-    public final int requestId;
-
-    /**
-     * Identifies the implementation. An overarching package should be
-     * specified.
-     */
-    public final Package implementation;
-
-    /**
-     * Get a string representation of this object. This takes the form
-     * <samp><var >{@linkplain #connectionDescription}</var>&#64;<var
-     * >{@linkplain #connectionId}</var>.<var
-     * >{@linkplain #requestId}</var></samp>.
+     * Get the stream for reading the request body.
      * 
-     * @return the requested string representation
+     * @return the input stream providing the request body
      */
-    @Override
-    public String toString() {
-        return connectionDescription + "@" + connectionId + "." + requestId;
-    }
-
-    /**
-     * Create diagnostics.
-     * 
-     * @param implementation the implementation
-     * 
-     * @param connectionDescription the connection description
-     * 
-     * @param connectionId the internal connection identifier
-     * 
-     * @param requestId the FastCGI request identifier
-     */
-    public Diagnostics(Package implementation, String connectionDescription,
-                       String connectionId, int requestId) {
-        this.implementation = implementation;
-        this.connectionDescription = connectionDescription;
-        this.connectionId = connectionId;
-        this.requestId = requestId;
-    }
+    InputStream in();
 }

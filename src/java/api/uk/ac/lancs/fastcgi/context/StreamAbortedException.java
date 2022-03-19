@@ -34,25 +34,22 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-package uk.ac.lancs.fastcgi;
+package uk.ac.lancs.fastcgi.context;
+
+import java.io.IOException;
 
 /**
- * Indicates that the server has aborted a session.
- *
+ * Indicates that a stream has been aborted by the source.
+ * 
  * @author simpsons
  */
-public class SessionAbortedException extends RuntimeException {
+public class StreamAbortedException extends IOException {
     /**
-     * Create an exception.
-     */
-    public SessionAbortedException() {}
-
-    /**
-     * Create an exception with a detail message.
+     * Indicate abortion for a specific reason.
      * 
-     * @param message the detail message
+     * @param cause the reason for this exception
      */
-    public SessionAbortedException(String message) {
-        super(message);
+    public StreamAbortedException(Throwable cause) {
+        super(cause);
     }
 }

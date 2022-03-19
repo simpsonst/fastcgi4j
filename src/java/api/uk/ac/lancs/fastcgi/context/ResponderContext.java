@@ -34,21 +34,16 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-package uk.ac.lancs.fastcgi;
-
-import java.io.InputStream;
+package uk.ac.lancs.fastcgi.context;
 
 /**
- * Presents the context of a FastCGI session to an application in a role
- * which receives a request body.
- *
+ * Presents the context of a FastCGI session to an application in the
+ * Responder role.
+ * 
  * @author simpsons
+ * 
+ * @see <a href=
+ * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.2">FastCGI
+ * Specification &mdash; Responder</a>
  */
-public interface RequestableContext {
-    /**
-     * Get the stream for reading the request body.
-     * 
-     * @return the input stream providing the request body
-     */
-    InputStream in();
-}
+public interface ResponderContext extends RequestableContext, SessionContext {}

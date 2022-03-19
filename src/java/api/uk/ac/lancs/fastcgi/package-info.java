@@ -35,7 +35,8 @@
  */
 
 /**
- * Supports the definition of roles in FastCGI session.
+ * Provides the interfaces that an application implements to process a
+ * FastCGI session.
  * 
  * @author simpsons
  */

@@ -39,7 +39,7 @@ package uk.ac.lancs.fastcgi.engine.util;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.atomic.AtomicLong;
-import uk.ac.lancs.fastcgi.StreamAbortedException;
+import uk.ac.lancs.fastcgi.context.StreamAbortedException;
 
 /**
  * Stores content in a byte array. A maximum size is configured. When

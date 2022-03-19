@@ -38,7 +38,7 @@ package uk.ac.lancs.fastcgi.engine.util;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import uk.ac.lancs.fastcgi.StreamAbortedException;
+import uk.ac.lancs.fastcgi.context.StreamAbortedException;
 
 /**
  * Provides an indefinitely long pipe with stream access.

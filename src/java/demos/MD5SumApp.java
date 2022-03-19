@@ -36,7 +36,7 @@
 
 import uk.ac.lancs.fastcgi.engine.Attribute;
 import uk.ac.lancs.fastcgi.engine.Engine;
-import uk.ac.lancs.fastcgi.role.Responder;
+import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.scc.jardeps.Application;
 import uk.ac.lancs.fastcgi.transport.Transport;
 

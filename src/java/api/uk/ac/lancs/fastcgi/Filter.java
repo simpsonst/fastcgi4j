@@ -15,11 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package uk.ac.lancs.fastcgi.role;
+package uk.ac.lancs.fastcgi;
 
 import java.io.IOException;
-import uk.ac.lancs.fastcgi.FilterContext;
-import uk.ac.lancs.fastcgi.SessionException;
+import uk.ac.lancs.fastcgi.context.FilterContext;
+import uk.ac.lancs.fastcgi.context.SessionException;
 
 /**
  * Augments a session by post-processing a partial response.

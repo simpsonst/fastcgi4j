@@ -34,16 +34,25 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-package uk.ac.lancs.fastcgi;
+package uk.ac.lancs.fastcgi.context;
+
+import java.io.InputStream;
 
 /**
  * Presents the context of a FastCGI session to an application in the
- * Responder role.
- * 
+ * Filter role.
+ *
  * @author simpsons
  * 
  * @see <a href=
- * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.2">FastCGI
- * Specification &mdash; Responder</a>
+ * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.4">FastCGI
+ * Specification &mdash; Filter</a>
  */
-public interface ResponderContext extends RequestableContext, SessionContext {}
+public interface FilterContext extends RequestableContext {
+    /**
+     * Get the stream for reading the file data.
+     * 
+     * @return the input stream providing the file data
+     */
+    InputStream data();
+}

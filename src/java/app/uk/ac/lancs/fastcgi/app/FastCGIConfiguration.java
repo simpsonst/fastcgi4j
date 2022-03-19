@@ -36,9 +36,9 @@
 
 package uk.ac.lancs.fastcgi.app;
 
-import uk.ac.lancs.fastcgi.role.Authorizer;
-import uk.ac.lancs.fastcgi.role.Filter;
-import uk.ac.lancs.fastcgi.role.Responder;
+import uk.ac.lancs.fastcgi.Authorizer;
+import uk.ac.lancs.fastcgi.Filter;
+import uk.ac.lancs.fastcgi.Responder;
 
 /**
  * Allows a FastCGI application to declare its capabilities.

@@ -34,38 +34,67 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-package uk.ac.lancs.fastcgi.role;
-
-import java.io.IOException;
-import uk.ac.lancs.fastcgi.ResponderContext;
-import uk.ac.lancs.fastcgi.SessionException;
+package uk.ac.lancs.fastcgi.context;
 
 /**
- * Responds to complete FastCGI requests.
+ * Indicates a reason for the application terminating a session
+ * abnormally.
  * 
  * @author simpsons
- * 
- * @see <a href=
- * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.2">FastCGI
- * Specification &mdash; Responder</a>
  */
-public interface Responder {
+public class SessionException extends Exception {
     /**
-     * Respond to a complete request.
-     * 
-     * @param session the FastCGI session context
-     * 
-     * @throws InterruptedException if the application was interrupted
-     * (usually by the server or the remote client aborting the session)
-     * 
-     * @throws SessionException if the application is temporarily unable
-     * to respond to the request
-     * 
-     * @throws IOException if an I/O error occurs in processing any of
-     * the streams of the session context
-     * 
-     * @throws Exception if something else goes wrong, to be logged by
-     * the library
+     * Create an exception.
      */
-    void respond(ResponderContext session) throws Exception;
+    public SessionException() {}
+
+    /**
+     * Create an exception with a detail message.
+     * 
+     * @param message the detail message
+     */
+    public SessionException(String message) {
+        super(message);
+    }
+
+    /**
+     * Create an exception with a detail message and a cause.
+     * 
+     * @param message the detail message
+     * 
+     * @param cause the cause of the exception
+     */
+    public SessionException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    /**
+     * Create an exception with a cause.
+     * 
+     * @param cause the cause of the exception
+     */
+    public SessionException(Throwable cause) {
+        super(cause);
+    }
+
+    /**
+     * Create an exception with a detail message, a cause, suppression
+     * enabled or disabled, and writable stack trace enabled or
+     * disabled.
+     * 
+     * @param message the detail message
+     * 
+     * @param cause the cause; or {@code null} if there was no cause
+     * 
+     * @param enableSuppression whether or not suppression is enabled or
+     * disabled
+     * 
+     * @param writableStackTrace whether or not the stack trace should
+     * be writable
+     */
+    protected SessionException(String message, Throwable cause,
+                               boolean enableSuppression,
+                               boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
 }

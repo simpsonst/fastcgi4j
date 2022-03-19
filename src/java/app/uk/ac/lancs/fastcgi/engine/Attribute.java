@@ -42,9 +42,9 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import uk.ac.lancs.fastcgi.role.Authorizer;
-import uk.ac.lancs.fastcgi.role.Filter;
-import uk.ac.lancs.fastcgi.role.Responder;
+import uk.ac.lancs.fastcgi.Authorizer;
+import uk.ac.lancs.fastcgi.Filter;
+import uk.ac.lancs.fastcgi.Responder;
 
 /**
  * Identifies a typed attribute that an engine is required or preferred

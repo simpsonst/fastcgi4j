@@ -34,67 +34,65 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-package uk.ac.lancs.fastcgi;
+package uk.ac.lancs.fastcgi.context;
 
 /**
- * Indicates a reason for the application terminating a session
- * abnormally.
+ * Provides diagnostic information for a FastCGI session.
  * 
  * @author simpsons
  */
-public class SessionException extends Exception {
+public final class Diagnostics {
     /**
-     * Create an exception.
+     * Holds a string describing how the server and application
+     * communicate.
      */
-    public SessionException() {}
+    public final String connectionDescription;
 
     /**
-     * Create an exception with a detail message.
-     * 
-     * @param message the detail message
+     * Holds an internal identifier for the transport connection.
      */
-    public SessionException(String message) {
-        super(message);
+    public final String connectionId;
+
+    /**
+     * Holds the FastCGI request identifier.
+     */
+    public final int requestId;
+
+    /**
+     * Identifies the implementation. An overarching package should be
+     * specified.
+     */
+    public final Package implementation;
+
+    /**
+     * Get a string representation of this object. This takes the form
+     * <samp><var >{@linkplain #connectionDescription}</var>&#64;<var
+     * >{@linkplain #connectionId}</var>.<var
+     * >{@linkplain #requestId}</var></samp>.
+     * 
+     * @return the requested string representation
+     */
+    @Override
+    public String toString() {
+        return connectionDescription + "@" + connectionId + "." + requestId;
     }
 
     /**
-     * Create an exception with a detail message and a cause.
+     * Create diagnostics.
      * 
-     * @param message the detail message
+     * @param implementation the implementation
      * 
-     * @param cause the cause of the exception
+     * @param connectionDescription the connection description
+     * 
+     * @param connectionId the internal connection identifier
+     * 
+     * @param requestId the FastCGI request identifier
      */
-    public SessionException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    /**
-     * Create an exception with a cause.
-     * 
-     * @param cause the cause of the exception
-     */
-    public SessionException(Throwable cause) {
-        super(cause);
-    }
-
-    /**
-     * Create an exception with a detail message, a cause, suppression
-     * enabled or disabled, and writable stack trace enabled or
-     * disabled.
-     * 
-     * @param message the detail message
-     * 
-     * @param cause the cause; or {@code null} if there was no cause
-     * 
-     * @param enableSuppression whether or not suppression is enabled or
-     * disabled
-     * 
-     * @param writableStackTrace whether or not the stack trace should
-     * be writable
-     */
-    protected SessionException(String message, Throwable cause,
-                               boolean enableSuppression,
-                               boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
+    public Diagnostics(Package implementation, String connectionDescription,
+                       String connectionId, int requestId) {
+        this.implementation = implementation;
+        this.connectionDescription = connectionDescription;
+        this.connectionId = connectionId;
+        this.requestId = requestId;
     }
 }

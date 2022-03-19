@@ -41,7 +41,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import uk.ac.lancs.fastcgi.StreamAbortedException;
+import uk.ac.lancs.fastcgi.context.StreamAbortedException;
 
 /**
  * Presents the contents of a sequence of source streams as its own

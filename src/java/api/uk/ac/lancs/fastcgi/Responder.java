@@ -36,23 +36,36 @@
 
 package uk.ac.lancs.fastcgi;
 
-import java.io.InputStream;
+import java.io.IOException;
+import uk.ac.lancs.fastcgi.context.ResponderContext;
+import uk.ac.lancs.fastcgi.context.SessionException;
 
 /**
- * Presents the context of a FastCGI session to an application in the
- * Filter role.
- *
+ * Responds to complete FastCGI requests.
+ * 
  * @author simpsons
  * 
  * @see <a href=
- * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.4">FastCGI
- * Specification &mdash; Filter</a>
+ * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.2">FastCGI
+ * Specification &mdash; Responder</a>
  */
-public interface FilterContext extends RequestableContext {
+public interface Responder {
     /**
-     * Get the stream for reading the file data.
+     * Respond to a complete request.
      * 
-     * @return the input stream providing the file data
+     * @param session the FastCGI session context
+     * 
+     * @throws InterruptedException if the application was interrupted
+     * (usually by the server or the remote client aborting the session)
+     * 
+     * @throws SessionException if the application is temporarily unable
+     * to respond to the request
+     * 
+     * @throws IOException if an I/O error occurs in processing any of
+     * the streams of the session context
+     * 
+     * @throws Exception if something else goes wrong, to be logged by
+     * the library
      */
-    InputStream data();
+    void respond(ResponderContext session) throws Exception;
 }
