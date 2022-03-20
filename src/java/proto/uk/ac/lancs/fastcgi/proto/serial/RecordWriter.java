@@ -77,6 +77,16 @@ public class RecordWriter {
         }
     };
 
+    /**
+     * Write a string length into a buffer. If the length is less than
+     * 128, a single byte is written. Otherwise, bit 31 of the amount is
+     * set, and four bytes are written; the first will be an unsigned
+     * value of at least 128 because it contains that top bit.
+     * 
+     * @param buf the buffer to write in to
+     * 
+     * @param amount the length to write, which must not be negative
+     */
     private static void writeStringLength(ByteBuffer buf, int amount) {
         assert amount >= 0;
         if (amount <= 127) {
@@ -86,6 +96,22 @@ public class RecordWriter {
         }
     }
 
+    /**
+     * Write a name-value pair into a buffer. The name and value are
+     * converted to byte arrays, and then their lengths are encoded into
+     * the buffer as 1- or 4-byte values, followed by the name and then
+     * the value. If the remaining space in the buffer is too small, the
+     * buffer is unmodified, and {@code false} is returned.
+     * 
+     * @param buf the buffer to extend
+     * 
+     * @param name the name to encode
+     * 
+     * @param value the value to encode
+     * 
+     * @return {@code true} if no overflow occurred; {@code false}
+     * otherwise
+     */
     private boolean writeNameValue(ByteBuffer buf, String name, String value) {
         byte[] nameBytes = name.getBytes(charset);
         byte[] valueBytes = value.getBytes(charset);
@@ -102,6 +128,10 @@ public class RecordWriter {
         return true;
     }
 
+    /**
+     * Holds bytes used for padding. This array should not be written
+     * to.
+     */
     private final byte[] padding = new byte[8];
 
     /**
@@ -238,6 +268,28 @@ public class RecordWriter {
         }
     }
 
+    /**
+     * Write bytes to one of the streams.
+     * 
+     * @param label a diagnostic label used in the formation of
+     * log/exception messages
+     * 
+     * @param rt the FastCGI record type; either
+     * {@link RecordTypes#STDOUT} or {@link RecordTypes#STDERR}, or any
+     * other future application-to-server stream type
+     * 
+     * @param id the request id
+     * 
+     * @param buf an array containing the bytes to write
+     * 
+     * @param off the index into the array of the first byte to write
+     * 
+     * @param len the maximum number of bytes to write
+     * 
+     * @return the number of bytes from the array that were written
+     * 
+     * @throws RecordIOException if an I/O error occurred
+     */
     private int writeStream(String label, byte rt, int id, byte[] buf, int off,
                             int len)
         throws RecordIOException {
@@ -277,6 +329,20 @@ public class RecordWriter {
         return amount;
     }
 
+    /**
+     * Signal the end of a stream.
+     * 
+     * @param label a diagnostic label used in the formation of
+     * log/exception messages
+     * 
+     * @param rt the FastCGI record type; either
+     * {@link RecordTypes#STDOUT} or {@link RecordTypes#STDERR}, or any
+     * other future application-to-server stream type
+     * 
+     * @param id the request id
+     * 
+     * @throws RecordIOException if an I/O error occurred
+     */
     private void writeEnd(String label, byte rt, int id)
         throws RecordIOException {
         ByteBuffer bf = buffer.get();
