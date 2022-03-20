@@ -67,9 +67,17 @@ public class RecordWriter {
         this.charset = charset;
     }
 
-    private final ByteBuffer buf = ByteBuffer.allocate((65535 + 8) & ~7);
+    /**
+     * Holds a buffer per calling thread.
+     */
+    private final ThreadLocal<ByteBuffer> buffer = new ThreadLocal<>() {
+        @Override
+        protected ByteBuffer initialValue() {
+            return ByteBuffer.allocate((65535 + 8) & ~7);
+        }
+    };
 
-    private void writeStringLength(int amount) {
+    private static void writeStringLength(ByteBuffer buf, int amount) {
         assert amount >= 0;
         if (amount <= 127) {
             buf.put((byte) amount);
@@ -78,7 +86,7 @@ public class RecordWriter {
         }
     }
 
-    private boolean writeNameValue(String name, String value) {
+    private boolean writeNameValue(ByteBuffer buf, String name, String value) {
         byte[] nameBytes = name.getBytes(charset);
         byte[] valueBytes = value.getBytes(charset);
         int len = 0;
@@ -87,8 +95,8 @@ public class RecordWriter {
         len += nameBytes.length;
         len += valueBytes.length;
         if (buf.remaining() < len) return false;
-        writeStringLength(nameBytes.length);
-        writeStringLength(valueBytes.length);
+        writeStringLength(buf, nameBytes.length);
+        writeStringLength(buf, valueBytes.length);
         buf.put(nameBytes);
         buf.put(valueBytes);
         return true;
@@ -120,6 +128,7 @@ public class RecordWriter {
      */
     public void writeValues(Map<? extends String, ? extends String> values)
         throws RecordIOException {
+        ByteBuffer buf = buffer.get();
         buf.clear();
 
         /* Write the header, leaving length fields empty. */
@@ -130,7 +139,7 @@ public class RecordWriter {
 
         /* Write as many requested values as will fit. */
         for (var entry : values.entrySet())
-            if (!writeNameValue(entry.getKey(), entry.getValue())) break;
+            if (!writeNameValue(buf, entry.getKey(), entry.getValue())) break;
 
         /* Compute and store the record length. */
         final int end = buf.position();
@@ -146,7 +155,9 @@ public class RecordWriter {
 
         assert buf.position() % 8 == 0;
         try {
-            out.write(buf.array(), 0, buf.position());
+            synchronized (this) {
+                out.write(buf.array(), 0, buf.position());
+            }
         } catch (IOException ex) {
             throw new RecordIOException("writeValues", ex);
         }
@@ -163,6 +174,7 @@ public class RecordWriter {
      * @see RecordTypes#UNKNOWN_TYPE
      */
     public void writeUnknownType(int type) throws RecordIOException {
+        ByteBuffer buf = buffer.get();
         buf.clear();
 
         buf.put((byte) 1); // version
@@ -177,7 +189,9 @@ public class RecordWriter {
 
         assert buf.position() % 8 == 0;
         try {
-            out.write(buf.array(), 0, buf.position());
+            synchronized (this) {
+                out.write(buf.array(), 0, buf.position());
+            }
         } catch (IOException ex) {
             throw new RecordIOException("writeUnknownType", ex);
         }
@@ -200,6 +214,7 @@ public class RecordWriter {
      */
     public void writeEndRequest(int id, int appStatus, int protoStatus)
         throws RecordIOException {
+        ByteBuffer buf = buffer.get();
         buf.clear();
 
         buf.put((byte) 1); // version
@@ -215,14 +230,16 @@ public class RecordWriter {
 
         assert buf.position() % 8 == 0;
         try {
-            out.write(buf.array(), 0, buf.position());
+            synchronized (this) {
+                out.write(buf.array(), 0, buf.position());
+            }
         } catch (IOException ex) {
             throw new RecordIOException("writeEndRequest", ex);
         }
     }
 
-    private int write(String label, byte rt, int id, byte[] buf, int off,
-                      int len)
+    private int writeStream(String label, byte rt, int id, byte[] buf, int off,
+                            int len)
         throws RecordIOException {
         if (len == 0) return 0;
         final int amount = Integer.min(len, 65535 & ~7);
@@ -232,47 +249,50 @@ public class RecordWriter {
         assert pad <= 255;
         assert (amount + pad) % 8 == 0;
 
-        this.buf.clear();
+        ByteBuffer bf = buffer.get();
+        bf.clear();
 
-        this.buf.put((byte) 1); // version
-        this.buf.put(rt); // type
-        this.buf.putShort((short) id); // request id
-        this.buf.putShort((short) amount); // content length
-        this.buf.put((byte) pad); // padding length
-        this.buf.put((byte) 0); // reserved
+        bf.put((byte) 1); // version
+        bf.put(rt); // type
+        bf.putShort((short) id); // request id
+        bf.putShort((short) amount); // content length
+        bf.put((byte) pad); // padding length
+        bf.put((byte) 0); // reserved
+        String pos = "hdr";
         try {
-            out.write(this.buf.array(), 0, this.buf.position());
-        } catch (IOException ex) {
-            throw new RecordIOException("write" + label + ":hdr", ex);
-        }
+            synchronized (this) {
+                out.write(bf.array(), 0, bf.position());
 
-        try {
-            out.write(buf, off, amount);
-        } catch (IOException ex) {
-            throw new RecordIOException("write" + label + ":data", ex);
-        }
+                pos = "data";
+                out.write(buf, off, amount);
 
-        try {
-            if (pad > 0) out.write(padding, 0, pad);
+                if (pad > 0) {
+                    pos = "pad";
+                    out.write(padding, 0, pad);
+                }
+            }
         } catch (IOException ex) {
-            throw new RecordIOException("write" + label + ":pad", ex);
+            throw new RecordIOException("write" + label + ":" + pos, ex);
         }
         return amount;
     }
 
     private void writeEnd(String label, byte rt, int id)
         throws RecordIOException {
-        this.buf.clear();
+        ByteBuffer bf = buffer.get();
+        bf.clear();
 
-        this.buf.put((byte) 1); // version
-        this.buf.put(rt); // type
-        this.buf.putShort((short) id); // request id
-        this.buf.putShort((short) 0); // content length
-        this.buf.put((byte) 0); // padding length
-        this.buf.put((byte) 0); // reserved
+        bf.put((byte) 1); // version
+        bf.put(rt); // type
+        bf.putShort((short) id); // request id
+        bf.putShort((short) 0); // content length
+        bf.put((byte) 0); // padding length
+        bf.put((byte) 0); // reserved
 
         try {
-            out.write(this.buf.array(), 0, this.buf.position());
+            synchronized (this) {
+                out.write(bf.array(), 0, bf.position());
+            }
         } catch (IOException ex) {
             throw new RecordIOException("write" + label + ":hdr0", ex);
         }
@@ -301,7 +321,7 @@ public class RecordWriter {
      */
     public int writeStdout(int id, byte[] buf, int off, int len)
         throws RecordIOException {
-        return write("Stdout", RecordTypes.STDOUT, id, buf, off, len);
+        return writeStream("Stdout", RecordTypes.STDOUT, id, buf, off, len);
     }
 
     /**
@@ -341,7 +361,7 @@ public class RecordWriter {
      */
     public int writeStderr(int id, byte[] buf, int off, int len)
         throws RecordIOException {
-        return write("Stderr", RecordTypes.STDERR, id, buf, off, len);
+        return writeStream("Stderr", RecordTypes.STDERR, id, buf, off, len);
     }
 
     /**
