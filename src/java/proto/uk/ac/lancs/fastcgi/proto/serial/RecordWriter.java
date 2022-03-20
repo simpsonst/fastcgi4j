@@ -55,6 +55,52 @@ public class RecordWriter {
     private final Charset charset;
 
     /**
+     * Specifies how big the payload of a record can be, namely
+     * {@value} bytes.
+     */
+    private static final int MAX_CONTENT_LENGTH = 0xffff;
+
+    /**
+     * Specifies the intended alignment of records.
+     */
+    private static final int ALIGNMENT = 8;
+
+    /**
+     * Increase an amount to make it a multiple of the alignment.
+     * 
+     * @param amount the amount to be modified
+     * 
+     * @return the aligned amount, which is no less than the input
+     */
+    private static int align(final int amount) {
+        final int plusXm1 = amount + (ALIGNMENT - 1);
+        final int aligned = plusXm1 - plusXm1 % ALIGNMENT;
+        assert aligned % ALIGNMENT == 0;
+        assert aligned - amount < ALIGNMENT;
+        return aligned;
+    }
+
+    /**
+     * Decrease an amount to make it a multiple of the alignment.
+     * 
+     * @param amount the amount to be modified
+     * 
+     * @return the aligned amount, which is no more than the input
+     */
+    private static int alignBack(final int amount) {
+        return amount - amount % ALIGNMENT;
+    }
+
+    private static void checkAlignment(int amount) {
+        assert amount % ALIGNMENT == 0 :
+            "not aligned to " + ALIGNMENT + ": " + amount;
+    }
+
+    private static void checkAlignment(ByteBuffer buf) {
+        checkAlignment(buf.position());
+    }
+
+    /**
      * Prepare to write records.
      * 
      * @param out the destination for serialized records
@@ -73,7 +119,10 @@ public class RecordWriter {
     private final ThreadLocal<ByteBuffer> buffer = new ThreadLocal<>() {
         @Override
         protected ByteBuffer initialValue() {
-            return ByteBuffer.allocate((65535 + 8) & ~7);
+            /* The maximum number of bytes we can write in a single
+             * record is 8 bytes for the header, and 65535 for the
+             * payload, plus enough padding to a multiple of 8. */
+            return ByteBuffer.allocate(align(8 + MAX_CONTENT_LENGTH));
         }
     };
 
@@ -132,7 +181,7 @@ public class RecordWriter {
      * Holds bytes used for padding. This array should not be written
      * to.
      */
-    private final byte[] padding = new byte[8];
+    private final byte[] padding = new byte[ALIGNMENT - 1];
 
     /**
      * Write application variables. An <code>FCGI_GET_VALUES</code>
@@ -165,25 +214,40 @@ public class RecordWriter {
         buf.put((byte) 1);
         buf.put(RecordTypes.GET_VALUES_RESULT);
         buf.putShort((short) 0); // request id
-        buf.putInt(0); // unknown length fields
+        final int lenPos = buf.position();
+        buf.putShort((short) 0); // unknown content length
+        final int padPos = buf.position();
+        buf.put((byte) 0); // unknown padding length
+        buf.put((byte) 0); // reserved
+        final int begin = buf.position();
 
         /* Write as many requested values as will fit. */
+        buf.limit(buf.position() + MAX_CONTENT_LENGTH);
         for (var entry : values.entrySet())
             if (!writeNameValue(buf, entry.getKey(), entry.getValue())) break;
 
         /* Compute and store the record length. */
         final int end = buf.position();
-        final int len = end - 8;
-        assert len <= 65535;
-        buf.putShort(4, (short) len);
+        final int len = end - begin;
+        assert len <= MAX_CONTENT_LENGTH;
+        buf.putShort(lenPos, (short) len);
 
-        /* Add padding. */
-        buf.put(padding, 0, ((buf.position() + 7) & ~7) - buf.position());
-        final int pad = buf.position() - end;
+        /* Add padding. First, work out how much, then extend the
+         * buffer, then write in the bytes, write in the padding data,
+         * and record the padding length. */
+        final int padEnd = align(buf.position());
+        final int pad = padEnd - buf.position();
+        buf.limit(padEnd);
+        buf.put(padding, 0, pad);
+        assert buf.position() == buf.limit();
         assert pad <= 255;
-        buf.put(6, (byte) pad);
+        buf.put(padPos, (byte) pad);
 
-        assert buf.position() % 8 == 0;
+        /* Ensure our new computation is the same as the old. */
+        final int pad2 = buf.position() - end;
+        assert pad2 == pad;
+
+        checkAlignment(buf);
         try {
             synchronized (this) {
                 out.write(buf.array(), 0, buf.position());
@@ -217,7 +281,7 @@ public class RecordWriter {
         buf.put((byte) type);
         buf.put(padding, 0, 7); // reserved
 
-        assert buf.position() % 8 == 0;
+        checkAlignment(buf);
         try {
             synchronized (this) {
                 out.write(buf.array(), 0, buf.position());
@@ -258,7 +322,7 @@ public class RecordWriter {
         buf.put((byte) protoStatus);
         buf.put(padding, 0, 3);
 
-        assert buf.position() % 8 == 0;
+        checkAlignment(buf);
         try {
             synchronized (this) {
                 out.write(buf.array(), 0, buf.position());
@@ -293,27 +357,61 @@ public class RecordWriter {
     private int writeStream(String label, byte rt, int id, byte[] buf, int off,
                             int len)
         throws RecordIOException {
+        /* We must not send a zero-length message, as this is
+         * interpreted as EOF. */
         if (len == 0) return 0;
-        final int amount = Integer.min(len, 65535 & ~7);
-        final int pad = ((amount + 7) & ~7) - amount;
-
-        assert amount <= 65535;
-        assert pad <= 255;
-        assert (amount + pad) % 8 == 0;
+        assert len > 0;
 
         ByteBuffer bf = buffer.get();
         bf.clear();
 
+        /* Write the header, not knowing the amount of content or
+         * padding to write. */
         bf.put((byte) 1); // version
         bf.put(rt); // type
         bf.putShort((short) id); // request id
-        bf.putShort((short) amount); // content length
-        bf.put((byte) pad); // padding length
+        final int lenPos = bf.position();
+        bf.putShort((short) 0); // unknown content length
+        final int padPos = bf.position();
+        bf.put((byte) 0); // unknown padding length
         bf.put((byte) 0); // reserved
+        final int begin = bf.position();
+
+        /* Determine how much content to actually send this time. */
+        final int amount;
+        if (len < MAX_CONTENT_LENGTH) {
+            /* Since the amount is less than our strict limit, just send
+             * the lot, and include whatever padding is required. It's
+             * not worth sending another record to save a few bytes of
+             * padding on this one. */
+            amount = len;
+        } else {
+            /* Send fewer than our maximum to avoid padding. We might
+             * not save anything in the end, but if the last segment
+             * needs no padding, we can ensure that by adding no padding
+             * here. */
+            amount = alignBack(begin + MAX_CONTENT_LENGTH) - begin;
+        }
+
+        /* Store the determined content length. */
+        assert amount <= MAX_CONTENT_LENGTH;
+        bf.putShort(lenPos, (short) amount); // content length
+
+        /* Work out the content end/padding start, and so the amount of
+         * padding. Write it into the header. */
+        final int end = begin + amount;
+        final int padEnd = align(end);
+        final int pad = padEnd - end;
+        bf.put(padPos, (byte) pad);
+
+        checkAlignment(begin + amount + pad);
+
+        /* Holding the lock, write out the header, content and padding
+         * as three operations. */
         String pos = "hdr";
         try {
             synchronized (this) {
-                out.write(bf.array(), 0, bf.position());
+                out.write(bf.array(), 0, begin);
 
                 pos = "data";
                 out.write(buf, off, amount);
@@ -354,6 +452,7 @@ public class RecordWriter {
         bf.putShort((short) 0); // content length
         bf.put((byte) 0); // padding length
         bf.put((byte) 0); // reserved
+        checkAlignment(bf);
 
         try {
             synchronized (this) {
