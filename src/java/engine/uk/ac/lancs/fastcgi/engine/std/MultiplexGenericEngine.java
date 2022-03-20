@@ -51,6 +51,9 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import uk.ac.lancs.fastcgi.Authorizer;
+import uk.ac.lancs.fastcgi.Filter;
+import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.engine.Engine;
 import uk.ac.lancs.fastcgi.engine.util.CachePipePool;
 import uk.ac.lancs.fastcgi.engine.util.Pipe;
@@ -61,9 +64,6 @@ import uk.ac.lancs.fastcgi.proto.RoleTypes;
 import uk.ac.lancs.fastcgi.proto.serial.RecordHandler;
 import uk.ac.lancs.fastcgi.proto.serial.RecordReader;
 import uk.ac.lancs.fastcgi.proto.serial.RecordWriter;
-import uk.ac.lancs.fastcgi.Authorizer;
-import uk.ac.lancs.fastcgi.Filter;
-import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.transport.Connection;
 import uk.ac.lancs.fastcgi.transport.Transport;
 
@@ -168,6 +168,23 @@ class MultiplexGenericEngine implements Engine {
 
     private final AtomicInteger connIds = new AtomicInteger(0);
 
+    private static int optimizeBufferSize(int requested, int recommended,
+                                          int alignment) {
+        final int chosenAlignment;
+        if (requested < recommended * 2) {
+            /* Just round it up to the alignment. */
+            chosenAlignment = alignment;
+        } else {
+            chosenAlignment = recommended;
+        }
+
+        /* Round up to a multiple of the recommended. */
+
+        /* Round it up to the alignment. */
+        final int tmp = requested + (chosenAlignment - 1);
+        return tmp + tmp % chosenAlignment;
+    }
+
     private class ConnHandler implements Runnable, RecordHandler {
         private final int id = connIds.getAndIncrement();
 
@@ -182,10 +199,16 @@ class MultiplexGenericEngine implements Engine {
 
         private final Executor executor;
 
+        private final int optimizedBufferSize;
+
         public ConnHandler(Connection conn) throws IOException {
             this.conn = conn;
             this.recordsIn = new RecordReader(conn.getInput(), charset, this);
             this.recordsOut = new RecordWriter(conn.getOutput(), charset);
+            this.optimizedBufferSize =
+                optimizeBufferSize(stdoutBufferSize,
+                                   this.recordsOut.optimumPayloadLength(),
+                                   this.recordsOut.alignment());
             AtomicInteger intSessIds = new AtomicInteger(0);
             ThreadFactory tf = r -> new Thread(sesstg, r, "session-" + id + "-"
                 + intSessIds.getAndIncrement());
@@ -275,7 +298,7 @@ class MultiplexGenericEngine implements Engine {
                                          this::abortConnection,
                                          () -> sessions.remove(id), recordsOut,
                                          executor, charset, paramBufs,
-                                         stdoutBufferSize, stderrBufferSize);
+                                         optimizedBufferSize, stderrBufferSize);
 
             /* Create the session if there isn't one with the specified
              * id, and the role type is recognized. */

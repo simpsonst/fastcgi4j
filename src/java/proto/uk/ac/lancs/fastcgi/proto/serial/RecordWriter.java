@@ -66,6 +66,11 @@ public class RecordWriter {
     private static final int ALIGNMENT = 8;
 
     /**
+     * Specifies the expected size of a record header.
+     */
+    private static final int HEADER_LENGTH = 8;
+
+    /**
      * Increase an amount to make it a multiple of the alignment.
      * 
      * @param amount the amount to be modified
@@ -78,6 +83,42 @@ public class RecordWriter {
         assert aligned % ALIGNMENT == 0;
         assert aligned - amount < ALIGNMENT;
         return aligned;
+    }
+
+    private static final int OPTIMUM_PAYLOAD =
+        alignBack(HEADER_LENGTH + MAX_CONTENT_LENGTH) - HEADER_LENGTH;
+
+    /**
+     * Get the optimum payload length for this writer. This is computed
+     * by taking the maximum payload length, increasing it by the header
+     * length, reducing by the minimum amount to achieve optimum
+     * alignment, and then subtracting the header length. For example, a
+     * header length of 8, a maximum payload of 65535, and an alignment
+     * of 8 yields 65528. The user should consider offering multiples of
+     * this amount when doing large transfers with
+     * {@link #writeStdout(int, byte[], int, int)} or
+     * {@link #writeStderr(int, byte[], int, int)}, to avoid padding.
+     * 
+     * @return the optimum payload length
+     */
+    public int optimumPayloadLength() {
+        return OPTIMUM_PAYLOAD;
+    }
+
+    /**
+     * Get the optimum alignment for this writer. The <a href=
+     * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S3.3">specification
+     * recommends 8</a>, so that's what you'll likely get here.
+     * 
+     * @return the optimum alignment
+     */
+    public int alignment() {
+        return ALIGNMENT;
+    }
+
+    private static void checkHeaderLength(int amount) {
+        assert amount == HEADER_LENGTH :
+            "header not " + HEADER_LENGTH + ": " + amount;
     }
 
     /**
@@ -220,6 +261,7 @@ public class RecordWriter {
         buf.put((byte) 0); // unknown padding length
         buf.put((byte) 0); // reserved
         final int begin = buf.position();
+        checkHeaderLength(begin);
 
         /* Write as many requested values as will fit. */
         buf.limit(buf.position() + MAX_CONTENT_LENGTH);
@@ -277,6 +319,7 @@ public class RecordWriter {
         buf.putShort((short) 8); // content length
         buf.put((byte) 0); // padding length
         buf.put((byte) 0); // reserved
+        checkHeaderLength(buf.position());
 
         buf.put((byte) type);
         buf.put(padding, 0, 7); // reserved
@@ -317,6 +360,7 @@ public class RecordWriter {
         buf.putShort((short) 8); // content length
         buf.put((byte) 0); // padding length
         buf.put((byte) 0); // reserved
+        checkHeaderLength(buf.position());
 
         buf.putInt(appStatus);
         buf.put((byte) protoStatus);
@@ -376,6 +420,7 @@ public class RecordWriter {
         bf.put((byte) 0); // unknown padding length
         bf.put((byte) 0); // reserved
         final int begin = bf.position();
+        checkHeaderLength(begin);
 
         /* Determine how much content to actually send this time. */
         final int amount;
@@ -453,6 +498,7 @@ public class RecordWriter {
         bf.put((byte) 0); // padding length
         bf.put((byte) 0); // reserved
         checkAlignment(bf);
+        checkHeaderLength(bf.position());
 
         try {
             synchronized (this) {
