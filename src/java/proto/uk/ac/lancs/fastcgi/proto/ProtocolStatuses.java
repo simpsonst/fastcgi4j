@@ -50,26 +50,29 @@ public final class ProtocolStatuses {
     private ProtocolStatuses() {}
 
     /**
-     * Indicates that the request is complete. The value is {@value}.
+     * Indicates that the request is complete. The value is {@value},
+     * corresponding to <code>FCGI_REQUEST_COMPLETE</code>.
      */
     public static final byte REQUEST_COMPLETE = 0;
 
     /**
      * Indicates that another request is open on this connection, and
      * the application does not multiplex requests. The value is
-     * {@value}.
+     * {@value}, corresponding to <code>FCGI_CANT_MPX_CONN</code>.
      */
     public static final byte CANT_MPX_CONN = 1;
 
     /**
      * Indicates that the application currently can't handle another
-     * request. The value is {@value}.
+     * request. The value is {@value}, corresponding to
+     * <code>FCGI_OVERLOADED</code>.
      */
     public static final byte OVERLOADED = 2;
 
     /**
      * Indicates that the request's role cannot be fulfilled by the
-     * application. The value is {@value}.
+     * application. The value is {@value}, corresponding to
+     * <code>FCGI_UNKNOWN_ROLE</code>.
      */
     public static final byte UNKNOWN_ROLE = 3;
 }

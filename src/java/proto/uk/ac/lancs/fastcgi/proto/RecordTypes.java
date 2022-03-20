@@ -51,7 +51,7 @@ public final class RecordTypes {
 
     /**
      * Indicates that a request is being opened by the server. The value
-     * is {@value}.
+     * is {@value}, corresponding to <code>FCGI_BEGIN_REQUEST</code>.
      * 
      * @see <a href=
      * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.1">FastCGI
@@ -61,7 +61,8 @@ public final class RecordTypes {
 
     /**
      * Indicates that a request is being aborted by the server. The
-     * value is {@value}.
+     * value is {@value}, corresponding to
+     * <code>FCGI_ABORT_REQUEST</code>.
      * 
      * @see <a href=
      * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.4">FastCGI
@@ -71,8 +72,9 @@ public final class RecordTypes {
 
     /**
      * Indicates that the application is terminating a request. The
-     * value is {@value}. Values in {@link ProtocolStatuses} indicate
-     * the reason.
+     * value is {@value}, corresponding to
+     * <code>FCGI_END_REQUEST</code>. Values in {@link ProtocolStatuses}
+     * indicate the reason.
      * 
      * @see <a href=
      * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.5">FastCGI
@@ -82,7 +84,8 @@ public final class RecordTypes {
 
     /**
      * Indicates that the content is part of the server-to-application
-     * parameters stream. The value is {@value}.
+     * parameters stream. The value is {@value}, corresponding to
+     * <code>FCGI_PARAMS</code>.
      * 
      * @see <a href=
      * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.2">FastCGI
@@ -92,7 +95,8 @@ public final class RecordTypes {
 
     /**
      * Indicates that the content is part of the server-to-application
-     * standard input. The value is {@value}.
+     * standard input. The value is {@value}, corresponding to
+     * <code>FCGI_STDIN</code>.
      * 
      * @see <a href=
      * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.3">FastCGI
@@ -102,7 +106,8 @@ public final class RecordTypes {
 
     /**
      * Indicates that the content is part of the application-to-server
-     * standard output. The value is {@value}.
+     * standard output. The value is {@value}, corresponding to
+     * <code>FCGI_STDOUT</code>.
      * 
      * @see <a href=
      * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.3">FastCGI
@@ -112,7 +117,8 @@ public final class RecordTypes {
 
     /**
      * Indicates that the content is part of the application-to-server
-     * standard error output. The value is {@value}.
+     * standard error output. The value is {@value}, corresponding to
+     * <code>FCGI_STDERR</code>.
      * 
      * @see <a href=
      * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.3">FastCGI
@@ -122,7 +128,8 @@ public final class RecordTypes {
 
     /**
      * Indicates that the content is part of the server-to-application
-     * extra data. The value is {@value}.
+     * extra data. The value is {@value}, corresponding to
+     * <code>FCGI_DATA</code>.
      * 
      * @see <a href=
      * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.3">FastCGI
@@ -132,7 +139,8 @@ public final class RecordTypes {
 
     /**
      * Indicates that the content is a list of application variable
-     * names requested by the server. The value is {@value}. See
+     * names requested by the server. The value is {@value},
+     * corresponding to <code>FCGI_GET_VALUES</code>. See
      * {@link ApplicationVariables} for standard variable names.
      * 
      * @see <a href=
@@ -143,8 +151,9 @@ public final class RecordTypes {
 
     /**
      * Indicates that the content is a list of application variables and
-     * values. The value is {@value}. See {@link ApplicationVariables}
-     * for standard variable names.
+     * values. The value is {@value}, corresponding to
+     * <code>FCGI_GET_VALUES_RESULT</code>. See
+     * {@link ApplicationVariables} for standard variable names.
      * 
      * @see <a href=
      * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S4.1">FastCGI
@@ -154,7 +163,8 @@ public final class RecordTypes {
 
     /**
      * Indicates that a record type from the server was not understood
-     * by the application. The value is {@value}.
+     * by the application. The value is {@value}, corresponding to
+     * <code>FCGI_UNKNOWN_TYPE</code>.
      * 
      * @see <a href=
      * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S4.2">FastCGI

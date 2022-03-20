@@ -51,7 +51,8 @@ public final class RequestFlags {
 
     /**
      * Specifies whether the application should expect more records
-     * after this request is complete. The value is {@value}.
+     * after this request is complete. The value is {@value},
+     * corresponding to <code>FCGI_KEEP_CONN</code>.
      */
     public static final int KEEP_CONN = 1;
 }
