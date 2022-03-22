@@ -182,7 +182,7 @@ class MultiplexGenericEngine implements Engine {
 
         /* Round it up to the alignment. */
         final int tmp = requested + (chosenAlignment - 1);
-        return tmp + tmp % chosenAlignment;
+        return tmp - tmp % chosenAlignment;
     }
 
     private class ConnHandler implements Runnable, RecordHandler {
