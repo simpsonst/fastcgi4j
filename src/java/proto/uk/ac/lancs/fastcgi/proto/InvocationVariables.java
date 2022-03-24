@@ -228,6 +228,13 @@ public final class InvocationVariables {
      */
     public static final String INET_BIND_ADDR = "FASTCGI4J_INET_BIND";
 
+    /**
+     * Specifies the name of the environment variable instructing the
+     * application process to bind to a Unix-domain socket address. The
+     * value is {@value}.
+     */
+    public static final String UNIX_BIND_ADDR = "FASTCGI4J_UNIX_BIND";
+
     private static final String DECIMAL_OCTET =
         "(?:(?:[12][0-9]|[1-9])?[0-9]|25[0-5])";
 

@@ -34,15 +34,37 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
+package uk.ac.lancs.fastcgi.transport.native_unix;
+
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
+import uk.ac.lancs.fastcgi.transport.Connection;
+import uk.ac.lancs.fastcgi.transport.Transport;
+
 /**
- * Provides transports for server-forked FastCGI applications and
- * stand-alone Unix-domain applications. Server-forked applications
- * receive a server socket as file descriptor 0, so native calls are
- * used to build the transport. The stand-alone Unix transport exploits
- * Unix-domain sockets appearing in Java 16.
- * 
- * @see java.net.UnixDomainSocketAddress
- * 
+ *
  * @author simpsons
  */
-package uk.ac.lancs.fastcgi.transport.native_unix;
+class StandaloneUnixTransport implements Transport {
+    private final ServerSocket socket;
+
+    private final String descr;
+
+    private final String intDescr;
+
+    public StandaloneUnixTransport(String descr, ServerSocket socket) {
+        this.descr = descr;
+        this.intDescr = socket.getLocalSocketAddress().toString();
+        this.socket = socket;
+    }
+
+    @Override
+    public Connection nextConnection() throws IOException {
+        do {
+            Socket sock = socket.accept();
+            return new StandaloneUnixConnection(descr, intDescr, sock);
+        } while (true);
+    }
+
+}

@@ -121,6 +121,9 @@ Usage: $SELF [options] [handler|--] [args...]
 	Add FILE to the classpath.
 --bind HOST:PORT
 	Run stand-alone, bound to HOST:PORT.
+--bind PATH
+	Run stand-alone, bound to Unix-domain rendezvous point PATH,
+	which must be absolute.
 --peer HOST
 	Add HOST to set of permitted peers in stand-alone mode.
 -f FILE
@@ -314,7 +317,9 @@ if [ -n "$seek" ] ; then
     APPARGS+=(--seek)
 fi
 
-if [ -n "$bindaddr" ] ; then
+if [[ "$bindaddr" =~ ^/ ]] ; then
+    export FASTCGI4J_UNIX_BIND="$bindaddr"
+elif [ -n "$bindaddr" ] ; then
     export FASTCGI4J_INET_BIND="$bindaddr"
     export FASTCGI4J_WEB_SERVER_ADDRS="$(printf ':%s' "${peers[@]}")"
     FASTCGI4J_WEB_SERVER_ADDRS="${FASTCGI4J_WEB_SERVER_ADDRS:1}"

@@ -34,15 +34,43 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
+package uk.ac.lancs.fastcgi.transport.native_unix;
+
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.UnixDomainSocketAddress;
+import uk.ac.lancs.fastcgi.proto.InvocationVariables;
+import uk.ac.lancs.fastcgi.transport.Transport;
+import uk.ac.lancs.fastcgi.transport.TransportConfigurationException;
+import uk.ac.lancs.fastcgi.transport.TransportFactory;
+import uk.ac.lancs.scc.jardeps.Service;
+
 /**
- * Provides transports for server-forked FastCGI applications and
- * stand-alone Unix-domain applications. Server-forked applications
- * receive a server socket as file descriptor 0, so native calls are
- * used to build the transport. The stand-alone Unix transport exploits
- * Unix-domain sockets appearing in Java 16.
+ * Recognizes stand-alone Unix-domain transports. The environment
+ * variable {@value InvocationVariables#UNIX_BIND_ADDR} must be set,
+ * specifying the file of the rendezvous point.
  * 
- * @see java.net.UnixDomainSocketAddress
+ * <p>
+ * Each connection's description is {@value #STANDALONE_DESCRIPTION}.
  * 
  * @author simpsons
  */
-package uk.ac.lancs.fastcgi.transport.native_unix;
+@Service(TransportFactory.class)
+public class StandaloneUnixTransportFactory implements TransportFactory {
+    @Override
+    public Transport getTransport() {
+        try {
+            String pathText = System.getenv(InvocationVariables.UNIX_BIND_ADDR);
+            if (pathText == null) return null;
+
+            UnixDomainSocketAddress addr = UnixDomainSocketAddress.of(pathText);
+            final ServerSocket ss = new ServerSocket();
+            ss.bind(addr);
+            return new StandaloneUnixTransport(STANDALONE_DESCRIPTION, ss);
+        } catch (IOException ex) {
+            throw new TransportConfigurationException(ex);
+        }
+    }
+
+    private static final String STANDALONE_DESCRIPTION = "unix-standalone";
+}
