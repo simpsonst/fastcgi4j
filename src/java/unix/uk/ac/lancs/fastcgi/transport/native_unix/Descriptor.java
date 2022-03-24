@@ -38,7 +38,7 @@ package uk.ac.lancs.fastcgi.transport.native_unix;
 
 import java.io.IOException;
 import java.lang.ref.Cleaner;
-import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -225,18 +225,17 @@ class Descriptor {
     static native int checkDescriptor(int[] addrLen, byte[] addr);
 
     /**
-     * Decode an Internet-domain address from a buffer.
+     * Decode a socket address from a buffer.
      * 
      * @param addrLen the number of bytes at the start of the array
      * holding the address
      * 
      * @param addr the array holding the address
      * 
-     * @return the address reformulated as a Java socket address if of
-     * the right domain; or {@code null} otherwise
+     * @return the address reformulated as a Java socket address if of a
+     * known domain; or {@code null} otherwise
      */
-    static native InetSocketAddress getInternetAddress(int addrLen,
-                                                       byte[] addr);
+    static native SocketAddress getSocketAddress(int addrLen, byte[] addr);
 
     /**
      * Attempt to accept a connection

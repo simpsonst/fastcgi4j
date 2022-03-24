@@ -39,6 +39,8 @@ package uk.ac.lancs.fastcgi.transport.native_unix;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.net.UnixDomainSocketAddress;
 import java.net.UnknownHostException;
 import java.util.Collection;
 import uk.ac.lancs.fastcgi.proto.InvocationVariables;
@@ -54,14 +56,30 @@ import uk.ac.lancs.fastcgi.transport.Transport;
 class ForkedUnixTransport implements Transport {
     private final Descriptor fd;
 
-    private final Collection<InetAddress> permittedCallers;
+    private interface PeerValidator {
+        /**
+         * Determine whether the connection from the peer should be
+         * accepted.
+         * 
+         * @param addrLen the number of bytes in the peer's address
+         * 
+         * @param addr the bytes of the peer's address
+         * 
+         * @return {@code null} if the connection should be rejected; or
+         * a suffix to be used in the connection's description (as
+         * defined by {@link Diagnostics#connectionDescription)
+         */
+        String permit(int addrLen, byte[] addr);
+    }
+
+    private final PeerValidator validator;
 
     private final String descr;
 
     private ForkedUnixTransport(int descriptor, String descr,
-                                       Collection<InetAddress> permittedCallers) {
+                                PeerValidator validator) {
         this.fd = new Descriptor(descriptor);
-        this.permittedCallers = permittedCallers;
+        this.validator = validator;
         this.descr = descr;
     }
 
@@ -85,16 +103,24 @@ class ForkedUnixTransport implements Transport {
         int[] addrLen = new int[1];
         int descriptor = Descriptor.checkDescriptor(addrLen, addr);
         if (descriptor < 0) return null;
-        InetSocketAddress home =
-            Descriptor.getInternetAddress(addrLen[0], addr);
-        final Collection<InetAddress> permittedCallers;
-        if (home != null) {
-            permittedCallers = InvocationVariables.getAuthorizedInetPeers();
+        SocketAddress saddr = Descriptor.getSocketAddress(addrLen[0], addr);
+        final PeerValidator validator;
+        if (saddr instanceof InetSocketAddress) {
+            final Collection<InetAddress> permittedCallers =
+                InvocationVariables.getAuthorizedInetPeers();
+            validator = (addrLen1, addr1) -> {
+                InetSocketAddress peerAddr = (InetSocketAddress) Descriptor
+                    .getSocketAddress(addrLen1, addr1);
+                if (!permittedCallers.contains(peerAddr.getAddress()))
+                    return null;
+                return "-inet-" + peerAddr;
+            };
+        } else if (saddr instanceof UnixDomainSocketAddress) {
+            validator = (addrLen1, addr1) -> "-unix";
         } else {
-            permittedCallers = null;
+            return null;
         }
-        return new ForkedUnixTransport(descriptor, "forked",
-                                              permittedCallers);
+        return new ForkedUnixTransport(descriptor, "forked", validator);
     }
 
     @Override
@@ -105,17 +131,10 @@ class ForkedUnixTransport implements Transport {
                 int[] addrLen = new int[1];
                 int socket =
                     Descriptor.acceptConnection(fd.fd(), addrLen, addr);
-                String suffix = "-unix";
-                if (permittedCallers != null) {
-                    InetSocketAddress caller =
-                        Descriptor.getInternetAddress(addrLen[0], addr);
-                    if (caller == null) {
-                        Descriptor.closeSocket(socket);
-                        continue;
-                    }
-                    if (!permittedCallers.contains(caller.getAddress()))
-                        continue;
-                    suffix = "-inet-" + caller;
+                String suffix = validator.permit(addrLen[0], addr);
+                if (suffix == null) {
+                    Descriptor.closeSocket(socket);
+                    continue;
                 }
                 return new ForkedUnixConnection(descr + suffix, socket);
             }

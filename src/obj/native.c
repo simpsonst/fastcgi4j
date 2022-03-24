@@ -126,12 +126,11 @@ Java_uk_ac_lancs_fastcgi_transport_native_1unix_Descriptor_checkDescriptor
 
 /*
  * Class:     uk_ac_lancs_fastcgi_transport_native_unix_Descriptor
- * Method:    getInternetAddress
- * Signature: (I[B)Ljava/net/InetSocketAddress;
+ * Method:    getSocketAddress
+ * Signature: (I[B)Ljava/net/SocketAddress;
  */
-JNIEXPORT jobject JNICALL
-Java_uk_ac_lancs_fastcgi_transport_native_1unix_Descriptor_getInternetAddress
-(JNIEnv *env, jclass jc, jint ulen, jbyteArray ubuf)
+JNIEXPORT jobject JNICALL Java_uk_ac_lancs_fastcgi_transport_native_1unix_Descriptor_getSocketAddress
+  (JNIEnv *env, jclass jc, jint ulen, jbyteArray ubuf)
 {
   union {
     struct sockaddr sa;
@@ -168,37 +167,70 @@ Java_uk_ac_lancs_fastcgi_transport_native_1unix_Descriptor_getInternetAddress
     break;
 
   case AF_UNIX:
-    //fprintf(stderr, "bound path: %s\n", u.un.sun_path);
-    return NULL;
+    /* We recognize this type, but do nothing at this stage. */
+    break;
 
   default:
     /* It's not recognized, so we say nothing. */
     return NULL;
   }
 
-  /* Convert the bytes into a Java byte array. */
-  jbyteArray array = (*env)->NewByteArray(env, len);
-  {
-    jbyte *dst = (*env)->GetByteArrayElements(env, array, NULL);
-    for (size_t i = 0; i < len; i++)
-      dst[i] = ptr[i];
-    (*env)->ReleaseByteArrayElements(env, array, dst, 0);
+  switch (u.sa.sa_family) {
+  case AF_INET:
+  case AF_INET6: {
+    /* Convert the bytes into a Java byte array. */
+    jbyteArray array = (*env)->NewByteArray(env, len);
+    {
+      jbyte *dst = (*env)->GetByteArrayElements(env, array, NULL);
+      for (size_t i = 0; i < len; i++)
+	dst[i] = ptr[i];
+      (*env)->ReleaseByteArrayElements(env, array, dst, 0);
+    }
+
+    /* Create the InetAddress from the Java byte array. */
+    jclass inat = (*env)->FindClass(env, "java/net/InetAddress");
+    jmethodID gba = (*env)->GetMethodID(env, inat, "getByAddress",
+					"([b)Ljava/net/InetAddress;");
+    jobject aobj = (*env)->CallStaticObjectMethod(env, inat, gba, array);
+    if ((*env)->ExceptionCheck(env)) return NULL;
+
+    /* Combine the port with the IP address. */
+    jclass insat = (*env)->FindClass(env, "java/net/InetSocketAddress");
+    jmethodID ctr = (*env)->GetMethodID(env, insat, "<init>",
+					"(Ljava/net/InetAddress;I)V");
+    jobject insa = (*env)->NewObject(env, insat, ctr, aobj, port);
+    if ((*env)->ExceptionCheck(env)) return NULL;
+
+    return insa;
   }
 
-  /* Create the InetAddress from the Java byte array. */
-  jclass inat = (*env)->FindClass(env, "java/net/InetAddress");
-  jmethodID gba = (*env)->GetMethodID(env, inat, "getByAddress",
-				      "([b)Ljava/net/InetAddress;");
-  jobject aobj = (*env)->CallStaticObjectMethod(env, inat, gba, array);
-  if ((*env)->ExceptionCheck(env)) return NULL;
+  case AF_UNIX: {
+    /* Convert the path into a Java string.  TODO: Perhaps this string
+       should not be considered compatible with UTF-8. */
+    const size_t len = strnlen(u.un.sun_path, sizeof u.un.sun_path);
+    char cpy[sizeof u.un.sun_path + 1];
+    strncpy(cpy, u.un.sun_path, len);
+    cpy[sizeof u.un.sun_path] = '\0';
+    //fprintf(stderr, "bound path: %s\n", cpy);
+    jstring path = (*env)->NewStringUTF(env, cpy);
+    if ((*env)->ExceptionCheck(env)) return NULL;
 
-  /* Combine the port with the IP address. */
-  jclass insat = (*env)->FindClass(env, "java/net/InetSocketAddress");
-  jmethodID ctr = (*env)->GetMethodID(env, inat, "<init>",
-				      "(Ljava/net/InetAddress;I)V");
-  jobject insa = (*env)->NewObject(env, insat, ctr, aobj, port);
-  if ((*env)->ExceptionCheck(env)) return NULL;
-  return insa;
+    /* Create a UnixDomainSocketAddress from the path. */
+    jclass insat = (*env)->FindClass(env, "java/net/UnixDomainSocketAddress");
+    jmethodID ctr =
+      (*env)->GetMethodID(env, insat, "of",
+			  "(Ljava/lang/String;)"
+			  "Ljava/net/UnixDomainSocketAddress;");
+    jobject insa = (*env)->CallStaticObjectMethod(env, insat, ctr, path);
+    if ((*env)->ExceptionCheck(env)) return NULL;
+
+    return insa;
+  }
+
+  default:
+    // unreachable
+    return NULL;
+  }
 }
 
 /*
