@@ -50,13 +50,17 @@ import uk.ac.lancs.fastcgi.transport.Transport;
 class ForkedAFUNIXTransport implements Transport {
     private final AFUNIXServerSocket serverSocket;
 
+    private final String intDescr;
+
     /**
      * Create a connection supply from a Unix-domain server socket.
      * 
      * @param serverSocket the server socket
      */
-    public ForkedAFUNIXTransport(AFUNIXServerSocket serverSocket) {
+    public ForkedAFUNIXTransport(AFUNIXServerSocket serverSocket,
+                                 String intDescr) {
         this.serverSocket = serverSocket;
+        this.intDescr = intDescr;
     }
 
     /**
@@ -69,6 +73,6 @@ class ForkedAFUNIXTransport implements Transport {
     @Override
     public Connection nextConnection() throws IOException {
         AFUNIXSocket socket = serverSocket.accept();
-        return new ForkedAFUNIXConnection("unix-forked", socket);
+        return new ForkedAFUNIXConnection("unix-forked", intDescr, socket);
     }
 }

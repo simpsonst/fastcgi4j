@@ -49,6 +49,13 @@ public final class Diagnostics {
     public final String connectionDescription;
 
     /**
+     * Holds a string describing sensitive parts of how the server and
+     * application communicate. This is not part of the string
+     * representation returned by {@link #toString()}.
+     */
+    public final String internalConnectionDescription;
+
+    /**
      * Holds an internal identifier for the transport connection.
      */
     public final String connectionId;
@@ -84,14 +91,19 @@ public final class Diagnostics {
      * 
      * @param connectionDescription the connection description
      * 
+     * @param internalConnectionDescription the sensitive parts of the
+     * connection description
+     * 
      * @param connectionId the internal connection identifier
      * 
      * @param requestId the FastCGI request identifier
      */
     public Diagnostics(Package implementation, String connectionDescription,
+                       String internalConnectionDescription,
                        String connectionId, int requestId) {
         this.implementation = implementation;
         this.connectionDescription = connectionDescription;
+        this.internalConnectionDescription = internalConnectionDescription;
         this.connectionId = connectionId;
         this.requestId = requestId;
     }

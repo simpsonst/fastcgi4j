@@ -54,6 +54,8 @@ class HandlerContext {
 
     final String connDescr;
 
+    final String intConnDescr;
+
     final Runnable connAbort;
 
     final Runnable cleanUp;
@@ -81,6 +83,9 @@ class HandlerContext {
      * @param connDescr a textual description of the transport
      * connection
      * 
+     * @param intConnDescr sensitive parts of the textual description of
+     * the transport connection
+     * 
      * @param connAbort an action to take if the transport is disrupted
      * 
      * @param cleanUp an action to take when the session is complete
@@ -102,14 +107,16 @@ class HandlerContext {
      * @param stderrBufferSize the buffer size of standard error output
      */
     public HandlerContext(int connId, int id, Package impl, String connDescr,
-                          Runnable connAbort, Runnable cleanUp,
-                          RecordWriter recordsOut, Executor executor,
-                          Charset charset, BufferPool paramBufs,
-                          int stdoutBufferSize, int stderrBufferSize) {
+                          String intConnDescr, Runnable connAbort,
+                          Runnable cleanUp, RecordWriter recordsOut,
+                          Executor executor, Charset charset,
+                          BufferPool paramBufs, int stdoutBufferSize,
+                          int stderrBufferSize) {
         this.connId = connId;
         this.id = id;
         this.impl = impl;
         this.connDescr = connDescr;
+        this.intConnDescr = intConnDescr;
         this.connAbort = connAbort;
         this.cleanUp = cleanUp;
         this.recordsOut = recordsOut;

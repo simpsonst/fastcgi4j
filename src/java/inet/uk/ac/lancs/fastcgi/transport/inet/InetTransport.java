@@ -56,9 +56,12 @@ class InetTransport implements Transport {
 
     private final String descrPrefix;
 
+    private final String intDescr;
+
     public InetTransport(String descrPrefix, ServerSocket socket,
-                                Collection<? extends InetAddress> allowedPeers) {
+                         Collection<? extends InetAddress> allowedPeers) {
         this.descrPrefix = descrPrefix;
+        this.intDescr = socket.getLocalSocketAddress().toString();
         this.socket = socket;
         this.allowedPeers = Set.copyOf(allowedPeers);
     }
@@ -69,7 +72,7 @@ class InetTransport implements Transport {
             Socket sock = socket.accept();
             InetAddress peer = sock.getInetAddress();
             if (allowedPeers.contains(peer))
-                return new InetConnection(descrPrefix, sock);
+                return new InetConnection(descrPrefix, intDescr, sock);
         } while (true);
     }
 }

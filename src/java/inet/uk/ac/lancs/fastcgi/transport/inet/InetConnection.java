@@ -51,8 +51,11 @@ class InetConnection implements Connection {
 
     private final String descrPrefix;
 
-    public InetConnection(String descrPrefix, Socket socket) {
+    private final String intDescr;
+
+    public InetConnection(String descrPrefix, String intDescr, Socket socket) {
         this.descrPrefix = descrPrefix;
+        this.intDescr = intDescr;
         this.socket = socket;
     }
 
@@ -74,5 +77,10 @@ class InetConnection implements Connection {
     @Override
     public String description() {
         return descrPrefix + "#" + socket.getRemoteSocketAddress();
+    }
+
+    @Override
+    public String internalDescription() {
+        return intDescr;
     }
 }

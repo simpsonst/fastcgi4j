@@ -76,11 +76,14 @@ class ForkedUnixTransport implements Transport {
 
     private final String descr;
 
-    private ForkedUnixTransport(int descriptor, String descr,
+    private final String intDescr;
+
+    private ForkedUnixTransport(int descriptor, String descr, String intDescr,
                                 PeerValidator validator) {
         this.fd = new Descriptor(descriptor);
         this.validator = validator;
         this.descr = descr;
+        this.intDescr = intDescr;
     }
 
     /**
@@ -105,6 +108,7 @@ class ForkedUnixTransport implements Transport {
         if (descriptor < 0) return null;
         SocketAddress saddr = Descriptor.getSocketAddress(addrLen[0], addr);
         final PeerValidator validator;
+        final String intDescr;
         if (saddr instanceof InetSocketAddress) {
             final Collection<InetAddress> permittedCallers =
                 InvocationVariables.getAuthorizedInetPeers();
@@ -115,12 +119,15 @@ class ForkedUnixTransport implements Transport {
                     return null;
                 return "-inet-" + peerAddr;
             };
-        } else if (saddr instanceof UnixDomainSocketAddress) {
+            intDescr = saddr.toString();
+        } else if (saddr instanceof UnixDomainSocketAddress udsa) {
             validator = (addrLen1, addr1) -> "-unix";
+            intDescr = udsa.getPath().toString();
         } else {
             return null;
         }
-        return new ForkedUnixTransport(descriptor, "forked", validator);
+        return new ForkedUnixTransport(descriptor, "forked", intDescr,
+                                       validator);
     }
 
     @Override
@@ -136,7 +143,8 @@ class ForkedUnixTransport implements Transport {
                     Descriptor.closeSocket(socket);
                     continue;
                 }
-                return new ForkedUnixConnection(descr + suffix, socket);
+                return new ForkedUnixConnection(descr + suffix, intDescr,
+                                                socket);
             }
             return null;
         } catch (IOException ex) {

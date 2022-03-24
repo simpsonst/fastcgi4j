@@ -48,10 +48,13 @@ import uk.ac.lancs.fastcgi.transport.Connection;
 class ForkedUnixConnection implements Connection {
     private final String descr;
 
+    private final String intDescr;
+
     private final Descriptor fd;
 
-    ForkedUnixConnection(String descr, int fd) {
+    ForkedUnixConnection(String descr, String intDescr, int fd) {
         this.descr = descr;
+        this.intDescr = intDescr;
         this.fd = new Descriptor(fd);
     }
 
@@ -107,5 +110,10 @@ class ForkedUnixConnection implements Connection {
     @Override
     public String description() {
         return descr;
+    }
+
+    @Override
+    public String internalDescription() {
+        return intDescr;
     }
 }

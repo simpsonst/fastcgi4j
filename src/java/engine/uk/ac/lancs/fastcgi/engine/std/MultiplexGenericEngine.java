@@ -295,6 +295,7 @@ class MultiplexGenericEngine implements Engine {
             Supplier<HandlerContext> ctxt =
                 () -> new HandlerContext(this.id, id, conn.implementation(),
                                          conn.description(),
+                                         conn.internalDescription(),
                                          this::abortConnection,
                                          () -> sessions.remove(id), recordsOut,
                                          executor, charset, paramBufs,

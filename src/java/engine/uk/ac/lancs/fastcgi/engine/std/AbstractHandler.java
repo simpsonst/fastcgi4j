@@ -239,8 +239,9 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
      */
     public AbstractHandler(HandlerContext ctxt) {
         this.id = ctxt.id;
-        this.diags = new Diagnostics(ctxt.impl, ctxt.connDescr,
-                                     Integer.toString(ctxt.connId), id);
+        this.diags =
+            new Diagnostics(ctxt.impl, ctxt.connDescr, ctxt.intConnDescr,
+                            Integer.toString(ctxt.connId), id);
         this.connAbort = ctxt.connAbort;
         this.cleanUp = ctxt.cleanUp;
         this.recordsOut = ctxt.recordsOut;

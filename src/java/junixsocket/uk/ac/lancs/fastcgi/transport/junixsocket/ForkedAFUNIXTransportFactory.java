@@ -43,10 +43,10 @@ import java.net.SocketException;
 import java.util.Collection;
 import org.newsclub.net.unix.AFUNIXServerSocket;
 import uk.ac.lancs.fastcgi.proto.InvocationVariables;
-import uk.ac.lancs.fastcgi.transport.TransportConfigurationException;
-import uk.ac.lancs.scc.jardeps.Service;
 import uk.ac.lancs.fastcgi.transport.Transport;
+import uk.ac.lancs.fastcgi.transport.TransportConfigurationException;
 import uk.ac.lancs.fastcgi.transport.TransportFactory;
+import uk.ac.lancs.scc.jardeps.Service;
 
 /**
  * Creates a connection supply from a Unix-domain stream server socket
@@ -89,7 +89,8 @@ public class ForkedAFUNIXTransportFactory implements TransportFactory {
              * FastCGI with a Unix-domain socket. */
             AFUNIXServerSocket serverSocket =
                 AFUNIXServerSocket.newInstance(FileDescriptor.in, 1000, 1001);
-            return new ForkedAFUNIXTransport(serverSocket);
+            return new ForkedAFUNIXTransport(serverSocket, serverSocket
+                .getLocalSocketAddress().toString());
         } catch (SocketException ex) {
             return null;
         } catch (IOException ex) {

@@ -52,8 +52,12 @@ class ForkedAFUNIXConnection implements Connection {
 
     private final String descr;
 
-    public ForkedAFUNIXConnection(String descr, AFUNIXSocket socket) {
+    private final String intDescr;
+
+    public ForkedAFUNIXConnection(String descr, String intDescr,
+                                  AFUNIXSocket socket) {
         this.descr = descr;
+        this.intDescr = intDescr;
         this.socket = socket;
     }
 
@@ -75,5 +79,10 @@ class ForkedAFUNIXConnection implements Connection {
     @Override
     public String description() {
         return descr;
+    }
+
+    @Override
+    public String internalDescription() {
+        return intDescr;
     }
 }

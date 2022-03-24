@@ -79,6 +79,15 @@ public interface Connection {
     String description();
 
     /**
+     * Get the sensitive parts of a diagnostic description of this
+     * connection. This should not repeat parts mentioned by
+     * {@link #description()}.
+     * 
+     * @return the sensitive connection description
+     */
+    String internalDescription();
+
+    /**
      * Identify the implementation of this connection as an overarching
      * package.
      * 
