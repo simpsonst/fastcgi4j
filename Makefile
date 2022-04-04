@@ -37,6 +37,9 @@ endif
 
 trees_fastcgi4j_unix += unix
 
+SELECTED_JARS += fastcgi4j_iis
+trees_fastcgi4j_iis += iis
+
 jars += $(SELECTED_JARS)
 
 SELECTED_JARS += fastcgi4j_demos
@@ -58,6 +61,9 @@ deps_unix += proto
 roots_inet += $(found_inet)
 deps_inet += app
 deps_inet += proto
+roots_iis += $(found_iis)
+deps_iis += app
+deps_iis += proto
 roots_demos += $(found_demos)
 deps_demos += api
 deps_demos += app
@@ -94,6 +100,7 @@ DOC_PKGS += uk.ac.lancs.fastcgi.proto
 DOC_PKGS += uk.ac.lancs.fastcgi.proto.serial
 DOC_PKGS += uk.ac.lancs.fastcgi.transport
 DOC_PKGS += uk.ac.lancs.fastcgi.transport.inet
+DOC_PKGS += uk.ac.lancs.fastcgi.transport.iis
 ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_UNIX))),)
 DOC_PKGS += uk.ac.lancs.fastcgi.transport.unix
 DOC_PKGS += uk.ac.lancs.fastcgi.transport.fork
