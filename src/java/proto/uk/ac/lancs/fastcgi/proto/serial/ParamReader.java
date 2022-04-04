@@ -123,7 +123,7 @@ public class ParamReader {
      * @throws IOException if an I/O error occurs reading from the
      * stream
      */
-    boolean recordParam(InputStream in) throws IOException {
+    private boolean recordParam(InputStream in) throws IOException {
         assert len <= buf.length;
 
         /* If our array is too small, allocate a little more space. */
@@ -156,7 +156,7 @@ public class ParamReader {
      * {@code false} otherwise, e.g., if there are insufficient bytes to
      * determine whether a complete parameter has loaded
      */
-    boolean decodeParam() {
+    private boolean decodeParam() {
         /* Work out the lengths of the name and value in bytes. Each
          * length is either 1 byte (in the range 0 to 127) or 4 bytes
          * (big-endian, with the top bit set in the first, which must be
