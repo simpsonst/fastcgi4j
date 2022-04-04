@@ -40,6 +40,7 @@ import java.io.IOException;
 import org.newsclub.net.unix.AFUNIXServerSocket;
 import org.newsclub.net.unix.AFUNIXSocket;
 import uk.ac.lancs.fastcgi.transport.Connection;
+import uk.ac.lancs.fastcgi.transport.SocketConnection;
 import uk.ac.lancs.fastcgi.transport.Transport;
 
 /**
@@ -73,6 +74,6 @@ class ForkedAFUNIXTransport implements Transport {
     @Override
     public Connection nextConnection() throws IOException {
         AFUNIXSocket socket = serverSocket.accept();
-        return new ForkedAFUNIXConnection("unix-forked", intDescr, socket);
+        return new SocketConnection(socket, "unix-forked", intDescr);
     }
 }
