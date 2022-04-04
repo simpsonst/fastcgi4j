@@ -64,7 +64,7 @@ import uk.ac.lancs.fastcgi.transport.TransportFactory;
  * @author simpsons
  */
 @Service(TransportFactory.class)
-public class InetTransportFactory implements TransportFactory {
+public class StandaloneInetTransportFactory implements TransportFactory {
     @Override
     public Transport getTransport() {
         try {
@@ -84,7 +84,7 @@ public class InetTransportFactory implements TransportFactory {
             ss = new ServerSocket(bindAddress.getPort(), 5,
                                   bindAddress.getAddress());
             descr = STANDALONE_DESCRIPTION;
-            return new InetTransport(descr, ss, allowedPeers);
+            return new StandaloneInetTransport(descr, ss, allowedPeers);
         } catch (IOException ex) {
             throw new TransportConfigurationException(ex);
         }

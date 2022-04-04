@@ -52,7 +52,7 @@ import uk.ac.lancs.fastcgi.transport.SocketTransport;
  * 
  * @author simpsons
  */
-class InetTransport extends SocketTransport {
+class StandaloneInetTransport extends SocketTransport {
     private final Collection<InetAddress> allowedPeers;
 
     private final String descrPrefix;
@@ -72,7 +72,7 @@ class InetTransport extends SocketTransport {
      * @throws ClassCastException if the socket's address is not
      * {@link InetSocketAddress}
      */
-    public InetTransport(String descrPrefix, ServerSocket socket,
+    public StandaloneInetTransport(String descrPrefix, ServerSocket socket,
                          Collection<? extends InetAddress> allowedPeers) {
         super(socket);
 
@@ -87,7 +87,7 @@ class InetTransport extends SocketTransport {
     }
 
     private static final Logger logger =
-        Logger.getLogger(InetTransport.class.getPackageName());
+        Logger.getLogger(StandaloneInetTransport.class.getPackageName());
 
     /**
      * {@inheritDoc}
