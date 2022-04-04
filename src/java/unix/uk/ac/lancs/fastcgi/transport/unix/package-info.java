@@ -35,14 +35,10 @@
  */
 
 /**
- * Provides transports for server-forked FastCGI applications and
- * stand-alone Unix-domain applications. Server-forked applications
- * receive a server socket as file descriptor 0, so native calls are
- * used to build the transport. The stand-alone Unix transport exploits
- * Unix-domain sockets appearing in Java 16.
- * 
- * @see java.net.UnixDomainSocketAddress
+ * Provides a transport for stand-alone FastCGI applications using
+ * Unix-domain sockets. This exploits
+ * {@link java.net.UnixDomainSocketAddress}, available since Java 16.
  * 
  * @author simpsons
  */
-package uk.ac.lancs.fastcgi.transport.native_unix;
+package uk.ac.lancs.fastcgi.transport.unix;

@@ -34,86 +34,37 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-package uk.ac.lancs.fastcgi.transport.native_unix;
+package uk.ac.lancs.fastcgi.transport.unix;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
 import uk.ac.lancs.fastcgi.transport.Connection;
+import uk.ac.lancs.fastcgi.transport.SocketConnection;
+import uk.ac.lancs.fastcgi.transport.Transport;
 
 /**
  *
  * @author simpsons
  */
-class ForkedUnixConnection implements Connection {
+class StandaloneUnixTransport implements Transport {
+    private final ServerSocket socket;
+
     private final String descr;
 
     private final String intDescr;
 
-    private final Descriptor fd;
-
-    ForkedUnixConnection(String descr, String intDescr, int fd) {
+    public StandaloneUnixTransport(String descr, ServerSocket socket) {
         this.descr = descr;
-        this.intDescr = intDescr;
-        this.fd = new Descriptor(fd);
-    }
-
-    private final InputStream input = new InputStream() {
-        @Override
-        public int read() throws IOException {
-            return fd.read();
-        }
-
-        @Override
-        public void close() throws IOException {
-            fd.close();
-        }
-
-        @Override
-        public int read(byte[] b, int off, int len) throws IOException {
-            return fd.read(b, off, len);
-        }
-    };
-
-    private final OutputStream output = new OutputStream() {
-        @Override
-        public void write(int b) throws IOException {
-            fd.write(b);
-        }
-
-        @Override
-        public void close() throws IOException {
-            fd.close();
-        }
-
-        @Override
-        public void write(byte[] b, int off, int len) throws IOException {
-            fd.write(b, off, len);
-        }
-    };
-
-    @Override
-    public InputStream getInput() throws IOException {
-        return input;
+        this.intDescr = socket.getLocalSocketAddress().toString();
+        this.socket = socket;
     }
 
     @Override
-    public OutputStream getOutput() throws IOException {
-        return output;
-    }
-
-    @Override
-    public void close() throws IOException {
-        fd.close();
-    }
-
-    @Override
-    public String description() {
-        return descr;
-    }
-
-    @Override
-    public String internalDescription() {
-        return intDescr;
+    public Connection nextConnection() throws IOException {
+        do {
+            Socket sock = socket.accept();
+            return new SocketConnection(sock, descr, intDescr);
+        } while (true);
     }
 }

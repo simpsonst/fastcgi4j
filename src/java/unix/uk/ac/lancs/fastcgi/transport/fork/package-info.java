@@ -34,43 +34,14 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-package uk.ac.lancs.fastcgi.transport.native_unix;
-
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.UnixDomainSocketAddress;
-import uk.ac.lancs.fastcgi.proto.InvocationVariables;
-import uk.ac.lancs.fastcgi.transport.Transport;
-import uk.ac.lancs.fastcgi.transport.TransportConfigurationException;
-import uk.ac.lancs.fastcgi.transport.TransportFactory;
-import uk.ac.lancs.scc.jardeps.Service;
-
 /**
- * Recognizes stand-alone Unix-domain transports. The environment
- * variable {@value InvocationVariables#UNIX_BIND_ADDR} must be set,
- * specifying the file of the rendezvous point.
- * 
- * <p>
- * Each connection's description is {@value #STANDALONE_DESCRIPTION}.
+ * Provides transports for server-forked FastCGI applications
+ * applications. Server-forked applications receive a server socket as
+ * file descriptor 0. Although Java provides
+ * {@link java.io.FileDescriptor#in} to model this, there's no
+ * non-native way in Java to build a {@link java.net.ServerSocket} from
+ * it, so native calls are used to build the transport.
  * 
  * @author simpsons
  */
-@Service(TransportFactory.class)
-public class StandaloneUnixTransportFactory implements TransportFactory {
-    @Override
-    public Transport getTransport() {
-        try {
-            String pathText = System.getenv(InvocationVariables.UNIX_BIND_ADDR);
-            if (pathText == null) return null;
-
-            UnixDomainSocketAddress addr = UnixDomainSocketAddress.of(pathText);
-            final ServerSocket ss = new ServerSocket();
-            ss.bind(addr);
-            return new StandaloneUnixTransport(STANDALONE_DESCRIPTION, ss);
-        } catch (IOException ex) {
-            throw new TransportConfigurationException(ex);
-        }
-    }
-
-    private static final String STANDALONE_DESCRIPTION = "unix-standalone";
-}
+package uk.ac.lancs.fastcgi.transport.fork;

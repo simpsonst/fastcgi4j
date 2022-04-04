@@ -34,7 +34,7 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-package uk.ac.lancs.fastcgi.transport.native_unix;
+package uk.ac.lancs.fastcgi.transport.fork;
 
 import java.net.UnknownHostException;
 import uk.ac.lancs.fastcgi.transport.TransportConfigurationException;

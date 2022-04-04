@@ -106,7 +106,8 @@ ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_JUNIXSOCKET))),)
 DOC_PKGS += uk.ac.lancs.fastcgi.transport.junixsocket
 endif
 ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_UNIX))),)
-DOC_PKGS += uk.ac.lancs.fastcgi.transport.native_unix
+DOC_PKGS += uk.ac.lancs.fastcgi.transport.unix
+DOC_PKGS += uk.ac.lancs.fastcgi.transport.fork
 endif
 
 $(BINODEPS_OBJDIR)/native.lo: | tmp/tree-unix.compiled
