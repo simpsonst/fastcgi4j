@@ -36,55 +36,78 @@
 
 package uk.ac.lancs.fastcgi.transport.inet;
 
-import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Collection;
 import java.util.Set;
 import java.util.logging.Logger;
-import uk.ac.lancs.fastcgi.transport.Connection;
-import uk.ac.lancs.fastcgi.transport.SocketConnection;
-import uk.ac.lancs.fastcgi.transport.Transport;
+import uk.ac.lancs.fastcgi.transport.SocketTransport;
 
 /**
- *
+ * Creates connections by accepting sockets from a server socket, and
+ * checking the peer's (Internet) address against a configured set of
+ * permitted peers.
+ * 
  * @author simpsons
  */
-class InetTransport implements Transport {
+class InetTransport extends SocketTransport {
     private final Collection<InetAddress> allowedPeers;
-
-    private final ServerSocket socket;
 
     private final String descrPrefix;
 
-    private final String intDescr;
-
+    /**
+     * Create an Internet-domain transport based on an existing server
+     * socket.
+     * 
+     * @param descrPrefix the string to prefix each connection's public
+     * description with
+     * 
+     * @param socket the socket to accept connections from
+     * 
+     * @param allowedPeers the set of Internet addresses to accept
+     * connections from
+     * 
+     * @throws ClassCastException if the socket's address is not
+     * {@link InetSocketAddress}
+     */
     public InetTransport(String descrPrefix, ServerSocket socket,
                          Collection<? extends InetAddress> allowedPeers) {
-        this.descrPrefix = descrPrefix;
-        this.intDescr = socket.getLocalSocketAddress().toString();
-        this.socket = socket;
-        this.allowedPeers = Set.copyOf(allowedPeers);
-    }
+        super(socket);
 
-    @Override
-    public Connection nextConnection() throws IOException {
-        do {
-            Socket sock = socket.accept();
-            InetAddress peer = sock.getInetAddress();
-            if (!allowedPeers.contains(peer)) {
-                logger.warning(() -> String
-                    .format("rejected connection from %s to %s", peer,
-                            sock.getLocalSocketAddress()));
-                sock.close();
-                continue;
-            }
-            String descr = descrPrefix + "#" + sock.getRemoteSocketAddress();
-            return new SocketConnection(sock, descr, intDescr);
-        } while (true);
+        /* Force a class-cast exception if the socket is not bound to
+         * the right type. */
+        @SuppressWarnings("unused")
+        InetSocketAddress localAddr =
+            (InetSocketAddress) socket.getLocalSocketAddress();
+
+        this.descrPrefix = descrPrefix;
+        this.allowedPeers = Set.copyOf(allowedPeers);
     }
 
     private static final Logger logger =
         Logger.getLogger(InetTransport.class.getPackageName());
+
+    /**
+     * {@inheritDoc}
+     * 
+     * @default If the supplied socket's address (obtained by
+     * {@link Socket#getInetAddress()}) is not in the configured set of
+     * peer addresses, the event is logged, and {@code null} is
+     * returned. Otherwise, a public socket description is formed by
+     * concatenating the configured prefix with <samp>#</samp> and the
+     * peer's host and port.
+     */
+    @Override
+    protected String describe(Socket sock) {
+        InetAddress peer = sock.getInetAddress();
+        if (!allowedPeers.contains(peer)) {
+            logger.warning(() -> String
+                .format("rejected connection from %s to %s", peer,
+                        sock.getLocalSocketAddress()));
+            return null;
+        }
+        return descrPrefix + "#" + sock.getRemoteSocketAddress();
+    }
 }

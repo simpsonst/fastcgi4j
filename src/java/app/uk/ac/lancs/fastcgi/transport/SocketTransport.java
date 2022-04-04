@@ -34,37 +34,66 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-package uk.ac.lancs.fastcgi.transport.unix;
+package uk.ac.lancs.fastcgi.transport;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import uk.ac.lancs.fastcgi.transport.Connection;
-import uk.ac.lancs.fastcgi.transport.SocketConnection;
-import uk.ac.lancs.fastcgi.transport.Transport;
 
 /**
- *
+ * Creates connections by accepting sockets from a server socket.
+ * 
  * @author simpsons
  */
-class StandaloneUnixTransport implements Transport {
-    private final ServerSocket socket;
-
-    private final String descr;
+public abstract class SocketTransport implements Transport {
+    /**
+     * Holds the socket from which connections are accepted.
+     */
+    protected final ServerSocket socket;
 
     private final String intDescr;
 
-    public StandaloneUnixTransport(String descr, ServerSocket socket) {
-        this.descr = descr;
-        this.intDescr = socket.getLocalSocketAddress().toString();
+    /**
+     * Create a transport based on a server socket.
+     * 
+     * @param socket the socket from which connections will be accepted
+     */
+    public SocketTransport(ServerSocket socket) {
         this.socket = socket;
+        this.intDescr = socket.getLocalSocketAddress().toString();
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * @default Repeatedly, {@link ServerSocket#accept()} is invoked on
+     * the configured socket. The new socket is submitted to
+     * {@link #describe(Socket)}. If this returns null, the socket is
+     * closed. Otherwise, the result is used as the public diagnostic
+     * description of a new {@link SocketConnection} built from the new
+     * socket. Its internal description is the server socket's local
+     * address.
+     */
     @Override
     public Connection nextConnection() throws IOException {
         do {
             Socket sock = socket.accept();
+            String descr = describe(sock);
+            if (descr == null) {
+                sock.close();
+                continue;
+            }
             return new SocketConnection(sock, descr, intDescr);
         } while (true);
     }
+
+    /**
+     * Determine whether to build a connection from a socket, and how to
+     * describe it.
+     * 
+     * @param sock the socket to be tested
+     * 
+     * @return a public description of the socket
+     */
+    protected abstract String describe(Socket sock);
 }

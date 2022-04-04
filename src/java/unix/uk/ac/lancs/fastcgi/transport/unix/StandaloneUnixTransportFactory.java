@@ -38,8 +38,10 @@ package uk.ac.lancs.fastcgi.transport.unix;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.net.Socket;
 import java.net.UnixDomainSocketAddress;
 import uk.ac.lancs.fastcgi.proto.InvocationVariables;
+import uk.ac.lancs.fastcgi.transport.SocketTransport;
 import uk.ac.lancs.fastcgi.transport.Transport;
 import uk.ac.lancs.fastcgi.transport.TransportConfigurationException;
 import uk.ac.lancs.fastcgi.transport.TransportFactory;
@@ -66,7 +68,12 @@ public class StandaloneUnixTransportFactory implements TransportFactory {
             UnixDomainSocketAddress addr = UnixDomainSocketAddress.of(pathText);
             final ServerSocket ss = new ServerSocket();
             ss.bind(addr);
-            return new StandaloneUnixTransport(STANDALONE_DESCRIPTION, ss);
+            return new SocketTransport(ss) {
+                @Override
+                protected String describe(Socket sock) {
+                    return STANDALONE_DESCRIPTION;
+                }
+            };
         } catch (IOException ex) {
             throw new TransportConfigurationException(ex);
         }
