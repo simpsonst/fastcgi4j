@@ -43,6 +43,7 @@ import java.net.SocketAddress;
 import java.net.UnixDomainSocketAddress;
 import java.net.UnknownHostException;
 import java.util.Collection;
+import java.util.logging.Logger;
 import uk.ac.lancs.fastcgi.proto.InvocationVariables;
 import uk.ac.lancs.fastcgi.transport.Connection;
 import uk.ac.lancs.fastcgi.transport.Transport;
@@ -115,8 +116,12 @@ class ForkedUnixTransport implements Transport {
             validator = (addrLen1, addr1) -> {
                 InetSocketAddress peerAddr = (InetSocketAddress) Descriptor
                     .getSocketAddress(addrLen1, addr1);
-                if (!permittedCallers.contains(peerAddr.getAddress()))
+                if (!permittedCallers.contains(peerAddr.getAddress())) {
+                    logger.warning(() -> String
+                        .format("rejected connection from %s to %s", peerAddr,
+                                saddr));
                     return null;
+                }
                 return "-inet-" + peerAddr;
             };
             intDescr = saddr.toString();
@@ -156,4 +161,7 @@ class ForkedUnixTransport implements Transport {
             throw ex;
         }
     }
+
+    private static final Logger logger =
+        Logger.getLogger(ForkedUnixTransport.class.getPackageName());
 }

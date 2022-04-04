@@ -42,6 +42,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Collection;
 import java.util.Set;
+import java.util.logging.Logger;
 import uk.ac.lancs.fastcgi.transport.Connection;
 import uk.ac.lancs.fastcgi.transport.SocketConnection;
 import uk.ac.lancs.fastcgi.transport.Transport;
@@ -72,9 +73,18 @@ class InetTransport implements Transport {
         do {
             Socket sock = socket.accept();
             InetAddress peer = sock.getInetAddress();
-            if (!allowedPeers.contains(peer)) continue;
+            if (!allowedPeers.contains(peer)) {
+                logger.warning(() -> String
+                    .format("rejected connection from %s to %s", peer,
+                            sock.getLocalSocketAddress()));
+                sock.close();
+                continue;
+            }
             String descr = descrPrefix + "#" + sock.getRemoteSocketAddress();
             return new SocketConnection(sock, descr, intDescr);
         } while (true);
     }
+
+    private static final Logger logger =
+        Logger.getLogger(InetTransport.class.getPackageName());
 }
