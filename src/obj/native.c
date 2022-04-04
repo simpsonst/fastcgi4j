@@ -210,7 +210,7 @@ JNIEXPORT jobject JNICALL Java_uk_ac_lancs_fastcgi_transport_fork_Descriptor_get
     const size_t len = strnlen(u.un.sun_path, sizeof u.un.sun_path);
     char cpy[sizeof u.un.sun_path + 1];
     strncpy(cpy, u.un.sun_path, len);
-    cpy[sizeof u.un.sun_path] = '\0';
+    cpy[len] = '\0';
     //fprintf(stderr, "bound path: %s\n", cpy);
     jstring path = (*env)->NewStringUTF(env, cpy);
     if ((*env)->ExceptionCheck(env)) return NULL;
