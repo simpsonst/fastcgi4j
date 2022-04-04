@@ -42,6 +42,15 @@
  * non-native way in Java to build a {@link java.net.ServerSocket} from
  * it, so native calls are used to build the transport.
  * 
+ * @see <a href= "https://httpd.apache.org/mod_fcgid/"
+ * title="mod_fcgid - FastCGI interface module for Apache 2 - The Apache HTTP Server Project">mod_fcgi</a>
+ * Apache module
+ * 
+ * @see <a href=
+ * "https://redmine.lighttpd.net/projects/1/wiki/docs_modfastcgi"
+ * title="Docs ModFastCGI - Lighttpd - lighty labs">ModFastCGI</a>
+ * Lighttpd module
+ * 
  * @author simpsons
  */
 package uk.ac.lancs.fastcgi.transport.fork;

@@ -39,5 +39,19 @@
  * stand-alone mode.
  * 
  * @author simpsons
+ * 
+ * @see <a href=
+ * "https://httpd.apache.org/docs/2.4/mod/mod_proxy_fcgi.html"
+ * title="mod_proxy_fcgi - Apache HTTP Server Version 2.4">mod_proxy_fcgi</a>
+ * Apache module
+ * 
+ * @see <a href=
+ * "https://redmine.lighttpd.net/projects/1/wiki/docs_modproxycore"
+ * title="Docs ModProxyCore - Lighttpd - lighty labs">ModProxyCore</a>
+ * Lighttpd module
+ * 
+ * @see <a href=
+ * "https://www.nginx.com/resources/wiki/start/topics/examples/fastcgiexample/"
+ * title="FastCGI Example | NGINX">FastCGI Example</a> for NGINX
  */
 package uk.ac.lancs.fastcgi.transport.inet;
