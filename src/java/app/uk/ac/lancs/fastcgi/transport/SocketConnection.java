@@ -106,11 +106,23 @@ public class SocketConnection implements Connection {
         socket.close();
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * @default The value returned is the second argument of the
+     * constructor.
+     */
     @Override
     public String description() {
         return descr;
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * @default The value returned is the third argument of the
+     * constructor.
+     */
     @Override
     public String internalDescription() {
         return intDescr;

@@ -57,6 +57,10 @@ import uk.ac.lancs.fastcgi.transport.Transport;
 class ForkedUnixTransport implements Transport {
     private final Descriptor fd;
 
+    /**
+     * Determines whether a connection from a given peer should be
+     * accepted, and how to identify the connection.
+     */
     private interface PeerValidator {
         /**
          * Determine whether the connection from the peer should be

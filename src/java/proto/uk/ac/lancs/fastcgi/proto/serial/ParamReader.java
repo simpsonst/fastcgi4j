@@ -94,7 +94,7 @@ public class ParamReader {
     }
 
     /**
-     * Indicate that no more encoded parameter is forthcoming.
+     * Indicate that no more encoded parameter data is forthcoming.
      * 
      * @throws IllegalStateException if this method has already been
      * called, or if there are trailing bytes in the internal buffer
