@@ -218,9 +218,9 @@ JNIEXPORT jobject JNICALL Java_uk_ac_lancs_fastcgi_transport_fork_Descriptor_get
     /* Create a UnixDomainSocketAddress from the path. */
     jclass insat = (*env)->FindClass(env, "java/net/UnixDomainSocketAddress");
     jmethodID ctr =
-      (*env)->GetMethodID(env, insat, "of",
-			  "(Ljava/lang/String;)"
-			  "Ljava/net/UnixDomainSocketAddress;");
+      (*env)->GetStaticMethodID(env, insat, "of",
+				"(Ljava/lang/String;)"
+				"Ljava/net/UnixDomainSocketAddress;");
     jobject insa = (*env)->CallStaticObjectMethod(env, insat, ctr, path);
     if ((*env)->ExceptionCheck(env)) return NULL;
 
