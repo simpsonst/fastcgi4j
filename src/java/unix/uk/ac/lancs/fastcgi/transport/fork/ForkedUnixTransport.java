@@ -138,9 +138,9 @@ class ForkedUnixTransport implements Transport {
     @Override
     public Connection nextConnection() throws IOException {
         try {
+            byte[] addr = new byte[Descriptor.getAddressSize()];
+            int[] addrLen = new int[1];
             while (fd.isValid()) {
-                byte[] addr = new byte[Descriptor.getAddressSize()];
-                int[] addrLen = new int[1];
                 int socket =
                     Descriptor.acceptConnection(fd.fd(), addrLen, addr);
                 String suffix = validator.permit(addrLen[0], addr);
