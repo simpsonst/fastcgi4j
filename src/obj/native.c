@@ -129,8 +129,9 @@ Java_uk_ac_lancs_fastcgi_transport_fork_Descriptor_checkDescriptor
  * Method:    getSocketAddress
  * Signature: (I[B)Ljava/net/SocketAddress;
  */
-JNIEXPORT jobject JNICALL Java_uk_ac_lancs_fastcgi_transport_fork_Descriptor_getSocketAddress
-  (JNIEnv *env, jclass jc, jint ulen, jbyteArray ubuf)
+JNIEXPORT jobject JNICALL
+Java_uk_ac_lancs_fastcgi_transport_fork_Descriptor_getSocketAddress
+(JNIEnv *env, jclass jc, jint ulen, jbyteArray ubuf)
 {
   union {
     struct sockaddr sa;
