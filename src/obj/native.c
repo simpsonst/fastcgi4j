@@ -44,7 +44,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include "uk_ac_lancs_fastcgi_transport_native_unix_Descriptor.h"
+#include "uk_ac_lancs_fastcgi_transport_fork_Descriptor.h"
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
@@ -64,7 +64,7 @@ static void throwErrno(JNIEnv *env, int ec)
 }
 
 JNIEXPORT void JNICALL
-Java_uk_ac_lancs_fastcgi_transport_native_1unix_Descriptor_closeSocket
+Java_uk_ac_lancs_fastcgi_transport_fork_Descriptor_closeSocket
 (JNIEnv *env, jclass jc, jint fd)
 {
   int rc = close(fd);
@@ -91,7 +91,7 @@ static void copy_back_addr(JNIEnv *env, jintArray ulen,
  * Signature: ([I[B)I
  */
 JNIEXPORT jint JNICALL
-Java_uk_ac_lancs_fastcgi_transport_native_1unix_Descriptor_checkDescriptor
+Java_uk_ac_lancs_fastcgi_transport_fork_Descriptor_checkDescriptor
 (JNIEnv *env, jclass jc, jintArray ulen, jbyteArray ubuf)
 {
   int fd = 0;
@@ -129,7 +129,7 @@ Java_uk_ac_lancs_fastcgi_transport_native_1unix_Descriptor_checkDescriptor
  * Method:    getSocketAddress
  * Signature: (I[B)Ljava/net/SocketAddress;
  */
-JNIEXPORT jobject JNICALL Java_uk_ac_lancs_fastcgi_transport_native_1unix_Descriptor_getSocketAddress
+JNIEXPORT jobject JNICALL Java_uk_ac_lancs_fastcgi_transport_fork_Descriptor_getSocketAddress
   (JNIEnv *env, jclass jc, jint ulen, jbyteArray ubuf)
 {
   union {
@@ -239,7 +239,7 @@ JNIEXPORT jobject JNICALL Java_uk_ac_lancs_fastcgi_transport_native_1unix_Descri
  * Signature: (I[I[B)I
  */
 JNIEXPORT jint JNICALL
-Java_uk_ac_lancs_fastcgi_transport_native_1unix_Descriptor_acceptConnection
+Java_uk_ac_lancs_fastcgi_transport_fork_Descriptor_acceptConnection
 (JNIEnv *env, jclass jc, jint fd, jintArray ulen, jbyteArray ubuf)
 {
   union {
@@ -263,7 +263,7 @@ Java_uk_ac_lancs_fastcgi_transport_native_1unix_Descriptor_acceptConnection
  * Signature: ()I
  */
 JNIEXPORT jint JNICALL
-Java_uk_ac_lancs_fastcgi_transport_native_1unix_Descriptor_getAddressSize
+Java_uk_ac_lancs_fastcgi_transport_fork_Descriptor_getAddressSize
 (JNIEnv *env, jclass jc)
 {
   return MAX_SOCKADDR_LEN;
@@ -275,7 +275,7 @@ Java_uk_ac_lancs_fastcgi_transport_native_1unix_Descriptor_getAddressSize
  * Signature: (II)V
  */
 JNIEXPORT void JNICALL
-Java_uk_ac_lancs_fastcgi_transport_native_1unix_Descriptor_writeSocket__II
+Java_uk_ac_lancs_fastcgi_transport_fork_Descriptor_writeSocket__II
 (JNIEnv *env, jclass jc, jint fd, jint b)
 {
   char nb = b;
@@ -292,7 +292,7 @@ Java_uk_ac_lancs_fastcgi_transport_native_1unix_Descriptor_writeSocket__II
  * Signature: (I[BII)V
  */
 JNIEXPORT void JNICALL
-Java_uk_ac_lancs_fastcgi_transport_native_1unix_Descriptor_writeSocket__I_3BII
+Java_uk_ac_lancs_fastcgi_transport_fork_Descriptor_writeSocket__I_3BII
 (JNIEnv *env, jclass jc, jint fd, jbyteArray b, jint off, jint len)
 {
   char buf[len];
@@ -318,7 +318,7 @@ Java_uk_ac_lancs_fastcgi_transport_native_1unix_Descriptor_writeSocket__I_3BII
  * Signature: (I[BII)I
  */
 JNIEXPORT jint JNICALL
-Java_uk_ac_lancs_fastcgi_transport_native_1unix_Descriptor_readSocket__I_3BII
+Java_uk_ac_lancs_fastcgi_transport_fork_Descriptor_readSocket__I_3BII
 (JNIEnv *env, jclass jc, jint fd, jbyteArray b, jint off, jint len)
 {
   char buf[len];
@@ -342,7 +342,7 @@ Java_uk_ac_lancs_fastcgi_transport_native_1unix_Descriptor_readSocket__I_3BII
  * Signature: (I)I
  */
 JNIEXPORT jint JNICALL
-Java_uk_ac_lancs_fastcgi_transport_native_1unix_Descriptor_readSocket__I
+Java_uk_ac_lancs_fastcgi_transport_fork_Descriptor_readSocket__I
 (JNIEnv *env, jclass jc, jint fd)
 {
   char b;
