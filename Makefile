@@ -35,12 +35,7 @@ ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_UNIX))),)
 SELECTED_JARS += fastcgi4j_unix
 endif
 
-ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_JUNIXSOCKET))),)
-SELECTED_JARS += fastcgi4j_junixsocket
-endif
-
 trees_fastcgi4j_unix += unix
-trees_fastcgi4j_junixsocket += junixsocket
 
 jars += $(SELECTED_JARS)
 
@@ -60,9 +55,6 @@ roots_proto += $(found_proto)
 roots_unix += $(found_unix)
 deps_unix += app
 deps_unix += proto
-roots_junixsocket += $(found_junixsocket)
-deps_junixsocket += app
-deps_junixsocket += proto
 roots_inet += $(found_inet)
 deps_inet += app
 deps_inet += proto
@@ -102,9 +94,6 @@ DOC_PKGS += uk.ac.lancs.fastcgi.proto
 DOC_PKGS += uk.ac.lancs.fastcgi.proto.serial
 DOC_PKGS += uk.ac.lancs.fastcgi.transport
 DOC_PKGS += uk.ac.lancs.fastcgi.transport.inet
-ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_JUNIXSOCKET))),)
-DOC_PKGS += uk.ac.lancs.fastcgi.transport.junixsocket
-endif
 ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_UNIX))),)
 DOC_PKGS += uk.ac.lancs.fastcgi.transport.unix
 DOC_PKGS += uk.ac.lancs.fastcgi.transport.fork
