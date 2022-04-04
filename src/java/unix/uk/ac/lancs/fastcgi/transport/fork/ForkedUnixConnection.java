@@ -93,12 +93,12 @@ class ForkedUnixConnection implements Connection {
     };
 
     @Override
-    public InputStream getInput() throws IOException {
+    public InputStream input() throws IOException {
         return input;
     }
 
     @Override
-    public OutputStream getOutput() throws IOException {
+    public OutputStream output() throws IOException {
         return output;
     }
 

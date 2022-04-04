@@ -53,7 +53,7 @@ public interface Connection {
      * 
      * @throws IOException if an I/O error occurs
      */
-    InputStream getInput() throws IOException;
+    InputStream input() throws IOException;
 
     /**
      * Get the stream of bytes to the server.
@@ -62,7 +62,7 @@ public interface Connection {
      * 
      * @throws IOException if an I/O error occurs
      */
-    OutputStream getOutput() throws IOException;
+    OutputStream output() throws IOException;
 
     /**
      * Close the connection.

@@ -80,7 +80,7 @@ public class SocketConnection implements Connection {
      * supplied socket, and the result is returned.
      */
     @Override
-    public InputStream getInput() throws IOException {
+    public InputStream input() throws IOException {
         return socket.getInputStream();
     }
 
@@ -91,7 +91,7 @@ public class SocketConnection implements Connection {
      * supplied socket, and the result returned.
      */
     @Override
-    public OutputStream getOutput() throws IOException {
+    public OutputStream output() throws IOException {
         return socket.getOutputStream();
     }
 

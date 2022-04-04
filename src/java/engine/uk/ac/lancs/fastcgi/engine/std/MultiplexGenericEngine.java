@@ -203,8 +203,8 @@ class MultiplexGenericEngine implements Engine {
 
         public ConnHandler(Connection conn) throws IOException {
             this.conn = conn;
-            this.recordsIn = new RecordReader(conn.getInput(), charset, this);
-            this.recordsOut = new RecordWriter(conn.getOutput(), charset);
+            this.recordsIn = new RecordReader(conn.input(), charset, this);
+            this.recordsOut = new RecordWriter(conn.output(), charset);
             this.optimizedBufferSize =
                 optimizeBufferSize(stdoutBufferSize,
                                    this.recordsOut.optimumPayloadLength(),
