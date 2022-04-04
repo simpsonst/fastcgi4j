@@ -39,7 +39,7 @@ trees_fastcgi4j_unix += unix
 
 jars += $(SELECTED_JARS)
 
-jars += fastcgi4j_demos
+SELECTED_JARS += fastcgi4j_demos
 trees_fastcgi4j_demos += demos
 
 jars += tests
