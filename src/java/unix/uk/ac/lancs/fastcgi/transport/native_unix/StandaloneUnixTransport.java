@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import uk.ac.lancs.fastcgi.transport.Connection;
+import uk.ac.lancs.fastcgi.transport.SocketConnection;
 import uk.ac.lancs.fastcgi.transport.Transport;
 
 /**
@@ -63,8 +64,7 @@ class StandaloneUnixTransport implements Transport {
     public Connection nextConnection() throws IOException {
         do {
             Socket sock = socket.accept();
-            return new StandaloneUnixConnection(descr, intDescr, sock);
+            return new SocketConnection(sock, descr, intDescr);
         } while (true);
     }
-
 }

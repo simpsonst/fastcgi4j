@@ -43,6 +43,7 @@ import java.net.Socket;
 import java.util.Collection;
 import java.util.Set;
 import uk.ac.lancs.fastcgi.transport.Connection;
+import uk.ac.lancs.fastcgi.transport.SocketConnection;
 import uk.ac.lancs.fastcgi.transport.Transport;
 
 /**
@@ -71,8 +72,9 @@ class InetTransport implements Transport {
         do {
             Socket sock = socket.accept();
             InetAddress peer = sock.getInetAddress();
-            if (allowedPeers.contains(peer))
-                return new InetConnection(descrPrefix, intDescr, sock);
+            if (!allowedPeers.contains(peer)) continue;
+            String descr = descrPrefix + "#" + sock.getRemoteSocketAddress();
+            return new SocketConnection(sock, descr, intDescr);
         } while (true);
     }
 }
