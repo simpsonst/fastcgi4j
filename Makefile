@@ -142,4 +142,4 @@ YEARS=2022
 
 update-licence:
 	$(FIND) . -name ".git" -prune -or -type f -print0 | $(XARGS) -0 \
-	$(SED) -i 's/Copyright (c)\s[-0-9,]\+\Lancaster University/Copyright (c) $(YEARS), Lancaster University/g'
+	$(SED) -i 's/Copyright (c)\s[-0-9,]\+\sLancaster University/Copyright (c) $(YEARS), Lancaster University/g'
