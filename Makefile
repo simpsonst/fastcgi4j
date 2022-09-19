@@ -5,7 +5,7 @@ SED ?= sed
 FIND ?= find
 XARGS ?= xargs
 
-ENABLE_UNIX ?= yes
+#ENABLE_UNIX ?= yes
 
 -include fastcgi4j-env.mk
 -include $(subst $(jardeps_space),\$(jardeps_space),$(CURDIR))/config.mk
@@ -31,10 +31,15 @@ trees_fastcgi4j_proto += proto
 SELECTED_JARS += fastcgi4j_inet
 trees_fastcgi4j_inet += inet
 
+SELECTED_JARS += fastcgi4j_inherit
+trees_fastcgi4j_inherit += inherit
+
 ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_UNIX))),)
-SELECTED_JARS += fastcgi4j_unix
+SELECTED_JARS += fastcgi4j_fork
+trees_fastcgi4j_fork += fork
 endif
 
+SELECTED_JARS += fastcgi4j_unix
 trees_fastcgi4j_unix += unix
 
 SELECTED_JARS += fastcgi4j_iis
@@ -102,8 +107,9 @@ DOC_PKGS += uk.ac.lancs.fastcgi.proto.serial
 DOC_PKGS += uk.ac.lancs.fastcgi.transport
 DOC_PKGS += uk.ac.lancs.fastcgi.transport.inet
 DOC_PKGS += uk.ac.lancs.fastcgi.transport.iis
-ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_UNIX))),)
 DOC_PKGS += uk.ac.lancs.fastcgi.transport.unix
+DOC_PKGS += uk.ac.lancs.fastcgi.transport.inherit
+ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_UNIX))),)
 DOC_PKGS += uk.ac.lancs.fastcgi.transport.fork
 endif
 

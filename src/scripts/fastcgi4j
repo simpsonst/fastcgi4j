@@ -312,6 +312,7 @@ FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_proto.jar")
 CLASSPATH=("${FASTCGI_CLASSPATH[@]}" "${CLASSPATH[@]}")
 CLASSPATH+=("$HERE/share/java/fastcgi4j_inet.jar")
 CLASSPATH+=("$HERE/share/java/fastcgi4j_unix.jar")
+CLASSPATH+=("$HERE/share/java/fastcgi4j_inherit.jar")
 CLASSPATH+=("$HERE/share/java/fastcgi4j_demos.jar")
 
 if [ -n "$seek" ] ; then

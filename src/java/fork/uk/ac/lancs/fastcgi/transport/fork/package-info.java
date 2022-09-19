@@ -35,12 +35,12 @@
  */
 
 /**
- * Provides transports for server-forked FastCGI applications
- * applications. Server-forked applications receive a server socket as
- * file descriptor 0. Although Java provides
- * {@link java.io.FileDescriptor#in} to model this, there's no
- * non-native way in Java to build a {@link java.net.ServerSocket} from
- * it, so native calls are used to build the transport.
+ * Provides transports for server-forked FastCGI applications.
+ * Server-forked applications receive a server socket as file descriptor
+ * 0. Although Java provides {@link java.io.FileDescriptor#in} to model
+ * this, there's no non-native way in Java to build a
+ * {@link java.net.ServerSocket} from it, so native calls are used to
+ * build the transport.
  * 
  * @see <a href= "https://httpd.apache.org/mod_fcgid/"
  * title="mod_fcgid - FastCGI interface module for Apache 2 - The Apache HTTP Server Project">mod_fcgi</a>
@@ -52,5 +52,9 @@
  * Lighttpd module
  * 
  * @author simpsons
+ * 
+ * @deprecated This relies on some native code, and so might not work
+ * well with lightweight threads. Inherited-channel transports require
+ * no native code, and so should work better.
  */
 package uk.ac.lancs.fastcgi.transport.fork;
