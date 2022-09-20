@@ -68,11 +68,11 @@ public abstract class SocketTransport implements Transport {
      * 
      * @default Repeatedly, {@link ServerSocket#accept()} is invoked on
      * the configured socket. The new socket is submitted to
-     * {@link #describe(Socket)}. If this returns null, the socket is
-     * closed. Otherwise, the result is used as the public diagnostic
-     * description of a new {@link SocketConnection} built from the new
-     * socket. Its internal description is the server socket's local
-     * address.
+     * {@link #describe(Socket)}. If this returns {@code null}, the
+     * socket is closed. Otherwise, the result is used as the public
+     * diagnostic description of a new {@link SocketConnection} built
+     * from the new socket. Its internal description is the server
+     * socket's local address.
      */
     @Override
     public Connection nextConnection() throws IOException {
@@ -93,7 +93,8 @@ public abstract class SocketTransport implements Transport {
      * 
      * @param sock the socket to be tested
      * 
-     * @return a public description of the socket
+     * @return a public description of the socket; or {@code null} if
+     * the connection is to be rejected
      */
     protected abstract String describe(Socket sock);
 }
