@@ -51,6 +51,7 @@ import uk.ac.lancs.fastcgi.transport.SocketTransport;
 import uk.ac.lancs.fastcgi.transport.Transport;
 import uk.ac.lancs.fastcgi.transport.TransportConfigurationException;
 import uk.ac.lancs.fastcgi.transport.TransportFactory;
+import uk.ac.lancs.scc.jardeps.Service;
 
 /**
  * Builds a transport from the channel inherited from the entity that
@@ -62,6 +63,7 @@ import uk.ac.lancs.fastcgi.transport.TransportFactory;
  * 
  * @author simpsons
  */
+@Service(TransportFactory.class)
 public class InheritedChannelTransportFactory implements TransportFactory {
     @Override
     public Transport getTransport() {
