@@ -72,11 +72,9 @@ public class InheritedChannelTransportFactory implements TransportFactory {
             if (ic instanceof ServerSocketChannel ssc) {
                 SocketAddress addr = ssc.getLocalAddress();
                 if (addr instanceof UnixDomainSocketAddress) {
-                    System.err.printf("Bound to %s%n", addr);
                     return new SocketChannelTransport(ssc) {
                         @Override
                         protected String describe(SocketChannel sock) {
-                            System.err.printf("described%n");
                             return UNIX_DESCRIPTION;
                         }
                     };

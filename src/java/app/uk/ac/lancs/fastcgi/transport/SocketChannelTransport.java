@@ -85,13 +85,11 @@ public abstract class SocketChannelTransport implements Transport {
     public Connection nextConnection() throws IOException {
         do {
             SocketChannel chan = channel.accept();
-            System.err.printf("accepted%n");
             String descr = describe(chan);
             if (descr == null) {
                 chan.close();
                 continue;
             }
-            System.err.printf("new channel%n");
             return new SocketChannelConnection(chan, descr, intDescr);
         } while (true);
     }
