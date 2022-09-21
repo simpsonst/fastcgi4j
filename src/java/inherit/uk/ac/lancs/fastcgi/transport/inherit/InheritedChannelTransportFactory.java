@@ -39,15 +39,14 @@ package uk.ac.lancs.fastcgi.transport.inherit;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.UnixDomainSocketAddress;
 import java.nio.channels.Channel;
 import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.util.Collection;
 import uk.ac.lancs.fastcgi.proto.InvocationVariables;
-import uk.ac.lancs.fastcgi.transport.SocketTransport;
+import uk.ac.lancs.fastcgi.transport.SocketChannelTransport;
 import uk.ac.lancs.fastcgi.transport.Transport;
 import uk.ac.lancs.fastcgi.transport.TransportConfigurationException;
 import uk.ac.lancs.fastcgi.transport.TransportFactory;
@@ -71,23 +70,27 @@ public class InheritedChannelTransportFactory implements TransportFactory {
             Channel ic = System.inheritedChannel();
             if (ic == null) return null;
             if (ic instanceof ServerSocketChannel ssc) {
-                ServerSocket socket = ssc.socket();
-                SocketAddress addr = socket.getLocalSocketAddress();
+                SocketAddress addr = ssc.getLocalAddress();
                 if (addr instanceof UnixDomainSocketAddress) {
-                    return new SocketTransport(socket) {
+                    System.err.printf("Bound to %s%n", addr);
+                    return new SocketChannelTransport(ssc) {
                         @Override
-                        protected String describe(Socket sock) {
+                        protected String describe(SocketChannel sock) {
+                            System.err.printf("described%n");
                             return UNIX_DESCRIPTION;
                         }
                     };
                 } else if (addr instanceof InetSocketAddress) {
                     final Collection<InetAddress> permittedCallers =
                         InvocationVariables.getAuthorizedInetPeers();
-                    return new SocketTransport(socket) {
+                    return new SocketChannelTransport(ssc) {
                         @Override
-                        protected String describe(Socket sock) {
-                            InetAddress peer = sock.getInetAddress();
-                            if (!permittedCallers.contains(peer)) return null;
+                        protected String describe(SocketChannel sock)
+                            throws IOException {
+                            InetSocketAddress peer =
+                                (InetSocketAddress) sock.getRemoteAddress();
+                            if (!permittedCallers.contains(peer.getAddress()))
+                                return null;
                             return INET_DESCRIPTION_PREFIX + peer;
                         }
                     };

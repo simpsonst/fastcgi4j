@@ -36,8 +36,9 @@
 
 /**
  * Provides a transport for server-forked FastCGI applications using the
- * inherited channel. This works for both Internet- and Unix-domain
- * server sockets.
+ * {@linkplain java.lang.System#inheritedChannel() inherited channel}.
+ * This is known to work on Linux with a Unix-domain server socket as
+ * file descriptor 0, and should work with Internet-domain sockets too.
  * 
  * @see System#inheritedChannel()
  */
