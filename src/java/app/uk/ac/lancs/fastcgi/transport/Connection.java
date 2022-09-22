@@ -41,7 +41,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- * Provides bidirectional byte-stream communication with the server.
+ * Provides bidirectional byte-stream communication with the server. The
+ * streams returned by {@link #input()} and {@link #output()} do not
+ * have to be individually thread-safe, but it must be possible to use
+ * both simultaneously on separate threads.
  * 
  * @author simpsons
  */

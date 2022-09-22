@@ -44,18 +44,25 @@ import java.nio.channels.Channels;
 import java.nio.channels.SocketChannel;
 
 /**
- * Implements a FastCGI connection over a socket channel.
+ * Implements a FastCGI connection over a socket channel. A custom
+ * {@link InputStream} wraps the channel's
+ * {@link SocketChannel#read(ByteBuffer)} method, and similarly a custom
+ * {@link OutputStream} wraps {@link SocketChannel#write(ByteBuffer)}.
  *
  * @author simpsons
  */
 public class SocketChannelConnection implements Connection {
+    /**
+     * Holds the channel over which the FastCGI connection is
+     * implemented.
+     */
     protected final SocketChannel channel;
 
     /**
      * Presents an input-stream view of the socket's read operations. We
-     * cannot use {@link Channels#newChannel(InputStream)}, as it locks
-     * on a monitor that {@link Channels#newChannel(OutputStream)} locks
-     * on.
+     * cannot use {@link Channels#newInputStream(ReadableByteChannel)},
+     * as it locks on a monitor that
+     * {@link Channels#newOutputStream(WritableByteChannel)} locks on.
      */
     private final InputStream in = new InputStream() {
         private boolean open = true;
@@ -91,9 +98,10 @@ public class SocketChannelConnection implements Connection {
 
     /**
      * Presents an output-stream view of the socket's write operations.
-     * We cannot use {@link Channels#newChannel(OutputStream)}, as it
-     * locks on a monitor that {@link Channels#newChannel(InputStream)}
-     * locks on.
+     * We cannot use
+     * {@link Channels#newOutputStream(WritableByteChannel)}, as it
+     * locks on a monitor that
+     * {@link Channels#newInputStream(ReadableByteChannel)} locks on.
      */
     private final OutputStream out = new OutputStream() {
         private boolean open = true;
