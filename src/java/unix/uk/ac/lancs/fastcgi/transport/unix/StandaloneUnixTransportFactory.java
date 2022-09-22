@@ -37,11 +37,12 @@
 package uk.ac.lancs.fastcgi.transport.unix;
 
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.StandardProtocolFamily;
 import java.net.UnixDomainSocketAddress;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import uk.ac.lancs.fastcgi.proto.InvocationVariables;
-import uk.ac.lancs.fastcgi.transport.SocketTransport;
+import uk.ac.lancs.fastcgi.transport.SocketChannelTransport;
 import uk.ac.lancs.fastcgi.transport.Transport;
 import uk.ac.lancs.fastcgi.transport.TransportConfigurationException;
 import uk.ac.lancs.fastcgi.transport.TransportFactory;
@@ -66,11 +67,13 @@ public class StandaloneUnixTransportFactory implements TransportFactory {
             if (pathText == null) return null;
 
             UnixDomainSocketAddress addr = UnixDomainSocketAddress.of(pathText);
-            final ServerSocket ss = new ServerSocket();
-            ss.bind(addr);
-            return new SocketTransport(ss) {
+            final ServerSocketChannel ssc =
+                ServerSocketChannel.open(StandardProtocolFamily.UNIX);
+            ssc.bind(addr);
+            return new SocketChannelTransport(ssc) {
                 @Override
-                protected String describe(Socket sock) {
+                protected String describe(SocketChannel channel)
+                    throws IOException {
                     return STANDALONE_DESCRIPTION;
                 }
             };
