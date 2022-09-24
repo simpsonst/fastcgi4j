@@ -5,3 +5,5 @@
 /tmp/
 /jardeps-install.mk
 /jardeps-install.sh
+/BUILD
+/VERSION

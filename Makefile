@@ -4,11 +4,24 @@ PREFIX=/usr/local
 SED ?= sed
 FIND ?= find
 XARGS ?= xargs
+CMP ?= cmp -s
+CP ?= cp
 
 #ENABLE_UNIX ?= yes
 
+VWORDS:=$(shell src/getversion.sh --prefix=v MAJOR MINOR PATCH)
+VERSION:=$(word 1,$(VWORDS))
+BUILD:=$(word 2,$(VWORDS))
+
+## Provide a version of $(abspath) that can cope with spaces in the
+## current directory.
+myblank:=
+myspace:=$(myblank) $(myblank)
+MYCURDIR:=$(subst $(myspace),\$(myspace),$(CURDIR)/)
+MYABSPATH=$(foreach f,$1,$(if $(patsubst /%,,$f),$(MYCURDIR)$f,$f))
+
+-include $(call MYABSPATH,config.mk)
 -include fastcgi4j-env.mk
--include $(subst $(jardeps_space),\$(jardeps_space),$(CURDIR))/config.mk
 
 lc=$(subst A,a,$(subst B,b,$(subst C,c,$(subst D,d,$(subst E,e,$(subst F,f,$(subst G,g,$(subst H,h,$(subst I,i,$(subst J,j,$(subst K,k,$(subst L,l,$(subst M,m,$(subst N,n,$(subst O,o,$(subst P,p,$(subst Q,q,$(subst R,r,$(subst S,s,$(subst T,t,$(subst U,u,$(subst V,v,$(subst W,w,$(subst X,x,$(subst Y,y,$(subst Z,z,$1))))))))))))))))))))))))))
 
@@ -97,7 +110,7 @@ include jardeps.mk
 DOC_OVERVIEW=src/java/overview.html
 DOC_CLASSPATH += $(jars:%=$(JARDEPS_OUTDIR)/%.jar)
 DOC_SRC=$(call jardeps_srcdirs4jars,$(SELECTED_JARS))
-DOC_CORE=fastcgi4j$(DOC_CORE_SFX)
+DOC_CORE=fastcgi4j
 DOC_PKGS += uk.ac.lancs.fastcgi
 DOC_PKGS += uk.ac.lancs.fastcgi.context
 DOC_PKGS += uk.ac.lancs.fastcgi.util
@@ -116,11 +129,31 @@ ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_UNIX))),)
 DOC_PKGS += uk.ac.lancs.fastcgi.transport.fork
 endif
 
+MYCMPCP=$(CMP) -s '$1' '$2' || $(CP) '$1' '$2'
+.PHONY: prepare-version
+mktmp:
+	@$(MKDIR) tmp/
+prepare-version: mktmp
+	$(file >tmp/BUILD,$(BUILD))
+	$(file >tmp/VERSION,$(VERSION))
+BUILD: prepare-version
+	@$(call MYCMPCP,tmp/BUILD,$@)
+VERSION: prepare-version
+	@$(call MYCMPCP,tmp/VERSION,$@)
+
 $(BINODEPS_OBJDIR)/native.lo: | tmp/tree-unix.compiled
 
-all:: installed-jars installed-libraries
+all:: VERSION BUILD installed-jars installed-libraries
 installed-jars:: $(SELECTED_JARS:%=out/%.jar)
 installed-jars:: $(SELECTED_JARS:%=out/%-src.zip)
+
+define JARVERSION
+version_$1=$$(VERSION)
+
+endef
+
+
+$(foreach j,$(jars),$(eval $(call JARVERSION,$j)))
 
 install-jar-%::
 	@$(call JARDEPS_INSTALL,$(PREFIX)/share/java,$*,$(version_$*))
@@ -134,6 +167,9 @@ tidy::
 	@$(FIND) . -name "*~" -delete
 
 clean:: tidy
+
+distclean:: blank
+	$(RM) VERSION BUILD
 
 test_suite += uk.ac.lancs.fastcgi.engine.util.TestCachePipePool
 
