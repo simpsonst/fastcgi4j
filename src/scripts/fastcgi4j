@@ -90,7 +90,7 @@ function change_dir () {
 
 
 function show_help () {
-    echo <<EOF
+    cat <<EOF
 Usage: $SELF [options] [handler|--] [args...]
 -n
 	Dry run.  Print command and environment, then exit.
