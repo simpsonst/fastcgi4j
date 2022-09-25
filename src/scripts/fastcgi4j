@@ -304,10 +304,6 @@ while [ $# -gt 0 ] ; do
     shift
 done
 
-if [ -z "$PROGRAM" ] ; then
-    seek=yes
-fi
-
 ## Ensure our Java libraries are available.
 FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_api.jar")
 FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_app.jar")
