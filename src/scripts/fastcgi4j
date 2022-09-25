@@ -62,6 +62,7 @@ unset dryrun
 unset bindaddr
 peers=()
 unset seek
+unset demo
 
 function add_library () {
     local stem="$1"
@@ -213,6 +214,10 @@ while [ $# -gt 0 ] ; do
 	    APPARGS+=(-Uuk.ac.lancs.fastcgi.nconn)
 	    ;;
 
+	(--demo)
+	    demo=yes
+	    ;;
+
 	(-s)
 	    shift
 	    APPARGS+=(-Duk.ac.lancs.fastcgi.nsess="$1")
@@ -312,7 +317,9 @@ CLASSPATH=("${FASTCGI_CLASSPATH[@]}" "${CLASSPATH[@]}")
 CLASSPATH+=("$HERE/share/java/fastcgi4j_inet.jar")
 CLASSPATH+=("$HERE/share/java/fastcgi4j_unix.jar")
 CLASSPATH+=("$HERE/share/java/fastcgi4j_inherit.jar")
-CLASSPATH+=("$HERE/share/java/fastcgi4j_demos.jar")
+if [ -n "$demo" ] ; then
+    CLASSPATH+=("$HERE/share/java/fastcgi4j_demos.jar")
+fi
 
 if [ -n "$seek" ] ; then
     APPARGS+=(--seek)
