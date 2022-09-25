@@ -148,6 +148,8 @@ class MultiplexGenericEngine implements Engine {
         AtomicInteger ctid = new AtomicInteger(0);
         ThreadFactory conntf =
             (r) -> new Thread(conntg, r, "ct-" + ctid.getAndIncrement());
+        /* TODO: With unlimited connections, we should use virtual
+         * threads instead of a cached-thread pool. */
         this.connExecutor =
             maxConns == 0 ? Executors.newCachedThreadPool(conntf) :
                 Executors.newFixedThreadPool(maxConns, conntf);
@@ -212,6 +214,8 @@ class MultiplexGenericEngine implements Engine {
             AtomicInteger intSessIds = new AtomicInteger(0);
             ThreadFactory tf = r -> new Thread(sesstg, r, "session-" + id + "-"
                 + intSessIds.getAndIncrement());
+            /* TODO: With unlimited requests per connection, we should
+             * use virtual threads instead of a cached-thread pool. */
             this.executor = maxReqsPerConn >= 1 ?
                 Executors.newFixedThreadPool(maxReqsPerConn, tf) :
                 Executors.newCachedThreadPool(tf);
