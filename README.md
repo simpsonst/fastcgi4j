@@ -6,14 +6,14 @@ So far, the code is *hardly tested*, so good luck!
 
 # Writing a FastCGI application
 
-See the (Java API documentation)[https://www.lancaster.ac.uk/~simpsons/javadoc/fastcgi4j/].
+See the [Java API documentation](https://www.lancaster.ac.uk/~simpsons/javadoc/fastcgi4j/).
 
 Define the application's behaviour by implementing `Responder`, `Filter` or `Authorizer`.
 Then you have two choices:
 
-* Your application should then create an (`Engine`)[https://www.lancaster.ac.uk/~simpsons/javadoc/fastcgi4j/fastcgi4j/uk/ac/lancs/fastcgi/engine/Engine], configure it with the behaviour object, and then get the engine to repeatedly process requests.
+* Your application should then create an [`Engine`](https://www.lancaster.ac.uk/~simpsons/javadoc/fastcgi4j/fastcgi4j/uk/ac/lancs/fastcgi/engine/Engine), configure it with the behaviour object, and then get the engine to repeatedly process requests.
 
-* Extend (`FastCGIApplication`)[https://www.lancaster.ac.uk/~simpsons/javadoc/fastcgi4j/fastcgi4j/uk/ac/lancs/fastcgi/app/FastCGIApplication], and add the behaviour object to it.
+* Extend [`FastCGIApplication`](https://www.lancaster.ac.uk/~simpsons/javadoc/fastcgi4j/fastcgi4j/uk/ac/lancs/fastcgi/app/FastCGIApplication), and add the behaviour object to it.
   This will recognize a number of command-line switches to control non-functional behaviour.
   Invocation with the `fastcgi4j` script will also set some of these switches.
 
