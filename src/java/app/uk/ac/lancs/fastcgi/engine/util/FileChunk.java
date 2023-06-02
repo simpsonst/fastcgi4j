@@ -39,6 +39,9 @@ package uk.ac.lancs.fastcgi.engine.util;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import uk.ac.lancs.fastcgi.context.StreamAbortedException;
 
 /**
@@ -47,6 +50,10 @@ import uk.ac.lancs.fastcgi.context.StreamAbortedException;
  * @author simpsons
  */
 final class FileChunk implements Chunk {
+    private final Lock lock = new ReentrantLock();
+
+    private final Condition ready = lock.newCondition();
+
     private final long maxFileSize;
 
     private RandomAccessFile file;
@@ -84,36 +91,41 @@ final class FileChunk implements Chunk {
      * using {@link #complete()}
      */
     @Override
-    public synchronized int write(byte[] buf, int off, int len)
-        throws IOException {
-        /* The content provider should not be supplying more content
-         * when they've already said there's no more. */
-        if (complete) throw new IllegalStateException("complete");
+    public int write(byte[] buf, int off, int len) throws IOException {
+        try {
+            lock.lock();
+            /* The content provider should not be supplying more content
+             * when they've already said there's no more. */
+            if (complete) throw new IllegalStateException("complete");
 
-        /* Short-circuit the no-op. */
-        if (len == 0) return 0;
+            /* Short-circuit the no-op. */
+            if (len == 0) return 0;
 
-        /* If the consumer has already indicated they're not longer
-         * interested in the content, we can absorb it. */
-        if (file == null) return len;
+            /* If the consumer has already indicated they're not longer
+             * interested in the content, we can absorb it. */
+            if (file == null) return len;
 
-        /* How much space have we got left? Indicate if we can't take
-         * any more. */
-        long remaining = maxFileSize - writePos;
-        if (remaining == 0) return 0;
+            /* How much space have we got left? Indicate if we can't
+             * take any more. */
+            long remaining = maxFileSize - writePos;
+            if (remaining == 0) return 0;
 
-        /* Decide how much to actually accept, and copy to the file. */
-        int amount = (int) Long.min(remaining, len);
-        file.seek(writePos);
-        file.write(buf, off, amount);
+            /* Decide how much to actually accept, and copy to the
+             * file. */
+            int amount = (int) Long.min(remaining, len);
+            file.seek(writePos);
+            file.write(buf, off, amount);
 
-        /* Remember our new file position. */
-        writePos += amount;
+            /* Remember our new file position. */
+            writePos += amount;
 
-        /* Let the reader know there's data, and the caller how much was
-         * consumed. */
-        notify();
-        return amount;
+            /* Let the reader know there's data, and the caller how much
+             * was consumed. */
+            ready.signal();
+            return amount;
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -122,9 +134,14 @@ final class FileChunk implements Chunk {
      * The content is marked as complete.
      */
     @Override
-    public synchronized void complete() {
-        complete = true;
-        notify();
+    public void complete() {
+        try {
+            lock.lock();
+            complete = true;
+            ready.signal();
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -143,32 +160,38 @@ final class FileChunk implements Chunk {
      * 
      * @throws IOException if the input stream has been closed
      */
-    synchronized int read() throws IOException {
-        /* Wait until there's no reason to block. */
-        boolean interrupted = false;
-        while (file != null && !complete && reason == null &&
-            readPos == writePos) {
-            try {
-                wait();
-            } catch (InterruptedException ex) {
-                interrupted = true;
+    int read() throws IOException {
+        try {
+            lock.lock();
+            /* Wait until there's no reason to block. */
+            boolean interrupted = false;
+            while (file != null && !complete && reason == null &&
+                readPos == writePos) {
+                try {
+                    ready.await();
+                } catch (InterruptedException ex) {
+                    interrupted = true;
+                }
             }
+
+            /* Re-transmit the interruption. */
+            if (interrupted) Thread.currentThread().interrupt();
+
+            /* Detect errors and end-of-file. */
+            if (file == null) throw new IOException("closed");
+            if (reason != null) throw new StreamAbortedException(reason);
+            if (readPos == writePos) return -1;
+
+            /* At least one byte is available, so seek and provide
+             * it. */
+            file.seek(readPos);
+            int r = file.read();
+            assert r >= 0;
+            readPos++;
+            return r;
+        } finally {
+            lock.unlock();
         }
-
-        /* Re-transmit the interruption. */
-        if (interrupted) Thread.currentThread().interrupt();
-
-        /* Detect errors and end-of-file. */
-        if (file == null) throw new IOException("closed");
-        if (reason != null) throw new StreamAbortedException(reason);
-        if (readPos == writePos) return -1;
-
-        /* At least one byte is available, so seek and provide it. */
-        file.seek(readPos);
-        int r = file.read();
-        assert r >= 0;
-        readPos++;
-        return r;
     }
 
     /**
@@ -177,17 +200,27 @@ final class FileChunk implements Chunk {
      * 
      * @throws IOException if closing the underlying file fails
      */
-    synchronized void close() throws IOException {
+    void close() throws IOException {
         try {
-            file.close();
+            lock.lock();
+            try {
+                file.close();
+            } finally {
+                file = null;
+            }
         } finally {
-            file = null;
+            lock.unlock();
         }
     }
 
-    synchronized int available() {
-        if (file == null) return 0;
-        return (int) Long.max(writePos - readPos, Integer.MAX_VALUE);
+    int available() {
+        try {
+            lock.lock();
+            if (file == null) return 0;
+            return (int) Long.max(writePos - readPos, Integer.MAX_VALUE);
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -211,37 +244,42 @@ final class FileChunk implements Chunk {
      * 
      * @throws IOException if the input stream has been closed
      */
-    synchronized int read(byte[] b, int off, int len) throws IOException {
+    int read(byte[] b, int off, int len) throws IOException {
         /* Short-circuit the no-op. */
         if (len == 0) return 0;
 
-        /* Wait until there's no reason to block. */
-        boolean interrupted = false;
-        while (file != null && !complete && reason == null &&
-            readPos == writePos) {
-            try {
-                wait();
-            } catch (InterruptedException ex) {
-                interrupted = true;
+        try {
+            lock.lock();
+            /* Wait until there's no reason to block. */
+            boolean interrupted = false;
+            while (file != null && !complete && reason == null &&
+                readPos == writePos) {
+                try {
+                    ready.await();
+                } catch (InterruptedException ex) {
+                    interrupted = true;
+                }
             }
+
+            /* Re-transmit the interruption. */
+            if (interrupted) Thread.currentThread().interrupt();
+
+            /* Detect errors and end-of-file. */
+            if (file == null) throw new IOException("closed");
+            if (reason != null) throw new StreamAbortedException(reason);
+            if (readPos == writePos) return -1;
+
+            /* At least one byte is available. Work out how much to
+             * provide, transfer it, and report how much was moved. */
+            int amount = (int) Long.min(len, writePos - readPos);
+            file.seek(readPos);
+            int got = file.read(b, off, amount);
+            assert got >= 0;
+            readPos += got;
+            return got;
+        } finally {
+            lock.unlock();
         }
-
-        /* Re-transmit the interruption. */
-        if (interrupted) Thread.currentThread().interrupt();
-
-        /* Detect errors and end-of-file. */
-        if (file == null) throw new IOException("closed");
-        if (reason != null) throw new StreamAbortedException(reason);
-        if (readPos == writePos) return -1;
-
-        /* At least one byte is available. Work out how much to provide,
-         * transfer it, and report how much was moved. */
-        int amount = (int) Long.min(len, writePos - readPos);
-        file.seek(readPos);
-        int got = file.read(b, off, amount);
-        assert got >= 0;
-        readPos += got;
-        return got;
     }
 
     @Override
@@ -272,9 +310,14 @@ final class FileChunk implements Chunk {
     };
 
     @Override
-    public synchronized void abort(Throwable reason) {
-        if (this.reason != null) return;
-        this.reason = reason;
-        notify();
+    public void abort(Throwable reason) {
+        try {
+            lock.lock();
+            if (this.reason != null) return;
+            this.reason = reason;
+            ready.signal();
+        } finally {
+            lock.unlock();
+        }
     }
 }

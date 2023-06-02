@@ -41,6 +41,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -66,6 +68,8 @@ public class SQLConnectionPool {
          */
         Connection newConnection() throws SQLException;
     }
+
+    private final Lock lock = new ReentrantLock();
 
     private final Factory factory;
 
@@ -105,8 +109,11 @@ public class SQLConnectionPool {
     private void recover(Connection base) {
         try {
             if (!base.getAutoCommit()) base.rollback();
-            synchronized (this) {
+            try {
+                lock.lock();
                 state.bases.add(base);
+            } finally {
+                lock.unlock();
             }
         } catch (SQLException ex) {
             logger.log(Level.WARNING, "reset", ex);
@@ -125,16 +132,21 @@ public class SQLConnectionPool {
      * @throws SQLException if a database error occurs in creating a
      * fresh connection, or in enabling auto-commit
      */
-    public synchronized Connection open() throws SQLException {
-        final Connection base;
-        if (state.bases.isEmpty()) {
-            base = factory.newConnection();
-        } else {
-            base = state.bases.remove(0);
-        }
-        base.setAutoCommit(true);
+    public Connection open() throws SQLException {
+        try {
+            lock.lock();
+            final Connection base;
+            if (state.bases.isEmpty()) {
+                base = factory.newConnection();
+            } else {
+                base = state.bases.remove(0);
+            }
+            base.setAutoCommit(true);
 
-        return proxifier.proxy(base);
+            return proxifier.proxy(base);
+        } finally {
+            lock.unlock();
+        }
     }
 
     private final Cleaner.Cleanable cleanable;

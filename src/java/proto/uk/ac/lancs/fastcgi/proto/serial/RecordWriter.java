@@ -41,6 +41,8 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import uk.ac.lancs.fastcgi.proto.ProtocolStatuses;
 import uk.ac.lancs.fastcgi.proto.RecordTypes;
 
@@ -53,6 +55,8 @@ public class RecordWriter {
     private final OutputStream out;
 
     private final Charset charset;
+
+    private final Lock lock = new ReentrantLock();
 
     /**
      * Specifies how big the payload of a record can be, namely
@@ -291,8 +295,11 @@ public class RecordWriter {
 
         checkAlignment(buf);
         try {
-            synchronized (this) {
+            try {
+                lock.lock();
                 out.write(buf.array(), 0, buf.position());
+            } finally {
+                lock.unlock();
             }
         } catch (IOException ex) {
             throw new RecordIOException("writeValues", ex);
@@ -326,8 +333,11 @@ public class RecordWriter {
 
         checkAlignment(buf);
         try {
-            synchronized (this) {
+            try {
+                lock.lock();
                 out.write(buf.array(), 0, buf.position());
+            } finally {
+                lock.unlock();
             }
         } catch (IOException ex) {
             throw new RecordIOException("writeUnknownType", ex);
@@ -368,8 +378,11 @@ public class RecordWriter {
 
         checkAlignment(buf);
         try {
-            synchronized (this) {
+            try {
+                lock.lock();
                 out.write(buf.array(), 0, buf.position());
+            } finally {
+                lock.unlock();
             }
         } catch (IOException ex) {
             throw new RecordIOException("writeEndRequest", ex);
@@ -455,7 +468,8 @@ public class RecordWriter {
          * as three operations. */
         String pos = "hdr";
         try {
-            synchronized (this) {
+            try {
+                lock.lock();
                 out.write(bf.array(), 0, begin);
 
                 pos = "data";
@@ -465,6 +479,8 @@ public class RecordWriter {
                     pos = "pad";
                     out.write(padding, 0, pad);
                 }
+            } finally {
+                lock.unlock();
             }
         } catch (IOException ex) {
             throw new RecordIOException("write" + label + ":" + pos, ex);
@@ -501,8 +517,11 @@ public class RecordWriter {
         checkHeaderLength(bf.position());
 
         try {
-            synchronized (this) {
+            try {
+                lock.lock();
                 out.write(bf.array(), 0, bf.position());
+            } finally {
+                lock.unlock();
             }
         } catch (IOException ex) {
             throw new RecordIOException("write" + label + ":hdr0", ex);

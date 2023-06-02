@@ -38,6 +38,8 @@ package uk.ac.lancs.fastcgi.engine.std;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Keeps a pool of redundant byte arrays.
@@ -47,6 +49,8 @@ import java.util.List;
 class BufferPool {
     private final List<byte[]> paramBufs = new ArrayList<>();
 
+    private final Lock lock = new ReentrantLock();
+
     /**
      * Get a buffer. One from the pool is chosen, removed and returned.
      * A new small one is created and returned if there isn't one in the
@@ -54,9 +58,14 @@ class BufferPool {
      * 
      * @return a free byte array as a buffer
      */
-    public synchronized byte[] getBuffer() {
-        if (paramBufs.isEmpty()) return new byte[128];
-        return paramBufs.remove(paramBufs.size() - 1);
+    public byte[] getBuffer() {
+        try {
+            lock.lock();
+            if (paramBufs.isEmpty()) return new byte[128];
+            return paramBufs.remove(paramBufs.size() - 1);
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -65,7 +74,12 @@ class BufferPool {
      * 
      * @param buf the array to be added to the pool
      */
-    public synchronized void returnParamBuf(byte[] buf) {
-        paramBufs.add(buf);
+    public void returnParamBuf(byte[] buf) {
+        try {
+            lock.lock();
+            paramBufs.add(buf);
+        } finally {
+            lock.unlock();
+        }
     }
 }

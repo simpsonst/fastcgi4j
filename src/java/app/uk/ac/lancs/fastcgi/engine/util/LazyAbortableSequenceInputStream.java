@@ -41,6 +41,9 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import uk.ac.lancs.fastcgi.context.StreamAbortedException;
 
 /**
@@ -52,6 +55,10 @@ import uk.ac.lancs.fastcgi.context.StreamAbortedException;
  * @author simpsons
  */
 class LazyAbortableSequenceInputStream extends InputStream {
+    private final Lock lock = new ReentrantLock();
+
+    private final Condition ready = lock.newCondition();
+
     private final List<InputStream> sequence = new ArrayList<>();
 
     private final boolean closeOnError;
@@ -85,16 +92,16 @@ class LazyAbortableSequenceInputStream extends InputStream {
      */
     public void submit(InputStream stream) {
         Objects.requireNonNull(stream, "stream");
-        submitInternal(stream);
-    }
-
-    private synchronized void submitInternal(InputStream stream) {
-        assert Thread.holdsLock(this);
-        if (abortedReason != null)
-            throw new IllegalStateException("aborted", abortedReason);
-        if (completed) throw new IllegalStateException("closed");
-        sequence.add(stream);
-        notify();
+        try {
+            lock.lock();
+            if (abortedReason != null)
+                throw new IllegalStateException("aborted", abortedReason);
+            if (completed) throw new IllegalStateException("closed");
+            sequence.add(stream);
+            ready.signal();
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -107,15 +114,15 @@ class LazyAbortableSequenceInputStream extends InputStream {
      */
     public void abort(Throwable reason) {
         Objects.requireNonNull(reason, "reason");
-        abortInternal(reason);
-    }
-
-    private synchronized void abortInternal(Throwable reason) {
-        assert Thread.holdsLock(this);
-        if (abortedReason != null) return;
-        if (completed) return;
-        abortedReason = reason;
-        notifyAll();
+        try {
+            lock.lock();
+            if (abortedReason != null) return;
+            if (completed) return;
+            abortedReason = reason;
+            ready.signalAll();
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -123,11 +130,16 @@ class LazyAbortableSequenceInputStream extends InputStream {
      * streams already supplied will yield end-of-file. If the stream
      * has already been completed or aborted, this call has no effect.
      */
-    public synchronized void complete() {
-        if (abortedReason != null) return;
-        if (completed) return;
-        completed = true;
-        notifyAll();
+    public void complete() {
+        try {
+            lock.lock();
+            if (abortedReason != null) return;
+            if (completed) return;
+            completed = true;
+            ready.signalAll();
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -139,12 +151,13 @@ class LazyAbortableSequenceInputStream extends InputStream {
     private boolean ensure(boolean throwAbort) throws StreamAbortedException {
         if (current != null) return false;
         boolean interrupted = false;
-        synchronized (this) {
+        try {
+            lock.lock();
             boolean r;
             while ((r = sequence.isEmpty()) && !completed &&
                 abortedReason == null) {
                 try {
-                    wait();
+                    ready.await();
                 } catch (InterruptedException ex) {
                     interrupted = true;
                 }
@@ -155,6 +168,8 @@ class LazyAbortableSequenceInputStream extends InputStream {
             if (r) return true;
             current = sequence.remove(0);
             return false;
+        } finally {
+            lock.unlock();
         }
     }
 

@@ -39,6 +39,9 @@ package uk.ac.lancs.fastcgi.engine.util;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import uk.ac.lancs.fastcgi.context.StreamAbortedException;
 
 /**
@@ -54,6 +57,10 @@ import uk.ac.lancs.fastcgi.context.StreamAbortedException;
  */
 final class MemoryChunk implements Chunk {
     private final AtomicLong memoryUsage;
+
+    private final Lock lock = new ReentrantLock();
+
+    private final Condition ready = lock.newCondition();
 
     private byte[] array;
 
@@ -97,64 +104,80 @@ final class MemoryChunk implements Chunk {
      * limit.
      */
     @Override
-    public synchronized int write(byte[] buf, int off, int len) {
-        /* The content provider should not be supplying more content
-         * when they've already said there's no more. */
-        if (complete) throw new IllegalStateException("complete");
-
-        /* Short-circuit the no-op. */
-        if (len == 0) return 0;
-
-        /* If the consumer has already indicated they're not longer
-         * interested in the content, we can absorb it. */
-        if (array == null) return len;
-
-        check();
+    public int write(byte[] buf, int off, int len) {
         try {
-            /* How much space is at the end of the array? */
-            final int rem = array.length - writePos;
-            final int amount;
-            if (len > rem) {
-                /* We don't have enough space in our buffer. Try
-                 * shifting the current content to the start of the
-                 * buffer. */
-                System.arraycopy(array, readPos, array, 0, writePos - readPos);
-                writePos -= readPos;
-                readPos = 0;
-                amount = Integer.min(len, array.length - writePos);
-            } else {
-                /* Just use what we have left. */
-                amount = Integer.min(len, rem);
-            }
+            lock.lock();
+            /* The content provider should not be supplying more content
+             * when they've already said there's no more. */
+            if (complete) throw new IllegalStateException("complete");
 
-            /* Consume some of the supplied content. */
-            System.arraycopy(buf, off, array, writePos, amount);
-            writePos += amount;
-            memoryUsage.addAndGet(amount);
-            notify();
-            return amount;
-        } finally {
+            /* Short-circuit the no-op. */
+            if (len == 0) return 0;
+
+            /* If the consumer has already indicated they're not longer
+             * interested in the content, we can absorb it. */
+            if (array == null) return len;
+
             check();
+            try {
+                /* How much space is at the end of the array? */
+                final int rem = array.length - writePos;
+                final int amount;
+                if (len > rem) {
+                    /* We don't have enough space in our buffer. Try
+                     * shifting the current content to the start of the
+                     * buffer. */
+                    System.arraycopy(array, readPos, array, 0,
+                                     writePos - readPos);
+                    writePos -= readPos;
+                    readPos = 0;
+                    amount = Integer.min(len, array.length - writePos);
+                } else {
+                    /* Just use what we have left. */
+                    amount = Integer.min(len, rem);
+                }
+
+                /* Consume some of the supplied content. */
+                System.arraycopy(buf, off, array, writePos, amount);
+                writePos += amount;
+                memoryUsage.addAndGet(amount);
+                ready.signal();
+                return amount;
+            } finally {
+                check();
+            }
+        } finally {
+            lock.unlock();
         }
     }
 
     @Override
-    public synchronized void complete() {
-        complete = true;
-        notify();
+    public void complete() {
+        try {
+            lock.lock();
+            complete = true;
+            ready.signal();
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
      * Close the input stream. {@link #array} is set to {@code null} to
      * mark this. Closing twice is not an error.
      */
-    synchronized void close() {
-        array = null;
+    void close() {
+        try {
+            lock.lock();
+            array = null;
 
-        /* The memory is no longer in use, so account for it as if it
-         * had been delivered. */
-        memoryUsage.addAndGet(readPos - writePos);
-        readPos = writePos;
+            /* The memory is no longer in use, so account for it as if
+             * it had been delivered. */
+            memoryUsage.addAndGet(readPos - writePos);
+            readPos = writePos;
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -163,8 +186,13 @@ final class MemoryChunk implements Chunk {
      * @return the number of available bytes, i.e., the difference
      * between the read and write positions
      */
-    synchronized int available() {
-        return writePos - readPos;
+    int available() {
+        try {
+            lock.lock();
+            return writePos - readPos;
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -183,33 +211,38 @@ final class MemoryChunk implements Chunk {
      * 
      * @throws IOException if the input stream has been closed
      */
-    synchronized int read() throws IOException {
-        check();
+    int read() throws IOException {
         try {
-            /* Wait until there's no reason to block. */
-            boolean interrupted = false;
-            while (array != null && !complete && reason == null &&
-                readPos == writePos) {
-                try {
-                    wait();
-                } catch (InterruptedException ex) {
-                    interrupted = true;
-                }
-            }
-
-            /* Re-transmit the interruption. */
-            if (interrupted) Thread.currentThread().interrupt();
-
-            /* Detect errors and end-of-file. */
-            if (array == null) throw new IOException("closed");
-            if (reason != null) throw new StreamAbortedException(reason);
-            if (readPos == writePos) return -1;
-
-            /* At least one byte is available, so provide it. */
-            memoryUsage.addAndGet(-1);
-            return array[readPos++] & 0xff;
-        } finally {
+            lock.lock();
             check();
+            try {
+                /* Wait until there's no reason to block. */
+                boolean interrupted = false;
+                while (array != null && !complete && reason == null &&
+                    readPos == writePos) {
+                    try {
+                        ready.await();
+                    } catch (InterruptedException ex) {
+                        interrupted = true;
+                    }
+                }
+
+                /* Re-transmit the interruption. */
+                if (interrupted) Thread.currentThread().interrupt();
+
+                /* Detect errors and end-of-file. */
+                if (array == null) throw new IOException("closed");
+                if (reason != null) throw new StreamAbortedException(reason);
+                if (readPos == writePos) return -1;
+
+                /* At least one byte is available, so provide it. */
+                memoryUsage.addAndGet(-1);
+                return array[readPos++] & 0xff;
+            } finally {
+                check();
+            }
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -235,42 +268,47 @@ final class MemoryChunk implements Chunk {
      * 
      * @throws IOException if the input stream has been closed
      */
-    synchronized int read(byte[] b, int off, int len) throws IOException {
+    int read(byte[] b, int off, int len) throws IOException {
         /* Short-circuit the no-op. */
         if (len == 0) return 0;
 
-        check();
         try {
-            /* Wait until there's no reason to block. */
-            boolean interrupted = false;
-            while (array != null && !complete && reason == null &&
-                readPos == writePos) {
-                try {
-                    wait();
-                } catch (InterruptedException ex) {
-                    interrupted = true;
-                }
-            }
-
-            /* Re-transmit the interruption. */
-            if (interrupted) Thread.currentThread().interrupt();
-
-            /* Detect errors and end-of-file. */
-            if (array == null) throw new IOException("closed");
-            if (reason != null) throw new StreamAbortedException(reason);
-            if (readPos == writePos) return -1;
-
-            /* At least one byte is available, so work out how much to
-             * provide, and transfer it. */
-            int amount = Integer.min(len, writePos - readPos);
-            if (amount == 0) return 0;
-            assert amount > 0;
-            System.arraycopy(array, readPos, b, off, amount);
-            readPos += amount;
-            memoryUsage.addAndGet(-amount);
-            return amount;
-        } finally {
+            lock.lock();
             check();
+            try {
+                /* Wait until there's no reason to block. */
+                boolean interrupted = false;
+                while (array != null && !complete && reason == null &&
+                    readPos == writePos) {
+                    try {
+                        ready.await();
+                    } catch (InterruptedException ex) {
+                        interrupted = true;
+                    }
+                }
+
+                /* Re-transmit the interruption. */
+                if (interrupted) Thread.currentThread().interrupt();
+
+                /* Detect errors and end-of-file. */
+                if (array == null) throw new IOException("closed");
+                if (reason != null) throw new StreamAbortedException(reason);
+                if (readPos == writePos) return -1;
+
+                /* At least one byte is available, so work out how much
+                 * to provide, and transfer it. */
+                int amount = Integer.min(len, writePos - readPos);
+                if (amount == 0) return 0;
+                assert amount > 0;
+                System.arraycopy(array, readPos, b, off, amount);
+                readPos += amount;
+                memoryUsage.addAndGet(-amount);
+                return amount;
+            } finally {
+                check();
+            }
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -302,9 +340,14 @@ final class MemoryChunk implements Chunk {
     };
 
     @Override
-    public synchronized void abort(Throwable reason) {
-        if (this.reason != null) return;
-        this.reason = reason;
-        notify();
+    public void abort(Throwable reason) {
+        try {
+            lock.lock();
+            if (this.reason != null) return;
+            this.reason = reason;
+            ready.signal();
+        } finally {
+            lock.unlock();
+        }
     }
 }

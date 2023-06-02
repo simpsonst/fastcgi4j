@@ -41,6 +41,8 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Provides a blocking enumeration to which elements can be added
@@ -51,6 +53,10 @@ import java.util.Objects;
  * @author simpsons
  */
 final class BlockingEnumeration<E> implements Enumeration<E> {
+    private final ReentrantLock lock = new ReentrantLock();
+
+    private final Condition ready = lock.newCondition();
+
     private final List<E> queue = new ArrayList<>();
 
     private Exception closer = null;
@@ -64,17 +70,22 @@ final class BlockingEnumeration<E> implements Enumeration<E> {
      * otherwise
      */
     @Override
-    public synchronized boolean hasMoreElements() {
-        return hasMoreElementsInternal();
+    public boolean hasMoreElements() {
+        try {
+            lock.lock();
+            return hasMoreElementsInternal();
+        } finally {
+            lock.unlock();
+        }
     }
 
     private boolean hasMoreElementsInternal() {
-        assert Thread.holdsLock(this);
+        assert lock.isHeldByCurrentThread();
         boolean empty = true;
         boolean interrupted = false;
         while ((empty = queue.isEmpty()) && closer == null) {
             try {
-                wait();
+                ready.await();
             } catch (InterruptedException ex) {
                 interrupted = true;
             }
@@ -95,11 +106,16 @@ final class BlockingEnumeration<E> implements Enumeration<E> {
      * retrieved
      */
     @Override
-    public synchronized E nextElement() {
-        if (!hasMoreElementsInternal()) throw new NoSuchElementException();
-        E result = queue.remove(0);
-        System.err.printf("served %s%n", result);
-        return result;
+    public E nextElement() {
+        try {
+            lock.lock();
+            if (!hasMoreElementsInternal()) throw new NoSuchElementException();
+            E result = queue.remove(0);
+            System.err.printf("served %s%n", result);
+            return result;
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -113,14 +129,15 @@ final class BlockingEnumeration<E> implements Enumeration<E> {
      */
     public void submit(E elem) {
         Objects.requireNonNull(elem, "elem");
-        submitInternal(elem);
-    }
-
-    private synchronized void submitInternal(E elem) {
-        assert Thread.holdsLock(this);
-        if (closer != null) throw new IllegalStateException("closed", closer);
-        queue.add(elem);
-        notify();
+        try {
+            lock.lock();
+            if (closer != null)
+                throw new IllegalStateException("closed", closer);
+            queue.add(elem);
+            ready.signal();
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -130,9 +147,14 @@ final class BlockingEnumeration<E> implements Enumeration<E> {
      * will appear as the cause of the thrown exception. Subsequent
      * calls do not update the dummy exception.
      */
-    public synchronized void complete() {
-        if (closer != null) return;
-        closer = new Exception("stack");
-        notify();
+    public void complete() {
+        try {
+            lock.lock();
+            if (closer != null) return;
+            closer = new Exception("stack");
+            ready.signal();
+        } finally {
+            lock.unlock();
+        }
     }
 }
