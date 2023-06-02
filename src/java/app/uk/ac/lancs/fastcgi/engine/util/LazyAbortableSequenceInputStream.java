@@ -113,7 +113,7 @@ class LazyAbortableSequenceInputStream extends InputStream {
      * @param reason the reason for abortion
      */
     public void abort(Throwable reason) {
-        Objects.requireNonNull(reason, "reason");
+        reason = Objects.requireNonNull(reason, "reason");
         try {
             lock.lock();
             if (abortedReason != null) return;
