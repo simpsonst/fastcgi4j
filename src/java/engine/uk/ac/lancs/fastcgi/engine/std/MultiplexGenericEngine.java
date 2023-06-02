@@ -145,14 +145,17 @@ class MultiplexGenericEngine implements Engine {
         this.maxReqsPerConn = maxReqsPerConn;
         this.stdoutBufferSize = stdoutBufferSize;
         this.stderrBufferSize = stderrBufferSize;
-        AtomicInteger ctid = new AtomicInteger(0);
-        ThreadFactory conntf =
-            (r) -> new Thread(conntg, r, "ct-" + ctid.getAndIncrement());
-        /* TODO: With unlimited connections, we should use virtual
-         * threads instead of a cached-thread pool. */
-        this.connExecutor =
-            maxConns == 0 ? Executors.newCachedThreadPool(conntf) :
-                Executors.newFixedThreadPool(maxConns, conntf);
+        final AtomicInteger ctid = new AtomicInteger(0);
+        if (maxConns == 0) {
+            /* With virtual threads, we cannot use the thread group. */
+            ThreadFactory conntf = (r) -> Thread.ofVirtual()
+                .name("ct-" + ctid.getAndIncrement()).unstarted(r);
+            this.connExecutor = Executors.newThreadPerTaskExecutor(conntf);
+        } else {
+            ThreadFactory conntf =
+                (r) -> new Thread(conntg, r, "ct-" + ctid.getAndIncrement());
+            this.connExecutor = Executors.newFixedThreadPool(maxConns, conntf);
+        }
     }
 
     private final Executor connExecutor;
@@ -211,14 +214,18 @@ class MultiplexGenericEngine implements Engine {
                 optimizeBufferSize(stdoutBufferSize,
                                    this.recordsOut.optimumPayloadLength(),
                                    this.recordsOut.alignment());
-            AtomicInteger intSessIds = new AtomicInteger(0);
-            ThreadFactory tf = r -> new Thread(sesstg, r, "session-" + id + "-"
-                + intSessIds.getAndIncrement());
-            /* TODO: With unlimited requests per connection, we should
-             * use virtual threads instead of a cached-thread pool. */
-            this.executor = maxReqsPerConn >= 1 ?
-                Executors.newFixedThreadPool(maxReqsPerConn, tf) :
-                Executors.newCachedThreadPool(tf);
+            final AtomicInteger intSessIds = new AtomicInteger(0);
+            if (maxReqsPerConn > 0) {
+                ThreadFactory tf = r -> Thread.ofVirtual()
+                    .name("session-" + id + "-" + intSessIds.getAndIncrement())
+                    .unstarted(r);
+                this.executor = Executors.newThreadPerTaskExecutor(tf);
+            } else {
+                ThreadFactory tf = r -> new Thread(sesstg, r, "session-" + id
+                    + "-" + intSessIds.getAndIncrement());
+                this.executor =
+                    Executors.newFixedThreadPool(maxReqsPerConn, tf);
+            }
         }
 
         private final Map<Integer, SessionHandler> sessions =
