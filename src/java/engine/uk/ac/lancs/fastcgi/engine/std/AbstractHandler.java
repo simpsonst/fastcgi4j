@@ -52,6 +52,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 import java.util.concurrent.Executor;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import uk.ac.lancs.fastcgi.context.Diagnostics;
 import uk.ac.lancs.fastcgi.context.OverloadException;
 import uk.ac.lancs.fastcgi.context.SessionContext;
@@ -141,9 +143,22 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
         new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
     /**
-     * Holds the thread being used to execute the application.
+     * Holds the thread being used to execute the application. It is set
+     * by the application task as soon as it starts, protected by
+     * {@link #threadLock}.
      */
     private Thread thread;
+
+    /**
+     * Protects {@link #thread} and {@link #appCompleted}.
+     */
+    private final Lock threadLock = new ReentrantLock();
+
+    /**
+     * Set to {@code true} only when the application code has completed.
+     * Protected by {@link #threadLock}.
+     */
+    private boolean appCompleted = false;
 
     /**
      * Records whether the handler has started. This is used to detect
@@ -320,19 +335,28 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
      * appropriately.
      */
     void run() {
-        synchronized (this) {
-            this.thread = Thread.currentThread();
+        try {
+            threadLock.lock();
+            thread = Thread.currentThread();
+        } finally {
+            threadLock.unlock();
         }
         try {
             boolean completed = false;
             try {
                 try {
                     innerRun();
-                    Thread.interrupted();
                 } finally {
-                    synchronized (this) {
-                        this.thread = null;
+                    /* Suppress further interruptions. */
+                    try {
+                        threadLock.lock();
+                        appCompleted = true;
+                    } finally {
+                        threadLock.unlock();
                     }
+
+                    /* Discard any remaining interruptions. */
+                    Thread.interrupted();
                 }
             } catch (RecordIOException ex) {
                 ex.unpack();
@@ -389,11 +413,15 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
         }
     }
 
-    protected synchronized void terminate() {
-        if (thread == null)
-            cleanUp.run();
-        else
-            thread.interrupt();
+    protected void terminate() {
+        try {
+            threadLock.lock();
+            if (thread == null)
+                cleanUp.run();
+            else if (!appCompleted) thread.interrupt();
+        } finally {
+            threadLock.unlock();
+        }
     }
 
     @Override
