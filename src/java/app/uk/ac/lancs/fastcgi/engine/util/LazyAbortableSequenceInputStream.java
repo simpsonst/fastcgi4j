@@ -96,7 +96,7 @@ class LazyAbortableSequenceInputStream extends InputStream {
             lock.lock();
             if (abortedReason != null)
                 throw new IllegalStateException("aborted", abortedReason);
-            if (completed) throw new IllegalStateException("closed");
+            if (completed) throw new IllegalStateException("completed");
             sequence.add(stream);
             ready.signal();
         } finally {
