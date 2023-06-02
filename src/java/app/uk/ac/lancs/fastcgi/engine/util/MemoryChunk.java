@@ -40,7 +40,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import uk.ac.lancs.fastcgi.context.StreamAbortedException;
 
@@ -58,7 +57,7 @@ import uk.ac.lancs.fastcgi.context.StreamAbortedException;
 final class MemoryChunk implements Chunk {
     private final AtomicLong memoryUsage;
 
-    private final Lock lock = new ReentrantLock();
+    private final ReentrantLock lock = new ReentrantLock();
 
     private final Condition ready = lock.newCondition();
 
@@ -216,24 +215,8 @@ final class MemoryChunk implements Chunk {
             lock.lock();
             check();
             try {
-                /* Wait until there's no reason to block. */
-                boolean interrupted = false;
-                while (array != null && !complete && reason == null &&
-                    readPos == writePos) {
-                    try {
-                        ready.await();
-                    } catch (InterruptedException ex) {
-                        interrupted = true;
-                    }
-                }
-
-                /* Re-transmit the interruption. */
-                if (interrupted) Thread.currentThread().interrupt();
-
-                /* Detect errors and end-of-file. */
-                if (array == null) throw new IOException("closed");
-                if (reason != null) throw new StreamAbortedException(reason);
-                if (readPos == writePos) return -1;
+                final int rem = awaitData();
+                if (rem == 0) return -1;
 
                 /* At least one byte is available, so provide it. */
                 memoryUsage.addAndGet(-1);
@@ -244,6 +227,45 @@ final class MemoryChunk implements Chunk {
         } finally {
             lock.unlock();
         }
+    }
+
+    /**
+     * Wait until there is data to be read or some other
+     * stream-terminating condition. The calling thread must hold
+     * {@link #lock}. If an interruption occurs while waiting, the
+     * interruption is recorded, and waiting continues. The interruption
+     * is then re-issued before exiting the method.
+     * 
+     * @return the number of bytes available
+     * 
+     * @throws StreamAbortedException if the stream has been aborted
+     * with {@link #abort(Throwable)}
+     * 
+     * @throws IOException if the input stream has been closed
+     */
+    private int awaitData() throws IOException {
+        assert lock.isHeldByCurrentThread();
+
+        /* Wait until there's no reason to block. */
+        boolean interrupted = false;
+        int rem = -1;
+        while (array != null && reason == null &&
+            (rem = writePos - readPos) == 0 && !complete) {
+            try {
+                ready.await();
+            } catch (InterruptedException ex) {
+                interrupted = true;
+            }
+        }
+
+        /* Re-transmit the interruption. */
+        if (interrupted) Thread.currentThread().interrupt();
+
+        /* Detect errors and end-of-file. */
+        if (array == null) throw new IOException("closed");
+        if (reason != null) throw new StreamAbortedException(reason);
+        assert rem >= 0;
+        return rem;
     }
 
     /**
@@ -276,28 +298,12 @@ final class MemoryChunk implements Chunk {
             lock.lock();
             check();
             try {
-                /* Wait until there's no reason to block. */
-                boolean interrupted = false;
-                while (array != null && !complete && reason == null &&
-                    readPos == writePos) {
-                    try {
-                        ready.await();
-                    } catch (InterruptedException ex) {
-                        interrupted = true;
-                    }
-                }
-
-                /* Re-transmit the interruption. */
-                if (interrupted) Thread.currentThread().interrupt();
-
-                /* Detect errors and end-of-file. */
-                if (array == null) throw new IOException("closed");
-                if (reason != null) throw new StreamAbortedException(reason);
-                if (readPos == writePos) return -1;
+                final int rem = awaitData();
+                if (rem == 0) return -1;
 
                 /* At least one byte is available, so work out how much
                  * to provide, and transfer it. */
-                int amount = Integer.min(len, writePos - readPos);
+                int amount = Integer.min(len, rem);
                 if (amount == 0) return 0;
                 assert amount > 0;
                 System.arraycopy(array, readPos, b, off, amount);
