@@ -215,7 +215,7 @@ class MultiplexGenericEngine implements Engine {
                                    this.recordsOut.optimumPayloadLength(),
                                    this.recordsOut.alignment());
             final AtomicInteger intSessIds = new AtomicInteger(0);
-            if (maxReqsPerConn > 0) {
+            if (maxReqsPerConn == 0) {
                 ThreadFactory tf = r -> Thread.ofVirtual()
                     .name("session-" + id + "-" + intSessIds.getAndIncrement())
                     .unstarted(r);
