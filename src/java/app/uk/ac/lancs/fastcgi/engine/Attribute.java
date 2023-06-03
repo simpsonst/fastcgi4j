@@ -267,4 +267,24 @@ public final class Attribute<V> {
         }
         return base;
     }
+
+    /**
+     * Specifies whether soft threads should be used for all
+     * connections, regardless of the maximum number of connections. The
+     * default is {@code true}. However, hard threads will be used if
+     * soft threads are unavailable (pre-JDK19).
+     */
+    public static final Attribute<Boolean> SOFT_CONN_THREAD =
+        Attribute.of(Boolean.class).withDefault(Boolean.TRUE)
+            .withParser(Boolean::valueOf).define();
+
+    /**
+     * Specifies whether soft threads should be used for all sessions,
+     * regardless of the maximum number of sessions per connection. The
+     * default is {@code true}. However, hard threads will be used if
+     * soft threads are unavailable (pre-JDK19).
+     */
+    public static final Attribute<Boolean> SOFT_SESS_THREAD =
+        Attribute.of(Boolean.class).withDefault(Boolean.TRUE)
+            .withParser(Boolean::valueOf).define();
 }

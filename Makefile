@@ -7,6 +7,7 @@ XARGS ?= xargs
 CMP ?= cmp -s
 CP ?= cp
 
+ENABLE_SOFT ?= yes
 #ENABLE_UNIX ?= yes
 
 VWORDS:=$(shell src/getversion.sh --prefix=v MAJOR MINOR PATCH)
@@ -34,6 +35,14 @@ trees_fastcgi4j_api += api
 
 SELECTED_JARS += fastcgi4j_app
 trees_fastcgi4j_app += app
+
+SELECTED_JARS += fastcgi4j_threads
+trees_fastcgi4j_threads += threads
+
+ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_SOFT))),)
+SELECTED_JARS += fastcgi4j_soft
+trees_fastcgi4j_soft += soft
+endif
 
 SELECTED_JARS += fastcgi4j_engine
 trees_fastcgi4j_engine += engine
@@ -68,10 +77,16 @@ jars += tests
 roots_api += $(found_api)
 roots_app += $(found_app)
 deps_app += api
+roots_threads += $(found_threads)
+deps_threads += app
+roots_soft += $(found_soft)
+deps_soft += app
+deps_soft += threads
 roots_engine += $(found_engine)
 deps_engine += api
 deps_engine += app
 deps_engine += proto
+deps_engine += threads
 roots_proto += $(found_proto)
 roots_unix += $(found_unix)
 deps_unix += app
@@ -118,6 +133,10 @@ DOC_PKGS += uk.ac.lancs.fastcgi.app
 DOC_PKGS += uk.ac.lancs.fastcgi.engine
 DOC_PKGS += uk.ac.lancs.fastcgi.engine.util
 DOC_PKGS += uk.ac.lancs.fastcgi.engine.std
+DOC_PKGS += uk.ac.lancs.fastcgi.engine.std.threading
+ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_SOFT))),)
+DOC_PKGS += uk.ac.lancs.fastcgi.engine.std.threading.soft
+endif
 DOC_PKGS += uk.ac.lancs.fastcgi.proto
 DOC_PKGS += uk.ac.lancs.fastcgi.proto.serial
 DOC_PKGS += uk.ac.lancs.fastcgi.transport

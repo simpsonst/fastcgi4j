@@ -37,6 +37,7 @@
 package uk.ac.lancs.fastcgi.engine.std;
 
 import java.nio.charset.Charset;
+import java.util.ServiceLoader;
 import java.util.function.Function;
 import uk.ac.lancs.fastcgi.Authorizer;
 import uk.ac.lancs.fastcgi.Filter;
@@ -45,8 +46,10 @@ import uk.ac.lancs.fastcgi.engine.Attribute;
 import uk.ac.lancs.fastcgi.engine.Engine;
 import uk.ac.lancs.fastcgi.engine.EngineConfiguration;
 import uk.ac.lancs.fastcgi.engine.EngineFactory;
-import uk.ac.lancs.scc.jardeps.Service;
+import uk.ac.lancs.fastcgi.engine.std.threading.ThreadingManager;
+import uk.ac.lancs.fastcgi.engine.std.threading.ThreadingManagerFactory;
 import uk.ac.lancs.fastcgi.transport.Transport;
+import uk.ac.lancs.scc.jardeps.Service;
 
 /**
  * Provides engines which can handle responders, authorizers and
@@ -64,6 +67,17 @@ import uk.ac.lancs.fastcgi.transport.Transport;
  */
 @Service(EngineFactory.class)
 public class MultiplexGenericEngineFactory implements EngineFactory {
+    private ThreadingManager getThreading(EngineConfiguration config,
+                                          int maxConn, int maxSessPerConn) {
+        for (ThreadingManagerFactory factory : ServiceLoader
+            .load(ThreadingManagerFactory.class,
+                  MultiplexGenericEngineFactory.class.getClassLoader())) {
+            ThreadingManager cand = factory.getManager(config);
+            if (cand != null) return cand;
+        }
+        return new DefaultThreadingManager(maxConn, maxSessPerConn);
+    }
+
     @Override
     public Function<? super Transport, ? extends Engine>
         test(EngineConfiguration config) {
@@ -84,9 +98,14 @@ public class MultiplexGenericEngineFactory implements EngineFactory {
         int outBufSize = config.get(Attribute.BUFFER_SIZE);
         if (outBufSize < 0) return null;
 
+        final ThreadingManager threading =
+            getThreading(config, maxConn == null ? 0 : maxConn,
+                         maxSessPerConn == null ? 0 : maxSessPerConn);
+
         /* Create the factory for creating the engine from a connection
          * supply. */
-        return cs -> new MultiplexGenericEngine(cs, Charset.defaultCharset(),
+        return cs -> new MultiplexGenericEngine(cs, threading,
+                                                Charset.defaultCharset(),
                                                 responder, authorizer, filter,
                                                 maxConn != null ? maxConn : 0,
                                                 maxSessPerConn != null ?

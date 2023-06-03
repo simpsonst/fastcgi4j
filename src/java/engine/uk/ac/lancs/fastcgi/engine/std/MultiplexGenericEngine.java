@@ -36,6 +36,7 @@
 
 package uk.ac.lancs.fastcgi.engine.std;
 
+import uk.ac.lancs.fastcgi.engine.std.threading.ThreadingManager;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -44,8 +45,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -78,6 +77,8 @@ class MultiplexGenericEngine implements Engine {
 
     private final Transport connections;
 
+    private final ThreadingManager threading;
+
     private final Responder responder;
 
     private final Authorizer authorizer;
@@ -103,6 +104,8 @@ class MultiplexGenericEngine implements Engine {
      * Create an engine.
      * 
      * @param connections the supply of connections
+     * 
+     * @param threading a means to create thread-related resources
      * 
      * @param charset the character encoding for handling parameters
      * from the server, application variable names and values, and
@@ -130,12 +133,14 @@ class MultiplexGenericEngine implements Engine {
      * 
      * @param stderrBufferSize the standard error output buffer size
      */
-    public MultiplexGenericEngine(Transport connections, Charset charset,
+    public MultiplexGenericEngine(Transport connections,
+                                  ThreadingManager threading, Charset charset,
                                   Responder responder, Authorizer authorizer,
                                   Filter filter, int maxConns,
                                   int maxReqsPerConn, int maxReqs,
                                   int stdoutBufferSize, int stderrBufferSize) {
         this.connections = connections;
+        this.threading = threading;
         this.charset = charset;
         this.responder = responder;
         this.authorizer = authorizer;
@@ -145,17 +150,7 @@ class MultiplexGenericEngine implements Engine {
         this.maxReqsPerConn = maxReqsPerConn;
         this.stdoutBufferSize = stdoutBufferSize;
         this.stderrBufferSize = stderrBufferSize;
-        final AtomicInteger ctid = new AtomicInteger(0);
-        if (maxConns == 0) {
-            /* With virtual threads, we cannot use the thread group. */
-            ThreadFactory conntf = (r) -> Thread.ofVirtual()
-                .name("ct-" + ctid.getAndIncrement()).unstarted(r);
-            this.connExecutor = Executors.newThreadPerTaskExecutor(conntf);
-        } else {
-            ThreadFactory conntf =
-                (r) -> new Thread(conntg, r, "ct-" + ctid.getAndIncrement());
-            this.connExecutor = Executors.newFixedThreadPool(maxConns, conntf);
-        }
+        this.connExecutor = threading.newConnectionExecutor(conntg);
     }
 
     private final Executor connExecutor;
@@ -214,18 +209,7 @@ class MultiplexGenericEngine implements Engine {
                 optimizeBufferSize(stdoutBufferSize,
                                    this.recordsOut.optimumPayloadLength(),
                                    this.recordsOut.alignment());
-            final AtomicInteger intSessIds = new AtomicInteger(0);
-            if (maxReqsPerConn == 0) {
-                ThreadFactory tf = r -> Thread.ofVirtual()
-                    .name("session-" + id + "-" + intSessIds.getAndIncrement())
-                    .unstarted(r);
-                this.executor = Executors.newThreadPerTaskExecutor(tf);
-            } else {
-                ThreadFactory tf = r -> new Thread(sesstg, r, "session-" + id
-                    + "-" + intSessIds.getAndIncrement());
-                this.executor =
-                    Executors.newFixedThreadPool(maxReqsPerConn, tf);
-            }
+            this.executor = threading.newSessionExceutor(sesstg);
         }
 
         private final Map<Integer, SessionHandler> sessions =
