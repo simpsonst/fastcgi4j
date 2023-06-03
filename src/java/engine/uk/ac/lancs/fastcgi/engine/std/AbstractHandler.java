@@ -75,6 +75,11 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
     final int id;
 
     /**
+     * Holds the id of the owning connection.
+     */
+    final int connId;
+
+    /**
      * Holds the diagnostic structure to help cross-referencing of
      * error/log messages.
      */
@@ -254,6 +259,7 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
      */
     public AbstractHandler(HandlerContext ctxt) {
         this.id = ctxt.id;
+        this.connId = ctxt.connId;
         this.diags =
             new Diagnostics(ctxt.impl, ctxt.connDescr, ctxt.intConnDescr,
                             Integer.toString(ctxt.connId), id);
@@ -335,6 +341,7 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
      * appropriately.
      */
     void run() {
+        Thread.currentThread().setName("fastcgi-sess-" + connId + "-" + id);
         try {
             threadLock.lock();
             thread = Thread.currentThread();
@@ -410,6 +417,7 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
             connAbort.run();
         } finally {
             cleanUp.run();
+            Thread.currentThread().setName("fastcgi-sess-unused");
         }
     }
 

@@ -235,6 +235,7 @@ class MultiplexGenericEngine implements Engine {
 
         @Override
         public void run() {
+            Thread.currentThread().setName("fastcgi4j-ct-" + id);
             try {
                 while ((keepGoing || !sessions.isEmpty()) &&
                     recordsIn.processRecord()) {
@@ -245,6 +246,8 @@ class MultiplexGenericEngine implements Engine {
                 /* There was an error reading to or writing from the
                  * connection. */
                 logger.log(Level.SEVERE, "connection " + id, ex);
+            } finally {
+                Thread.currentThread().setName("fastcgi4j-ct-unused");
             }
         }
 
