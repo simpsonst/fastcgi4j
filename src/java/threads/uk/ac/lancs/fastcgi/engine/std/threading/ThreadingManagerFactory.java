@@ -38,6 +38,7 @@
 
 package uk.ac.lancs.fastcgi.engine.std.threading;
 
+import uk.ac.lancs.fastcgi.engine.Attribute;
 import uk.ac.lancs.fastcgi.engine.EngineConfiguration;
 
 /**
