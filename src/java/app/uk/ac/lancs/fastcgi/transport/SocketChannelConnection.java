@@ -163,8 +163,7 @@ public class SocketChannelConnection implements Connection {
      * @param intDescr sensitive information describing this connection
      */
     public SocketChannelConnection(SocketChannel channel, String descr,
-                                   String intDescr)
-        throws IOException {
+                                   String intDescr) {
         this.channel = channel;
         this.descr = descr;
         this.intDescr = intDescr;
