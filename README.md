@@ -98,7 +98,9 @@ Options:
 
 * `--bind PATH` &ndash; Run stand-alone, bound to Unix-domain rendezvous point `PATH`, which must be absolute.
 
-* `--peer HOST` &ndash; Add `HOST` to set of permitted peers in stand-alone mode.
+* `--peer PEER` &ndash; Add `PEER` to set of permitted peers in stand-alone mode.
+  For Internet-domain, `PEER` is a hostname or IP address.
+  For Unix-domain, `PEER` is `USER`, `@GROUP`, or `USER@GROUP`.
 
 * `-f FILE` &ndash; Load properties in `FILE`, and push onto stack.
 

@@ -91,10 +91,10 @@ public final class InvocationVariables {
     /**
      * Get the set of IP addresses of legitimate peers as a set of
      * structured data. This reads from the environment variable
-     * {@value #INET_SERVER_ADDRS}, which is only to be used when
-     * operating in stand-alone mode. The result is cached, so only the
-     * first call will actually do anything. An exception in the first
-     * call is preserved for other calls, so its stack trace will not be
+     * {@value #LEGIT_PEERS}, which is only to be used when operating in
+     * stand-alone mode. The result is cached, so only the first call
+     * will actually do anything. An exception in the first call is
+     * preserved for other calls, so its stack trace will not be
      * correct.
      * 
      * @return an unmodifiable set of IP addresses; or {@code null} if
@@ -107,7 +107,7 @@ public final class InvocationVariables {
      */
     public static Collection<InetAddress> getAuthorizedStandaloneInetPeers()
         throws UnknownHostException {
-        return getPermittedPeers(INET_SERVER_ADDRS);
+        return getPermittedPeers(LEGIT_PEERS);
     }
 
     /**
@@ -216,10 +216,11 @@ public final class InvocationVariables {
 
     /**
      * Specifies the name of the environment variable identifying IP
-     * addresses of legitimate peers when running in stand-alone mode.
-     * The value is {@value}.
+     * addresses of legitimate peers (Internet-domain) or names of
+     * legitimate users/groups (Unix-domain) when running in stand-alone
+     * mode. The value is {@value}.
      */
-    public static final String INET_SERVER_ADDRS = "FASTCGI4J_WEB_SERVER_ADDRS";
+    public static final String LEGIT_PEERS = "FASTCGI4J_WEB_SERVER_ADDRS";
 
     /**
      * Specifies the name of the environment variable instructing the
