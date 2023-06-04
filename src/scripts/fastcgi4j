@@ -110,6 +110,8 @@ Usage: $SELF [options] [handler|--] [args...]
 	Reset classpath.
 -JARG
 	Add ARG to JVM arguments.
+-eaARG
+	Add -eaARG to JVM arguments.  ARG may be empty.
 --jvm PROG
 	Use PROG as java command.
 --seek
