@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Lancaster University
+ * Copyright (c) 2022,2023, Lancaster University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

@@ -203,7 +203,7 @@ jtests: $(jars:%=$(JARDEPS_OUTDIR)/%.jar)
 
 # Set this to the comma-separated list of years that should appear in
 # the licence.  Do not use characters other than [-0-9,] - no spaces.
-YEARS=2022
+YEARS=2022,2023
 
 update-licence:
 	$(FIND) . -name ".git" -prune -or -type f -print0 | $(XARGS) -0 \
