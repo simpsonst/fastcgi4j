@@ -7,3 +7,5 @@
 /jardeps-install.sh
 /BUILD
 /VERSION
+/config.mk
+/fastcgi4j-env.mk
