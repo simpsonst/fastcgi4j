@@ -102,6 +102,9 @@ public abstract class SocketChannelTransport implements Transport {
      * 
      * @return a public description of the channel; or {@code null} if
      * the connection is to be rejected
+     * 
+     * @throws IOException if an I/O error occurs, usually in
+     * determining whether to build a connection
      */
     protected abstract String describe(SocketChannel channel)
         throws IOException;
