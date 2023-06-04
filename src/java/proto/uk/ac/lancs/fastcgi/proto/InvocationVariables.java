@@ -216,7 +216,7 @@ public final class InvocationVariables {
 
     /**
      * Specifies the name of the environment variable identifying IP
-     * addresses of legitimate peers when running in stand-alone more.
+     * addresses of legitimate peers when running in stand-alone mode.
      * The value is {@value}.
      */
     public static final String INET_SERVER_ADDRS = "FASTCGI4J_WEB_SERVER_ADDRS";
