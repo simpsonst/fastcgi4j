@@ -84,7 +84,7 @@ Options:
 * `-eaARG` &ndash; Add `-eaARG` to JVM arguments.
   `ARG` may be empty.
 
-* `--jvm PROG` &ndash; Use PROG as java command.
+* `--jvm PROG` &ndash; Use `PROG` as java command.
   Default is just `java`.
 
 * `--seek` &ndash; Seek `FastCGIApplication` service instead of taking first application argument (handler) as class name.
@@ -212,8 +212,8 @@ A stand-alone Internet-domain implementation in Java is fairly trivial.
 Unix-domain and server-managed implementations are more problematic.
 The first requires Unix-domain sockets in Java, and the second requires a means to get a server socket from file descriptor 0, which is how a socket is provided to a server-managed process.
 
-JDK 16 introduced [`UnixDomainSocketAddress`](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/UnixDomainSocketAddress.html), and presumably some Unix-domain socket support appeared at the same time.
+JDK 16 introduced [`UnixDomainSocketAddress`](https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/net/UnixDomainSocketAddress.html), and presumably some Unix-domain socket support appeared at the same time.
 In OpenJDK 18, this is (still?) limited to a `ServerSocketChannel`;
 you can't have a Unix-domain `ServerSocket`, only the channel.
-As far back as JDK 1.5, [`System.inheritedChannel`](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/System.html#inheritedChannel()) could provide access (on Linux, at least) to file descriptor 0, and generate a `ServerSocketChannel` from it.
+As far back as JDK 1.5, [`System.inheritedChannel`](https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/System.html#inheritedChannel()) could provide access (on Linux, at least) to file descriptor 0, and generate a `ServerSocketChannel` from it.
 Hence, both Unix-domain and server-managed implementations (and the combination of both) are possible natively.
