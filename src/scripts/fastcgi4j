@@ -329,7 +329,7 @@ if [[ "$bindaddr" =~ ^/ ]] ; then
     export FASTCGI4J_UNIX_BIND="$bindaddr"
 elif [ -n "$bindaddr" ] ; then
     export FASTCGI4J_INET_BIND="$bindaddr"
-    export FASTCGI4J_WEB_SERVER_ADDRS="$(printf ':%s' "${peers[@]}")"
+    export FASTCGI4J_WEB_SERVER_ADDRS="$(printf ',%s' "${peers[@]}")"
     FASTCGI4J_WEB_SERVER_ADDRS="${FASTCGI4J_WEB_SERVER_ADDRS:1}"
 fi
 
