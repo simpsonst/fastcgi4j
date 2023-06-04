@@ -92,14 +92,14 @@ public final class CachePipePool implements PipePool {
     public static final String SUFFIX = ".chunk";
 
     /**
-     * The default size in bytes for chunk files, namely {@value},
-     * overridden by {@link Builder#maxFileSize(long)}
+     * The default size in bytes for chunk files, namely
+     * {@value}, overridden by {@link Builder#maxFileSize(long)}
      */
     public static final long MAX_FILE_SIZE = 1 * 1024 * 1024;
 
     /**
-     * The default size in bytes of each memory chunk, namely {@value},
-     * overridden by {@link Builder#memChunkSize(int)}
+     * The default size in bytes of each memory chunk, namely
+     * {@value}, overridden by {@link Builder#memChunkSize(int)}
      */
     public static final int MEM_CHUNK_SIZE = 1024;
 

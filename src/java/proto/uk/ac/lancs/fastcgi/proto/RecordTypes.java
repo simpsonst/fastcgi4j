@@ -139,8 +139,8 @@ public final class RecordTypes {
 
     /**
      * Indicates that the content is a list of application variable
-     * names requested by the server. The value is {@value},
-     * corresponding to <code>FCGI_GET_VALUES</code>. See
+     * names requested by the server. The value is
+     * {@value}, corresponding to <code>FCGI_GET_VALUES</code>. See
      * {@link ApplicationVariables} for standard variable names.
      * 
      * @see <a href=

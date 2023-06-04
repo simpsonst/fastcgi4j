@@ -50,8 +50,8 @@ public final class ProtocolStatuses {
     private ProtocolStatuses() {}
 
     /**
-     * Indicates that the request is complete. The value is {@value},
-     * corresponding to <code>FCGI_REQUEST_COMPLETE</code>.
+     * Indicates that the request is complete. The value is
+     * {@value}, corresponding to <code>FCGI_REQUEST_COMPLETE</code>.
      */
     public static final byte REQUEST_COMPLETE = 0;
 

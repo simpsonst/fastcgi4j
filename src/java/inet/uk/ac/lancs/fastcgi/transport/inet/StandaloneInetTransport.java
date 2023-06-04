@@ -73,7 +73,7 @@ class StandaloneInetTransport extends SocketTransport {
      * {@link InetSocketAddress}
      */
     public StandaloneInetTransport(String descrPrefix, ServerSocket socket,
-                         Collection<? extends InetAddress> allowedPeers) {
+                                   Collection<? extends InetAddress> allowedPeers) {
         super(socket);
 
         /* Force a class-cast exception if the socket is not bound to

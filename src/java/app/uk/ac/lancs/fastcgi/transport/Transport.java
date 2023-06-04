@@ -61,8 +61,8 @@ public interface Transport {
      * will yield the same result for the same argument.
      * 
      * @param loader the class loader to be used to find services
-     * implementing {@link TransportFactory}; or {@code null} to use
-     * the context class loader of the calling thread
+     * implementing {@link TransportFactory}; or {@code null} to use the
+     * context class loader of the calling thread
      * 
      * @return the connection supply
      * 
@@ -89,8 +89,8 @@ public interface Transport {
      * calling thread.
      * 
      * @param loader the class loader to be used to find services
-     * implementing {@link TransportFactory}; or {@code null} to use
-     * the context class loader of the calling thread
+     * implementing {@link TransportFactory}; or {@code null} to use the
+     * context class loader of the calling thread
      * 
      * @return the connection supply
      * 

@@ -58,4 +58,3 @@
  * Specification &mdash; Initial Process State</a>
  */
 package uk.ac.lancs.fastcgi.transport;
-
