@@ -78,9 +78,7 @@ class StandaloneInetTransport extends SocketTransport {
 
         /* Force a class-cast exception if the socket is not bound to
          * the right type. */
-        @SuppressWarnings("unused")
-        InetSocketAddress localAddr =
-            (InetSocketAddress) socket.getLocalSocketAddress();
+        InetSocketAddress.class.cast(socket.getLocalSocketAddress());
 
         this.descrPrefix = descrPrefix;
         this.allowedPeers = Set.copyOf(allowedPeers);
