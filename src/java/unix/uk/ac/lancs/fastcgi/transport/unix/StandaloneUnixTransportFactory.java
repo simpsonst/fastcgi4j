@@ -151,6 +151,7 @@ public class StandaloneUnixTransportFactory implements TransportFactory {
      */
     private static Collection<PrincipalRequirement>
         parsePrincipals(String text) {
+        if (text == null) return null;
         Collection<PrincipalRequirement> result = new HashSet<>();
         for (String item : COMMA.split(text)) {
             PrincipalRequirement req = PrincipalRequirement.of(item);
