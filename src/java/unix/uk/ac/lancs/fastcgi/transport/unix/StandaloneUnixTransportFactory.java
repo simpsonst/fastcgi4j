@@ -41,6 +41,11 @@ import java.net.StandardProtocolFamily;
 import java.net.UnixDomainSocketAddress;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -220,10 +225,15 @@ public class StandaloneUnixTransportFactory implements TransportFactory {
                         .anyMatch(t -> t.test(principal));
                 };
 
-            UnixDomainSocketAddress addr = UnixDomainSocketAddress.of(pathText);
+            Path path = Paths.get(pathText);
+            UnixDomainSocketAddress addr = UnixDomainSocketAddress.of(path);
             final ServerSocketChannel ssc =
                 ServerSocketChannel.open(StandardProtocolFamily.UNIX);
             ssc.bind(addr);
+            Set<PosixFilePermission> perms =
+                PosixFilePermissions.fromString("rwxrwxrwx");
+            Files.setPosixFilePermissions(path, perms);
+            path.toFile().deleteOnExit();
             return new SocketChannelTransport(ssc) {
                 @Override
                 protected String describe(SocketChannel channel)
