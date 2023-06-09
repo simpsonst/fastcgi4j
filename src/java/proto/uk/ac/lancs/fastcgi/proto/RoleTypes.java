@@ -83,4 +83,28 @@ public final class RoleTypes {
      * Specification &mdash; Filter</a> from the FastCGI specification
      */
     public static final int FILTER = 3;
+
+    /**
+     * Get a string representation of a role.
+     * 
+     * @param role the numeric role
+     * 
+     * @return the role as a string, including the role number if
+     * unknown
+     */
+    public static String toString(int role) {
+        switch (role) {
+        case RESPONDER:
+            return "RESPONDER";
+
+        case AUTHORIZER:
+            return "AUTHORIZER";
+
+        case FILTER:
+            return "FILTER";
+
+        default:
+            return "ROLE_TYPE_" + role;
+        }
+    }
 }

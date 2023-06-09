@@ -55,4 +55,23 @@ public final class RequestFlags {
      * {@value}, corresponding to <code>FCGI_KEEP_CONN</code>.
      */
     public static final int KEEP_CONN = 1;
+
+    /**
+     * Get a string representation of a set of flags. Unknown flags up
+     * to the first 8 bits are represented by their bit positions.
+     * 
+     * @param flags the flags as a bit field
+     * 
+     * @return the string representation
+     */
+    public static String toString(int flags) {
+        StringBuilder result = new StringBuilder();
+        if ((flags & KEEP_CONN) != 0) {
+            flags &= ~KEEP_CONN;
+            result.append("|KEEP_CONN");
+        }
+        for (int i = 0; i < 8; i++)
+            if ((flags & (1 << i)) != 0) result.append("|FLAG_").append(i);
+        return result.toString();
+    }
 }

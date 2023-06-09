@@ -171,4 +171,52 @@ public final class RecordTypes {
      * Specification &mdash; <code>FCGI_UNKNOWN_TYPE</code></a>
      */
     public static final byte UNKNOWN_TYPE = 11;
+
+    /**
+     * Get a string representation of a record type.
+     * 
+     * @param type the record type
+     * 
+     * @return the string representation, including the numeric value if
+     * unknown
+     */
+    public static String toString(int type) {
+        switch (type) {
+        case ABORT_REQUEST:
+            return "ABORT_REQUEST";
+
+        case BEGIN_REQUEST:
+            return "BEGIN_REQUEST";
+
+        case DATA:
+            return "DATA";
+
+        case END_REQUEST:
+            return "END_REQUEST";
+
+        case GET_VALUES:
+            return "GET_VALUES";
+
+        case GET_VALUES_RESULT:
+            return "GET_VALUES_RESULT";
+
+        case PARAMS:
+            return "PARAMS";
+
+        case STDERR:
+            return "STDERR";
+
+        case STDIN:
+            return "STDIN";
+
+        case STDOUT:
+            return "STDOUT";
+
+        case UNKNOWN_TYPE:
+            return "UNKNOWN_TYPE";
+
+        default:
+            return "RECORD_TYPE_" + type;
+        }
+    }
 }

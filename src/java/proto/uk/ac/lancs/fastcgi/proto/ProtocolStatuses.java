@@ -75,4 +75,31 @@ public final class ProtocolStatuses {
      * <code>FCGI_UNKNOWN_ROLE</code>.
      */
     public static final byte UNKNOWN_ROLE = 3;
+
+    /**
+     * Get a string representation of a protocol status.
+     * 
+     * @param status the status
+     * 
+     * @return the string representation, including the numeric value if
+     * unknown
+     */
+    public static String toString(int status) {
+        switch (status) {
+        case REQUEST_COMPLETE:
+            return "REQUEST_COMPLETE";
+
+        case CANT_MPX_CONN:
+            return "CANT_MPX_CONN";
+
+        case OVERLOADED:
+            return "OVERLOADED";
+
+        case UNKNOWN_ROLE:
+            return "UNKNOWN_ROLE";
+
+        default:
+            return "PROTOCOL_STATUS_" + status;
+        }
+    }
 }
