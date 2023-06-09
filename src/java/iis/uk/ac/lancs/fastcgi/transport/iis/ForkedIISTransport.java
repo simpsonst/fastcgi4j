@@ -40,6 +40,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import uk.ac.lancs.fastcgi.transport.Connection;
 import uk.ac.lancs.fastcgi.transport.Transport;
 
@@ -121,11 +124,30 @@ class ForkedIISTransport implements Transport {
 
     private Connection primary;
 
+    private boolean more = true;
+
+    private final Lock lock = new ReentrantLock();
+
+    private final Condition ready = lock.newCondition();
+
+    /**
+     * Stop blocking on subsequent requests for the next connection.
+     */
+    public void terminate() {
+        try {
+            lock.lock();
+            more = false;
+            ready.signalAll();
+        } finally {
+            lock.unlock();
+        }
+    }
+
     /**
      * {@inheritDoc}
      * 
      * @default On the first call, the sole connection is returned. A
-     * subsequent call will block indefinitely.
+     * subsequent call will block until {@link #terminate() } is called.
      */
     @Override
     public Connection nextConnection() throws IOException {
@@ -135,11 +157,15 @@ class ForkedIISTransport implements Transport {
             return result;
         }
 
-        for (;;)
-            try {
-                Thread.sleep(100000);
-            } catch (InterruptedException ex) {
-                // Do nothing.
-            }
+        try {
+            lock.lock();
+            while (more)
+                ready.await();
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        } finally {
+            lock.unlock();
+        }
+        return null;
     }
 }
