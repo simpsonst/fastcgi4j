@@ -42,10 +42,10 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.Collection;
 import uk.ac.lancs.fastcgi.proto.InvocationVariables;
-import uk.ac.lancs.fastcgi.transport.TransportConfigurationException;
-import uk.ac.lancs.scc.jardeps.Service;
 import uk.ac.lancs.fastcgi.transport.Transport;
+import uk.ac.lancs.fastcgi.transport.TransportConfigurationException;
 import uk.ac.lancs.fastcgi.transport.TransportFactory;
+import uk.ac.lancs.scc.jardeps.Service;
 
 /**
  * Recognizes stand-alone Internet-domain transports. The environment
