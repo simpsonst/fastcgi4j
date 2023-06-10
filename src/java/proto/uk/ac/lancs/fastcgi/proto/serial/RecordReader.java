@@ -255,15 +255,7 @@ public class RecordReader {
         }
 
         /* Skip over trailing padding. */
-        while (plen > 0) {
-            long got = in.skip(plen);
-            plen -= got;
-            if (got == 0 && plen > 0) {
-                int c = in.read();
-                if (c < 0) return false;
-                plen--;
-            }
-        }
+        skip(plen);
 
         return true;
     }
