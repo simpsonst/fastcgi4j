@@ -37,6 +37,7 @@
 package uk.ac.lancs.fastcgi.proto.serial;
 
 import java.io.IOException;
+import java.util.Objects;
 
 /**
  * Indicates an error reading or writing a record stream. It always has
@@ -51,18 +52,22 @@ public class RecordIOException extends IOException {
      * @param message the detail message
      * 
      * @param cause the cause
+     * 
+     * @throws NullPointerException if the cause is {@code null}
      */
     public RecordIOException(String message, IOException cause) {
-        super(message, cause);
+        super(message, Objects.requireNonNull(cause, "cause"));
     }
 
     /**
      * Create an exception with a cause.
      * 
      * @param cause the cause
+     * 
+     * @throws NullPointerException if the cause is {@code null}
      */
     public RecordIOException(IOException cause) {
-        super(cause);
+        super(Objects.requireNonNull(cause, "cause"));
     }
 
     /**
