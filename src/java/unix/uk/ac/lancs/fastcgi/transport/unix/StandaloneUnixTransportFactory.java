@@ -225,9 +225,14 @@ public class StandaloneUnixTransportFactory implements TransportFactory {
             final ServerSocketChannel ssc =
                 ServerSocketChannel.open(StandardProtocolFamily.UNIX);
             ssc.bind(addr);
-            Set<PosixFilePermission> perms =
-                PosixFilePermissions.fromString("rwxrwxrwx");
-            Files.setPosixFilePermissions(path, perms);
+
+            /* Ensure the rendezvous point is accessible by all (if we
+             * have a set of allowed peers), and delete it on exit. */
+            if (allowedPeers == null) {
+                Set<PosixFilePermission> perms =
+                    PosixFilePermissions.fromString("rwxrwxrwx");
+                Files.setPosixFilePermissions(path, perms);
+            }
             path.toFile().deleteOnExit();
             return new SocketChannelTransport(ssc) {
                 @Override
