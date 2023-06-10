@@ -37,8 +37,8 @@
 package uk.ac.lancs.fastcgi.engine.std;
 
 import java.util.Objects;
-import uk.ac.lancs.fastcgi.context.AuthorizerContext;
 import uk.ac.lancs.fastcgi.Authorizer;
+import uk.ac.lancs.fastcgi.context.AuthorizerContext;
 
 /**
  * Handles Authorizer sessions.
