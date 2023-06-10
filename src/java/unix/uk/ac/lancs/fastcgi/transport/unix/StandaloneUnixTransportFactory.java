@@ -212,6 +212,7 @@ public class StandaloneUnixTransportFactory implements TransportFactory {
             String pathText = System.getenv(InvocationVariables.UNIX_BIND_ADDR);
             if (pathText == null) return null;
 
+            /* Determine who is allowed to connect. */
             Collection<PrincipalRequirement> allowedPeers =
                 getAuthorizedStandalonePrincipals();
             Predicate<UnixDomainPrincipal> peerOkay =
@@ -220,6 +221,7 @@ public class StandaloneUnixTransportFactory implements TransportFactory {
                         .anyMatch(t -> t.test(principal));
                 };
 
+            /* Bind to the configured path. */
             Path path = Paths.get(pathText);
             UnixDomainSocketAddress addr = UnixDomainSocketAddress.of(path);
             final ServerSocketChannel ssc =
@@ -234,6 +236,9 @@ public class StandaloneUnixTransportFactory implements TransportFactory {
                 Files.setPosixFilePermissions(path, perms);
             }
             path.toFile().deleteOnExit();
+
+            /* Build a transport out of the server socket that checks
+             * and names each accepted connection. */
             return new SocketChannelTransport(ssc) {
                 @Override
                 protected String describe(SocketChannel channel)
