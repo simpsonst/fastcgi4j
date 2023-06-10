@@ -597,12 +597,13 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
      * 
      * @param code the code to convert
      * 
-     * @return the equivalent message; or {@code "UNKNOWN"}.
+     * @return the equivalent message; or {@code "UNKNOWN-RESPONSE-"}
+     * followed by the code.
      */
     private static String getStatusMessage(int code) {
         switch (code) {
         default:
-            return "UNKNOWN";
+            return "UNKNOWN-RESPONSE-" + code;
 
         case 100:
             return "Continue";
