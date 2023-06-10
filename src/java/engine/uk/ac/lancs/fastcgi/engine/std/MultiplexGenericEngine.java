@@ -273,7 +273,7 @@ class MultiplexGenericEngine implements Engine {
                 return;
             }
 
-            if ((flags & RequestFlags.KEEP_CONN) != 0) {
+            if ((flags & RequestFlags.KEEP_CONN) == 0) {
                 /* The server tells us we're not going to use this
                  * connection any more for new requests. */
                 keepGoing = false;
