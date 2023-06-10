@@ -51,6 +51,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import jdk.net.ExtendedSocketOptions;
 import jdk.net.UnixDomainPrincipal;
@@ -205,10 +206,6 @@ public class StandaloneUnixTransportFactory implements TransportFactory {
         return parsePrincipals(text);
     }
 
-    private interface SocketChannelPredicate {
-        boolean test(SocketChannel channel) throws IOException;
-    }
-
     @Override
     public Transport getTransport() {
         try {
@@ -217,10 +214,8 @@ public class StandaloneUnixTransportFactory implements TransportFactory {
 
             Collection<PrincipalRequirement> allowedPeers =
                 getAuthorizedStandalonePrincipals();
-            SocketChannelPredicate peerOkay =
-                allowedPeers == null ? channel -> true : channel -> {
-                    UnixDomainPrincipal principal =
-                        channel.getOption(ExtendedSocketOptions.SO_PEERCRED);
+            Predicate<UnixDomainPrincipal> peerOkay =
+                allowedPeers == null ? principal -> true : principal -> {
                     return allowedPeers.stream()
                         .anyMatch(t -> t.test(principal));
                 };
@@ -238,7 +233,9 @@ public class StandaloneUnixTransportFactory implements TransportFactory {
                 @Override
                 protected String describe(SocketChannel channel)
                     throws IOException {
-                    if (!peerOkay.test(channel)) return null;
+                    UnixDomainPrincipal principal =
+                        channel.getOption(ExtendedSocketOptions.SO_PEERCRED);
+                    if (!peerOkay.test(principal)) return null;
                     return STANDALONE_DESCRIPTION;
                 }
             };
