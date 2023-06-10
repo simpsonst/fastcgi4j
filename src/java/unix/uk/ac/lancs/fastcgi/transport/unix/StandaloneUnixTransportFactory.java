@@ -52,6 +52,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import jdk.net.ExtendedSocketOptions;
 import jdk.net.UnixDomainPrincipal;
@@ -179,6 +180,8 @@ public class StandaloneUnixTransportFactory implements TransportFactory {
         try {
             Collection<PrincipalRequirement> value =
                 parsePrincipalsEnvironment(varName);
+            logger.info(() -> String.format("UNIX peers for %s detected as %s",
+                                            varName, value));
             return () -> value;
         } catch (IllegalArgumentException ex) {
             return () -> {
@@ -245,8 +248,17 @@ public class StandaloneUnixTransportFactory implements TransportFactory {
                     throws IOException {
                     UnixDomainPrincipal principal =
                         channel.getOption(ExtendedSocketOptions.SO_PEERCRED);
-                    if (!peerOkay.test(principal)) return null;
-                    return STANDALONE_DESCRIPTION;
+                    if (!peerOkay.test(principal)) {
+                        logger.warning(() -> String
+                            .format("rejected connection from %s to %s",
+                                    principal, path));
+                        return null;
+                    }
+                    String result = STANDALONE_DESCRIPTION;
+                    logger.info(() -> String
+                        .format("accepted connection from %s to %s as %s",
+                                principal, path, result));
+                    return result;
                 }
             };
         } catch (IOException ex) {
@@ -255,4 +267,7 @@ public class StandaloneUnixTransportFactory implements TransportFactory {
     }
 
     private static final String STANDALONE_DESCRIPTION = "unix-standalone";
+
+    private static final Logger logger =
+        Logger.getLogger(StandaloneUnixTransportFactory.class.getPackageName());
 }

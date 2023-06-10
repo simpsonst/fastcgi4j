@@ -45,6 +45,7 @@ import java.nio.channels.Channel;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Collection;
+import java.util.logging.Logger;
 import uk.ac.lancs.fastcgi.proto.InvocationVariables;
 import uk.ac.lancs.fastcgi.transport.SocketChannelTransport;
 import uk.ac.lancs.fastcgi.transport.Transport;
@@ -75,7 +76,11 @@ public class InheritedChannelTransportFactory implements TransportFactory {
                     return new SocketChannelTransport(ssc) {
                         @Override
                         protected String describe(SocketChannel sock) {
-                            return UNIX_DESCRIPTION;
+                            String result = UNIX_DESCRIPTION;
+                            logger.info(() -> String
+                                .format("accepted connection to %s as %s", ssc,
+                                        result));
+                            return result;
                         }
                     };
                 } else if (addr instanceof InetSocketAddress) {
@@ -89,7 +94,11 @@ public class InheritedChannelTransportFactory implements TransportFactory {
                                 (InetSocketAddress) sock.getRemoteAddress();
                             if (!permittedCallers.contains(peer.getAddress()))
                                 return null;
-                            return INET_DESCRIPTION_PREFIX + peer;
+                            String result = INET_DESCRIPTION_PREFIX + peer;
+                            logger.info(() -> String
+                                .format("accepted connection to %s as %s", ssc,
+                                        result));
+                            return result;
                         }
                     };
                 }
@@ -103,4 +112,7 @@ public class InheritedChannelTransportFactory implements TransportFactory {
     private static final String UNIX_DESCRIPTION = "inherited-unix";
 
     private static final String INET_DESCRIPTION_PREFIX = "inherited-inet-";
+
+    private static final Logger logger = Logger
+        .getLogger(InheritedChannelTransportFactory.class.getPackageName());
 }

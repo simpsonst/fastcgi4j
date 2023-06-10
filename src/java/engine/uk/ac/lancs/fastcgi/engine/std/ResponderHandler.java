@@ -38,10 +38,11 @@ package uk.ac.lancs.fastcgi.engine.std;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.logging.Logger;
+import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.context.ResponderContext;
 import uk.ac.lancs.fastcgi.context.SessionAbortedException;
 import uk.ac.lancs.fastcgi.engine.util.Pipe;
-import uk.ac.lancs.fastcgi.Responder;
 
 /**
  * Handles Responder sessions.
@@ -89,11 +90,13 @@ class ResponderHandler extends AbstractHandler implements ResponderContext {
 
     @Override
     public void stdin(int len, InputStream in) throws IOException {
+        logger.finer(() -> msg("stdin(%d)", len));
         in.transferTo(stdinPipe.getOutputStream());
     }
 
     @Override
     public void stdinEnd() throws IOException {
+        logger.finer(() -> msg("stdin-end"));
         stdinPipe.getOutputStream().close();
     }
 
@@ -101,4 +104,7 @@ class ResponderHandler extends AbstractHandler implements ResponderContext {
     public InputStream in() {
         return stdinPipe.getInputStream();
     }
+
+    private static final Logger logger =
+        Logger.getLogger(ResponderHandler.class.getPackageName());
 }

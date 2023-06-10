@@ -44,6 +44,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**
@@ -160,6 +161,8 @@ public final class InvocationVariables {
     private static PeersResult parsePeersEnvironmentResult(String varName) {
         try {
             Collection<InetAddress> value = parsePeersEnvironment(varName);
+            logger.info(() -> String.format("INET peers for %s detected as %s",
+                                            varName, value));
             return () -> value;
         } catch (UnknownHostException ex) {
             return () -> {
@@ -278,6 +281,12 @@ public final class InvocationVariables {
         String hostText = value.substring(0, colon);
         int port = Integer.parseInt(portText);
         InetAddress host = InetAddress.getByName(hostText);
-        return new InetSocketAddress(host, port);
+        var result = new InetSocketAddress(host, port);
+        logger.info(() -> String.format("stand-alone INET bind detected as %s",
+                                        result));
+        return result;
     }
+
+    private static final Logger logger =
+        Logger.getLogger(InvocationVariables.class.getPackageName());
 }

@@ -54,6 +54,7 @@ import java.util.TreeMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Logger;
 import uk.ac.lancs.fastcgi.context.Diagnostics;
 import uk.ac.lancs.fastcgi.context.OverloadException;
 import uk.ac.lancs.fastcgi.context.SessionContext;
@@ -231,18 +232,21 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
         public void write(byte[] b, int off, int len) throws IOException {
             ensureResponseHeader();
             bufferedOut.write(b, off, len);
+            logger.finer(() -> msg("rsp-bdy:%d", len));
         }
 
         @Override
         public void write(int b) throws IOException {
             ensureResponseHeader();
             bufferedOut.write(b);
+            logger.finer(() -> msg("rsp-bdy:1 (single)"));
         }
 
         @Override
         public void close() throws IOException {
             ensureResponseHeader();
             bufferedOut.close();
+            logger.fine(() -> msg("rsp-bdy:sent"));
         }
 
         @Override
@@ -271,7 +275,8 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
 
         this.paramReader =
             new ParamReader(params, ctxt.charset, ctxt.paramBufs.getBuffer(),
-                            ctxt.paramBufs::returnParamBuf);
+                            ctxt.paramBufs::returnParamBuf,
+                            "conn-" + this.connId + "-" + this.id);
         this.bufferSize = ctxt.stdoutBufferSize;
         this.err = new PrintStream(new BufferedOutputStream(new OutputStream() {
             private boolean closed = false;
@@ -342,6 +347,7 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
      */
     void run() {
         Thread.currentThread().setName("fastcgi-sess-" + connId + "-" + id);
+        logger.info(() -> msg("app-thread-entry"));
         try {
             threadLock.lock();
             thread = Thread.currentThread();
@@ -352,6 +358,7 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
             boolean completed = false;
             try {
                 try {
+                    logger.info(() -> msg("app-entry"));
                     innerRun();
                 } finally {
                     /* Suppress further interruptions. */
@@ -364,17 +371,21 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
 
                     /* Discard any remaining interruptions. */
                     Thread.interrupted();
+                    logger.info(() -> msg("app-exit"));
                 }
             } catch (RecordIOException ex) {
                 ex.unpack();
             } catch (InterruptedException ex) {
+                logger.info(() -> msg("interrupt"));
                 recordsOut.writeEndRequest(id, -1,
                                            ProtocolStatuses.REQUEST_COMPLETE);
                 completed = true;
             } catch (OverloadException ex) {
+                logger.info(() -> msg("overload"));
                 recordsOut.writeEndRequest(id, -2, ProtocolStatuses.OVERLOADED);
                 completed = true;
             } catch (Exception | Error ex) {
+                logger.info(() -> msg("ex: %s %s", ex, ex.getMessage()));
                 try {
                     try {
                         setStatus(501);
@@ -401,6 +412,7 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
                 }
             } finally {
                 if (!completed) {
+                    logger.info(() -> msg("exit %d", appStatus));
                     try {
                         ensureResponseHeader();
                         recordsOut
@@ -417,6 +429,7 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
             connAbort.run();
         } finally {
             cleanUp.run();
+            logger.info(() -> msg("app-thread-exit"));
             Thread.currentThread().setName("fastcgi-sess-unused");
         }
     }
@@ -434,23 +447,28 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
 
     @Override
     public void abortRequest() throws IOException {
+        logger.info(() -> msg("aborted"));
         terminate();
     }
 
     @Override
     public void transportFailure(IOException ex) {
+        logger
+            .info(() -> msg("transport failure: %s: %s", ex, ex.getMessage()));
         terminate();
     }
 
     @Override
     @SuppressWarnings("empty-statement")
     public void params(int len, InputStream in) throws IOException {
+        logger.finer(() -> msg("params(%d)", len));
         assert len > 0;
         paramReader.consume(in);
     }
 
     @Override
     public void paramsEnd() throws IOException {
+        logger.finer(() -> msg("params-end"));
         try {
             paramReader.complete();
         } catch (IllegalStateException ex) {
@@ -548,9 +566,10 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
         /* Don't autoclose this stream; we need the base to remain
          * open. */
         PrintStream pout = new PrintStream(bufferedOut, false, charset);
+        final int fsc = statusCode;
+        final String fsm = getStatusMessage(statusCode);
         try {
-            pout.printf("Status: %d %s%n", statusCode,
-                        getStatusMessage(statusCode));
+            pout.printf("Status: %d %s%n", statusCode, fsm);
             for (var entry : outHeaders.entrySet()) {
                 List<String> values = entry.getValue();
                 if (values.isEmpty()) continue;
@@ -563,6 +582,7 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
             pout.flush();
             statusCode = -1;
         }
+        logger.info(() -> msg("rsp-hdr-sent %d %s", fsc, fsm));
     }
 
     @Override
@@ -575,21 +595,25 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
     @Override
     public void stdin(int len, InputStream in) throws IOException {
         /* Ignored by default, as we don't expect this record type. */
+        logger.warning(() -> msg("unexpected stdin(%d)", len));
     }
 
     @Override
     public void stdinEnd() throws IOException {
         /* Ignored by default, as we don't expect this record type. */
+        logger.warning(() -> msg("unexpected stdin-end"));
     }
 
     @Override
     public void data(int len, InputStream in) throws IOException {
         /* Ignored by default, as we don't expect this record type. */
+        logger.warning(() -> msg("unexpected data(%d)", len));
     }
 
     @Override
     public void dataEnd() throws IOException {
         /* Ignored by default, as we don't expect this record type. */
+        logger.warning(() -> msg("unexpected stdin-end"));
     }
 
     /**
@@ -795,4 +819,11 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
             return "Network Connect Timeout Error";
         }
     }
+
+    String msg(String fmt, Object... args) {
+        return "sess-" + connId + "-" + id + ":" + String.format(fmt, args);
+    }
+
+    private static final Logger logger =
+        Logger.getLogger(AbstractHandler.class.getPackageName());
 }

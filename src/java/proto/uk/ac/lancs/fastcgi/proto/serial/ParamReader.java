@@ -42,6 +42,7 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.logging.Logger;
 
 /**
  * Reads byte-encoded parameters from a sequence of input streams.
@@ -54,6 +55,8 @@ public class ParamReader {
     private final Consumer<byte[]> pool;
 
     private final Charset charset;
+
+    private final String tag;
 
     private byte[] buf;
 
@@ -70,13 +73,17 @@ public class ParamReader {
      * @param pool a place to discard the internal buffer
      * 
      * @param buf an initial buffer to use
+     * 
+     * @param tag a tag to include in logging messages
      */
     public ParamReader(Map<? super String, ? super String> dest,
-                       Charset charset, byte[] buf, Consumer<byte[]> pool) {
+                       Charset charset, byte[] buf, Consumer<byte[]> pool,
+                       String tag) {
         this.params = dest;
         this.charset = charset;
         this.buf = buf;
         this.pool = pool;
+        this.tag = tag;
     }
 
     /**
@@ -91,6 +98,7 @@ public class ParamReader {
         while (recordParam(in))
             while (decodeParam())
                 ;
+        logger.fine(() -> msg("params: %s", params));
     }
 
     /**
@@ -212,6 +220,7 @@ public class ParamReader {
         final int valueStart = nameStart + nameLen;
         final String value = new String(buf, valueStart, valueLen, charset);
         params.put(name, value);
+        logger.finer(() -> msg("PARAM[%s]=%s", name, value));
 
         /* Move the trailing bytes to the head of the array. */
         final int rem = len - end;
@@ -240,4 +249,11 @@ public class ParamReader {
         }
         return r & 0x7fffffff;
     }
+
+    private String msg(String fmt, Object... args) {
+        return tag + ":" + String.format(fmt, args);
+    }
+
+    private static final Logger logger =
+        Logger.getLogger(ParamReader.class.getPackageName());
 }

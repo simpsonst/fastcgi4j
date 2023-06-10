@@ -38,10 +38,11 @@ package uk.ac.lancs.fastcgi.engine.std;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.logging.Logger;
+import uk.ac.lancs.fastcgi.Filter;
 import uk.ac.lancs.fastcgi.context.FilterContext;
 import uk.ac.lancs.fastcgi.context.SessionAbortedException;
 import uk.ac.lancs.fastcgi.engine.util.Pipe;
-import uk.ac.lancs.fastcgi.Filter;
 
 /**
  * Handles Filter sessions.
@@ -96,11 +97,13 @@ class FilterHandler extends AbstractHandler implements FilterContext {
 
     @Override
     public void stdin(int len, InputStream in) throws IOException {
+        logger.finer(() -> msg("stdin(%d)", len));
         in.transferTo(stdinPipe.getOutputStream());
     }
 
     @Override
     public void stdinEnd() throws IOException {
+        logger.finer(() -> msg("stdin-end"));
         stdinPipe.getOutputStream().close();
     }
 
@@ -111,11 +114,13 @@ class FilterHandler extends AbstractHandler implements FilterContext {
 
     @Override
     public void data(int len, InputStream in) throws IOException {
+        logger.finer(() -> msg("data(%d)", len));
         in.transferTo(dataPipe.getOutputStream());
     }
 
     @Override
     public void dataEnd() throws IOException {
+        logger.finer(() -> msg("data-end"));
         dataPipe.getOutputStream().close();
     }
 
@@ -123,4 +128,7 @@ class FilterHandler extends AbstractHandler implements FilterContext {
     public InputStream data() {
         return dataPipe.getInputStream();
     }
+
+    private static final Logger logger =
+        Logger.getLogger(FilterHandler.class.getPackageName());
 }

@@ -36,7 +36,6 @@
 
 package uk.ac.lancs.fastcgi.engine.std;
 
-import uk.ac.lancs.fastcgi.engine.std.threading.ThreadingManager;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -54,6 +53,7 @@ import uk.ac.lancs.fastcgi.Authorizer;
 import uk.ac.lancs.fastcgi.Filter;
 import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.engine.Engine;
+import uk.ac.lancs.fastcgi.engine.std.threading.ThreadingManager;
 import uk.ac.lancs.fastcgi.engine.util.CachePipePool;
 import uk.ac.lancs.fastcgi.engine.util.Pipe;
 import uk.ac.lancs.fastcgi.proto.ApplicationVariables;
@@ -203,7 +203,8 @@ class MultiplexGenericEngine implements Engine {
 
         public ConnHandler(Connection conn) throws IOException {
             this.conn = conn;
-            this.recordsIn = new RecordReader(conn.input(), charset, this);
+            this.recordsIn =
+                new RecordReader(conn.input(), charset, this, "conn-" + id);
             this.recordsOut = new RecordWriter(conn.output(), charset);
             this.optimizedBufferSize =
                 optimizeBufferSize(stdoutBufferSize,

@@ -43,6 +43,7 @@ import java.io.RandomAccessFile;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Logger;
 import uk.ac.lancs.fastcgi.transport.Connection;
 import uk.ac.lancs.fastcgi.transport.Transport;
 
@@ -154,9 +155,14 @@ class ForkedIISTransport implements Transport {
         if (primary != null) {
             Connection result = primary;
             primary = null;
+            logger
+                .info(() -> String.format("accepted sole connection as %s (%s)",
+                                          result.description(),
+                                          result.internalDescription()));
             return result;
         }
 
+        logger.warning("awaiting indefinitely");
         try {
             lock.lock();
             while (more)
@@ -168,4 +174,7 @@ class ForkedIISTransport implements Transport {
         }
         return null;
     }
+
+    private static final Logger logger =
+        Logger.getLogger(ForkedIISTransport.class.getPackageName());
 }

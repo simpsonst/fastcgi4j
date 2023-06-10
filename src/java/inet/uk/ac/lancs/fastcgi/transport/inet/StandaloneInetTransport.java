@@ -84,9 +84,6 @@ class StandaloneInetTransport extends SocketTransport {
         this.allowedPeers = Set.copyOf(allowedPeers);
     }
 
-    private static final Logger logger =
-        Logger.getLogger(StandaloneInetTransport.class.getPackageName());
-
     /**
      * {@inheritDoc}
      * 
@@ -106,6 +103,14 @@ class StandaloneInetTransport extends SocketTransport {
                         sock.getLocalSocketAddress()));
             return null;
         }
-        return descrPrefix + "#" + sock.getRemoteSocketAddress();
+        String result = descrPrefix + "#" + sock.getRemoteSocketAddress();
+        logger
+            .info(() -> String.format("accepted connection from %s to %s as %s",
+                                      peer, sock.getLocalSocketAddress(),
+                                      result));
+        return result;
     }
+
+    private static final Logger logger =
+        Logger.getLogger(StandaloneInetTransport.class.getPackageName());
 }
