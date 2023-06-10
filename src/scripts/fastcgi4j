@@ -331,8 +331,18 @@ if [[ "$bindaddr" =~ ^/ ]] ; then
     export FASTCGI4J_UNIX_BIND="$bindaddr"
 elif [ -n "$bindaddr" ] ; then
     export FASTCGI4J_INET_BIND="$bindaddr"
-    export FASTCGI4J_WEB_SERVER_ADDRS="$(printf ',%s' "${peers[@]}")"
+    if [ ${#peers[@]} -eq 0 ] ; then
+	## Add the host we're binding to.
+	peers+=("${bindaddr%:*}")
+    fi
+fi
+
+if [ -n "$bindaddr" -a ${#peers[@]} -gt 0 ] ; then
+    export FASTCGI4J_WEB_SERVER_ADDRS
+    FASTCGI4J_WEB_SERVER_ADDRS="$(printf ',%s' "${peers[@]}")"
     FASTCGI4J_WEB_SERVER_ADDRS="${FASTCGI4J_WEB_SERVER_ADDRS:1}"
+else
+    unset FASTCGI4J_WEB_SERVER_ADDRS
 fi
 
 if [ -n "$dryrun" ] ; then
