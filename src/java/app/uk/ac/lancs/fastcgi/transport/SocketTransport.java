@@ -39,6 +39,8 @@ package uk.ac.lancs.fastcgi.transport;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketAddress;
+import java.util.logging.Logger;
 
 /**
  * Creates connections by accepting sockets from a server socket.
@@ -78,6 +80,8 @@ public abstract class SocketTransport implements Transport {
     public Connection nextConnection() throws IOException {
         do {
             Socket sock = socket.accept();
+            SocketAddress peer = sock.getRemoteSocketAddress();
+            logger.info(() -> msg("accepted from %s", peer));
             String descr = describe(sock);
             if (descr == null) {
                 sock.close();
@@ -97,4 +101,11 @@ public abstract class SocketTransport implements Transport {
      * the connection is to be rejected
      */
     protected abstract String describe(Socket sock);
+
+    private String msg(String fmt, Object... args) {
+        return String.format(fmt, args);
+    }
+
+    private static final Logger logger =
+        Logger.getLogger(SocketTransport.class.getPackageName());
 }
