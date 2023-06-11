@@ -38,6 +38,7 @@ package uk.ac.lancs.fastcgi.engine.std;
 
 import java.nio.charset.Charset;
 import java.util.concurrent.Executor;
+import java.util.function.Predicate;
 import uk.ac.lancs.fastcgi.proto.serial.RecordWriter;
 
 /**
@@ -58,7 +59,7 @@ class HandlerContext {
 
     final Runnable connAbort;
 
-    final Runnable cleanUp;
+    final Predicate<? super SessionHandler> cleanUp;
 
     final RecordWriter recordsOut;
 
@@ -88,7 +89,10 @@ class HandlerContext {
      * 
      * @param connAbort an action to take if the transport is disrupted
      * 
-     * @param cleanUp an action to take when the session is complete
+     * @param cleanUp an action to take when the session is complete.
+     * The session handler should pass itself as the argument, and the
+     * result, if {@code true}, indicates that the clean-up hadn't
+     * already taken place.
      * 
      * @param recordsOut a means to write FastCGI records to the
      * transport connection
@@ -108,10 +112,10 @@ class HandlerContext {
      */
     public HandlerContext(int connId, int id, Package impl, String connDescr,
                           String intConnDescr, Runnable connAbort,
-                          Runnable cleanUp, RecordWriter recordsOut,
-                          Executor executor, Charset charset,
-                          BufferPool paramBufs, int stdoutBufferSize,
-                          int stderrBufferSize) {
+                          Predicate<? super SessionHandler> cleanUp,
+                          RecordWriter recordsOut, Executor executor,
+                          Charset charset, BufferPool paramBufs,
+                          int stdoutBufferSize, int stderrBufferSize) {
         this.connId = connId;
         this.id = id;
         this.impl = impl;

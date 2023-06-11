@@ -52,8 +52,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 import java.util.concurrent.Executor;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Predicate;
 import java.util.logging.Logger;
 import uk.ac.lancs.fastcgi.context.Diagnostics;
 import uk.ac.lancs.fastcgi.context.OverloadException;
@@ -97,7 +96,7 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
      * Holds the action to take when the session is to receive no more
      * application records.
      */
-    final Runnable cleanUp;
+    final Predicate<? super SessionHandler> cleanUp;
 
     /**
      * Holds the means to write records to the transport connection.
@@ -153,18 +152,7 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
      * by the application task as soon as it starts, protected by
      * {@link #threadLock}.
      */
-    private Thread thread;
-
-    /**
-     * Protects {@link #thread} and {@link #appCompleted}.
-     */
-    private final Lock threadLock = new ReentrantLock();
-
-    /**
-     * Set to {@code true} only when the application code has completed.
-     * Protected by {@link #threadLock}.
-     */
-    private boolean appCompleted = false;
+    private volatile Thread thread = null;
 
     /**
      * Records whether the handler has started. This is used to detect
@@ -348,12 +336,8 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
     void run() {
         Thread.currentThread().setName("fastcgi-sess-" + connId + "-" + id);
         logger.info(() -> msg("app-thread-entry"));
-        try {
-            threadLock.lock();
-            thread = Thread.currentThread();
-        } finally {
-            threadLock.unlock();
-        }
+        byte pStat = ProtocolStatuses.REQUEST_COMPLETE;
+        thread = Thread.currentThread();
         try {
             boolean completed = false;
             try {
@@ -361,66 +345,65 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
                     logger.info(() -> msg("app-entry"));
                     innerRun();
                 } finally {
-                    /* Suppress further interruptions. */
-                    try {
-                        threadLock.lock();
-                        appCompleted = true;
-                    } finally {
-                        threadLock.unlock();
-                    }
-
                     /* Discard any remaining interruptions. */
                     Thread.interrupted();
+
                     logger.info(() -> msg("app-exit"));
                 }
             } catch (RecordIOException ex) {
                 ex.unpack();
             } catch (InterruptedException ex) {
                 logger.info(() -> msg("interrupt"));
-                recordsOut.writeEndRequest(id, -1,
-                                           ProtocolStatuses.REQUEST_COMPLETE);
+                appStatus = -1;
                 completed = true;
             } catch (OverloadException ex) {
                 logger.info(() -> msg("overload"));
-                recordsOut.writeEndRequest(id, -2, ProtocolStatuses.OVERLOADED);
+                appStatus = -2;
+                pStat = ProtocolStatuses.OVERLOADED;
                 completed = true;
             } catch (Exception | Error ex) {
                 logger.info(() -> msg("ex: %s %s", ex, ex.getMessage()));
                 try {
-                    try {
-                        setStatus(501);
-                        setHeader("Content-Type", "text/plain; charset=UTF-8");
-                        /* TODO: Clear other headers. */
-                        try (PrintWriter out =
-                            new PrintWriter(new OutputStreamWriter(out(),
-                                                                   StandardCharsets.UTF_8))) {
-                            out.printf("Internal Server Error\n");
-                            /* TODO: Provide a more detailed and
-                             * run-time configurable error. Use XSLT. */
-                        }
-                    } catch (IllegalStateException ise) {
-                        err().printf("Could not send error response; "
-                            + "response body partially sent%n");
+                    setStatus(501);
+                    setHeader("Content-Type", "text/plain; charset=UTF-8");
+                    /* TODO: Clear other headers. */
+                    try (PrintWriter out =
+                        new PrintWriter(new OutputStreamWriter(out(),
+                                                               StandardCharsets.UTF_8))) {
+                        out.printf("Internal Server Error\n");
+                        /* TODO: Provide a more detailed and run-time
+                         * configurable error. Use XSLT. */
                     }
-                    ex.printStackTrace(err());
-                    recordsOut
-                        .writeEndRequest(id, -2,
-                                         ProtocolStatuses.REQUEST_COMPLETE);
-                    completed = true;
+                } catch (IllegalStateException ise) {
+                    err().printf("Could not send error response; "
+                        + "response body partially sent%n");
+                }
+                ex.printStackTrace(err());
+                appStatus = -2;
+                completed = true;
+            } finally {
+                try {
+                    final boolean wasCleaned;
+                    try {
+                        if (!completed) {
+                            logger.info(() -> msg("exit"));
+                            ensureResponseHeader();
+                        }
+                    } finally {
+                        wasCleaned = cleanUp.test(this);
+                    }
+                    if (wasCleaned) {
+                        /* We removed our session id from the index. We
+                         * need to send the last message for this
+                         * session. */
+                        final var fpStat = pStat;
+                        logger
+                            .info(() -> msg("req=%d rc=%d ps=%s", id, appStatus,
+                                            ProtocolStatuses.toString(fpStat)));
+                        recordsOut.writeEndRequest(id, appStatus, pStat);
+                    }
                 } catch (RecordIOException ex2) {
                     ex2.unpack();
-                }
-            } finally {
-                if (!completed) {
-                    logger.info(() -> msg("exit %d", appStatus));
-                    try {
-                        ensureResponseHeader();
-                        recordsOut
-                            .writeEndRequest(id, appStatus,
-                                             ProtocolStatuses.REQUEST_COMPLETE);
-                    } catch (RecordIOException ex2) {
-                        ex2.unpack();
-                    }
                 }
             }
         } catch (IOException ex) {
@@ -428,21 +411,13 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
              * to terminate all handlers on this connection. */
             connAbort.run();
         } finally {
-            cleanUp.run();
             logger.info(() -> msg("app-thread-exit"));
             Thread.currentThread().setName("fastcgi-sess-unused");
         }
     }
 
     protected void terminate() {
-        try {
-            threadLock.lock();
-            if (thread == null)
-                cleanUp.run();
-            else if (!appCompleted) thread.interrupt();
-        } finally {
-            threadLock.unlock();
-        }
+        if (cleanUp.test(this) && thread != null) thread.interrupt();
     }
 
     @Override

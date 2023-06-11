@@ -296,9 +296,10 @@ class MultiplexGenericEngine implements Engine {
                                          conn.description(),
                                          conn.internalDescription(),
                                          this::abortConnection,
-                                         () -> sessions.remove(id), recordsOut,
-                                         executor, charset, paramBufs,
-                                         optimizedBufferSize, stderrBufferSize);
+                                         h -> sessions.remove(id, h),
+                                         recordsOut, executor, charset,
+                                         paramBufs, optimizedBufferSize,
+                                         stderrBufferSize);
 
             /* Create the session if there isn't one with the specified
              * id, and the role type is recognized. */
