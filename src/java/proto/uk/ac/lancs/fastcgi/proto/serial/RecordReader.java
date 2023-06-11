@@ -169,6 +169,7 @@ public class RecordReader {
      */
     public boolean processRecord() throws IOException {
         /* Read in the header. */
+        logger.fine(() -> msg("awaiting record"));
         if (!require(() -> "hdr", 8, false)) return false;
         final int rver = unser(buf, 0, 1);
         final int rtype = unser(buf, 1, 1);
@@ -283,13 +284,13 @@ public class RecordReader {
                 break;
             }
             if (clen == 0) {
-                logger.info(() -> msg("PARAMS(%d) end", rid));
+                logger.fine(() -> msg("PARAMS(%d) end", rid));
                 handler.paramsEnd(rid);
                 break;
             }
             FixedLengthInputStream out = new FixedLengthInputStream(clen, in);
             final int fclen = clen;
-            logger.info(() -> msg("PARAMS(%d, %d)", rid, fclen));
+            logger.fine(() -> msg("PARAMS(%d, %d)", rid, fclen));
             handler.params(rid, clen, out);
             out.skipRemaining();
             break;
@@ -305,13 +306,13 @@ public class RecordReader {
                 break;
             }
             if (clen == 0) {
-                logger.info(() -> msg("STDIN(%d) end", rid));
+                logger.fine(() -> msg("STDIN(%d) end", rid));
                 handler.stdinEnd(rid);
                 break;
             }
             FixedLengthInputStream out = new FixedLengthInputStream(clen, in);
             final int fclen = clen;
-            logger.info(() -> msg("STDIN(%d, %d)", rid, fclen));
+            logger.fine(() -> msg("STDIN(%d, %d)", rid, fclen));
             handler.stdin(rid, clen, out);
             out.skipRemaining();
             break;
@@ -327,13 +328,13 @@ public class RecordReader {
                 break;
             }
             if (clen == 0) {
-                logger.info(() -> msg("DATA(%d) end", rid));
+                logger.fine(() -> msg("DATA(%d) end", rid));
                 handler.dataEnd(rid);
                 break;
             }
             FixedLengthInputStream out = new FixedLengthInputStream(clen, in);
             final int fclen = clen;
-            logger.info(() -> msg("DATA(%d, %d)", rid, fclen));
+            logger.fine(() -> msg("DATA(%d, %d)", rid, fclen));
             handler.data(rid, clen, out);
             out.skipRemaining();
             break;

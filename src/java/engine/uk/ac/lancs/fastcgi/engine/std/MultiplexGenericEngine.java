@@ -269,6 +269,10 @@ class MultiplexGenericEngine implements Engine {
             if (!keepGoing) {
                 /* We're not accepting new requests on this connection.
                  * TODO: There really needs to be more status codes. */
+                logger.warning(() -> msg(
+                                         "rejecting request %d"
+                                             + " as we weren't expecting more",
+                                         id));
                 recordsOut.writeEndRequest(id, -3, ProtocolStatuses.OVERLOADED);
                 return;
             }
@@ -276,18 +280,26 @@ class MultiplexGenericEngine implements Engine {
             if ((flags & RequestFlags.KEEP_CONN) == 0) {
                 /* The server tells us we're not going to use this
                  * connection any more for new requests. */
+                logger.info(() -> msg("ack last request %d", id));
                 keepGoing = false;
                 /* Proceed with this one, though! */
             }
 
             /* Detect temporary overload based on the configured maximum
              * requests per connection. */
-            if (maxReqsPerConn > 0 && sessions.size() >= maxReqsPerConn) {
-                recordsOut.writeEndRequest(id, -3,
-                                           maxReqsPerConn == 1 ?
-                                               ProtocolStatuses.CANT_MPX_CONN :
-                                               ProtocolStatuses.OVERLOADED);
-                return;
+            if (maxReqsPerConn > 0) {
+                final int sz = sessions.size();
+                if (sz >= maxReqsPerConn) {
+                    logger.warning(() -> msg("rejecting request %d;"
+                        + " %d/%d sessions as overloaded", id, sz,
+                                             maxReqsPerConn));
+                    recordsOut
+                        .writeEndRequest(id, -3,
+                                         maxReqsPerConn == 1 ?
+                                             ProtocolStatuses.CANT_MPX_CONN :
+                                             ProtocolStatuses.OVERLOADED);
+                    return;
+                }
             }
 
             /* Package components required by all roles. */
@@ -329,6 +341,8 @@ class MultiplexGenericEngine implements Engine {
             if (sess == null) {
                 /* No mapping was recorded, meaning that we don't
                  * recognize the role. */
+                logger.warning(() -> msg("bad role %s for %d",
+                                         ProtocolStatuses.toString(role), id));
                 recordsOut.writeEndRequest(id, -3,
                                            ProtocolStatuses.UNKNOWN_ROLE);
                 return;
@@ -337,8 +351,10 @@ class MultiplexGenericEngine implements Engine {
             if (sess.start()) {
                 /* There must be no existing session. */
                 keepGoing = false;
-                logger.log(Level.SEVERE,
-                           () -> "server began existing request" + id);
+                logger
+                    .severe(() -> msg("server began existing request %d", id));
+            } else {
+                logger.fine(() -> msg("begun request %d", id));
             }
         }
 
@@ -398,10 +414,19 @@ class MultiplexGenericEngine implements Engine {
 
         private void abortConnection() {
             keepGoing = false;
+            logger.warning(() -> msg("aborting"));
             sessions.forEach((k, v) -> v
                 .transportFailure(new IOException("transport failure")));
         }
 
+        private String msg(String fmt, Object... args) {
+            return "conn-" + id + ":"
+                + MultiplexGenericEngine.this.msg(fmt, args);
+        }
+    }
+
+    private String msg(String fmt, Object... args) {
+        return String.format(fmt, args);
     }
 
     private static final Logger logger =
