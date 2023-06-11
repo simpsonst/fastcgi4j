@@ -233,7 +233,7 @@ public class StandaloneUnixTransportFactory implements TransportFactory {
 
             /* Ensure the rendezvous point is accessible by all (if we
              * have a set of allowed peers), and delete it on exit. */
-            if (allowedPeers == null) {
+            if (allowedPeers != null) {
                 Set<PosixFilePermission> perms =
                     PosixFilePermissions.fromString("rwxrwxrwx");
                 Files.setPosixFilePermissions(path, perms);
