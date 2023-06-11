@@ -49,9 +49,10 @@ import jdk.net.UnixDomainPrincipal;
  * @author simpsons
  */
 final class PrincipalRequirement {
-    static final String PRINCIPAL_TEXT = "^([a-z0-9A-Z]*)(?:@([a-z0-9A-Z]+))?$";
+    static final String PRINCIPAL_TEXT = "^([^@]*)(?:@(.*))?$";
 
-    private static final Pattern PRINCIPAL = Pattern.compile(PRINCIPAL_TEXT);
+    private static final Pattern PRINCIPAL =
+        Pattern.compile(PRINCIPAL_TEXT, Pattern.CASE_INSENSITIVE);
 
     private final String user;
 
