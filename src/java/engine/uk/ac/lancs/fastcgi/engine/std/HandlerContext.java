@@ -74,6 +74,7 @@ class HandlerContext {
     final int stderrBufferSize;
 
     /**
+     * Create a handler context.
      * 
      * @param connId the internal transport connection id
      * 

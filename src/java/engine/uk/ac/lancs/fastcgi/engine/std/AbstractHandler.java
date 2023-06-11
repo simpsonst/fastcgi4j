@@ -416,6 +416,11 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
         }
     }
 
+    /**
+     * Terminate this session. Either the server has sent an abort for
+     * this session specifically, or the whole connection is being
+     * terminated.
+     */
     protected void terminate() {
         if (cleanUp.test(this) && thread != null) thread.interrupt();
     }
