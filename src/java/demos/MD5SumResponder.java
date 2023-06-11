@@ -38,8 +38,9 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import uk.ac.lancs.fastcgi.context.ResponderContext;
+import java.util.TreeMap;
 import uk.ac.lancs.fastcgi.Responder;
+import uk.ac.lancs.fastcgi.context.ResponderContext;
 
 /**
  * Responds by echoing all headers, and displaying a hex MD5 sum of the
@@ -62,7 +63,7 @@ public class MD5SumResponder implements Responder {
         try (PrintWriter out =
             new PrintWriter(new OutputStreamWriter(ctxt.out(),
                                                    StandardCharsets.UTF_8))) {
-            for (var entry : ctxt.parameters().entrySet()) {
+            for (var entry : new TreeMap<>(ctxt.parameters()).entrySet()) {
                 out.printf("[%s] = [%s]\n", entry.getKey(), entry.getValue());
             }
             out.printf("Digest: ");
