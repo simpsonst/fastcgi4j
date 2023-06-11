@@ -343,6 +343,7 @@ class MultiplexGenericEngine implements Engine {
                  * recognize the role. */
                 logger.warning(() -> msg("bad role %s for %d",
                                          ProtocolStatuses.toString(role), id));
+                assert !sessions.containsKey(id);
                 recordsOut.writeEndRequest(id, -3,
                                            ProtocolStatuses.UNKNOWN_ROLE);
                 return;
