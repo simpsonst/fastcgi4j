@@ -163,6 +163,7 @@ The application must bind to an agreed address to receive FastCGI connections on
 You can use the `fastcgi4j` wrapper to run a stand-alone application.
 Use (say) `--bind /path/to/sock` to bind to a Unix-domain socket, or `--bind localhost:8888` to bind to an Internet-domain socket.
 In the latter case, you might want to use one or more `--peer` switches to specify HTTPd server hosts that may connect to the socket.
+Also, beware of using a path in `/tmp/`, e.g., `--bind /tmp/my.sock`, as Apache is often run with a private `/tmp/`, and can't see the real directory where your socket is.
 
 Here's some documentation for web servers that can talk to a stand-alone FastCGI application:
 
@@ -172,7 +173,48 @@ Here's some documentation for web servers that can talk to a stand-alone FastCGI
 
 * [Nginx `fastcgi_pass` directive](http://nginx.org/en/docs/http/ngx_http_fastcgi_module.html#fastcgi_pass)
 
-Can't say I've really tried these yet.
+
+### Apache stand-alone configuration examples
+
+These examples assume that you've started your application with `--bind localhost:9000`, i.e., you're using an Internet-domain socket.
+As such, they refer to this address using `fcgi://localhost:9000`.
+Alternatively, if you're using a Unix-domain socket, e.g., with `--bind /path/to.sock`, replace `fcgi://localhost:9000` with `unix:///path/to.sock|fcgi://localhost`.
+
+If you have privileged access to the Apache configuration, [`ProxyPass`](https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxypass) can be used to pass a whole subtree of virtual paths to your application.
+This matches paths such as `/foo`, `/foo/bar`, and so on, but not `/foobar`:
+```
+ProxyPass "/foo" "fcgi://localhost:9000" enablereuse=on
+```
+
+It can also be used in a [`<Location>`](https://httpd.apache.org/docs/2.4/mod/core.html#location) context:
+
+```
+<Location "/foo">
+  ProxyPass "fcgi://localhost:9000" enablereuse=on
+</Location>
+```
+
+The following directives should also be investigated as providing more flexibility:
+
+- [`ProxyPassMatch`](https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxypassmatch)
+- [`<ProxySet>`](https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxyset)
+- [`<Proxy>`](https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxy)
+- [`<ProxyMatch>`](https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxymatch)
+- [`<LocationMatch>`](https://httpd.apache.org/docs/2.4/mod/core.html#locationmatch)
+
+If you only have access to `.htaccess`, [`mod_rewrite`](https://httpd.apache.org/docs/2.4/mod/mod_rewrite.html) is sometimes available:
+
+```
+RewriteEngine On
+RewriteCond %{REQUEST_URI} ^/some/path(/.*)?$
+RewriteRule ^.* "fcgi://localhost:9000/" [P,NE]
+```
+
+
+### Nginx stand-alone configurations
+
+To do.
+
 
 
 # Demonstration
@@ -215,7 +257,8 @@ Unix-domain and server-managed implementations are more problematic.
 The first requires Unix-domain sockets in Java, and the second requires a means to get a server socket from file descriptor 0, which is how a socket is provided to a server-managed process.
 
 JDK 16 introduced [`UnixDomainSocketAddress`](https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/net/UnixDomainSocketAddress.html), and presumably some Unix-domain socket support appeared at the same time.
-In OpenJDK 18, this is (still?) limited to a `ServerSocketChannel`;
-you can't have a Unix-domain `ServerSocket`, only the channel.
+In OpenJDK 18, this is (still?) limited to a [`ServerSocketChannel`](https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/nio/channels/ServerSocketChannel.html);
+you can't have a Unix-domain [`ServerSocket`](https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/net/ServerSocket.html), only the channel.
+
 As far back as JDK 1.5, [`System.inheritedChannel`](https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/System.html#inheritedChannel()) could provide access (on Linux, at least) to file descriptor 0, and generate a `ServerSocketChannel` from it.
 Hence, both Unix-domain and server-managed implementations (and the combination of both) are possible natively.
