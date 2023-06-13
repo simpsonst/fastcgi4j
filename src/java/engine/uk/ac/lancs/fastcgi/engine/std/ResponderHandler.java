@@ -77,7 +77,8 @@ class ResponderHandler extends AbstractHandler implements ResponderContext {
 
     @Override
     public void abortRequest() throws IOException {
-        SessionAbortedException ex = new SessionAbortedException("id=" + id);
+        SessionAbortedException ex =
+            new SessionAbortedException("sess-" + connId + "." + id);
         stdinPipe.abort(ex);
         super.abortRequest();
     }

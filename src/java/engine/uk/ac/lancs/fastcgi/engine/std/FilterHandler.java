@@ -82,7 +82,8 @@ class FilterHandler extends AbstractHandler implements FilterContext {
 
     @Override
     public void abortRequest() throws IOException {
-        SessionAbortedException ex = new SessionAbortedException("id=" + id);
+        SessionAbortedException ex =
+            new SessionAbortedException("sess-" + connId + "." + id);
         stdinPipe.abort(ex);
         dataPipe.abort(ex);
         super.abortRequest();
