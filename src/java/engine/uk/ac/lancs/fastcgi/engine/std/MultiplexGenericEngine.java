@@ -211,6 +211,8 @@ class MultiplexGenericEngine implements Engine {
                                    this.recordsOut.optimumPayloadLength(),
                                    this.recordsOut.alignment());
             this.executor = threading.newSessionExceutor(sesstg);
+            logger.info(() -> msg("on %s/%s", conn.description(),
+                                  conn.internalDescription()));
         }
 
         private final Map<Integer, SessionHandler> sessions =

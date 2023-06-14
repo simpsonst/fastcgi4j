@@ -335,34 +335,34 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
      */
     void run() {
         Thread.currentThread().setName("fastcgi-sess-" + connId + "-" + id);
-        logger.info(() -> msg("app-thread-entry"));
+        logger.fine(() -> msg("app-thread-entry"));
         byte pStat = ProtocolStatuses.REQUEST_COMPLETE;
         thread = Thread.currentThread();
         try {
             boolean completed = false;
             try {
                 try {
-                    logger.info(() -> msg("app-entry"));
+                    logger.finer(() -> msg("app-entry"));
                     innerRun();
                 } finally {
                     /* Discard any remaining interruptions. */
                     Thread.interrupted();
 
-                    logger.info(() -> msg("app-exit"));
+                    logger.finer(() -> msg("app-exit"));
                 }
             } catch (RecordIOException ex) {
                 ex.unpack();
             } catch (InterruptedException ex) {
-                logger.info(() -> msg("interrupt"));
+                logger.warning(() -> msg("interrupt"));
                 appStatus = -1;
                 completed = true;
             } catch (OverloadException ex) {
-                logger.info(() -> msg("overload"));
+                logger.warning(() -> msg("overload"));
                 appStatus = -2;
                 pStat = ProtocolStatuses.OVERLOADED;
                 completed = true;
             } catch (Exception | Error ex) {
-                logger.info(() -> msg("ex: %s %s", ex, ex.getMessage()));
+                logger.severe(() -> msg("ex: %s %s", ex, ex.getMessage()));
                 try {
                     setStatus(501);
                     setHeader("Content-Type", "text/plain; charset=UTF-8");
@@ -386,7 +386,7 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
                     final boolean wasCleaned;
                     try {
                         if (!completed) {
-                            logger.info(() -> msg("exit"));
+                            logger.finer(() -> msg("exit"));
                             ensureResponseHeader();
                         }
                     } finally {
@@ -398,7 +398,7 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
                          * session. */
                         final var fpStat = pStat;
                         logger
-                            .info(() -> msg("req=%d rc=%d ps=%s", id, appStatus,
+                            .fine(() -> msg("req=%d rc=%d ps=%s", id, appStatus,
                                             ProtocolStatuses.toString(fpStat)));
                         recordsOut.writeEndRequest(id, appStatus, pStat);
                     }
@@ -411,7 +411,7 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
              * to terminate all handlers on this connection. */
             connAbort.run();
         } finally {
-            logger.info(() -> msg("app-thread-exit"));
+            logger.fine(() -> msg("app-thread-exit"));
             Thread.currentThread().setName("fastcgi-sess-unused");
         }
     }
@@ -562,7 +562,7 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
             pout.flush();
             statusCode = -1;
         }
-        logger.info(() -> msg("rsp-hdr-sent %d %s", fsc, fsm));
+        logger.fine(() -> msg("rsp-hdr-sent %d %s", fsc, fsm));
     }
 
     @Override

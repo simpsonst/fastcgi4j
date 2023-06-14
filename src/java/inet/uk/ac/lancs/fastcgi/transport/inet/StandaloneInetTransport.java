@@ -105,7 +105,7 @@ class StandaloneInetTransport extends SocketTransport {
         }
         String result = descrPrefix + "#" + sock.getRemoteSocketAddress();
         logger
-            .info(() -> String.format("accepted connection from %s to %s as %s",
+            .fine(() -> String.format("accepted connection from %s to %s as %s",
                                       peer, sock.getLocalSocketAddress(),
                                       result));
         return result;

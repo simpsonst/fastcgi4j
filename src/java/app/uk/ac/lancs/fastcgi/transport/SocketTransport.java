@@ -81,7 +81,7 @@ public abstract class SocketTransport implements Transport {
         do {
             Socket sock = socket.accept();
             SocketAddress peer = sock.getRemoteSocketAddress();
-            logger.info(() -> msg("accepted from %s", peer));
+            logger.fine(() -> msg("accepted from %s", peer));
             String descr = describe(sock);
             if (descr == null) {
                 sock.close();
