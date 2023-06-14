@@ -54,7 +54,7 @@ function split_path () {
 readarray -t CLASSDIRS \
 	  < <(split_path "${CLASSDIRS:-/usr/share/java:/usr/local/share/java}")
 readarray -t CLASSPATH < <(split_path "$CLASSPATH")
-readarray -t LD_LIBRARY_PATH < <(split_path "$LD_LIBRARY_PATH")
+# readarray -t LD_LIBRARY_PATH < <(split_path "$LD_LIBRARY_PATH")
 
 JVM=java
 JVMARGS=()
@@ -346,9 +346,9 @@ else
 fi
 
 if [ -n "$dryrun" ] ; then
-    printf 'Lib path:'
-    printf ' %s' "${LD_LIBRARY_PATH[@]}"
-    printf '\n'
+    # printf 'Lib path:'
+    # printf ' %s' "${LD_LIBRARY_PATH[@]}"
+    # printf '\n'
     if [ -n "$bindaddr" ] ; then
 	printf 'Bind address: %s\n' "$FASTCGI4J_INET_BIND"
 	printf 'Stand-alone peers: %s\n' "$FASTCGI4J_WEB_SERVER_ADDRS"
@@ -359,12 +359,13 @@ fi
 ## Convert arrays back into colon-separated strings.
 CLASSPATH="$(printf ':%s' "${CLASSPATH[@]}")"
 CLASSPATH="${CLASSPATH:1}"
-LD_LIBRARY_PATH="$(printf ':%s' "${LD_LIBRARY_PATH[@]}")"
-LD_LIBRARY_PATH="${LD_LIBRARY_PATH:1}"
-export LD_LIBRARY_PATH
+# LD_LIBRARY_PATH="$(printf ':%s' "${LD_LIBRARY_PATH[@]}")"
+# LD_LIBRARY_PATH="${LD_LIBRARY_PATH:1}"
+# export LD_LIBRARY_PATH
+
+# -Duk.ac.lancs.fastcgi.transport.native_unix.library="$HERE/libexec/fastcgi4j/libfastcgi4j.so"
 
 CMD=("$JVM" "${JVMARGS[@]}"
-     -Duk.ac.lancs.fastcgi.transport.native_unix.library="$HERE/libexec/fastcgi4j/libfastcgi4j.so"
      --class-path "${CLASSPATH}"
      uk.ac.lancs.fastcgi.app.FastCGIApplication "${APPARGS[@]}" "$@")
 

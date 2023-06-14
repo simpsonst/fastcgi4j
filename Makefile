@@ -56,10 +56,10 @@ trees_fastcgi4j_inet += inet
 SELECTED_JARS += fastcgi4j_inherit
 trees_fastcgi4j_inherit += inherit
 
-ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_UNIX))),)
-SELECTED_JARS += fastcgi4j_fork
-trees_fastcgi4j_fork += fork
-endif
+# ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_UNIX))),)
+# SELECTED_JARS += fastcgi4j_fork
+# trees_fastcgi4j_fork += fork
+# endif
 
 SELECTED_JARS += fastcgi4j_unix
 trees_fastcgi4j_unix += unix
@@ -107,15 +107,15 @@ roots_tests += $(found_tests)
 deps_tests += api
 deps_tests += app
 
-ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_UNIX))),)
-hidden_libraries += main
-endif
-main_libname = fastcgi4j
-main_mod += native
+# ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_UNIX))),)
+# hidden_libraries += main
+# endif
+# main_libname = fastcgi4j
+# main_mod += native
 scripts += fastcgi4j
 
 SHAREDIR ?= $(PREFIX)/share/fastcgi4j
-LIBEXECDIR ?= $(PREFIX)/libexec/fastcgi4j
+# LIBEXECDIR ?= $(PREFIX)/libexec/fastcgi4j
 
 include binodeps.mk
 
@@ -144,9 +144,9 @@ DOC_PKGS += uk.ac.lancs.fastcgi.transport.inet
 DOC_PKGS += uk.ac.lancs.fastcgi.transport.iis
 DOC_PKGS += uk.ac.lancs.fastcgi.transport.unix
 DOC_PKGS += uk.ac.lancs.fastcgi.transport.inherit
-ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_UNIX))),)
-DOC_PKGS += uk.ac.lancs.fastcgi.transport.fork
-endif
+# ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_UNIX))),)
+# DOC_PKGS += uk.ac.lancs.fastcgi.transport.fork
+# endif
 
 MYCMPCP=$(CMP) -s '$1' '$2' || $(CP) '$1' '$2'
 .PHONY: prepare-version
@@ -160,9 +160,10 @@ BUILD: prepare-version
 VERSION: prepare-version
 	@$(call MYCMPCP,tmp/VERSION,$@)
 
-$(BINODEPS_OBJDIR)/native.lo: | tmp/tree-unix.compiled
+# $(BINODEPS_OBJDIR)/native.lo: | tmp/tree-unix.compiled
 
-all:: VERSION BUILD installed-jars installed-libraries
+all:: VERSION BUILD installed-jars
+# all:: installed-libraries
 installed-jars:: $(SELECTED_JARS:%=out/%.jar)
 installed-jars:: $(SELECTED_JARS:%=out/%-src.zip)
 
@@ -179,7 +180,8 @@ install-jar-%::
 
 install-jars:: $(SELECTED_JARS:%=install-jar-%)
 
-install:: install-jars install-hidden-libraries install-scripts
+install:: install-jars install-scripts
+# install:: install-hidden-libraries
 
 tidy::
 	@$(PRINTF) 'Deleting trash\n'
