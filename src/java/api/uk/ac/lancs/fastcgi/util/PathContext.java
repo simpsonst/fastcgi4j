@@ -170,7 +170,6 @@ public final class PathContext {
      */
     public URI locate(String ref) {
         List<String> elems = new ArrayList<>(List.of(PATH_SEPS.split(ref, -1)));
-        System.err.printf("%nRaw: %s -> %s%n", ref, elems);
 
         /* Normalize the reference by appending an empty element when
          * the last element is a dot or double-dot. */
