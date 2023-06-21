@@ -38,6 +38,7 @@ package uk.ac.lancs.fastcgi.util;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -92,22 +93,96 @@ public final class PathContext {
 
     /**
      * Determine the relative path of a given reference, based on the
-     * sub-path. The reference may be empty to refer to the script
-     * itself. Otherwise, if it doesn't begin with a slash, it is
-     * treated as if the slash is prefixed. A trailing dot element is
-     * replaced with an empty string, and other dot elements are
-     * removed. Each double-dot element and its non-double-dot element
-     * are removed. Double slashes are collapsed into singles. It is an
-     * error to attempt to break out of the script's context by using
-     * leading double-dot elements.
+     * sub-path.
+     * 
+     * <p>
+     * This call is equivalent to calling
+     * <code>{@linkplain #locate(String, List, String) locate}(ref, null, null)</code>.
+     * 
+     * @param ref the reference
+     * 
+     * @return the relative URI
+     * 
+     * @throws NoSuchElementException if a leading double-dot element is
+     * present
+     */
+    public URI locate(String ref) {
+        return locate(ref, null, null);
+    }
+
+    /**
+     * Determine the relative path of a given reference, based on the
+     * sub-path, and optionally include a fragment identifier.
+     * 
+     * <p>
+     * This call is equivalent to calling
+     * <code>{@linkplain #locate(String, List, String) locate}(ref, null, fragment)</code>.
+     * 
+     * @param ref the reference
+     * 
+     * @param fragment the fragment identifier; or {@code null} if no
+     * fragment identifier is to be present
+     * 
+     * @return the relative URI
+     * 
+     * @throws NoSuchElementException if a leading double-dot element is
+     * present
+     */
+    public URI locate(String ref, String fragment) {
+        return locate(ref, null, fragment);
+    }
+
+    /**
+     * Determine the relative path of a given reference, based on the
+     * sub-path, and optionally include query parameters.
+     * 
+     * <p>
+     * This call is equivalent to calling
+     * <code>{@linkplain #locate(String, List, String) locate}(ref, params, null)</code>.
+     * 
+     * @param ref the reference
+     * 
+     * @param params name-value pairs for the query string; or
+     * {@code null} if no query string is to be present
+     * 
+     * @return the relative URI
+     * 
+     * @throws NoSuchElementException if a leading double-dot element is
+     * present
+     */
+    public URI
+        locate(String ref,
+               Collection<? extends Map.Entry<? extends String,
+                                              ? extends String>> params) {
+        return locate(ref, params, null);
+    }
+
+    /**
+     * Determine the relative path of a given reference, based on the
+     * sub-path, and optionally include query parameters and a fragment
+     * identifier.
+     * 
+     * <p>
+     * The reference may be empty to refer to the script itself.
+     * Otherwise, if it doesn't begin with a slash, it is treated as if
+     * the slash is prefixed. A trailing dot element is replaced with an
+     * empty string, and other dot elements are removed. Each double-dot
+     * element and its non-double-dot element are removed. Double
+     * slashes are collapsed into singles. It is an error to attempt to
+     * break out of the script's context by using leading double-dot
+     * elements.
+     * 
+     * <p>
+     * Query parameters are added in the iteration order of the supplied
+     * collection.
      * 
      * <table>
      * <thead>
      * <tr>
-     * <th>Script path</th>
-     * <th>Sub-path</th>
-     * <th>Reference</th>
-     * <th>Result</th>
+     * <th align="left">Script path</th>
+     * <th align="left">Sub-path</th>
+     * <th align="left">Reference</th>
+     * <th align="left">Result</th>
      * </tr>
      * </thead> <tbody>
      * <tr>
@@ -163,12 +238,21 @@ public final class PathContext {
      * 
      * @param ref the reference
      * 
-     * @return the relative path
+     * @param params name-value pairs for the query string; or
+     * {@code null} if no query string is to be present
+     * 
+     * @param fragment the fragment identifier; or {@code null} if no
+     * fragment identifier is to be present
+     * 
+     * @return the relative URI
      * 
      * @throws NoSuchElementException if a leading double-dot element is
      * present
      */
-    public URI locate(String ref) {
+    public URI locate(String ref,
+                      Collection<? extends Map.Entry<? extends String,
+                                                     ? extends String>> params,
+                      String fragment) {
         List<String> elems = new ArrayList<>(List.of(PATH_SEPS.split(ref, -1)));
 
         /* Normalize the reference by appending an empty element when
@@ -211,98 +295,143 @@ public final class PathContext {
         /* For each element of the base still remaining, prefix "../",
          * then append the remaining elements separated by "/". */
         StringBuilder result = new StringBuilder("../".repeat(pfx.size()));
-        String sep = "";
-        for (String elem : elems) {
-            result.append(sep);
-            sep = "/";
-            escapePathElement(result, elem);
+        {
+            String sep = "";
+            for (String elem : elems) {
+                result.append(sep);
+                sep = "/";
+                escapePathElement(result, elem);
+            }
         }
         if (result.isEmpty()) result.append("./");
+        if (params != null) {
+            result.append('?');
+            String sep = "";
+            for (var kv : params) {
+                result.append(sep);
+                sep = "&";
+
+                var k = kv.getKey();
+                var v = kv.getValue();
+                escapeParam(result, k);
+                result.append('=');
+                escapeParam(result, v);
+            }
+        }
+        if (fragment != null) escapeFragment(result.append('#'), fragment);
         return URI.create(result.toString());
+    }
+
+    private static StringBuilder escapeParam(StringBuilder output,
+                                             CharSequence input) {
+        for (int cp : input.codePoints().toArray()) {
+            switch (cp) {
+            default -> output.appendCodePoint(cp);
+            case ' ' -> output.append('+');
+            /* TODO: Work out full set of characters. */
+            case '=', '&', '+', '#', ':' -> appendPercentCodepoint(output, cp);
+            }
+        }
+        return output;
+    }
+
+    private static StringBuilder escapePathElement(StringBuilder output,
+                                                   CharSequence input) {
+        for (int cp : input.codePoints().toArray()) {
+            switch (cp) {
+            default -> output.appendCodePoint(cp);
+            /* TODO: Work out full set of characters. */
+            case ':', '/', '?', '#' -> appendPercentCodepoint(output, cp);
+            }
+        }
+        return output;
+    }
+
+    private static StringBuilder escapeFragment(StringBuilder output,
+                                                CharSequence input) {
+        for (int cp : input.codePoints().toArray()) {
+            switch (cp) {
+            default -> output.appendCodePoint(cp);
+            /* TODO: Work out full set of characters. */
+            case '#' -> appendPercentCodepoint(output, cp);
+            }
+        }
+        return output;
     }
 
     private static final char[] hexes = "0123456789ABCDEF".toCharArray();
 
-    private static void escapePathElement(StringBuilder output,
-                                          CharSequence input) {
-        int[] cps = input.codePoints().toArray();
-        for (int cp : cps) {
-            switch (cp) {
-            default -> output.appendCodePoint(cp);
+    private static StringBuilder appendPercentCodepoint(StringBuilder output,
+                                                        int cp) {
+        if (cp < 0x80) {
+            /* 0xxx:xxxx */
+            output.append('%').append(hexes[(cp >>> 4) & 0xf])
+                .append(hexes[cp & 0xf]);
+        } else if (cp < 0x800) {
+            /* 110x:xxxx 10xx:xxxx */
+            output.append('%').append(hexes[(cp >>> 10) | 0xc])
+                .append(hexes[(cp >>> 6) & 0xf])
 
-            case ':', '/', '?', '#' -> {
-                if (cp < 0x80) {
-                    /* 0xxx:xxxx */
-                    output.append('%').append(hexes[(cp >>> 4) & 0xf])
-                        .append(hexes[cp & 0xf]);
-                } else if (cp < 0x800) {
-                    /* 110x:xxxx 10xx:xxxx */
-                    output.append('%').append(hexes[(cp >>> 10) | 0xc])
-                        .append(hexes[(cp >>> 6) & 0xf])
+                .append('%').append(hexes[(cp >>> 4) & 0x3 | 0x8])
+                .append(hexes[cp & 0xf]);
+        } else if (cp < 0x10000) {
+            /* 1110:xxxx 10xx:xxxx 10xx:xxxx */
+            output.append("%E").append(hexes[cp >>> 12])
 
-                        .append('%').append(hexes[(cp >>> 4) & 0x3 | 0x8])
-                        .append(hexes[cp & 0xf]);
-                } else if (cp < 0x10000) {
-                    /* 1110:xxxx 10xx:xxxx 10xx:xxxx */
-                    output.append("%E").append(hexes[cp >>> 12])
+                .append('%').append(hexes[(cp >>> 10) & 0xf | 0x8])
+                .append(hexes[(cp >>> 6) & 0xf])
 
-                        .append('%').append(hexes[(cp >>> 10) & 0xf | 0x8])
-                        .append(hexes[(cp >>> 6) & 0xf])
+                .append('%').append(hexes[(cp >>> 4) & 0xf | 0x8])
+                .append(hexes[cp & 0xf]);
+        } else if (cp < 0x200000) {
+            /* 1111:0xxx 10xx:xxxx 10xx:xxxx 10xx:xxxx */
+            output.append("%F").append(hexes[cp >>> 18])
 
-                        .append('%').append(hexes[(cp >>> 4) & 0xf | 0x8])
-                        .append(hexes[cp & 0xf]);
-                } else if (cp < 0x200000) {
-                    /* 1111:0xxx 10xx:xxxx 10xx:xxxx 10xx:xxxx */
-                    output.append("%F").append(hexes[cp >>> 18])
+                .append('%').append(hexes[(cp >>> 16) & 0xf | 0x8])
+                .append(hexes[(cp >>> 12) & 0xf])
 
-                        .append('%').append(hexes[(cp >>> 16) & 0xf | 0x8])
-                        .append(hexes[(cp >>> 12) & 0xf])
+                .append('%').append(hexes[(cp >>> 10) & 0xf | 0x8])
+                .append(hexes[(cp >>> 6) & 0xf])
 
-                        .append('%').append(hexes[(cp >>> 10) & 0xf | 0x8])
-                        .append(hexes[(cp >>> 6) & 0xf])
+                .append('%').append(hexes[(cp >>> 4) & 0xf | 0x8])
+                .append(hexes[cp & 0xf]);
+        } else if (cp < 0x4000000) {
+            /* 1111:10xx 10xx:xxxx 10xx:xxxx 10xx:xxxx 10xx:xxxx */
+            output.append("%F").append(hexes[cp >>> 24] | 0x8)
 
-                        .append('%').append(hexes[(cp >>> 4) & 0xf | 0x8])
-                        .append(hexes[cp & 0xf]);
-                } else if (cp < 0x4000000) {
-                    /* 1111:10xx 10xx:xxxx 10xx:xxxx 10xx:xxxx
-                     * 10xx:xxxx */
-                    output.append("%F").append(hexes[cp >>> 24] | 0x8)
+                .append('%').append(hexes[(cp >>> 22) & 0xf | 0x8])
+                .append(hexes[(cp >>> 18) & 0xf])
 
-                        .append('%').append(hexes[(cp >>> 22) & 0xf | 0x8])
-                        .append(hexes[(cp >>> 18) & 0xf])
+                .append('%').append(hexes[(cp >>> 16) & 0xf | 0x8])
+                .append(hexes[(cp >>> 12) & 0xf])
 
-                        .append('%').append(hexes[(cp >>> 16) & 0xf | 0x8])
-                        .append(hexes[(cp >>> 12) & 0xf])
+                .append('%').append(hexes[(cp >>> 10) & 0xf | 0x8])
+                .append(hexes[(cp >>> 6) & 0xf])
 
-                        .append('%').append(hexes[(cp >>> 10) & 0xf | 0x8])
-                        .append(hexes[(cp >>> 6) & 0xf])
+                .append('%').append(hexes[(cp >>> 4) & 0xf | 0x8])
+                .append(hexes[cp & 0xf]);
+        } else {
+            assert cp < 0x80000000;
+            /* 1111:110x 10xx:xxxx 10xx:xxxx 10xx:xxxx 10xx:xxxx
+             * 10xx:xxxx */
+            output.append("%F").append(hexes[cp >>> 30] | 0xc)
 
-                        .append('%').append(hexes[(cp >>> 4) & 0xf | 0x8])
-                        .append(hexes[cp & 0xf]);
-                } else {
-                    assert cp < 0x80000000;
-                    /* 1111:110x 10xx:xxxx 10xx:xxxx 10xx:xxxx 10xx:xxxx
-                     * 10xx:xxxx */
-                    output.append("%F").append(hexes[cp >>> 30] | 0xc)
+                .append('%').append(hexes[(cp >>> 28) & 0xf | 0x8])
+                .append(hexes[(cp >>> 24) & 0xf])
 
-                        .append('%').append(hexes[(cp >>> 28) & 0xf | 0x8])
-                        .append(hexes[(cp >>> 24) & 0xf])
+                .append('%').append(hexes[(cp >>> 22) & 0xf | 0x8])
+                .append(hexes[(cp >>> 18) & 0xf])
 
-                        .append('%').append(hexes[(cp >>> 22) & 0xf | 0x8])
-                        .append(hexes[(cp >>> 18) & 0xf])
+                .append('%').append(hexes[(cp >>> 16) & 0xf | 0x8])
+                .append(hexes[(cp >>> 12) & 0xf])
 
-                        .append('%').append(hexes[(cp >>> 16) & 0xf | 0x8])
-                        .append(hexes[(cp >>> 12) & 0xf])
+                .append('%').append(hexes[(cp >>> 10) & 0xf | 0x8])
+                .append(hexes[(cp >>> 6) & 0xf])
 
-                        .append('%').append(hexes[(cp >>> 10) & 0xf | 0x8])
-                        .append(hexes[(cp >>> 6) & 0xf])
-
-                        .append('%').append(hexes[(cp >>> 4) & 0xf | 0x8])
-                        .append(hexes[cp & 0xf]);
-                }
-            }
-            }
+                .append('%').append(hexes[(cp >>> 4) & 0xf | 0x8])
+                .append(hexes[cp & 0xf]);
         }
+        return output;
     }
 
     /**
