@@ -50,6 +50,10 @@ import uk.ac.lancs.fastcgi.util.PathContext;
  * @author simpsons
  */
 public class MD5SumResponder implements Responder {
+    private static final String[] subpaths = { "", "/", "baz/qux", "/baz/qux",
+        "baz/qux/quux", "baz/qux/", "baz/yan/tan/", "baz/yan/tan", "/baz/",
+        "/baz", "/foo:bar/baz", "/foó/bär/båz" };
+
     @Override
     public void respond(ResponderContext ctxt) throws Exception {
         final byte[] dig;
@@ -74,6 +78,8 @@ public class MD5SumResponder implements Responder {
             out.printf("\nPath computations:\n");
             out.printf("Script: %s\n", pathCtxt.script);
             out.printf("Subpath: %s\n", pathCtxt.subpath);
+            for (String sp : subpaths)
+                out.printf("Ref: [%s] -> [%s]%n", sp, pathCtxt.locate(sp));
 
             out.printf("\nDigest: ");
             for (int i = 0; i < dig.length; i++) {
