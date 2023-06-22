@@ -366,7 +366,7 @@ public class RecordReader {
     }
 
     private String msg(String fmt, Object... args) {
-        return tag + ":" + String.format(fmt, args);
+        return tag + ":in:" + String.format(fmt, args);
     }
 
     private void rejectMessage(int rver, int rtype, int rid, int iclen,

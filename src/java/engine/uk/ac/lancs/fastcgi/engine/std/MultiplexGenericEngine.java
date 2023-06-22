@@ -205,7 +205,8 @@ class MultiplexGenericEngine implements Engine {
             this.conn = conn;
             this.recordsIn =
                 new RecordReader(conn.input(), charset, this, "conn-" + id);
-            this.recordsOut = new RecordWriter(conn.output(), charset);
+            this.recordsOut =
+                new RecordWriter(conn.output(), charset, "conn-" + id);
             this.optimizedBufferSize =
                 optimizeBufferSize(stdoutBufferSize,
                                    this.recordsOut.optimumPayloadLength(),

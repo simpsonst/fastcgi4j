@@ -43,6 +43,7 @@ import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Logger;
 import uk.ac.lancs.fastcgi.proto.ProtocolStatuses;
 import uk.ac.lancs.fastcgi.proto.RecordTypes;
 
@@ -55,6 +56,8 @@ public class RecordWriter {
     private final OutputStream out;
 
     private final Charset charset;
+
+    private final String tag;
 
     private final Lock lock = new ReentrantLock();
 
@@ -152,10 +155,13 @@ public class RecordWriter {
      * 
      * @param charset the character encoding for writing name-value
      * pairs
+     * 
+     * @param tag a tag to include in logging messages
      */
-    public RecordWriter(OutputStream out, Charset charset) {
+    public RecordWriter(OutputStream out, Charset charset, String tag) {
         this.out = out;
         this.charset = charset;
+        this.tag = tag;
     }
 
     /**
@@ -294,6 +300,7 @@ public class RecordWriter {
         assert pad2 == pad;
 
         checkAlignment(buf);
+        logger.fine(() -> msg("GET_VALUES_RESULT"));
         try {
             try {
                 lock.lock();
@@ -332,6 +339,7 @@ public class RecordWriter {
         buf.put(padding, 0, 7); // reserved
 
         checkAlignment(buf);
+        logger.fine(() -> msg("UNKNOWN_TYPE(%d)", RecordTypes.toString(type)));
         try {
             try {
                 lock.lock();
@@ -377,6 +385,8 @@ public class RecordWriter {
         buf.put(padding, 0, 3);
 
         checkAlignment(buf);
+        logger.fine(() -> msg("END_REQUEST(%d, %d, %s)", id, appStatus,
+                              ProtocolStatuses.toString(protoStatus)));
         try {
             try {
                 lock.lock();
@@ -551,6 +561,7 @@ public class RecordWriter {
      */
     public int writeStdout(int id, byte[] buf, int off, int len)
         throws RecordIOException {
+        logger.fine(() -> msg("STDOUT(%d, %d)", id, len));
         return writeStream("Stdout", RecordTypes.STDOUT, id, buf, off, len);
     }
 
@@ -565,6 +576,7 @@ public class RecordWriter {
      * @see RecordTypes#STDOUT
      */
     public void writeStdoutEnd(int id) throws RecordIOException {
+        logger.fine(() -> msg("STDOUT(%d) end", id));
         writeEnd("Stdout", RecordTypes.STDOUT, id);
     }
 
@@ -591,6 +603,7 @@ public class RecordWriter {
      */
     public int writeStderr(int id, byte[] buf, int off, int len)
         throws RecordIOException {
+        logger.fine(() -> msg("STDERR(%d, %d)", id, len));
         return writeStream("Stderr", RecordTypes.STDERR, id, buf, off, len);
     }
 
@@ -605,6 +618,14 @@ public class RecordWriter {
      * @see RecordTypes#STDERR
      */
     public void writeStderrEnd(int id) throws RecordIOException {
+        logger.fine(() -> msg("STDERR(%d) end", id));
         writeEnd("Stderr", RecordTypes.STDERR, id);
     }
+
+    private String msg(String fmt, Object... args) {
+        return tag + ":out:" + String.format(fmt, args);
+    }
+
+    private static final Logger logger =
+        Logger.getLogger(RecordWriter.class.getPackageName());
 }
