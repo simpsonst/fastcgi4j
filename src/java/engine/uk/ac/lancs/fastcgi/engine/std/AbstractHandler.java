@@ -348,7 +348,15 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
                     /* Discard any remaining interruptions. */
                     Thread.interrupted();
 
-                    logger.finer(() -> msg("app-exit"));
+                    try {
+                        out().close();
+                    } finally {
+                        try {
+                            err().close();
+                        } finally {
+                            logger.finer(() -> msg("app-exit"));
+                        }
+                    }
                 }
             } catch (RecordIOException ex) {
                 ex.unpack();
