@@ -362,7 +362,14 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
                 pStat = ProtocolStatuses.OVERLOADED;
                 completed = true;
             } catch (Exception | Error ex) {
-                logger.severe(() -> msg("ex: %s %s", ex, ex.getMessage()));
+                logger.severe(() -> {
+                    StringBuilder st = new StringBuilder();
+                    for (var se : ex.getStackTrace()) {
+                        st.append(' ').append(se.getClassName()).append(':')
+                            .append(se.getLineNumber());
+                    }
+                    return msg("ex:%s %s %s", st, ex, ex.getMessage());
+                });
                 try {
                     setStatus(501);
                     setHeader("Content-Type", "text/plain; charset=UTF-8");
