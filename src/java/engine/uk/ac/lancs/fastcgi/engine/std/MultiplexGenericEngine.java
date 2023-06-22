@@ -47,7 +47,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import uk.ac.lancs.fastcgi.Authorizer;
 import uk.ac.lancs.fastcgi.Filter;
@@ -231,10 +230,13 @@ class MultiplexGenericEngine implements Engine {
                 }
                 conn.close();
             } catch (IOException ex) {
-                /* There was an error reading to or writing from the
-                 * connection. */
-                logger.log(Level.SEVERE, "connection " + id, ex);
+                if (keepGoing || !sessions.isEmpty()) {
+                    /* There was an error reading to or writing from the
+                     * connection. */
+                    logger.severe(() -> msg("I/O error: %s", ex.getMessage()));
+                }
             } finally {
+                logger.fine(() -> msg("closed"));
                 Thread.currentThread().setName("fastcgi4j-ct-unused");
             }
         }
