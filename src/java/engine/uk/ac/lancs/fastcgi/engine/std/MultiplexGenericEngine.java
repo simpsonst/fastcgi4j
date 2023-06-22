@@ -314,9 +314,9 @@ class MultiplexGenericEngine implements Engine {
                                          conn.internalDescription(),
                                          this::abortConnection,
                                          h -> sessions.remove(id, h),
-                                         recordsOut, executor, charset,
-                                         paramBufs, optimizedBufferSize,
-                                         stderrBufferSize);
+                                         this::checkLastCall, recordsOut,
+                                         executor, charset, paramBufs,
+                                         optimizedBufferSize, stderrBufferSize);
 
             /* Create the session if there isn't one with the specified
              * id, and the role type is recognized. */
@@ -361,6 +361,17 @@ class MultiplexGenericEngine implements Engine {
                     .severe(() -> msg("server began existing request %d", id));
             } else {
                 logger.fine(() -> msg("begun request %d", id));
+            }
+        }
+
+        private void checkLastCall() {
+            if (!keepGoing && sessions.isEmpty()) {
+                try {
+                    conn.close();
+                } catch (IOException ex) {
+                    logger.warning(() -> msg("I/O on close: %s",
+                                             ex.getMessage()));
+                }
             }
         }
 

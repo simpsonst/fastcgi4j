@@ -99,6 +99,12 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
     final Predicate<? super SessionHandler> cleanUp;
 
     /**
+     * Holds the action to take when the session has sent its last
+     * record.
+     */
+    final Runnable checkLastSession;
+
+    /**
      * Holds the means to write records to the transport connection.
      */
     final RecordWriter recordsOut;
@@ -260,6 +266,7 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
         this.recordsOut = ctxt.recordsOut;
         this.executor = ctxt.executor;
         this.charset = ctxt.charset;
+        this.checkLastSession = ctxt.checkLastSession;
 
         this.paramReader =
             new ParamReader(params, ctxt.charset, ctxt.paramBufs.getBuffer(),
@@ -416,6 +423,7 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
                             .fine(() -> msg("req=%d rc=%d ps=%s", id, appStatus,
                                             ProtocolStatuses.toString(fpStat)));
                         recordsOut.writeEndRequest(id, appStatus, pStat);
+                        checkLastSession.run();
                     }
                 } catch (RecordIOException ex2) {
                     ex2.unpack();

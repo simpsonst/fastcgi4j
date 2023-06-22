@@ -61,6 +61,8 @@ class HandlerContext {
 
     final Predicate<? super SessionHandler> cleanUp;
 
+    final Runnable checkLastSession;
+
     final RecordWriter recordsOut;
 
     final Executor executor;
@@ -114,9 +116,10 @@ class HandlerContext {
     public HandlerContext(int connId, int id, Package impl, String connDescr,
                           String intConnDescr, Runnable connAbort,
                           Predicate<? super SessionHandler> cleanUp,
-                          RecordWriter recordsOut, Executor executor,
-                          Charset charset, BufferPool paramBufs,
-                          int stdoutBufferSize, int stderrBufferSize) {
+                          Runnable checkLastSession, RecordWriter recordsOut,
+                          Executor executor, Charset charset,
+                          BufferPool paramBufs, int stdoutBufferSize,
+                          int stderrBufferSize) {
         this.connId = connId;
         this.id = id;
         this.impl = impl;
@@ -124,6 +127,7 @@ class HandlerContext {
         this.intConnDescr = intConnDescr;
         this.connAbort = connAbort;
         this.cleanUp = cleanUp;
+        this.checkLastSession = checkLastSession;
         this.recordsOut = recordsOut;
         this.executor = executor;
         this.charset = charset;
