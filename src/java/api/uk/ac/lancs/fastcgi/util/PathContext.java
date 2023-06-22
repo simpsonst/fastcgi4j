@@ -38,12 +38,16 @@ package uk.ac.lancs.fastcgi.util;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import uk.ac.lancs.fastcgi.context.SessionContext;
 
 /**
@@ -80,8 +84,7 @@ public final class PathContext {
         this.script = script;
 
         String[] scriptElems = PATH_SEPS.split(script);
-        leadElem =
-            scriptElems.length == 0 ? "" : scriptElems[scriptElems.length - 1];
+        leadElem = scriptElems[scriptElems.length - 1];
 
         this.subpath = subpath;
         var spes = new ArrayList<>(List.of(PATH_SEPS.split(subpath, -1)));
@@ -158,6 +161,17 @@ public final class PathContext {
     }
 
     /**
+     * Determine whether the script's root path can be referenced. This
+     * is not the case if the script's root is the server root.
+     * 
+     * @return {@code true} if the root path can be referenced;
+     * {@code false} otherwise
+     */
+    public boolean allowRoot() {
+        return !leadElem.isEmpty();
+    }
+
+    /**
      * Determine the relative path of a given reference, based on the
      * sub-path, and optionally include query parameters and a fragment
      * identifier.
@@ -231,7 +245,7 @@ public final class PathContext {
      * <td><samp>/foo/bar</samp></td>
      * <td><samp>/baz/qux/</samp></td>
      * <td><samp>/baz</samp></td>
-     * <td><samp>../baz</samp></td>
+     * <td><samp>../../baz</samp></td>
      * </tr>
      * </tbody>
      * </table>
@@ -253,6 +267,12 @@ public final class PathContext {
                       Collection<? extends Map.Entry<? extends String,
                                                      ? extends String>> params,
                       String fragment) {
+        /* The raw script cannot be referenced if at the top level. */
+        if (leadElem.isEmpty() && ref.isEmpty())
+            throw new IllegalArgumentException(String
+                .format("bad ref [%s] base=[%s] sub=[%s]", ref, script,
+                        subpath));
+
         List<String> elems = new ArrayList<>(List.of(PATH_SEPS.split(ref, -1)));
 
         /* Normalize the reference by appending an empty element when
@@ -264,15 +284,21 @@ public final class PathContext {
         }
 
         /* Normalize the reference by removing "." and ".." elements. */
-        for (var iter = elems.listIterator(); iter.hasNext();) {
-            String value = iter.next();
-            if (value.equals(".")) {
-                iter.remove();
-            } else if (value.equals("..")) {
-                iter.remove();
-                iter.previous();
-                iter.remove();
+        try {
+            for (var iter = elems.listIterator(); iter.hasNext();) {
+                String value = iter.next();
+                if (value.equals(".")) {
+                    iter.remove();
+                } else if (value.equals("..")) {
+                    iter.remove();
+                    iter.previous();
+                    iter.remove();
+                }
             }
+        } catch (NoSuchElementException ex) {
+            throw new IllegalArgumentException(String
+                .format("bad ref [%s] base=[%s] sub=[%s]", ref, script,
+                        subpath));
         }
 
         /* The first element should always be the lead element. If
@@ -304,6 +330,10 @@ public final class PathContext {
             }
         }
         if (result.isEmpty()) result.append("./");
+        logger.finer(() -> String
+            .format("script=%s subpath=%s " + "ref=%s result=%s", script,
+                    subpath, ref, result));
+
         if (params != null) {
             result.append('?');
             String sep = "";
@@ -318,7 +348,9 @@ public final class PathContext {
                 escapeParam(result, v);
             }
         }
+
         if (fragment != null) escapeFragment(result.append('#'), fragment);
+
         return URI.create(result.toString());
     }
 
@@ -341,7 +373,7 @@ public final class PathContext {
             switch (cp) {
             default -> output.appendCodePoint(cp);
             /* TODO: Work out full set of characters. */
-            case ':', '/', '?', '#' -> appendPercentCodepoint(output, cp);
+            case ':', '/', '?', '#', ' ' -> appendPercentCodepoint(output, cp);
             }
         }
         return output;
@@ -353,7 +385,7 @@ public final class PathContext {
             switch (cp) {
             default -> output.appendCodePoint(cp);
             /* TODO: Work out full set of characters. */
-            case '#' -> appendPercentCodepoint(output, cp);
+            case '#', ' ' -> appendPercentCodepoint(output, cp);
             }
         }
         return output;
@@ -434,8 +466,44 @@ public final class PathContext {
         return output;
     }
 
+    private static PathContext infer(URI scriptFilename, String pathInfo,
+                                     String scriptName, String prefix) {
+        prefix = normalizePrefix(prefix);
+        if (pathInfo != null) {
+            return new PathContext(prefix + scriptName, pathInfo);
+        } else if ("proxy".equals(scriptFilename.getScheme())) {
+            final URI ssp =
+                URI.create(scriptFilename.getRawSchemeSpecificPart());
+            final String virtualPath = ssp.getPath();
+            if (scriptName.endsWith(virtualPath)) {
+                final String correctedScriptName = scriptName
+                    .substring(0, scriptName.length() - virtualPath.length());
+                return new PathContext(prefix + correctedScriptName,
+                                       virtualPath);
+            }
+        }
+        return new PathContext(prefix + scriptName, "");
+    }
+
     /**
-     * Create a path context from CGI variables.
+     * Normalize a path prefix. The input is split by slashes, empty
+     * elements are removed, then each element is prefixed with a slash,
+     * and the elements are concatenated. If {@code null} is supplied,
+     * an empty string is returned.
+     * 
+     * @param input the prefix to normalize
+     * 
+     * @return the normalized prefix
+     */
+    private static String normalizePrefix(CharSequence input) {
+        if (input == null) return "";
+        return Arrays.stream(PATH_SEPS.split(input, -1))
+            .filter(s -> !s.isEmpty()).map(s -> "/" + s)
+            .collect(Collectors.joining());
+    }
+
+    /**
+     * Creates path contexts from CGI parameters.
      * 
      * <p>
      * The algorithm is as follows:
@@ -458,44 +526,193 @@ public final class PathContext {
      * 
      * </ol>
      * 
-     * @param params the request context's CGI variables
-     * 
-     * @return the derived path context
+     * <p>
+     * In each case, the path script may be prefixed by a value possibly
+     * derived from CGI parameters. This <dfn>external prefix</dfn>
+     * defaults to an empty string. Any supplied prefix will be
+     * normalized by ensuring that each path element begins with a
+     * slash, and no element is empty. So, for example,
+     * <samp>foo/bar/</samp> is normalized to <samp>/foo/bar</samp>.
      */
-    public static PathContext
-        infer(Map<? super String, ? extends String> params) {
-        final URI scriptFilename = URI.create(params.get("SCRIPT_FILENAME"));
-        final String pathInfo = params.get("PATH_INFO");
-        final String scriptName = params.get("SCRIPT_NAME");
-        if (pathInfo != null) {
-            return new PathContext(scriptName, pathInfo);
-        } else if ("proxy".equals(scriptFilename.getScheme())) {
-            final URI ssp =
-                URI.create(scriptFilename.getRawSchemeSpecificPart());
-            final String virtualPath = ssp.getPath();
-            if (scriptName.endsWith(virtualPath)) {
-                final String correctedScriptName = scriptName
-                    .substring(0, scriptName.length() - virtualPath.length());
-                return new PathContext(correctedScriptName, virtualPath);
-            }
+    public static final class Builder {
+        private Function<? super Map<? super String, ? extends String>,
+                         ? extends String> scriptFilename =
+                             m -> m.get("SCRIPT_FILENAME");
+
+        private Function<? super Map<? super String, ? extends String>,
+                         ? extends String> pathInfo = m -> m.get("PATH_INFO");
+
+        private Function<? super Map<? super String, ? extends String>,
+                         ? extends String> scriptName =
+                             m -> m.get("SCRIPT_NAME");
+
+        private Function<? super Map<? super String, ? extends String>,
+                         ? extends String> prefix = m -> "";
+
+        /**
+         * Specify how to obtain the script filename.
+         * 
+         * @param func a function taking CGI parameters and returning
+         * the script filename
+         * 
+         * @return this builder
+         */
+        public Builder
+            scriptFilename(Function<? super Map<? super String,
+                                                ? extends String>,
+                                    ? extends String> func) {
+            this.scriptFilename = Objects.requireNonNull(func, "func");
+            return this;
         }
-        return new PathContext(scriptName, "");
+
+        /**
+         * Specify how to obtain the script name.
+         * 
+         * @param func a function taking CGI parameters and returning
+         * the script name
+         * 
+         * @return this builder
+         * 
+         * @see <a href=
+         * "https://datatracker.ietf.org/doc/html/rfc3875#section-4.1.13">RFC3875
+         * Section 4.1.13</a>
+         */
+        public Builder
+            scriptName(Function<? super Map<? super String, ? extends String>,
+                                ? extends String> func) {
+            this.scriptName = Objects.requireNonNull(func, "func");
+            return this;
+        }
+
+        /**
+         * Specify how to obtain the path information.
+         * 
+         * @param func a function taking CGI parameters and returning
+         * the path information, or {@code null} if not available
+         * 
+         * @return this builder
+         * 
+         * @see <a href=
+         * "https://datatracker.ietf.org/doc/html/rfc3875section-4.1.5">RFC3875
+         * Section 4.1.5</a>
+         */
+        public Builder
+            pathInfo(Function<? super Map<? super String, ? extends String>,
+                              ? extends String> func) {
+            this.pathInfo = Objects.requireNonNull(func, "func");
+            return this;
+        }
+
+        /**
+         * Specify how to obtain the external prefix.
+         * 
+         * @param func a function taking CGI parameters and returning
+         * the external prefix
+         * 
+         * @return this builder
+         */
+        public Builder
+            prefix(Function<? super Map<? super String, ? extends String>,
+                            ? extends String> func) {
+            this.prefix = Objects.requireNonNull(func, "func");
+            return this;
+        }
+
+        /**
+         * Specify a fixed external prefix.
+         * 
+         * @param text the external prefix
+         * 
+         * @return this builder
+         */
+        public Builder prefix(CharSequence text) {
+            this.prefix = s -> text.toString();
+            return this;
+        }
+
+        /**
+         * Specify an external prefix derived from CGI parameters.
+         * 
+         * @param name the name of the CGI parameter
+         * 
+         * @return this builder
+         */
+        public Builder prefixFromCGI(String name) {
+            return prefix(s -> s.get(name));
+        }
+
+        /**
+         * Specify an external prefix derived from the environment. The
+         * value is read immediately using
+         * {@link System#getenv(String)}, and delivered as a constant.
+         * 
+         * @param name the name of the environment variable
+         * 
+         * @return this builder
+         */
+        public Builder prefixFromEnvironment(String name) {
+            return prefix(System.getenv(name));
+        }
+
+        /**
+         * Specify an external prefix derived from a system property.
+         * The value is read immediately using
+         * {@link System#getProperty(String)}, and delivered as a
+         * constant.
+         * 
+         * @param name the name of the system property
+         * 
+         * @return this builder
+         */
+        public Builder prefixFromSystemProperty(String name) {
+            return prefix(System.getProperty(name));
+        }
+
+        /**
+         * Create a path context using the current settings and some CGI
+         * parameters.
+         * 
+         * <p>
+         * This method can be used multiple times on the same object to
+         * obtain distinct path contexts.
+         * 
+         * @param params the CGI parameters
+         * 
+         * @return the path context
+         */
+        public PathContext build(Map<? super String, ? extends String> params) {
+            URI scriptFilename = URI.create(this.scriptFilename.apply(params));
+            String pathInfo = this.pathInfo.apply(params);
+            String scriptName = this.scriptName.apply(params);
+            String prefix = this.prefix.apply(params);
+            return infer(scriptFilename, pathInfo, scriptName, prefix);
+        }
+
+        /**
+         * Create a path context using the current settings and the CGI
+         * parameters from a session context.
+         * 
+         * @param ctxt the session context
+         * 
+         * @return the path context
+         */
+        public PathContext build(SessionContext ctxt) {
+            return build(ctxt.parameters());
+        }
+
+        private Builder() {}
     }
 
     /**
-     * Create a path context from a session context. Session parameters
-     * are extracted from the context using
-     * {@link SessionContext#parameters(), and then passed to
-     * {@link #infer(Map)}.
+     * Prepare to create a path context. By default, the builder reads
+     * <samp>PATH_INFO</samp>, <samp>SCRIPT_FILENAME</samp> and
+     * <samp>SCRIPT_NAME</samp> from the supplied CGI parameters, and
+     * has an empty external prefix.
      * 
-     * @param ctxt the session context
-     * 
-     * @return the derived path context
-     * 
-     * @see #infer(Map)
+     * @return the new builder
      */
-    public static PathContext infer(SessionContext ctxt) {
-        return infer(ctxt.parameters());
+    public static Builder start() {
+        return new Builder();
     }
 
     /**
@@ -552,4 +769,7 @@ public final class PathContext {
     private static String escape(String s) {
         return s.replace("%", "%25").replace(":", "%3A");
     }
+
+    private static final Logger logger =
+        Logger.getLogger(PathContext.class.getPackageName());
 }
