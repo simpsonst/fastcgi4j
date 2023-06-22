@@ -171,7 +171,7 @@ Here's some documentation for web servers that can talk to a stand-alone FastCGI
 
 * [Apache Module `mod_authnz_fcgi`](https://httpd.apache.org/docs/2.4/mod/mod_authnz_fcgi.html)
 
-* [Nginx `fastcgi_pass` directive](http://nginx.org/en/docs/http/ngx_http_fastcgi_module.html#fastcgi_pass)
+* [NGINX `fastcgi_pass` directive](http://nginx.org/en/docs/http/ngx_http_fastcgi_module.html#fastcgi_pass)
 
 
 ### Apache stand-alone configuration examples
@@ -211,9 +211,35 @@ RewriteRule ^.* "fcgi://localhost:9000/" [P,NE]
 ```
 
 
-### Nginx stand-alone configurations
+### NGINX stand-alone configurations
 
-To do.
+This example assumes you're starting your application with `--bind localhost:9000`.
+A `location` directive selects the path you bind to.
+Within it, set `fastcgi_pass` to point at your application's address:
+
+```
+location ~ ^/foo(/.*)?$ {
+  fastcgi_pass localhost:9000;
+}
+```
+
+This will match `/foo`, `/foo/`, `/foo/bar`, etc, but not `/football`.
+
+So far, this will only get you HTTP headers as CGI parameters (e.g., `HTTP_USER_AGENT`, etc).
+You will likely want additional parameters to be passed, especially `PATH_INFO` and `SCRIPT_NAME`.
+Based on information from [NGINX documentation](https://www.nginx.com/resources/wiki/start/topics/examples/phpfcgi/#fastcgi-params) and [StackOverflow answer](https://stackoverflow.com/questions/20848899/nginx-phpfpm-path-info-always-empty#answer-49246280), you need include some settings from `/etc/nginx/fastcgi.conf`, and customize a few values:
+
+```
+location ~ ^/foo(/.*)?$ {
+  fastcgi_pass localhost:9000;
+
+  include fastcgi.conf;
+  fastcgi_param SCRIPT_NAME       "/foo";
+  fastcgi_split_path_info         ^(/foo)(/.+)$;
+  fastcgi_param PATH_INFO         $fastcgi_path_info;
+  fastcgi_param PATH_TRANSLATED   $document_root$fastcgi_path_info;
+}
+```
 
 
 
