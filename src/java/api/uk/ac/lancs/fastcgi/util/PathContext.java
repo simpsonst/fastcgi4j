@@ -80,7 +80,13 @@ public final class PathContext {
 
     private final List<String> subelems;
 
-    private PathContext(String script, String subpath) {
+    private final URI root;
+
+    private final URI here;
+
+    private PathContext(URI root, String script, String subpath) {
+        this.root = root;
+
         this.script = script;
 
         String[] scriptElems = PATH_SEPS.split(script);
@@ -90,75 +96,10 @@ public final class PathContext {
         var spes = new ArrayList<>(List.of(PATH_SEPS.split(subpath, -1)));
         spes.set(0, leadElem);
         this.subelems = List.copyOf(spes);
+        this.here = this.root.resolve(this.script + this.subpath);
     }
 
     private static final Pattern PATH_SEPS = Pattern.compile("/+");
-
-    /**
-     * Determine the relative path of a given reference, based on the
-     * sub-path.
-     * 
-     * <p>
-     * This call is equivalent to calling
-     * <code>{@linkplain #locate(String, List, String) locate}(ref, null, null)</code>.
-     * 
-     * @param ref the reference
-     * 
-     * @return the relative URI
-     * 
-     * @throws NoSuchElementException if a leading double-dot element is
-     * present
-     */
-    public URI locate(String ref) {
-        return locate(ref, null, null);
-    }
-
-    /**
-     * Determine the relative path of a given reference, based on the
-     * sub-path, and optionally include a fragment identifier.
-     * 
-     * <p>
-     * This call is equivalent to calling
-     * <code>{@linkplain #locate(String, List, String) locate}(ref, null, fragment)</code>.
-     * 
-     * @param ref the reference
-     * 
-     * @param fragment the fragment identifier; or {@code null} if no
-     * fragment identifier is to be present
-     * 
-     * @return the relative URI
-     * 
-     * @throws NoSuchElementException if a leading double-dot element is
-     * present
-     */
-    public URI locate(String ref, String fragment) {
-        return locate(ref, null, fragment);
-    }
-
-    /**
-     * Determine the relative path of a given reference, based on the
-     * sub-path, and optionally include query parameters.
-     * 
-     * <p>
-     * This call is equivalent to calling
-     * <code>{@linkplain #locate(String, List, String) locate}(ref, params, null)</code>.
-     * 
-     * @param ref the reference
-     * 
-     * @param params name-value pairs for the query string; or
-     * {@code null} if no query string is to be present
-     * 
-     * @return the relative URI
-     * 
-     * @throws NoSuchElementException if a leading double-dot element is
-     * present
-     */
-    public URI
-        locate(String ref,
-               Collection<? extends Map.Entry<? extends String,
-                                              ? extends String>> params) {
-        return locate(ref, params, null);
-    }
 
     /**
      * Determine whether the script's root path can be referenced. This
@@ -171,10 +112,75 @@ public final class PathContext {
         return !leadElem.isEmpty();
     }
 
+    private String resolve(String ref) {
+        /* The raw script cannot be referenced if at the top level. */
+        if (leadElem.isEmpty() && ref.isEmpty())
+            throw new IllegalArgumentException(String
+                .format("bad ref [%s] base=[%s] sub=[%s]", ref, script,
+                        subpath));
+
+        List<String> elems = new ArrayList<>(List.of(PATH_SEPS.split(ref, -1)));
+
+        /* Normalize the reference by appending an empty element when
+         * the last element is a dot or double-dot. */
+        if (!elems.isEmpty()) {
+            switch (elems.get(elems.size() - 1)) {
+            case ".", ".." -> elems.add("");
+            }
+        }
+
+        /* Normalize the reference by removing "." and ".." elements. */
+        try {
+            for (var iter = elems.listIterator(); iter.hasNext();) {
+                String value = iter.next();
+                if (value.equals(".")) {
+                    iter.remove();
+                } else if (value.equals("..")) {
+                    iter.remove();
+                    iter.previous();
+                    iter.remove();
+                }
+            }
+        } catch (NoSuchElementException ex) {
+            throw new IllegalArgumentException(String
+                .format("bad ref [%s] base=[%s] sub=[%s]", ref, script,
+                        subpath));
+        }
+
+        /* The first element should always be the lead element. If
+         * blank, set it to that value; otherwise, prefix it. */
+        if (!elems.isEmpty() && elems.get(0).isEmpty())
+            elems.set(0, leadElem);
+        else
+            elems.add(0, leadElem);
+
+        /* Always take off the trailing element of the base. */
+        List<String> pfx = subelems.subList(0, subelems.size() - 1);
+
+        /* Eliminate identical initial elements of our two lists. */
+        while (!pfx.isEmpty() && elems.size() > 1 &&
+            pfx.get(0).equals(elems.get(0))) {
+            pfx = pfx.subList(1, pfx.size());
+            elems = elems.subList(1, elems.size());
+        }
+
+        /* For each element of the base still remaining, prefix "../",
+         * then append the remaining elements separated by "/". */
+        StringBuilder result = new StringBuilder("../".repeat(pfx.size()));
+        {
+            String sep = "";
+            for (String elem : elems) {
+                result.append(sep);
+                sep = "/";
+                escapePathElement(result, elem);
+            }
+        }
+        if (result.isEmpty()) result.append("./");
+        return result.toString();
+    }
+
     /**
-     * Determine the relative path of a given reference, based on the
-     * sub-path, and optionally include query parameters and a fragment
-     * identifier.
+     * Prepare to refer to a resource within this script.
      * 
      * <p>
      * The reference may be empty to refer to the script itself.
@@ -250,108 +256,127 @@ public final class PathContext {
      * </tbody>
      * </table>
      * 
-     * @param ref the reference
+     * @param ref the internal reference
      * 
-     * @param params name-value pairs for the query string; or
-     * {@code null} if no query string is to be present
+     * @return an object for adding query parameters or a fragment
+     * identifier, and for choosing a relative or absolute address
      * 
-     * @param fragment the fragment identifier; or {@code null} if no
-     * fragment identifier is to be present
-     * 
-     * @return the relative URI
-     * 
-     * @throws NoSuchElementException if a leading double-dot element is
-     * present
+     * @throws IllegalArgumentException if the reference is external
      */
-    public URI locate(String ref,
-                      Collection<? extends Map.Entry<? extends String,
-                                                     ? extends String>> params,
-                      String fragment) {
-        /* The raw script cannot be referenced if at the top level. */
-        if (leadElem.isEmpty() && ref.isEmpty())
-            throw new IllegalArgumentException(String
-                .format("bad ref [%s] base=[%s] sub=[%s]", ref, script,
-                        subpath));
+    public Reference locate(String ref) {
+        return new Reference(resolve(ref));
+    }
 
-        List<String> elems = new ArrayList<>(List.of(PATH_SEPS.split(ref, -1)));
+    /**
+     * Builds a URI referencing an internal resource. Call
+     * {@link #relative()} or {@link #absolute()} to generate the URI.
+     */
+    public final class Reference {
+        final String ref;
 
-        /* Normalize the reference by appending an empty element when
-         * the last element is a dot or double-dot. */
-        if (!elems.isEmpty()) {
-            switch (elems.get(elems.size() - 1)) {
-            case ".", ".." -> elems.add("");
-            }
+        Collection<? extends Map.Entry<? extends String,
+                                       ? extends String>> query = null;
+
+        String fragment = null;
+
+        Reference(String ref) {
+            this.ref = ref;
         }
 
-        /* Normalize the reference by removing "." and ".." elements. */
-        try {
-            for (var iter = elems.listIterator(); iter.hasNext();) {
-                String value = iter.next();
-                if (value.equals(".")) {
-                    iter.remove();
-                } else if (value.equals("..")) {
-                    iter.remove();
-                    iter.previous();
-                    iter.remove();
+        /**
+         * Generate the relative URI for the identified resource.
+         * 
+         * @return the relative URI to the resource
+         */
+        public URI relative() {
+            StringBuilder result = new StringBuilder(ref);
+            if (query != null) {
+                result.append('?');
+                String sep = "";
+                for (var kv : query) {
+                    result.append(sep);
+                    sep = "&";
+
+                    var k = kv.getKey();
+                    var v = kv.getValue();
+                    escapeParam(result, k);
+                    result.append('=');
+                    escapeParam(result, v);
                 }
             }
-        } catch (NoSuchElementException ex) {
-            throw new IllegalArgumentException(String
-                .format("bad ref [%s] base=[%s] sub=[%s]", ref, script,
-                        subpath));
+
+            if (fragment != null) escapeFragment(result.append('#'), fragment);
+
+            return URI.create(result.toString());
         }
 
-        /* The first element should always be the lead element. If
-         * blank, set it to that value; otherwise, prefix it. */
-        if (!elems.isEmpty() && elems.get(0).isEmpty())
-            elems.set(0, leadElem);
-        else
-            elems.add(0, leadElem);
-
-        /* Always take off the trailing element of the base. */
-        List<String> pfx = subelems.subList(0, subelems.size() - 1);
-
-        /* Eliminate identical initial elements of our two lists. */
-        while (!pfx.isEmpty() && elems.size() > 1 &&
-            pfx.get(0).equals(elems.get(0))) {
-            pfx = pfx.subList(1, pfx.size());
-            elems = elems.subList(1, elems.size());
+        /**
+         * Generate the absolute URI for the identified resource.
+         * 
+         * @return the absolute URI to the resource
+         */
+        public URI absolute() {
+            return here.resolve(relative());
         }
 
-        /* For each element of the base still remaining, prefix "../",
-         * then append the remaining elements separated by "/". */
-        StringBuilder result = new StringBuilder("../".repeat(pfx.size()));
-        {
-            String sep = "";
-            for (String elem : elems) {
-                result.append(sep);
-                sep = "/";
-                escapePathElement(result, elem);
-            }
-        }
-        if (result.isEmpty()) result.append("./");
-        logger.finer(() -> String
-            .format("script=%s subpath=%s " + "ref=%s result=%s", script,
-                    subpath, ref, result));
-
-        if (params != null) {
-            result.append('?');
-            String sep = "";
-            for (var kv : params) {
-                result.append(sep);
-                sep = "&";
-
-                var k = kv.getKey();
-                var v = kv.getValue();
-                escapeParam(result, k);
-                result.append('=');
-                escapeParam(result, v);
-            }
+        /**
+         * Set the fragment identifier.
+         * 
+         * @param value the new fragment identifier; or {@code null} to
+         * erase
+         * 
+         * @return this object
+         */
+        public Reference fragment(String value) {
+            this.fragment = value;
+            return this;
         }
 
-        if (fragment != null) escapeFragment(result.append('#'), fragment);
+        /**
+         * Set the query parameters. Previously set parameters are
+         * discarded. Parameters are added in iteration order. Iteration
+         * only occurs when building the URI with {@link #relative()} or
+         * {@link #absolute()}.
+         * 
+         * @param value the new query parameters
+         * 
+         * @return this object
+         */
+        public Reference
+            query(Collection<? extends Map.Entry<? extends String,
+                                                 ? extends String>> value) {
+            this.query = value;
+            return this;
+        }
 
-        return URI.create(result.toString());
+        /**
+         * Exclude the fragment identifier.
+         * 
+         * @return this object
+         */
+        public Reference noFragment() {
+            return fragment(null);
+        }
+
+        /**
+         * Exclude the query parameters.
+         * 
+         * @return this object
+         */
+        public Reference noQuery() {
+            return query(null);
+        }
+
+        /**
+         * Get a string representation of this reference.
+         * 
+         * @return the relative form of this reference converted to a
+         * US-ASCII URI
+         */
+        @Override
+        public String toString() {
+            return relative().toASCIIString();
+        }
     }
 
     private static StringBuilder escapeParam(StringBuilder output,
@@ -468,9 +493,11 @@ public final class PathContext {
 
     private static PathContext infer(URI scriptFilename, String pathInfo,
                                      String scriptName, String prefix) {
-        prefix = normalizePrefix(prefix);
+        URI rawPrefixLoc = URI.create(prefix);
+        URI rootLoc = rawPrefixLoc.resolve("/");
+        prefix = normalizePrefix(rawPrefixLoc.getPath());
         if (pathInfo != null) {
-            return new PathContext(prefix + scriptName, pathInfo);
+            return new PathContext(rootLoc, prefix + scriptName, pathInfo);
         } else if ("proxy".equals(scriptFilename.getScheme())) {
             final URI ssp =
                 URI.create(scriptFilename.getRawSchemeSpecificPart());
@@ -478,11 +505,11 @@ public final class PathContext {
             if (scriptName.endsWith(virtualPath)) {
                 final String correctedScriptName = scriptName
                     .substring(0, scriptName.length() - virtualPath.length());
-                return new PathContext(prefix + correctedScriptName,
+                return new PathContext(rootLoc, prefix + correctedScriptName,
                                        virtualPath);
             }
         }
-        return new PathContext(prefix + scriptName, "");
+        return new PathContext(rootLoc, prefix + scriptName, "");
     }
 
     /**
@@ -532,7 +559,10 @@ public final class PathContext {
      * defaults to an empty string. Any supplied prefix will be
      * normalized by ensuring that each path element begins with a
      * slash, and no element is empty. So, for example,
-     * <samp>foo/bar/</samp> is normalized to <samp>/foo/bar</samp>.
+     * <samp>foo/bar/</samp> is normalized to <samp>/foo/bar</samp>. The
+     * prefix may also be an absolute URI prefix, where the virtual path
+     * is normalized as just described, and the preceding parts are
+     * yielded by {@link Reference#absolute()}.
      */
     public static final class Builder {
         private Function<? super Map<? super String, ? extends String>,

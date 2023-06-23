@@ -68,6 +68,12 @@ public class MD5SumResponder implements Responder {
         dig = md.digest();
 
         PathContext pathCtxt = pathContexts.build(ctxt);
+        if (pathCtxt.subpath.isEmpty()) {
+            ctxt.setStatus(302);
+            ctxt.setHeader("Location",
+                           pathCtxt.locate("/").absolute().toASCIIString());
+            return;
+        }
 
         ctxt.setHeader("Content-Type", "text/plain; charset=UTF-8");
         try (PrintWriter out =
@@ -82,7 +88,9 @@ public class MD5SumResponder implements Responder {
             out.printf("Subpath: %s\n", pathCtxt.subpath);
             for (String sp : subpaths) {
                 try {
-                    out.printf("Ref: [%s] -> [%s]%n", sp, pathCtxt.locate(sp));
+                    out.printf("Ref: [%s] -> [%s] [%s]%n", sp,
+                               pathCtxt.locate(sp),
+                               pathCtxt.locate(sp).absolute().toASCIIString());
                 } catch (IllegalArgumentException ex) {
                     out.printf("Ref: [%s] invalid (%s)%n", sp, ex.getMessage());
                 }
