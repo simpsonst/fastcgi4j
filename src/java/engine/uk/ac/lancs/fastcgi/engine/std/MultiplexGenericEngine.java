@@ -282,66 +282,74 @@ class MultiplexGenericEngine implements Engine {
                 return;
             }
 
-            if ((flags & RequestFlags.KEEP_CONN) == 0) {
-                /* The server tells us we're not going to use this
-                 * connection any more for new requests. */
-                logger.info(() -> msg("ack last request %d", id));
-                keepGoing = false;
-                /* Proceed with this one, though! */
-            }
+            boolean stop = false;
 
-            /* Detect temporary overload based on the configured maximum
-             * requests per connection. */
-            if (maxReqsPerConn > 0) {
-                final int sz = sessions.size();
-                if (sz >= maxReqsPerConn) {
-                    logger.warning(() -> msg("rejecting request %d;"
-                        + " %d/%d sessions as overloaded", id, sz,
-                                             maxReqsPerConn));
-                    recordsOut
-                        .writeEndRequest(id, -3,
-                                         maxReqsPerConn == 1 ?
-                                             ProtocolStatuses.CANT_MPX_CONN :
-                                             ProtocolStatuses.OVERLOADED);
-                    return;
+            final SessionHandler sess;
+            try {
+                if ((flags & RequestFlags.KEEP_CONN) == 0) {
+                    /* The server tells us we're not going to use this
+                     * connection any more for new requests. */
+                    logger.info(() -> msg("ack last request %d", id));
+                    stop = true;
+                    /* Proceed with this one, though! */
                 }
-            }
 
-            /* Package components required by all roles. */
-            Supplier<HandlerContext> ctxt =
-                () -> new HandlerContext(this.id, id, conn.implementation(),
-                                         conn.description(),
-                                         conn.internalDescription(),
-                                         this::abortConnection,
-                                         h -> sessions.remove(id, h),
-                                         this::checkLastCall, recordsOut,
-                                         executor, charset, paramBufs,
-                                         optimizedBufferSize, stderrBufferSize);
-
-            /* Create the session if there isn't one with the specified
-             * id, and the role type is recognized. */
-            Function<Integer, SessionHandler> handlerMaker = k -> {
-                switch (role) {
-                case RoleTypes.RESPONDER:
-                    if (responder == null) return null;
-                    return new ResponderHandler(ctxt.get(), responder,
-                                                pipes.get());
-
-                case RoleTypes.FILTER:
-                    if (filter == null) return null;
-                    return new FilterHandler(ctxt.get(), filter, pipes.get(),
-                                             pipes.get());
-
-                case RoleTypes.AUTHORIZER:
-                    if (authorizer == null) return null;
-                    return new AuthorizerHandler(ctxt.get(), authorizer);
-
-                default:
-                    /* No mapping is to be recorded. */
-                    return null;
+                /* Detect temporary overload based on the configured
+                 * maximum requests per connection. */
+                if (maxReqsPerConn > 0) {
+                    final int sz = sessions.size();
+                    if (sz >= maxReqsPerConn) {
+                        logger.warning(() -> msg("rejecting request %d;"
+                            + " %d/%d sessions as overloaded", id, sz,
+                                                 maxReqsPerConn));
+                        recordsOut.writeEndRequest(id, -3, maxReqsPerConn == 1 ?
+                            ProtocolStatuses.CANT_MPX_CONN :
+                            ProtocolStatuses.OVERLOADED);
+                        return;
+                    }
                 }
-            };
-            SessionHandler sess = sessions.computeIfAbsent(id, handlerMaker);
+
+                /* Package components required by all roles. */
+                Supplier<HandlerContext> ctxt =
+                    () -> new HandlerContext(this.id, id, conn.implementation(),
+                                             conn.description(),
+                                             conn.internalDescription(),
+                                             this::abortConnection,
+                                             h -> sessions.remove(id, h),
+                                             this::checkLastCall, recordsOut,
+                                             executor, charset, paramBufs,
+                                             optimizedBufferSize,
+                                             stderrBufferSize);
+
+                /* Create the session if there isn't one with the
+                 * specified id, and the role type is recognized. */
+                Function<Integer, SessionHandler> handlerMaker = k -> {
+                    switch (role) {
+                    case RoleTypes.RESPONDER:
+                        if (responder == null) return null;
+                        return new ResponderHandler(ctxt.get(), responder,
+                                                    pipes.get());
+
+                    case RoleTypes.FILTER:
+                        if (filter == null) return null;
+                        return new FilterHandler(ctxt.get(), filter,
+                                                 pipes.get(), pipes.get());
+
+                    case RoleTypes.AUTHORIZER:
+                        if (authorizer == null) return null;
+                        return new AuthorizerHandler(ctxt.get(), authorizer);
+
+                    default:
+                        /* No mapping is to be recorded. */
+                        return null;
+                    }
+                };
+                sess = sessions.computeIfAbsent(id, handlerMaker);
+            } finally {
+                /* Only clear this flag after we've had an opportunity
+                 * to put something into the sessions map. */
+                if (stop) keepGoing = false;
+            }
 
             if (sess == null) {
                 /* No mapping was recorded, meaning that we don't
