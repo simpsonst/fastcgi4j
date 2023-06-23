@@ -323,27 +323,22 @@ class MultiplexGenericEngine implements Engine {
 
                 /* Create the session if there isn't one with the
                  * specified id, and the role type is recognized. */
-                Function<Integer, SessionHandler> handlerMaker = k -> {
-                    switch (role) {
-                    case RoleTypes.RESPONDER:
-                        if (responder == null) return null;
-                        return new ResponderHandler(ctxt.get(), responder,
-                                                    pipes.get());
+                Function<Integer, SessionHandler> handlerMaker =
+                    k -> switch (role) {
+                    case RoleTypes.RESPONDER -> responder == null ? null :
+                        new ResponderHandler(ctxt.get(), responder,
+                                             pipes.get());
 
-                    case RoleTypes.FILTER:
-                        if (filter == null) return null;
-                        return new FilterHandler(ctxt.get(), filter,
-                                                 pipes.get(), pipes.get());
+                    case RoleTypes.FILTER -> filter == null ? null :
+                        new FilterHandler(ctxt.get(), filter, pipes.get(),
+                                          pipes.get());
 
-                    case RoleTypes.AUTHORIZER:
-                        if (authorizer == null) return null;
-                        return new AuthorizerHandler(ctxt.get(), authorizer);
+                    case RoleTypes.AUTHORIZER -> authorizer == null ? null :
+                        new AuthorizerHandler(ctxt.get(), authorizer);
 
-                    default:
-                        /* No mapping is to be recorded. */
-                        return null;
-                    }
-                };
+                    /* No mapping is to be recorded. */
+                    default -> null;
+                    };
                 sess = sessions.computeIfAbsent(id, handlerMaker);
             } finally {
                 /* Only clear this flag after we've had an opportunity
