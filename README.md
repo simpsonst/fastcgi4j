@@ -235,7 +235,7 @@ location ~ ^/foo(/.*)?$ {
 
   include fastcgi.conf;
   fastcgi_param SCRIPT_NAME       "/foo";
-  fastcgi_split_path_info         ^(/foo)(/.+)$;
+  fastcgi_split_path_info         ^(/foo)(/.*)$;
   fastcgi_param PATH_INFO         $fastcgi_path_info;
   fastcgi_param PATH_TRANSLATED   $document_root$fastcgi_path_info;
 }
