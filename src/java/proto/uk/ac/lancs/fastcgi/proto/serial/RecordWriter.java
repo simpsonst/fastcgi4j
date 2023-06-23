@@ -178,6 +178,25 @@ public class RecordWriter {
     };
 
     /**
+     * Get a buffer of a given minimum size. The actual size is rounded
+     * up for alignment. If the caller is a virtual thread, a new buffer
+     * is allocated on each call. Otherwise, a buffer of maximum size (8
+     * + {@value #MAX_CONTENT_LENGTH} + alignment) is allocated for the
+     * thread, and re-used on each call.
+     * 
+     * @param size the minimum size
+     * 
+     * @return a buffer of sufficient size and private at least to the
+     * calling thread
+     */
+    private ByteBuffer getBuffer(int size) {
+        if (Thread.currentThread().isVirtual())
+            return ByteBuffer.allocate(align(size));
+        else
+            return buffer.get();
+    }
+
+    /**
      * Write a string length into a buffer. If the length is less than
      * 128, a single byte is written. Otherwise, bit 31 of the amount is
      * set, and four bytes are written; the first will be an unsigned
@@ -258,7 +277,7 @@ public class RecordWriter {
      */
     public void writeValues(Map<? extends String, ? extends String> values)
         throws RecordIOException {
-        ByteBuffer buf = buffer.get();
+        ByteBuffer buf = getBuffer(8 + MAX_CONTENT_LENGTH);
         buf.clear();
 
         /* Write the header, leaving length fields empty. */
@@ -324,7 +343,7 @@ public class RecordWriter {
      * @see RecordTypes#UNKNOWN_TYPE
      */
     public void writeUnknownType(int type) throws RecordIOException {
-        ByteBuffer buf = buffer.get();
+        ByteBuffer buf = getBuffer(16);
         buf.clear();
 
         buf.put((byte) 1); // version
@@ -369,7 +388,7 @@ public class RecordWriter {
      */
     public void writeEndRequest(int id, int appStatus, int protoStatus)
         throws RecordIOException {
-        ByteBuffer buf = buffer.get();
+        ByteBuffer buf = getBuffer(16);
         buf.clear();
 
         buf.put((byte) 1); // version
@@ -429,7 +448,7 @@ public class RecordWriter {
         if (len == 0) return 0;
         assert len > 0;
 
-        ByteBuffer bf = buffer.get();
+        ByteBuffer bf = getBuffer(8 + MAX_CONTENT_LENGTH);
         bf.clear();
 
         /* Write the header, not knowing the amount of content or
@@ -514,7 +533,7 @@ public class RecordWriter {
      */
     private void writeEnd(String label, byte rt, int id)
         throws RecordIOException {
-        ByteBuffer bf = buffer.get();
+        ByteBuffer bf = getBuffer(8);
         bf.clear();
 
         bf.put((byte) 1); // version
