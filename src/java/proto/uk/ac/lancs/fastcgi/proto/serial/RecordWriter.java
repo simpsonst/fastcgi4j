@@ -254,6 +254,57 @@ public class RecordWriter {
     private final byte[] padding = new byte[ALIGNMENT - 1];
 
     /**
+     * Write a header with a known content length. Padding is computed
+     * automatically.
+     * 
+     * @param buf the destination buffer
+     * 
+     * @param type the record type; see {@link RecordTypes}
+     * 
+     * @param rid the request id
+     * 
+     * @param clen the content length
+     */
+    private void writeHeader(ByteBuffer buf, byte type, int rid, int clen) {
+        final int tot = 8 + clen;
+        final int pad = align(tot) - tot;
+        buf.put((byte) 1); // version
+        buf.put(type); // record type
+        buf.putShort((short) rid); // request id
+        buf.putShort((short) clen); // content length
+        buf.put((byte) pad); // padding length
+        buf.put((byte) 0); // reserved
+    }
+
+    private static record Offsets(int lenPos, int padPos) {}
+
+    /**
+     * Write a header with an unknown content length. The offsets of the
+     * content and padding lengths are returned, and those fields are
+     * set to zero.
+     * 
+     * @param buf the destination buffer
+     * 
+     * @param type the record type; see {@link RecordTypes}
+     * 
+     * @param rid the request id
+     * 
+     * @return the offsets to the content length and padding length
+     * fields
+     */
+    private Offsets writeHeader(ByteBuffer buf, byte type, int rid) {
+        buf.put((byte) 1); // version
+        buf.put(type); // record type
+        buf.putShort((short) rid); // request id
+        final int lenPos = buf.position();
+        buf.putShort((short) 0); // unknown content length
+        final int padPos = buf.position();
+        buf.put((byte) 0); // unknown padding length
+        buf.put((byte) 0); // reserved
+        return new Offsets(lenPos, padPos);
+    }
+
+    /**
      * Write application variables. An <code>FCGI_GET_VALUES</code>
      * record is transmitted. Only one record is sent.
      * 
@@ -281,14 +332,7 @@ public class RecordWriter {
         buf.clear();
 
         /* Write the header, leaving length fields empty. */
-        buf.put((byte) 1);
-        buf.put(RecordTypes.GET_VALUES_RESULT);
-        buf.putShort((short) 0); // request id
-        final int lenPos = buf.position();
-        buf.putShort((short) 0); // unknown content length
-        final int padPos = buf.position();
-        buf.put((byte) 0); // unknown padding length
-        buf.put((byte) 0); // reserved
+        var poses = writeHeader(buf, RecordTypes.GET_VALUES_RESULT, 0);
         final int begin = buf.position();
         checkHeaderLength(begin);
 
@@ -301,7 +345,7 @@ public class RecordWriter {
         final int end = buf.position();
         final int len = end - begin;
         assert len <= MAX_CONTENT_LENGTH;
-        buf.putShort(lenPos, (short) len);
+        buf.putShort(poses.lenPos, (short) len);
 
         /* Add padding. First, work out how much, then extend the
          * buffer, then write in the bytes, write in the padding data,
@@ -312,7 +356,7 @@ public class RecordWriter {
         buf.put(padding, 0, pad);
         assert buf.position() == buf.limit();
         assert pad <= 255;
-        buf.put(padPos, (byte) pad);
+        buf.put(poses.padPos, (byte) pad);
 
         /* Ensure our new computation is the same as the old. */
         final int pad2 = buf.position() - end;
@@ -346,12 +390,7 @@ public class RecordWriter {
         ByteBuffer buf = getBuffer(16);
         buf.clear();
 
-        buf.put((byte) 1); // version
-        buf.put(RecordTypes.UNKNOWN_TYPE); // type
-        buf.putShort((short) 0); // request id
-        buf.putShort((short) 8); // content length
-        buf.put((byte) 0); // padding length
-        buf.put((byte) 0); // reserved
+        writeHeader(buf, RecordTypes.UNKNOWN_TYPE, 0, 8);
         checkHeaderLength(buf.position());
 
         buf.put((byte) type);
@@ -391,12 +430,7 @@ public class RecordWriter {
         ByteBuffer buf = getBuffer(16);
         buf.clear();
 
-        buf.put((byte) 1); // version
-        buf.put(RecordTypes.END_REQUEST); // type
-        buf.putShort((short) id); // request id
-        buf.putShort((short) 8); // content length
-        buf.put((byte) 0); // padding length
-        buf.put((byte) 0); // reserved
+        writeHeader(buf, RecordTypes.END_REQUEST, id, 8);
         checkHeaderLength(buf.position());
 
         buf.putInt(appStatus);
@@ -453,14 +487,7 @@ public class RecordWriter {
 
         /* Write the header, not knowing the amount of content or
          * padding to write. */
-        bf.put((byte) 1); // version
-        bf.put(rt); // type
-        bf.putShort((short) id); // request id
-        final int lenPos = bf.position();
-        bf.putShort((short) 0); // unknown content length
-        final int padPos = bf.position();
-        bf.put((byte) 0); // unknown padding length
-        bf.put((byte) 0); // reserved
+        var poses = writeHeader(bf, rt, id);
         final int begin = bf.position();
         checkHeaderLength(begin);
 
@@ -482,14 +509,14 @@ public class RecordWriter {
 
         /* Store the determined content length. */
         assert amount <= MAX_CONTENT_LENGTH;
-        bf.putShort(lenPos, (short) amount); // content length
+        bf.putShort(poses.lenPos, (short) amount); // content length
 
         /* Work out the content end/padding start, and so the amount of
          * padding. Write it into the header. */
         final int end = begin + amount;
         final int padEnd = align(end);
         final int pad = padEnd - end;
-        bf.put(padPos, (byte) pad);
+        bf.put(poses.padPos, (byte) pad);
 
         checkAlignment(begin + amount + pad);
 
@@ -536,12 +563,7 @@ public class RecordWriter {
         ByteBuffer bf = getBuffer(8);
         bf.clear();
 
-        bf.put((byte) 1); // version
-        bf.put(rt); // type
-        bf.putShort((short) id); // request id
-        bf.putShort((short) 0); // content length
-        bf.put((byte) 0); // padding length
-        bf.put((byte) 0); // reserved
+        writeHeader(bf, rt, id, 0);
         checkAlignment(bf);
         checkHeaderLength(bf.position());
 
