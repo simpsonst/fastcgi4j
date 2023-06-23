@@ -93,18 +93,11 @@ public final class RoleTypes {
      * unknown
      */
     public static String toString(int role) {
-        switch (role) {
-        case RESPONDER:
-            return "RESPONDER";
-
-        case AUTHORIZER:
-            return "AUTHORIZER";
-
-        case FILTER:
-            return "FILTER";
-
-        default:
-            return "ROLE_TYPE_" + role;
-        }
+        return switch (role) {
+        case RESPONDER -> "RESPONDER";
+        case AUTHORIZER -> "AUTHORIZER";
+        case FILTER -> "FILTER";
+        default -> "ROLE_TYPE_" + role;
+        };
     }
 }

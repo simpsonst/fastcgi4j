@@ -181,42 +181,19 @@ public final class RecordTypes {
      * unknown
      */
     public static String toString(int type) {
-        switch (type) {
-        case ABORT_REQUEST:
-            return "ABORT_REQUEST";
-
-        case BEGIN_REQUEST:
-            return "BEGIN_REQUEST";
-
-        case DATA:
-            return "DATA";
-
-        case END_REQUEST:
-            return "END_REQUEST";
-
-        case GET_VALUES:
-            return "GET_VALUES";
-
-        case GET_VALUES_RESULT:
-            return "GET_VALUES_RESULT";
-
-        case PARAMS:
-            return "PARAMS";
-
-        case STDERR:
-            return "STDERR";
-
-        case STDIN:
-            return "STDIN";
-
-        case STDOUT:
-            return "STDOUT";
-
-        case UNKNOWN_TYPE:
-            return "UNKNOWN_TYPE";
-
-        default:
-            return "RECORD_TYPE_" + type;
-        }
+        return switch (type) {
+        case ABORT_REQUEST -> "ABORT_REQUEST";
+        case BEGIN_REQUEST -> "BEGIN_REQUEST";
+        case DATA -> "DATA";
+        case END_REQUEST -> "END_REQUEST";
+        case GET_VALUES -> "GET_VALUES";
+        case GET_VALUES_RESULT -> "GET_VALUES_RESULT";
+        case PARAMS -> "PARAMS";
+        case STDERR -> "STDERR";
+        case STDIN -> "STDIN";
+        case STDOUT -> "STDOUT";
+        case UNKNOWN_TYPE -> "UNKNOWN_TYPE";
+        default -> "RECORD_TYPE_" + type;
+        };
     }
 }

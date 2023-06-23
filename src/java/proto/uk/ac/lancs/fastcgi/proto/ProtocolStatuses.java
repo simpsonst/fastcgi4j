@@ -85,21 +85,12 @@ public final class ProtocolStatuses {
      * unknown
      */
     public static String toString(int status) {
-        switch (status) {
-        case REQUEST_COMPLETE:
-            return "REQUEST_COMPLETE";
-
-        case CANT_MPX_CONN:
-            return "CANT_MPX_CONN";
-
-        case OVERLOADED:
-            return "OVERLOADED";
-
-        case UNKNOWN_ROLE:
-            return "UNKNOWN_ROLE";
-
-        default:
-            return "PROTOCOL_STATUS_" + status;
-        }
+        return switch (status) {
+        case REQUEST_COMPLETE -> "REQUEST_COMPLETE";
+        case CANT_MPX_CONN -> "CANT_MPX_CONN";
+        case OVERLOADED -> "OVERLOADED";
+        case UNKNOWN_ROLE -> "UNKNOWN_ROLE";
+        default -> "PROTOCOL_STATUS_" + status;
+        };
     }
 }
