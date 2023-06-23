@@ -616,7 +616,7 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
     @Override
     public void dataEnd() throws IOException {
         /* Ignored by default, as we don't expect this record type. */
-        logger.warning(() -> msg("unexpected stdin-end"));
+        logger.warning(() -> msg("unexpected data-end"));
     }
 
     /**
