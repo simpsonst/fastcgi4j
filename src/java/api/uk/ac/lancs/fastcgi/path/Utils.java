@@ -125,7 +125,7 @@ class Utils {
         /* Append an empty element when the last element is a dot or
          * double-dot, as these implicitly refer to a directory-like
          * resource. */
-        assert elems.isEmpty();
+        assert !elems.isEmpty();
         switch (elems.get(elems.size() - 1)) {
         case ".", ".." -> elems.add("");
         }
