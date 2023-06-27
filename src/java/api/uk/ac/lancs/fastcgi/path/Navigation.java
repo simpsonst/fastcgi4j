@@ -361,6 +361,8 @@ public final class Navigation {
         params.put("GATEWAY_INTERFACE", "CGI/1.1");
         Navigator tor = tion.navigate(params);
         System.out.printf("Instance: %s%n", tor.instance());
+        System.out.printf("Resource: [%s] or %s%n", tor.resource(),
+                          tor.resourceElements());
 
         /* Referencing */
         String[] refs = { "", "/", "/my/old/man", "my/old/man", "/a/b/man",
