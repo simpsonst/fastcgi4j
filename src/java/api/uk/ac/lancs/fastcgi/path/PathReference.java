@@ -42,6 +42,7 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * Refers to a resource within the script.
@@ -223,4 +224,7 @@ public final class PathReference {
     public String toString() {
         return relative().toASCIIString();
     }
+
+    private static final Logger logger =
+        Logger.getLogger(PathReference.class.getPackageName());
 }

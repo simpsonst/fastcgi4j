@@ -41,6 +41,7 @@ package uk.ac.lancs.fastcgi.path;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -183,4 +184,7 @@ public final class Navigator {
     public Matcher identify(Pattern pattern) {
         return pattern.matcher(resourceString);
     }
+
+    private static final Logger logger =
+        Logger.getLogger(Navigator.class.getPackageName());
 }
