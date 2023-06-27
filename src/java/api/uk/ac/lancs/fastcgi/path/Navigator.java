@@ -93,7 +93,7 @@ public final class Navigator {
          * first is the last element of the external service prefix. */
         final int rlen = resource.size();
         List<String> base = new ArrayList<>(resource.subList(0, rlen - 1));
-        base.set(0, this.leadElem);
+        if (!base.isEmpty()) base.set(0, this.leadElem);
         this.base = List.copyOf(base);
     }
 
