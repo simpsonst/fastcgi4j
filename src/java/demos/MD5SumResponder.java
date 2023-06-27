@@ -34,14 +34,22 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.io.Reader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
+import java.util.Properties;
 import java.util.TreeMap;
 import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.context.ResponderContext;
-import uk.ac.lancs.fastcgi.util.PathContext;
+import uk.ac.lancs.fastcgi.path.Navigation;
+import uk.ac.lancs.fastcgi.path.Navigator;
 
 /**
  * Responds by echoing all headers, and displaying a hex MD5 sum of the
@@ -54,10 +62,25 @@ public class MD5SumResponder implements Responder {
         "baz/qux/quux", "baz/qux/", "baz/yan/tan/", "baz/yan/tan", "/baz/",
         "/baz", "/foo:bar/baz", "/foó/bär/båz" };
 
-    private static final PathContext.Builder pathContexts = PathContext.start();
+    private static final Navigation navigation;
+
+    static {
+        Properties props = new Properties();
+        Path propPath = Paths.get("scratch", "instances.properties");
+        try (Reader in = Files.newBufferedReader(propPath)) {
+            props.load(in);
+        } catch (FileNotFoundException ex) {
+            /* Ignore. */
+        } catch (IOException ex) {
+            System.err.printf("failed to load from %s%n", propPath);
+        }
+        navigation = Navigation.start().instances(props, "").create();
+    }
 
     @Override
     public void respond(ResponderContext ctxt) throws Exception {
+        Navigator navigator = navigation.navigate(ctxt.parameters());
+
         final byte[] dig;
         MessageDigest md = MessageDigest.getInstance("md5");
         byte[] buf = new byte[1024];
@@ -67,11 +90,10 @@ public class MD5SumResponder implements Responder {
         }
         dig = md.digest();
 
-        PathContext pathCtxt = pathContexts.build(ctxt);
-        if (pathCtxt.subpath.isEmpty()) {
+        if (navigator.resource().isEmpty()) {
             ctxt.setStatus(302);
             ctxt.setHeader("Location",
-                           pathCtxt.locate("/").absolute().toASCIIString());
+                           navigator.locate("/").absolute().toASCIIString());
             return;
         }
 
@@ -84,13 +106,14 @@ public class MD5SumResponder implements Responder {
             }
 
             out.printf("\nPath computations:\n");
-            out.printf("Script: %s\n", pathCtxt.script);
-            out.printf("Subpath: %s\n", pathCtxt.subpath);
+            out.printf("Script: %s\n", navigator.script());
+            out.printf("Subpath: %s\n", navigator.resource());
             for (String sp : subpaths) {
                 try {
-                    out.printf("Ref: [%s] -> [%s] [%s]%n", sp,
-                               pathCtxt.locate(sp),
-                               pathCtxt.locate(sp).absolute().toASCIIString());
+                    out.printf("Ref: [%s] -> [%s] [%s] [%s]%n", sp,
+                               navigator.locate(sp).relative().toASCIIString(),
+                               navigator.locate(sp).local().toASCIIString(),
+                               navigator.locate(sp).absolute().toASCIIString());
                 } catch (IllegalArgumentException ex) {
                     out.printf("Ref: [%s] invalid (%s)%n", sp, ex.getMessage());
                 }
