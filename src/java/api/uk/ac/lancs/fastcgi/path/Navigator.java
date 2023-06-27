@@ -84,10 +84,14 @@ public final class Navigator {
         final int slen = this.script.size();
         this.leadElem = slen > 0 ? this.script.get(slen - 1) : null;
 
-        final int rlen = resource.size();
-        this.resource = resource.subList(1, rlen);
+        this.resource = resource;
         this.resourceString =
-            this.resource.stream().collect(Collectors.joining("/"));
+            resource.stream().collect(Collectors.joining("/"));
+
+        /* Create a base element sequence which is the same as the
+         * resource, except that the last element is removed, and the
+         * first is the last element of the external service prefix. */
+        final int rlen = resource.size();
         List<String> base = new ArrayList<>(resource.subList(0, rlen - 1));
         base.set(0, this.leadElem);
         this.base = List.copyOf(base);
