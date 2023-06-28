@@ -93,6 +93,20 @@ class Utils {
         return composePathPrefix(elems.stream());
     }
 
+    /**
+     * Compose a path prefix from separate path elements. For example,
+     * <code>composePathPrefix(Arrays.asList("foo", "bar", "baz"))</code>
+     * yields <samp>/foo/bar/baz/</samp>.
+     * 
+     * @param elems the sequence of path elements, which could be an
+     * empty list
+     * 
+     * @return the path prefix, always beginning and ending with a
+     * forward slash
+     * 
+     * @todo This should check that no elements contain forward slashes,
+     * and that none are empty.
+     */
     static String composePathPrefix(Stream<? extends String> elems) {
         return Stream.concat(elems, Stream.of("")).map(s -> "/" + s)
             .collect(Collectors.joining());

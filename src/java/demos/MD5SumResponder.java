@@ -62,7 +62,7 @@ public class MD5SumResponder implements Responder {
         "baz/qux/quux", "baz/qux/", "baz/yan/tan/", "baz/yan/tan", "/baz/",
         "/baz", "/foo:bar/baz", "/foó/bär/båz" };
 
-    private static final Navigation navigation;
+    private static final Navigation<String> navigation;
 
     static {
         Properties props = new Properties();
@@ -74,12 +74,13 @@ public class MD5SumResponder implements Responder {
         } catch (IOException ex) {
             System.err.printf("failed to load from %s%n", propPath);
         }
-        navigation = Navigation.start().instances(props, "").create();
+        navigation =
+            Navigation.<String>start().instances(props, "", s -> s).create();
     }
 
     @Override
     public void respond(ResponderContext ctxt) throws Exception {
-        Navigator navigator = navigation.navigate(ctxt.parameters());
+        Navigator<String> navigator = navigation.navigate(ctxt.parameters());
 
         final byte[] dig;
         MessageDigest md = MessageDigest.getInstance("md5");

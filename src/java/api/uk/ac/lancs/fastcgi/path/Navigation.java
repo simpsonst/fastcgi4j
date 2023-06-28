@@ -55,15 +55,30 @@ import java.util.stream.Stream;
  * Understands how to navigate based on future invocations of a service.
  * 
  * @author simpsons
+ * 
+ * @param <I> the instance type
  */
-public final class Navigation {
-    private static record Instance(URI server, List<String> prefix,
-                                   String name) {}
+public final class Navigation<I> {
+    private static class Instance<I> {
+        public final URI server;
+
+        public final List<String> prefix;
+
+        public final I context;
+
+        public Instance(URI server, List<String> prefix, I context) {
+            this.server = server;
+            this.prefix = prefix;
+            this.context = context;
+        }
+    }
 
     /**
      * Creates navigation in stages.
+     * 
+     * @param <I> the instance type
      */
-    public static final class Builder {
+    public static final class Builder<I> {
         private Function<? super Map<? super String, ? extends String>,
                          ? extends String> scriptFilename =
                              m -> m.get("SCRIPT_FILENAME");
@@ -75,7 +90,7 @@ public final class Navigation {
                          ? extends String> scriptName =
                              m -> m.get("SCRIPT_NAME");
 
-        private final Map<URI, Map<List<String>, Instance>> instances =
+        private final Map<URI, Map<List<String>, Instance<I>>> instances =
             new HashMap<>();
 
         Builder() {}
@@ -88,7 +103,7 @@ public final class Navigation {
          * 
          * @return this builder
          */
-        public Builder
+        public Builder<I>
             scriptFilename(Function<? super Map<? super String,
                                                 ? extends String>,
                                     ? extends String> func) {
@@ -108,7 +123,7 @@ public final class Navigation {
          * "https://datatracker.ietf.org/doc/html/rfc3875#section-4.1.13">RFC3875
          * Section 4.1.13</a>
          */
-        public Builder
+        public Builder<I>
             scriptName(Function<? super Map<? super String, ? extends String>,
                                 ? extends String> func) {
             this.scriptName = Objects.requireNonNull(func, "func");
@@ -127,7 +142,7 @@ public final class Navigation {
          * "https://datatracker.ietf.org/doc/html/rfc3875section-4.1.5">RFC3875
          * Section 4.1.5</a>
          */
-        public Builder
+        public Builder<I>
             pathInfo(Function<? super Map<? super String, ? extends String>,
                               ? extends String> func) {
             this.pathInfo = Objects.requireNonNull(func, "func");
@@ -137,7 +152,7 @@ public final class Navigation {
         /**
          * Specify an instance of the service.
          * 
-         * @param name the instance name
+         * @param instance the instance context
          * 
          * @param externalService the external service URI prefix
          * 
@@ -145,8 +160,8 @@ public final class Navigation {
          * 
          * @return this object
          */
-        public Builder instance(String name, String externalService,
-                                String internalService) {
+        public Builder<I> instance(I instance, String externalService,
+                                   String internalService) {
             /* Parse the internal service URI prefix as a URI, separate
              * the path elements from the server, and index on server
              * and path elements to yield the instance details. */
@@ -159,7 +174,7 @@ public final class Navigation {
             extSrv = extSrv.resolve("/");
 
             instances.computeIfAbsent(intSrv, k -> new HashMap<>())
-                .put(intPfx, new Instance(extSrv, extPfx, name));
+                .put(intPfx, new Instance<>(extSrv, extPfx, instance));
             return this;
         }
 
@@ -172,25 +187,30 @@ public final class Navigation {
          * <samp><var>prefix</var><var>instance</var>.external</samp>
          * may be set to specify an internal URI prefix for the
          * instance, but it is assumed to be the same as the external
-         * URI prefix.
+         * URI prefix. The <var>instance</var> string is mapped to the
+         * user-specified instance type.
          * 
          * @param props container of the properties
          * 
          * @param prefix prefix of property names to match
          * 
+         * @param instanceMap a mapping from extracted instance name to
+         * context
+         * 
          * @return this object
          */
-        public Builder instances(Properties props, String prefix) {
+        public Builder<I> instances(Properties props, String prefix,
+                                    Function<? super String, I> instanceMap) {
             Pattern pat = Pattern
                 .compile("^" + Pattern.quote(prefix) + "(.*)" + "\\.external$");
             for (var exk : props.stringPropertyNames()) {
                 Matcher m = pat.matcher(exk);
                 if (!m.matches()) continue;
-                String instance = m.group(1);
-                var ink = prefix + instance + ".internal";
+                String name = m.group(1);
+                var ink = prefix + name + ".internal";
                 String exv = props.getProperty(exk);
                 String inv = props.getProperty(ink, exv);
-                instance(instance, exv, inv);
+                instance(instanceMap.apply(name), exv, inv);
             }
             return this;
         }
@@ -202,9 +222,9 @@ public final class Navigation {
          * 
          * @constructor
          */
-        public Navigation create() {
-            return new Navigation(scriptFilename, pathInfo, scriptName,
-                                  Map.copyOf(instances));
+        public Navigation<I> create() {
+            return new Navigation<>(scriptFilename, pathInfo, scriptName,
+                                    Map.copyOf(instances));
         }
     }
 
@@ -231,12 +251,14 @@ public final class Navigation {
     /**
      * Start building navigation.
      * 
+     * @param <I> the instance type
+     * 
      * @return a fresh builder
      * 
      * @constructor
      */
-    public static Builder start() {
-        return new Builder();
+    public static <I> Builder<I> start() {
+        return new Builder<>();
     }
 
     Navigation(Function<? super Map<? super String, ? extends String>,
@@ -245,7 +267,7 @@ public final class Navigation {
                         ? extends String> pathInfo,
                Function<? super Map<? super String, ? extends String>,
                         ? extends String> scriptName,
-               Map<URI, Map<List<String>, Instance>> instances) {
+               Map<URI, Map<List<String>, Instance<I>>> instances) {
         this.scriptFilename = scriptFilename;
         this.pathInfo = pathInfo;
         this.scriptName = scriptName;
@@ -261,7 +283,7 @@ public final class Navigation {
     private final Function<? super Map<? super String, ? extends String>,
                            ? extends String> scriptName;
 
-    private final Map<URI, Map<List<String>, Instance>> instances;
+    private final Map<URI, Map<List<String>, Instance<I>>> instances;
 
     /**
      * Get a navigator for a CGI context.
@@ -270,7 +292,7 @@ public final class Navigation {
      * 
      * @return the requested navigator
      */
-    public Navigator navigate(Map<? super String, ? extends String> params) {
+    public Navigator<I> navigate(Map<? super String, ? extends String> params) {
         /* Determine from the local environment the correct internal
          * script name and path info. */
         final URI scriptFilename =
@@ -306,7 +328,7 @@ public final class Navigation {
         /* Combine the script name with the local server details,
          * gradually shortening the path until we get a match. */
         final List<String> scriptElems = Utils.decomposePathPrefix(scriptName);
-        Instance instance = null;
+        Instance<I> instance = null;
         List<String> remainder = null;
         List<String> prior = null;
         if (sm != null) {
@@ -318,21 +340,23 @@ public final class Navigation {
             }
         }
 
-        final String instanceName;
-        final URI service;
+        final I ctxt;
+        final URI server;
+        final List<String> script;
         if (instance == null) {
-            instanceName = null;
-            service =
-                internalServer.resolve(Utils.composePathPrefix(scriptElems));
+            ctxt = null;
+            server = internalServer;
+            script = scriptElems;
         } else {
             assert remainder != null;
-            instanceName = instance.name;
-            service = instance.server.resolve(Utils.composePathPrefix(Stream
-                .concat(instance.prefix.stream(), remainder.stream())));
+            ctxt = instance.context;
+            server = instance.server;
+            script = Stream.concat(instance.prefix.stream(), remainder.stream())
+                .toList();
         }
 
         List<String> resource = Utils.decomposeInternalPath(pathInfo);
-        return new Navigator(instanceName, service, List.copyOf(resource));
+        return new Navigator<>(ctxt, server, script, resource);
     }
 
     private static final Logger logger =
@@ -346,7 +370,8 @@ public final class Navigation {
         Properties props = new Properties();
         props.setProperty("main.external", "https://example.com/zarquon");
         props.setProperty("main.internal", "http://backend.local:3000/foo/bar");
-        Navigation tion = Navigation.start().instances(props, "").create();
+        Navigation<String> tion =
+            Navigation.<String>start().instances(props, "", s -> s).create();
 
         /* Invocation stage */
         Map<String, String> params = new HashMap<>();
@@ -359,7 +384,7 @@ public final class Navigation {
         params.put("SERVER_PORT", "3000");
         params.put("HTTP_HOST", "backend.local:3000");
         params.put("GATEWAY_INTERFACE", "CGI/1.1");
-        Navigator tor = tion.navigate(params);
+        Navigator<String> tor = tion.navigate(params);
         System.out.printf("Instance: %s%n", tor.instance());
         System.out.printf("Resource: [%s] or %s%n", tor.resource(),
                           tor.resourceElements());

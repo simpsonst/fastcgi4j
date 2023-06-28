@@ -41,18 +41,39 @@ package uk.ac.lancs.fastcgi.path;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * Understands the context of the invocation of a service.
+ * Understands the context of the invocation of a service. A navigator
+ * has two purposes, given an invocation of a script:
+ * 
+ * <ol>
+ * 
+ * <li>
+ * <p>
+ * It knows which resource within the script is being accessed. This is
+ * usually equivalent to the <samp>PATH_INFO</samp> CGI parameter, and
+ * can be used to determine what content to provide, and generate
+ * relative URIs to other resources within the same script.
+ * 
+ * <li>
+ * <p>
+ * It knows the script's external URI, so it can generate absolute URIs,
+ * usually required for <samp>Location</samp> header fields.
+ * 
+ * </ol>
+ * 
+ * 
  * 
  * @author simpsons
  */
-public final class Navigator {
-    private final String instance;
+public final class Navigator<I> {
+    private final I instance;
 
     private final URI server;
 
@@ -69,29 +90,97 @@ public final class Navigator {
     /**
      * Create a navigator.
      * 
-     * @param instance the name of the instance being invoked
+     * <p>
+     * The supplied external server URI has <samp>/</samp> resolved
+     * against it, so path information here is discarded.
      * 
-     * @param service the external URI prefix of the service instance
+     * <p>
+     * The resource path elements must begin with an empty element,
+     * e.g., <code>Arrays.asList("", "yan", "tan", "")</code> is
+     * equivalent to a <samp>PATH_INFO</samp> of <samp>/yan/tan/</samp>.
+     * (The trailing empty element <em>after</em> the leading one
+     * corresponds to a trailing slash in <samp>PATH_INFO</samp>.)
+     * 
+     * <p>
+     * Copies of the two supplied lists are retained internally.
+     * 
+     * @param instance the context of the instance being invoked
+     * 
+     * @param server the external server of the service instance; the
+     * path is discarded
+     * 
+     * @param script the path elements identifying the service instance;
+     * may be empty
      * 
      * @param resource the path elements identifying the resource within
-     * the service
+     * the service, beginning with an empty element, and optionally
+     * ending with an additional empty element to refer to a
+     * directory-like path
+     * 
+     * @throws PathElementException if the script elements include an
+     * empty element or an element with a slash, or the resource
+     * elements include an empty element other than at the start or end
+     * or an element with a slash
+     * 
+     * @throws IllegalArgumentException if there are no resource path
+     * elements
      */
-    Navigator(String instance, URI service, List<String> resource) {
+    Navigator(I instance, URI server, List<? extends String> script,
+              List<? extends String> resource) {
+        final int rlen = resource.size();
+        if (rlen == 0) throw new IllegalArgumentException("empty resource");
+        if (!resource.get(0).isEmpty())
+            throw new PathElementException(resource.get(0),
+                                           "resource-init-non-empty");
+
+        {
+            /* Reject a script path that contains empty elements, or
+             * elements containing forward slashes. */
+            Optional<? extends String> badElement = script.stream()
+                .filter(s -> s.isEmpty() || s.indexOf('/') >= 0).findAny();
+            if (badElement.isPresent())
+                throw new PathElementException(badElement.get(), "script-"
+                    + (badElement.get().isEmpty() ? "empty" : "slash"));
+        }
+
+        {
+            /* Reject a resource path that contains elements containing
+             * forward slashes. */
+            Optional<? extends String> badElement =
+                resource.stream().filter(s -> s.indexOf('/') >= 0).findAny();
+            if (badElement.isPresent())
+                throw new PathElementException(badElement.get(),
+                                               "resource-slash");
+        }
+
+        if (rlen >= 2) {
+            /* Reject a resource path that contains empty elements
+             * except at the start or end. */
+            Optional<? extends String> badElement =
+                resource.subList(1, rlen - 1).stream().filter(String::isEmpty)
+                    .findAny();
+            if (badElement.isPresent())
+                throw new PathElementException(badElement.get(),
+                                               "resource-empty");
+        }
+
         this.instance = instance;
-        this.script =
-            Utils.decomposePathPrefix(service.resolve("./").getPath());
-        this.server = service.resolve("/");
+
+        this.script = List.copyOf(script);
         final int slen = this.script.size();
         this.leadElem = slen > 0 ? this.script.get(slen - 1) : null;
 
-        this.resource = resource;
+        /* Discard any virtual path, query or fragment identifier of the
+         * server. */
+        this.server = server.resolve("/");
+
+        this.resource = List.copyOf(resource);
         this.resourceString =
             resource.stream().collect(Collectors.joining("/"));
 
         /* Create a base element sequence which is the same as the
          * resource, except that the last element is removed, and the
          * first is the last element of the external service prefix. */
-        final int rlen = resource.size();
         List<String> base = new ArrayList<>(resource.subList(0, rlen - 1));
         if (!base.isEmpty()) base.set(0, this.leadElem);
         this.base = List.copyOf(base);
@@ -122,11 +211,11 @@ public final class Navigator {
     }
 
     /**
-     * Get the name of this instance.
+     * Get the instance context.
      * 
-     * @return the instance name
+     * @return the instance context
      */
-    public String instance() {
+    public I instance() {
         return instance;
     }
 
@@ -187,6 +276,43 @@ public final class Navigator {
      */
     public Matcher identify(Pattern pattern) {
         return pattern.matcher(resourceString);
+    }
+
+    /**
+     * Get the hash code for this object. This is derived from
+     * normalized versions of all the provided inputs.
+     * 
+     * @return the object's hash code
+     */
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 13 * hash + Objects.hashCode(this.instance);
+        hash = 13 * hash + Objects.hashCode(this.server);
+        hash = 13 * hash + Objects.hashCode(this.resource);
+        hash = 13 * hash + Objects.hashCode(this.script);
+        return hash;
+    }
+
+    /**
+     * Test whether another object equals this one.
+     * 
+     * @param obj the object
+     * 
+     * @return {@code true} if the object is of the same type and is
+     * configured with the same normalized inputs; {@code false}
+     * otherwise
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null) return false;
+        if (getClass() != obj.getClass()) return false;
+        final Navigator other = (Navigator) obj;
+        if (!Objects.equals(this.instance, other.instance)) return false;
+        if (!Objects.equals(this.server, other.server)) return false;
+        if (!Objects.equals(this.resource, other.resource)) return false;
+        return Objects.equals(this.script, other.script);
     }
 
     private static final Logger logger =
