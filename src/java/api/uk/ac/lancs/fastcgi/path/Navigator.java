@@ -116,31 +116,21 @@ public final class Navigator<I> {
      * the service, beginning with an empty element, and optionally
      * ending with an additional empty element to refer to a
      * directory-like path
-     * 
-     * @throws PathElementException if the script elements include an
-     * empty element or an element with a slash, or the resource
-     * elements include an empty element other than at the start or end
-     * or an element with a slash
-     * 
-     * @throws IllegalArgumentException if there are no resource path
-     * elements
      */
     Navigator(I instance, URI server, List<? extends String> script,
               List<? extends String> resource) {
         final int rlen = resource.size();
-        if (rlen == 0) throw new IllegalArgumentException("empty resource");
-        if (!resource.get(0).isEmpty())
-            throw new PathElementException(resource.get(0),
-                                           "resource-init-non-empty");
+        assert rlen > 0 : "empty resource";
+        assert resource.get(0).isEmpty() : "initial resource element non-empty";
 
         {
             /* Reject a script path that contains empty elements, or
              * elements containing forward slashes. */
             Optional<? extends String> badElement = script.stream()
                 .filter(s -> s.isEmpty() || s.indexOf('/') >= 0).findAny();
-            if (badElement.isPresent())
-                throw new PathElementException(badElement.get(), "script-"
-                    + (badElement.get().isEmpty() ? "empty" : "slash"));
+            assert badElement.isEmpty() :
+                "script element " + (badElement.get().isEmpty() ? "empty" :
+                    ("with slash: " + badElement.get()));
         }
 
         {
@@ -148,9 +138,8 @@ public final class Navigator<I> {
              * forward slashes. */
             Optional<? extends String> badElement =
                 resource.stream().filter(s -> s.indexOf('/') >= 0).findAny();
-            if (badElement.isPresent())
-                throw new PathElementException(badElement.get(),
-                                               "resource-slash");
+            assert badElement.isEmpty() :
+                "resource element with slash: " + badElement.get();
         }
 
         if (rlen >= 2) {
@@ -159,9 +148,7 @@ public final class Navigator<I> {
             Optional<? extends String> badElement =
                 resource.subList(1, rlen - 1).stream().filter(String::isEmpty)
                     .findAny();
-            if (badElement.isPresent())
-                throw new PathElementException(badElement.get(),
-                                               "resource-empty");
+            assert badElement.isEmpty() : "resource element empty";
         }
 
         this.instance = instance;
