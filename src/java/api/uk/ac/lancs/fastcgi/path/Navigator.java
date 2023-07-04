@@ -43,6 +43,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -240,8 +241,42 @@ public final class Navigator<I> implements Locator {
      * 
      * @return a matcher for the resource against the expression
      */
-    public Matcher identify(Pattern pattern) {
+    public Matcher recognize(Pattern pattern) {
         return pattern.matcher(resourceString);
+    }
+
+    /**
+     * Match the resource against a regular expression, and take an
+     * action if it matches.
+     * 
+     * @param pattern the pattern to match the resource against
+     * 
+     * @param action the action to perform, given a match
+     * 
+     * @return {@code true} if the pattern matched and the action was
+     * performed; {@code false} if the pattern did not match
+     */
+    public boolean recognize(Pattern pattern,
+                             Consumer<? super Matcher> action) {
+        Matcher m = recognize(pattern);
+        if (!m.matches()) return false;
+        action.accept(m);
+        return true;
+    }
+
+    /**
+     * Match the resource against a sequence of regular expressions, and
+     * take a corresponding action on the first match.
+     * 
+     * @param actions the sequence of actions to take
+     * 
+     * @return {@code true} if a match was found; {@code false}
+     * otherwise
+     */
+    public boolean recognize(Action... actions) {
+        for (var action : actions)
+            if (action.attempt(this)) return true;
+        return false;
     }
 
     /**
