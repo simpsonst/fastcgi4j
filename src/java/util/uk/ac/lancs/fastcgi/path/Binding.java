@@ -44,7 +44,7 @@ import java.util.regex.Pattern;
  * Combines a path pattern with an action to take on a matching resource
  * path.
  */
-public class Action {
+public class Binding {
     /**
      * Create an action.
      *
@@ -57,20 +57,20 @@ public class Action {
      *
      * @constructor
      */
-    public static Action of(Pattern pattern, Consumer<? super Matcher> action) {
-        return new Action(pattern, action);
+    public static Binding of(Pattern pattern, Consumer<? super Matcher> action) {
+        return new Binding(pattern, action);
     }
 
     final Pattern pattern;
 
     final Consumer<? super Matcher> action;
 
-    Action(Pattern pattern, Consumer<? super Matcher> action) {
+    Binding(Pattern pattern, Consumer<? super Matcher> action) {
         this.pattern = pattern;
         this.action = action;
     }
 
-    boolean attempt(Navigator<?> navigator) {
+    boolean attempt(Navigator navigator) {
         Matcher m = navigator.recognize(pattern);
         if (!m.matches()) return false;
         action.accept(m);

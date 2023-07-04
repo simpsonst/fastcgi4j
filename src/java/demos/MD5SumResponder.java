@@ -48,8 +48,9 @@ import java.util.Properties;
 import java.util.TreeMap;
 import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.context.ResponderContext;
-import uk.ac.lancs.fastcgi.path.Navigation;
 import uk.ac.lancs.fastcgi.path.Navigator;
+import uk.ac.lancs.fastcgi.path.PathConfiguration;
+import uk.ac.lancs.fastcgi.path.PathContext;
 
 /**
  * Responds by echoing all headers, and displaying a hex MD5 sum of the
@@ -62,7 +63,7 @@ public class MD5SumResponder implements Responder {
         "baz/qux/quux", "baz/qux/", "baz/yan/tan/", "baz/yan/tan", "/baz/",
         "/baz", "/foo:bar/baz", "/foó/bär/båz" };
 
-    private static final Navigation<String> navigation;
+    private static final PathConfiguration<String> pathConfig;
 
     static {
         Properties props = new Properties();
@@ -74,13 +75,14 @@ public class MD5SumResponder implements Responder {
         } catch (IOException ex) {
             System.err.printf("failed to load from %s%n", propPath);
         }
-        navigation =
-            Navigation.<String>start().instances(props, "", s -> s).create();
+        pathConfig = PathConfiguration.<String>start()
+            .instances(props, "", s -> s).create();
     }
 
     @Override
     public void respond(ResponderContext ctxt) throws Exception {
-        Navigator<String> navigator = navigation.navigate(ctxt.parameters());
+        PathContext<String> pathCtxt = pathConfig.recognize(ctxt.parameters());
+        Navigator navigator = pathCtxt.navigator();
 
         final byte[] dig;
         MessageDigest md = MessageDigest.getInstance("md5");
@@ -107,7 +109,7 @@ public class MD5SumResponder implements Responder {
             }
 
             out.printf("\nPath computations:\n");
-            out.printf("Script: %s\n", navigator.script());
+            out.printf("Script: %s\n", pathCtxt.script());
             out.printf("Subpath: %s\n", navigator.resource());
             for (String sp : subpaths) {
                 try {

@@ -58,7 +58,7 @@ import java.util.stream.Stream;
  * 
  * @param <I> the instance type
  */
-public final class Navigation<I> {
+public final class PathConfiguration<I> {
     private static class Instance<I> {
         public final URI server;
 
@@ -222,9 +222,9 @@ public final class Navigation<I> {
          * 
          * @constructor
          */
-        public Navigation<I> create() {
-            return new Navigation<>(scriptFilename, pathInfo, scriptName,
-                                    Map.copyOf(instances));
+        public PathConfiguration<I> create() {
+            return new PathConfiguration<>(scriptFilename, pathInfo, scriptName,
+                                           Map.copyOf(instances));
         }
     }
 
@@ -261,13 +261,13 @@ public final class Navigation<I> {
         return new Builder<>();
     }
 
-    Navigation(Function<? super Map<? super String, ? extends String>,
-                        ? extends String> scriptFilename,
-               Function<? super Map<? super String, ? extends String>,
-                        ? extends String> pathInfo,
-               Function<? super Map<? super String, ? extends String>,
-                        ? extends String> scriptName,
-               Map<URI, Map<List<String>, Instance<I>>> instances) {
+    PathConfiguration(Function<? super Map<? super String, ? extends String>,
+                               ? extends String> scriptFilename,
+                      Function<? super Map<? super String, ? extends String>,
+                               ? extends String> pathInfo,
+                      Function<? super Map<? super String, ? extends String>,
+                               ? extends String> scriptName,
+                      Map<URI, Map<List<String>, Instance<I>>> instances) {
         this.scriptFilename = scriptFilename;
         this.pathInfo = pathInfo;
         this.scriptName = scriptName;
@@ -292,7 +292,8 @@ public final class Navigation<I> {
      * 
      * @return the requested navigator
      */
-    public Navigator<I> navigate(Map<? super String, ? extends String> params) {
+    public PathContext<I>
+        recognize(Map<? super String, ? extends String> params) {
         /* Determine from the local environment the correct internal
          * script name and path info. */
         final URI scriptFilename =
@@ -356,11 +357,11 @@ public final class Navigation<I> {
         }
 
         List<String> resource = Utils.decomposeInternalPath(pathInfo);
-        return new Navigator<>(ctxt, server, script, resource);
+        return new PathContext<>(ctxt, server, script, resource);
     }
 
     private static final Logger logger =
-        Logger.getLogger(Navigation.class.getPackageName());
+        Logger.getLogger(PathConfiguration.class.getPackageName());
 
     /**
      * @undocumented
@@ -370,8 +371,8 @@ public final class Navigation<I> {
         Properties props = new Properties();
         props.setProperty("main.external", "https://example.com/zarquon");
         props.setProperty("main.internal", "http://backend.local:3000/foo/bar");
-        Navigation<String> tion =
-            Navigation.<String>start().instances(props, "", s -> s).create();
+        PathConfiguration<String> pathConfig = PathConfiguration.<String>start()
+            .instances(props, "", s -> s).create();
 
         /* Invocation stage */
         Map<String, String> params = new HashMap<>();
@@ -384,17 +385,18 @@ public final class Navigation<I> {
         params.put("SERVER_PORT", "3000");
         params.put("HTTP_HOST", "backend.local:3000");
         params.put("GATEWAY_INTERFACE", "CGI/1.1");
-        Navigator<String> tor = tion.navigate(params);
-        System.out.printf("Instance: %s%n", tor.instance());
-        System.out.printf("Resource: [%s] or %s%n", tor.resource(),
-                          tor.resourceElements());
+        PathContext<String> pathCtxt = pathConfig.recognize(params);
+        Navigator navigator = pathCtxt.navigator();
+        System.out.printf("Instance: %s%n", pathCtxt.instance());
+        System.out.printf("Resource: [%s] or %s%n", navigator.resource(),
+                          navigator.resourceElements());
 
         /* Referencing */
         String[] refs = { "", "/", "/my/old/man", "my/old/man", "/a/b/man",
             "a/b/man", "/a/b/", "a/b/", "/a/b", "a/b", "/a/", "a/" };
         for (String ref : refs) {
             try {
-                PathReference pr = tor.locate(ref);
+                PathReference pr = navigator.locate(ref);
                 System.out.printf("[%s] -> %s %s %s%n", ref, pr.relative(),
                                   pr.local(), pr.absolute());
             } catch (ExternalPathException ex) {

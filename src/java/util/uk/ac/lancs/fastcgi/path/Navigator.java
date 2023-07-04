@@ -1,5 +1,3 @@
-// -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
-
 /*
  * Copyright (c) 2023, Lancaster University
  * All rights reserved.
@@ -38,20 +36,15 @@
 
 package uk.ac.lancs.fastcgi.path;
 
-import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * Understands the context of the invocation of a service. A navigator
- * has two purposes, given an invocation of a script:
+ * Locates internal resources with awareness of its own location. A
+ * navigator has two purposes, given an invocation of a script:
  * 
  * <ol>
  * 
@@ -68,144 +61,36 @@ import java.util.stream.Collectors;
  * usually required for <samp>Location</samp> header fields.
  * 
  * </ol>
- * 
- * 
- * 
+ *
  * @author simpsons
  */
-public final class Navigator<I> implements Locator {
-    private final I instance;
-
-    private final URI server;
-
-    private final List<String> resource;
-
-    private final String resourceString;
-
-    private final String leadElem;
-
-    private final List<String> base;
-
-    private final List<String> script;
+public interface Navigator {
+    /**
+     * Determine whether the service instance's root path can be
+     * referenced. This is not the case if the instance's root is the
+     * server root.
+     *
+     * @return {@code true} if the root path can be referenced;
+     * {@code false} otherwise
+     */
+    boolean allowRoot();
 
     /**
-     * Create a navigator.
-     * 
-     * <p>
-     * The supplied external server URI has <samp>/</samp> resolved
-     * against it, so path information here is discarded.
-     * 
-     * <p>
-     * The resource path elements must begin with an empty element,
-     * e.g., <code>Arrays.asList("", "yan", "tan", "")</code> is
-     * equivalent to a <samp>PATH_INFO</samp> of <samp>/yan/tan/</samp>.
-     * (The trailing empty element <em>after</em> the leading one
-     * corresponds to a trailing slash in <samp>PATH_INFO</samp>.)
-     * 
-     * <p>
-     * Copies of the two supplied lists are retained internally.
-     * 
-     * @param instance the context of the instance being invoked
-     * 
-     * @param server the external server of the service instance; the
-     * path is discarded
-     * 
-     * @param script the path elements identifying the service instance;
-     * may be empty
-     * 
-     * @param resource the path elements identifying the resource within
-     * the service, beginning with an empty element, and optionally
-     * ending with an additional empty element to refer to a
-     * directory-like path
+     * Refer to an internal resource within the service. An empty string
+     * refers to the service root. A leading slash is otherwise assumed.
+     * The result can be used to generate a relative URI with a relative
+     * or absolute path (useful for generating links to one resource
+     * from the content of another), or an absolute URI (essential for
+     * redirection).
+     *
+     * @param path the path to the resource relative to the service root
+     *
+     * @return the requested resource reference
+     *
+     * @throws ExternalPathException if an attempt is made to reference
+     * an external resource
      */
-    Navigator(I instance, URI server, List<? extends String> script,
-              List<? extends String> resource) {
-        final int rlen = resource.size();
-        assert rlen > 0 : "empty resource";
-        assert resource.get(0).isEmpty() : "initial resource element non-empty";
-
-        {
-            /* Reject a script path that contains empty elements, or
-             * elements containing forward slashes. */
-            Optional<? extends String> badElement = script.stream()
-                .filter(s -> s.isEmpty() || s.indexOf('/') >= 0).findAny();
-            assert badElement.isEmpty() :
-                "script element " + (badElement.get().isEmpty() ? "empty" :
-                    ("with slash: " + badElement.get()));
-        }
-
-        {
-            /* Reject a resource path that contains elements containing
-             * forward slashes. */
-            Optional<? extends String> badElement =
-                resource.stream().filter(s -> s.indexOf('/') >= 0).findAny();
-            assert badElement.isEmpty() :
-                "resource element with slash: " + badElement.get();
-        }
-
-        if (rlen >= 2) {
-            /* Reject a resource path that contains empty elements
-             * except at the start or end. */
-            Optional<? extends String> badElement =
-                resource.subList(1, rlen - 1).stream().filter(String::isEmpty)
-                    .findAny();
-            assert badElement.isEmpty() : "resource element empty";
-        }
-
-        this.instance = instance;
-
-        this.script = List.copyOf(script);
-        final int slen = this.script.size();
-        this.leadElem = slen > 0 ? this.script.get(slen - 1) : null;
-
-        /* Discard any virtual path, query or fragment identifier of the
-         * server. */
-        this.server = server.resolve("/");
-
-        this.resource = List.copyOf(resource);
-        this.resourceString =
-            resource.stream().collect(Collectors.joining("/"));
-
-        /* Create a base element sequence which is the same as the
-         * resource, except that the last element is removed, and the
-         * first is the last element of the external service prefix. */
-        List<String> base = new ArrayList<>(resource.subList(0, rlen - 1));
-        if (!base.isEmpty()) base.set(0, this.leadElem);
-        this.base = List.copyOf(base);
-    }
-
-    @Override
-    public PathReference locate(String path) {
-        if (path.isEmpty() && leadElem == null)
-            throw new ExternalPathException("");
-
-        List<String> ref = Utils.decomposeInternalPath(path);
-        ref.set(0, leadElem);
-        return new PathReference(ref, base, script, server);
-    }
-
-    /**
-     * Get the instance context.
-     * 
-     * @return the instance context
-     */
-    public I instance() {
-        return instance;
-    }
-
-    @Override
-    public boolean allowRoot() {
-        return leadElem != null;
-    }
-
-    /**
-     * Identify the resource as a sequence of path elements.
-     * 
-     * @return an immutable list beginning with an empty element
-     */
-    public List<String> resourceElements() {
-        return resource;
-    }
+    PathReference locate(String path);
 
     /**
      * Identify the resource as a slash-separated string. This is either
@@ -214,25 +99,21 @@ public final class Navigator<I> implements Locator {
      * be empty.
      * 
      * @return the resource identifier
+     * 
+     * @default By default, {@link #resourceElements()} is called, and
+     * then the elements are concatenated with intervening forward
+     * slashes.
      */
-    public String resource() {
-        return resourceString;
+    default String resource() {
+        return resourceElements().stream().collect(Collectors.joining("/"));
     }
 
     /**
-     * Identify the invoked script by its external virtual path.
+     * Identify the resource as a sequence of path elements.
      * 
-     * @return the script path
-     * 
-     * @deprecated The application should be able to do without this. In
-     * any case, calling
-     * <code>{@linkplain #locate(String)}("").local()</code> should
-     * yield the same value.
+     * @return an immutable list beginning with an empty element
      */
-    @Deprecated
-    public String script() {
-        return script.stream().map(s -> "/" + s).collect(Collectors.joining());
-    }
+    List<String> resourceElements();
 
     /**
      * Match the resource against a regular expression.
@@ -240,9 +121,12 @@ public final class Navigator<I> implements Locator {
      * @param pattern the regular expression
      * 
      * @return a matcher for the resource against the expression
+     * 
+     * @default By default, {@link #resource()} is called, and the
+     * result passed to the pattern to obtain the matcher.
      */
-    public Matcher recognize(Pattern pattern) {
-        return pattern.matcher(resourceString);
+    default Matcher recognize(Pattern pattern) {
+        return pattern.matcher(resource());
     }
 
     /**
@@ -255,9 +139,14 @@ public final class Navigator<I> implements Locator {
      * 
      * @return {@code true} if the pattern matched and the action was
      * performed; {@code false} if the pattern did not match
+     * 
+     * @default By default, {@link #recognize(Pattern)} is called. If
+     * the resource matches, the {@link Matcher} is passed to the second
+     * argument, and then {@code true} is returned. Otherwise
+     * {@code false} is returned.
      */
-    public boolean recognize(Pattern pattern,
-                             Consumer<? super Matcher> action) {
+    default boolean recognize(Pattern pattern,
+                              Consumer<? super Matcher> action) {
         Matcher m = recognize(pattern);
         if (!m.matches()) return false;
         action.accept(m);
@@ -272,50 +161,13 @@ public final class Navigator<I> implements Locator {
      * 
      * @return {@code true} if a match was found; {@code false}
      * otherwise
+     * 
+     * @default By default, {@link Action#attempt(Locator)} is called on
+     * each action in sequence, until one returns {@code true}.
      */
-    public boolean recognize(Action... actions) {
+    default boolean recognize(Binding... actions) {
         for (var action : actions)
             if (action.attempt(this)) return true;
         return false;
     }
-
-    /**
-     * Get the hash code for this object. This is derived from
-     * normalized versions of all the provided inputs.
-     * 
-     * @return the object's hash code
-     */
-    @Override
-    public int hashCode() {
-        int hash = 3;
-        hash = 13 * hash + Objects.hashCode(this.instance);
-        hash = 13 * hash + Objects.hashCode(this.server);
-        hash = 13 * hash + Objects.hashCode(this.resource);
-        hash = 13 * hash + Objects.hashCode(this.script);
-        return hash;
-    }
-
-    /**
-     * Test whether another object equals this one.
-     * 
-     * @param obj the object
-     * 
-     * @return {@code true} if the object is of the same type and is
-     * configured with the same normalized inputs; {@code false}
-     * otherwise
-     */
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null) return false;
-        if (getClass() != obj.getClass()) return false;
-        final Navigator<?> other = (Navigator<?>) obj;
-        if (!Objects.equals(this.instance, other.instance)) return false;
-        if (!Objects.equals(this.server, other.server)) return false;
-        if (!Objects.equals(this.resource, other.resource)) return false;
-        return Objects.equals(this.script, other.script);
-    }
-
-    private static final Logger logger =
-        Logger.getLogger(Navigator.class.getPackageName());
 }
