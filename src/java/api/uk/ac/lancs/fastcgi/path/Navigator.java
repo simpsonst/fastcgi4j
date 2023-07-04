@@ -72,7 +72,7 @@ import java.util.stream.Collectors;
  * 
  * @author simpsons
  */
-public final class Navigator<I> {
+public final class Navigator<I> implements Locator {
     private final I instance;
 
     private final URI server;
@@ -173,21 +173,7 @@ public final class Navigator<I> {
         this.base = List.copyOf(base);
     }
 
-    /**
-     * Refer to an internal resource within the service. An empty string
-     * refers to the service root. A leading slash is otherwise assumed.
-     * The result can be used to generate a relative URI with a relative
-     * or absolute path (useful for generating links to one resource
-     * from the content of another), or an absolute URI (essential for
-     * redirection).
-     * 
-     * @param path the path to the resource relative to the service root
-     * 
-     * @return the requested resource reference
-     * 
-     * @throws ExternalPathException if an attempt is made to reference
-     * an external resource
-     */
+    @Override
     public PathReference locate(String path) {
         if (path.isEmpty() && leadElem == null)
             throw new ExternalPathException("");
@@ -206,14 +192,7 @@ public final class Navigator<I> {
         return instance;
     }
 
-    /**
-     * Determine whether the service instance's root path can be
-     * referenced. This is not the case if the instance's root is the
-     * server root.
-     * 
-     * @return {@code true} if the root path can be referenced;
-     * {@code false} otherwise
-     */
+    @Override
     public boolean allowRoot() {
         return leadElem != null;
     }
