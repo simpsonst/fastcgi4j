@@ -46,4 +46,4 @@ package uk.ac.lancs.fastcgi.context;
  * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.2">FastCGI
  * Specification &mdash; Responder</a>
  */
-public interface ResponderContext extends RequestableContext, SessionContext {}
+public interface ResponderSession extends RequestableSession, Session {}

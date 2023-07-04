@@ -40,16 +40,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.logging.Logger;
 import uk.ac.lancs.fastcgi.Filter;
-import uk.ac.lancs.fastcgi.context.FilterContext;
 import uk.ac.lancs.fastcgi.context.SessionAbortedException;
 import uk.ac.lancs.fastcgi.engine.util.Pipe;
+import uk.ac.lancs.fastcgi.context.FilterSession;
 
 /**
  * Handles Filter sessions.
  *
  * @author simpsons
  */
-class FilterHandler extends AbstractHandler implements FilterContext {
+class FilterHandler extends AbstractHandler implements FilterSession {
     private final Filter app;
 
     /**

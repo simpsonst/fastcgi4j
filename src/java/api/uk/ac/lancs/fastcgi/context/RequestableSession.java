@@ -39,20 +39,16 @@ package uk.ac.lancs.fastcgi.context;
 import java.io.InputStream;
 
 /**
- * Presents the context of a FastCGI session to an application in the
- * Filter role.
+ * Presents the context of a FastCGI session to an application in a role
+ * which receives a request body.
  *
  * @author simpsons
- * 
- * @see <a href=
- * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.4">FastCGI
- * Specification &mdash; Filter</a>
  */
-public interface FilterContext extends RequestableContext {
+public interface RequestableSession {
     /**
-     * Get the stream for reading the file data.
+     * Get the stream for reading the request body.
      * 
-     * @return the input stream providing the file data
+     * @return the input stream providing the request body
      */
-    InputStream data();
+    InputStream in();
 }

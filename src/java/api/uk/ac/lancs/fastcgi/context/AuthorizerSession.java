@@ -27,7 +27,7 @@ package uk.ac.lancs.fastcgi.context;
  * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.3">FastCGI
  * Specification &mdash; Authorizer</a>
  */
-public interface AuthorizerContext extends SessionContext {
+public interface AuthorizerSession extends Session {
     /**
      * Set an authentication/authorization variable. The status is set
      * to 200.
@@ -43,7 +43,7 @@ public interface AuthorizerContext extends SessionContext {
      * 
      * @throws IllegalArgumentException if the name case-insensitively
      * begins with {@value #VARIABLE_PREFIX} or matches
-     * {@value SessionContext#STATUS_FIELD}
+     * {@value Session#STATUS_FIELD}
      */
     @Override
     void setHeader(String name, String value);
@@ -53,7 +53,7 @@ public interface AuthorizerContext extends SessionContext {
      * 
      * @throws IllegalArgumentException if the name case-insensitively
      * begins with {@value #VARIABLE_PREFIX} or matches
-     * {@value SessionContext#STATUS_FIELD}
+     * {@value Session#STATUS_FIELD}
      */
     @Override
     public void addHeader(String name, String value);

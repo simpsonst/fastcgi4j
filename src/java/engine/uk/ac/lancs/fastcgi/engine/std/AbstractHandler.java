@@ -56,11 +56,11 @@ import java.util.function.Predicate;
 import java.util.logging.Logger;
 import uk.ac.lancs.fastcgi.context.Diagnostics;
 import uk.ac.lancs.fastcgi.context.OverloadException;
-import uk.ac.lancs.fastcgi.context.SessionContext;
 import uk.ac.lancs.fastcgi.proto.ProtocolStatuses;
 import uk.ac.lancs.fastcgi.proto.serial.ParamReader;
 import uk.ac.lancs.fastcgi.proto.serial.RecordIOException;
 import uk.ac.lancs.fastcgi.proto.serial.RecordWriter;
+import uk.ac.lancs.fastcgi.context.Session;
 
 /**
  * Implements session-specific behaviour functionality common to all
@@ -68,7 +68,7 @@ import uk.ac.lancs.fastcgi.proto.serial.RecordWriter;
  *
  * @author simpsons
  */
-abstract class AbstractHandler implements SessionHandler, SessionContext {
+abstract class AbstractHandler implements SessionHandler, Session {
     /**
      * Holds the session id (or request id in FastCGI parlance).
      */
@@ -527,7 +527,7 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
     }
 
     void setHeaderInternal(String name, String value) {
-        if (name.equalsIgnoreCase(SessionContext.STATUS_FIELD))
+        if (name.equalsIgnoreCase(Session.STATUS_FIELD))
             throw new IllegalArgumentException("reserved name " + name);
         if (statusCode < 0) throw new IllegalStateException("header sent");
         List<String> aval =
@@ -545,7 +545,7 @@ abstract class AbstractHandler implements SessionHandler, SessionContext {
     }
 
     void addHeaderInternal(String name, String value) {
-        if (name.equalsIgnoreCase(SessionContext.STATUS_FIELD))
+        if (name.equalsIgnoreCase(Session.STATUS_FIELD))
             throw new IllegalArgumentException("reserved name " + name);
         if (statusCode < 0) throw new IllegalStateException("header sent");
         outHeaders.computeIfAbsent(name, k -> new ArrayList<>()).add(value);

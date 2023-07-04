@@ -37,8 +37,8 @@
 package uk.ac.lancs.fastcgi;
 
 import java.io.IOException;
-import uk.ac.lancs.fastcgi.context.ResponderContext;
 import uk.ac.lancs.fastcgi.context.SessionException;
+import uk.ac.lancs.fastcgi.context.ResponderSession;
 
 /**
  * Responds to complete FastCGI requests.
@@ -67,5 +67,5 @@ public interface Responder {
      * @throws Exception if something else goes wrong, to be logged by
      * the library
      */
-    void respond(ResponderContext session) throws Exception;
+    void respond(ResponderSession session) throws Exception;
 }

@@ -47,10 +47,10 @@ import java.security.MessageDigest;
 import java.util.Properties;
 import java.util.TreeMap;
 import uk.ac.lancs.fastcgi.Responder;
-import uk.ac.lancs.fastcgi.context.ResponderContext;
 import uk.ac.lancs.fastcgi.path.Navigator;
 import uk.ac.lancs.fastcgi.path.PathConfiguration;
 import uk.ac.lancs.fastcgi.path.PathContext;
+import uk.ac.lancs.fastcgi.context.ResponderSession;
 
 /**
  * Responds by echoing all headers, and displaying a hex MD5 sum of the
@@ -80,7 +80,7 @@ public class MD5SumResponder implements Responder {
     }
 
     @Override
-    public void respond(ResponderContext ctxt) throws Exception {
+    public void respond(ResponderSession ctxt) throws Exception {
         PathContext<String> pathCtxt = pathConfig.recognize(ctxt.parameters());
         Navigator navigator = pathCtxt.navigator();
 

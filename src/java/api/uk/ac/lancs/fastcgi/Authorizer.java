@@ -18,8 +18,8 @@
 package uk.ac.lancs.fastcgi;
 
 import java.io.IOException;
-import uk.ac.lancs.fastcgi.context.AuthorizerContext;
 import uk.ac.lancs.fastcgi.context.SessionException;
+import uk.ac.lancs.fastcgi.context.AuthorizerSession;
 
 /**
  * Responds as an authorizer to FastCGI requests.
@@ -48,5 +48,5 @@ public interface Authorizer {
      * @throws Exception if something else goes wrong, to be logged by
      * the library
      */
-    void authorize(AuthorizerContext session) throws Exception;
+    void authorize(AuthorizerSession session) throws Exception;
 }

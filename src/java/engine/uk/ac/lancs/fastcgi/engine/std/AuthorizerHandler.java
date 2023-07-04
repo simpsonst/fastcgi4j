@@ -38,14 +38,14 @@ package uk.ac.lancs.fastcgi.engine.std;
 
 import java.util.Objects;
 import uk.ac.lancs.fastcgi.Authorizer;
-import uk.ac.lancs.fastcgi.context.AuthorizerContext;
+import uk.ac.lancs.fastcgi.context.AuthorizerSession;
 
 /**
  * Handles Authorizer sessions.
  *
  * @author simpsons
  */
-class AuthorizerHandler extends AbstractHandler implements AuthorizerContext {
+class AuthorizerHandler extends AbstractHandler implements AuthorizerSession {
     private final Authorizer app;
 
     /**
@@ -92,16 +92,16 @@ class AuthorizerHandler extends AbstractHandler implements AuthorizerContext {
         Objects.requireNonNull(name, "name");
         Objects.requireNonNull(value, "value");
         name = name.trim();
-        setHeaderInternal(AuthorizerContext.VARIABLE_PREFIX + name, value);
+        setHeaderInternal(AuthorizerSession.VARIABLE_PREFIX + name, value);
     }
 
     private static final int VARIABLE_PREFIX_LENGTH =
-        AuthorizerContext.VARIABLE_PREFIX.length();
+        AuthorizerSession.VARIABLE_PREFIX.length();
 
     private static boolean isVariable(CharSequence in) {
         if (in.length() < VARIABLE_PREFIX_LENGTH) return false;
         CharSequence prefix =
             in.subSequence(0, VARIABLE_PREFIX_LENGTH).toString();
-        return AuthorizerContext.VARIABLE_PREFIX.equals(prefix);
+        return AuthorizerSession.VARIABLE_PREFIX.equals(prefix);
     }
 }

@@ -40,16 +40,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.logging.Logger;
 import uk.ac.lancs.fastcgi.Responder;
-import uk.ac.lancs.fastcgi.context.ResponderContext;
 import uk.ac.lancs.fastcgi.context.SessionAbortedException;
 import uk.ac.lancs.fastcgi.engine.util.Pipe;
+import uk.ac.lancs.fastcgi.context.ResponderSession;
 
 /**
  * Handles Responder sessions.
  * 
  * @author simpsons
  */
-class ResponderHandler extends AbstractHandler implements ResponderContext {
+class ResponderHandler extends AbstractHandler implements ResponderSession {
     private final Responder app;
 
     private final Pipe stdinPipe;

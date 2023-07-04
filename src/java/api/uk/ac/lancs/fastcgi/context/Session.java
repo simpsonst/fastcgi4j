@@ -45,7 +45,7 @@ import java.util.Map;
  * 
  * @author simpsons
  */
-public interface SessionContext {
+public interface Session {
     /**
      * Complete the request. The exit code should be 0 to indicate a
      * normal exit.

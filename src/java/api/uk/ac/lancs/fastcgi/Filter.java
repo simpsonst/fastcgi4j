@@ -18,8 +18,8 @@
 package uk.ac.lancs.fastcgi;
 
 import java.io.IOException;
-import uk.ac.lancs.fastcgi.context.FilterContext;
 import uk.ac.lancs.fastcgi.context.SessionException;
+import uk.ac.lancs.fastcgi.context.FilterSession;
 
 /**
  * Augments a session by post-processing a partial response.
@@ -48,5 +48,5 @@ public interface Filter {
      * @throws Exception if something else goes wrong, to be logged by
      * the library
      */
-    void filter(FilterContext session) throws Exception;
+    void filter(FilterSession session) throws Exception;
 }
