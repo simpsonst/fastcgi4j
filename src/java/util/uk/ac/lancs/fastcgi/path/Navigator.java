@@ -309,7 +309,7 @@ public final class Navigator<I> implements Locator {
         if (this == obj) return true;
         if (obj == null) return false;
         if (getClass() != obj.getClass()) return false;
-        final Navigator other = (Navigator) obj;
+        final Navigator<?> other = (Navigator<?>) obj;
         if (!Objects.equals(this.instance, other.instance)) return false;
         if (!Objects.equals(this.server, other.server)) return false;
         if (!Objects.equals(this.resource, other.resource)) return false;
