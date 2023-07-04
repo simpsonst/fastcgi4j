@@ -33,6 +33,9 @@ JARDEPS_MERGEDIR=src/merge
 SELECTED_JARS += fastcgi4j_api
 trees_fastcgi4j_api += api
 
+SELECTED_JARS += fastcgi4j_util
+trees_fastcgi4j_util += util
+
 SELECTED_JARS += fastcgi4j_app
 trees_fastcgi4j_app += app
 
@@ -75,6 +78,8 @@ trees_fastcgi4j_demos += demos
 jars += tests
 
 roots_api += $(found_api)
+roots_util += $(found_util)
+deps_util += api
 roots_app += $(found_app)
 deps_app += api
 roots_threads += $(found_threads)
@@ -103,6 +108,7 @@ deps_iis += proto
 roots_demos += $(found_demos)
 deps_demos += api
 deps_demos += app
+deps_demos += util
 roots_tests += $(found_tests)
 deps_tests += api
 deps_tests += app
