@@ -43,14 +43,16 @@
  * 
  * <p>
  * The FastCGI program should begin by building a
- * {@link uk.ac.lancs.fastcgi.path.Navigation} object, configuring it
- * with knowledge about internal and external URIs, and how they relate.
- * Then, on creation of each session, a
- * {@link uk.ac.lancs.fastcgi.path.Navigator} can be created from the
- * navigation object and the session's CGI parameters. Finally, for each
- * URI referencing an internal resource to be generated, the path to the
- * resource yields a {@link uk.ac.lancs.fastcgi.path.PathReference},
- * from which relative, local or absolute URIs can be obtained.
+ * {@link uk.ac.lancs.fastcgi.path.PathConfiguration} object,
+ * configuring it with knowledge about internal and external URIs, and
+ * how they relate. Then, on creation of each session, a
+ * {@link uk.ac.lancs.fastcgi.path.PathContext} can be created from the
+ * navigation object and the session's CGI parameters. This yields both
+ * a user-defined instance context and a
+ * {@link uk.ac.lancs.fastcgi.Navigator}. Given a path to an internal
+ * resource, the latter yields a
+ * {@link uk.ac.lancs.fastcgi.path.PathReference}, from which relative,
+ * local or absolute URIs can be obtained.
  * 
  * @author simpsons
  */
