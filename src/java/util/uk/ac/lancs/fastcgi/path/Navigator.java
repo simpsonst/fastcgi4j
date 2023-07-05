@@ -37,7 +37,6 @@
 package uk.ac.lancs.fastcgi.path;
 
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -145,8 +144,8 @@ public interface Navigator {
      * argument, and then {@code true} is returned. Otherwise
      * {@code false} is returned.
      */
-    default boolean recognize(Pattern pattern,
-                              Consumer<? super Matcher> action) {
+    default boolean recognize(Pattern pattern, PatternAction action)
+        throws Exception {
         Matcher m = recognize(pattern);
         if (!m.matches()) return false;
         action.accept(m);
@@ -165,7 +164,7 @@ public interface Navigator {
      * @default By default, {@link Action#attempt(Locator)} is called on
      * each action in sequence, until one returns {@code true}.
      */
-    default boolean recognize(Binding... actions) {
+    default boolean recognize(Binding... actions) throws Exception {
         for (var action : actions)
             if (action.attempt(this)) return true;
         return false;
