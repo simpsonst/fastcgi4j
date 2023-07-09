@@ -39,6 +39,7 @@
 package uk.ac.lancs.fastcgi.path;
 
 import java.net.URI;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -284,6 +285,16 @@ public final class PathConfiguration<I> {
                            ? extends String> scriptName;
 
     private final Map<URI, Map<List<String>, Instance<I>>> instances;
+
+    /**
+     * Get a collection of all instances.
+     * 
+     * @return a collection of instances
+     */
+    public Collection<I> getInstances() {
+        return instances.values().stream().map(Map::values)
+            .flatMap(Collection::stream).map(i -> i.context).toList();
+    }
 
     /**
      * Get a navigator for a CGI context.
