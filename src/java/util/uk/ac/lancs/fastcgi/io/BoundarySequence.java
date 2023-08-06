@@ -287,14 +287,24 @@ public final class BoundarySequence implements Iterator<InputStream> {
         return start < cand;
     }
 
+    /**
+     * Determines whether we're offering the very start of the stream to
+     * the recognizer. It is initially {@code true}, but is reset when
+     * the user reads at least one byte, or the recognizer tells us to
+     * skip over at least one byte.
+     */
+    private boolean atStart = true;
+
     private void recognize() {
         boolean go = true;
         while (go && cand < lim) {
-            int rc = recognizer.recognize(buf, cand, candEnd, lim, !baseEnded);
+            int rc = recognizer.recognize(buf, cand, candEnd, lim, !baseEnded,
+                                          atStart);
             assert rc >= -(lim - cand) && rc <= lim - candEnd : "rc=" + rc
                 + " not in [" + -(lim - cand) + ", " + (lim - candEnd) + "]";
             if (rc < 0) {
                 candEnd = cand -= rc;
+                atStart = false;
             } else if (rc > 0) {
                 candEnd += rc;
                 if (candEnd < lim || baseEnded) go = false;
@@ -363,6 +373,8 @@ public final class BoundarySequence implements Iterator<InputStream> {
              * buffer. */
             if (!populate()) return -1;
             int amount = Math.min(len, cand - start);
+            assert amount > 0;
+            atStart = false;
             System.arraycopy(buf, start, b, off, amount);
             start += amount;
             return amount;
@@ -371,6 +383,7 @@ public final class BoundarySequence implements Iterator<InputStream> {
         @Override
         public int read() throws IOException {
             if (!populate()) return -1;
+            atStart = false;
             return buf[start++] & 0xff;
         }
     }

@@ -104,12 +104,16 @@ public interface BoundaryRecognizer {
      * come; {@code false} if the byte before the limit is definitely
      * the last byte in the sequence
      * 
+     * @param init {@code true} if the first byte presented is at the
+     * start of the sequence; {@cpde false} otherwise
+     * 
      * @return a negative number if the region of the array does not
      * start with a boundary, indicating how many bytes to skip before
      * suspecting again; or the (non-negative) number of bytes that
      * constitute a boundary or boundary prefix otherwise
      */
-    int recognize(byte[] buf, int start, int done, int limit, boolean more);
+    int recognize(byte[] buf, int start, int done, int limit, boolean more,
+                  boolean init);
 
     /**
      * Generate the code that signals expansion of the region containing

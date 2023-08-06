@@ -151,15 +151,22 @@ public final class MultipartBoundaryRecognizer implements BoundaryRecognizer {
     @Override
     @SuppressWarnings("empty-statement")
     public int recognize(final byte[] buf, final int start, final int done,
-                         final int limit, final boolean more) {
+                         final int limit, final boolean more, boolean init) {
         assert start <= done;
         assert done <= limit;
         assert limit <= buf.length;
 
         if (terminated) return skip(limit - start);
 
+        final int candOff;
+        if (init && buf[start] == ASCII.DASH) {
+            candOff = 2;
+        } else {
+            candOff = 0;
+        }
+
         /* Where should the fixed part of the boundary end? */
-        final int fixedEnd = start + boundary.length;
+        final int fixedEnd = start + boundary.length - candOff;
 
         if (false) {
             System.err.printf("%n%d-%d-%d%s fixed end=%d%n", start, done, limit,
@@ -200,7 +207,7 @@ public final class MultipartBoundaryRecognizer implements BoundaryRecognizer {
             if (!more) return skip(limit - start);
 
             /* Check the bytes we do have. */
-            while (pos < limit && buf[pos] == boundary[pos - start])
+            while (pos < limit && buf[pos] == boundary[pos - start + candOff])
                 pos++;
 
             /* If they all match, they are part of the candidate. */
@@ -218,7 +225,7 @@ public final class MultipartBoundaryRecognizer implements BoundaryRecognizer {
 
         /* See if we can match the remaining bytes of the fixed part of
          * the boundary. */
-        while (pos < fixedEnd && buf[pos] == boundary[pos - start])
+        while (pos < fixedEnd && buf[pos] == boundary[pos - start + candOff])
             pos++;
         if (pos < fixedEnd) {
             /* We haven't got a boundary, but search for one in what's
