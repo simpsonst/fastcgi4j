@@ -39,24 +39,45 @@
 package uk.ac.lancs.fastcgi.mime;
 
 /**
+ * Defines symbols for significant US-ASCII characters' byte values.
  *
  * @author simpsons
  */
 final class ASCII {
     private ASCII() {}
 
+    /**
+     * The byte value of the US-ASCII tab U+0009 character
+     */
     static final byte TAB = 9;
 
+    /**
+     * The byte value of the US-ASCII linefeed U+000A character
+     */
     static final byte LF = 10;
 
+    /**
+     * The byte value of the US-ASCII carriage-return U+000D character
+     */
     static final byte CR = 13;
 
+    /**
+     * The byte value of the US-ASCII hyphen-minus U+002D character
+     */
     static final byte DASH = 0x2d;
 
+    /**
+     * The byte value of the US-ASCII colon U+003A character
+     */
     static final byte COLON = 0x3a;
 
+    /**
+     * The byte value of the US-ASCII space U+0020 character
+     */
     static final byte SPACE = 32;
 
+    /**
+     * The byte value of the US-ASCII delete U+007F character
+     */
     static final byte DEL = 127;
-
 }
