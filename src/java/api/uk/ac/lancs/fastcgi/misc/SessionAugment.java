@@ -165,6 +165,8 @@ public final class SessionAugment {
 
     private OutputStream out;
 
+    private boolean compressed = false;
+
     /**
      * Turn on compression if the client accepts it. The output stream
      * is wrapped in a compression filter.
@@ -173,6 +175,8 @@ public final class SessionAugment {
      * In the current implementation, only <samp>gzip</samp> is offered.
      */
     public void offerCompression() throws IOException {
+        if (compressed) return;
+        compressed = true;
         Map<String, Float> pref = getEncodingPreference();
         String comp = resolvePreference(pref, COMPRESSION_OFFER);
         switch (comp) {
