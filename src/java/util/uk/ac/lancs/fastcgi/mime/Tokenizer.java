@@ -38,6 +38,7 @@
 
 package uk.ac.lancs.fastcgi.mime;
 
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -123,12 +124,15 @@ public final class Tokenizer {
         return new String(text);
     }
 
-    private class Remnant implements CharSequence {
+    /**
+     * Presents a view of the text as a character sequence.
+     */
+    private class Substring implements CharSequence {
         private final int start;
 
         private final int length;
 
-        Remnant(int start, int length) {
+        Substring(int start, int length) {
             this.start = start;
             this.length = length;
         }
@@ -155,19 +159,26 @@ public final class Tokenizer {
             if (start > end)
                 throw new IndexOutOfBoundsException(Integer.toString(start)
                     + ">" + end);
-            return new Remnant(this.start + start, end - start);
+            return new Substring(this.start + start, end - start);
+        }
+
+        @Override
+        public String toString() {
+            return new String(text, start, length);
         }
     }
 
     /**
      * Get the remaining text.
      * 
-     * @return the original text from the current position
+     * @return the original text from the current position; or
+     * {@code null} if the end of the text has been parsed with
+     * {@link #end()}
      */
     public CharSequence remnant() {
         int rem = remaining();
-        if (rem < 0) return "";
-        return new Remnant(pos, rem);
+        if (rem < 0) return null;
+        return new Substring(pos, rem);
     }
 
     /**
@@ -192,18 +203,17 @@ public final class Tokenizer {
     /**
      * Parse characters within a set.
      * 
-     * @param set a function recognizing acceptable characters (as
-     * {@code int}s)
+     * @param set a function recognizing acceptable characters
      * 
      * @return the string of matching characters; or {@code null} if
      * none matched
      */
-    public String set(CharacterSet set) {
+    public CharSequence set(CharacterSet set) {
         int p = pos;
         while (pos < text.length && set.contains(text[pos]))
             pos++;
         if (pos == p) return null;
-        return new String(text, p, pos - p);
+        return new Substring(p, pos - p);
     }
 
     /**
@@ -211,7 +221,7 @@ public final class Tokenizer {
      * 
      * @return the atom; or {@code null} if no atom could be parsed
      */
-    public String atom() {
+    public CharSequence atom() {
         return set(CharacterSet.ATOM_CHARS);
     }
 
@@ -240,15 +250,133 @@ public final class Tokenizer {
     }
 
     /**
+     * Parse text until a potential encoded word is found. The caller
+     * should then attempt to parse an encoded word and, upon failure,
+     * consume the next two characters as literal text.
+     * 
+     * @return the non-empty text; or {@code null} if no text could be
+     * found
+     * 
+     * @todo This won't do. Encoded words must be separated from each
+     * other and anything else by whitespace. But should that whitespace
+     * be absorbed? Only between encoded words?
+     */
+    public CharSequence text() {
+        /* Seek a =? sequence. */
+        int p = pos;
+        while (p < text.length) {
+            if (p > pos && text[p - 1] == '=' && text[p] == '?') {
+                /* Found it, so go back one, and stop. */
+                p--;
+                break;
+            }
+            p++;
+        }
+        /* Fail rather than return an empty sequence. */
+        if (p == pos) return null;
+
+        /* Form the result and advance the position. */
+        CharSequence r = new Substring(pos, p - pos);
+        pos = p;
+        return r;
+    }
+
+    /**
+     * Parsed an encoded word. This has the form
+     * <samp>=?<var>charset</var>?<var>encoding</var>?<var>data</var>?=</samp>.
+     * 
+     * <p>
+     * If <var>encoding</var> is <samp>Q</samp>, then <var>data</var> is
+     * in Quoted-Printable form, and consists of US-ASCII characters and
+     * escape sequences of the form <samp>=<var>XX</var></samp>. Each
+     * escape sequence is converted to a single byte with the
+     * hexadecimal value <var>XX</var>. Each underscore <samp>_</samp>
+     * is converted to a byte with the value 32 (US-ASCII space). Other
+     * characters are converted to their US-ASCII equivalents.
+     * 
+     * <p>
+     * If <var>encoding</var> is <samp>B</samp>, then <var>data</var>
+     * consists of US-ASCII characters that represent Base64 sextets.
+     * The characters <samp>A</samp> through <samp>Z</samp> are
+     * converted to 0 through 25, <samp>a</samp> through <samp>z</samp>
+     * to 26 through 51, <samp>0</samp> through <samp>9</samp> to 52
+     * through 61, <samp>+</samp> to 62 and <samp>/</samp> to 63.
+     * <samp>=</samp> is ignored as padding. Sextets are concatenated,
+     * and repartitioned as bytes.
+     * 
+     * <p>
+     * Both byte sequences
+     * 
+     * @return the decoded word; or {@code null} if there is no match
+     * 
+     * @todo Is Quoted-Printable handling correct? Ordinarily, bytes
+     * that correspond to safe US-ASCII characters are represented as
+     * those characters, but do not necessarily decode into those
+     * characters. For example, an EBCDIC <samp>?</samp> has the value
+     * 111, so it may appear as <samp>o</samp>, whose US-ASCII code is
+     * also 111. This is appropriate for
+     * <samp>Content-Transfer-Encoding</samp>, as that is about
+     * conversion from one byte sequence to another (one of which is
+     * 7-bit-safe), and doesn't even have to involve a character
+     * encoding. In contrast, an <samp>encoded-word</samp> in RFC2047 is
+     * meant to express a character sequence, not a byte sequence, so it
+     * could be reasonable to treat the unescaped characters as plain
+     * characters, not character representations of bytes to be later
+     * converted back to (potentially other) characters.
+     * 
+     * @see <a href=
+     * "https://datatracker.ietf.org/doc/html/rfc2047.html">RFC2047:
+     * Message Header Extensions</a>
+     */
+    public String encodedWord() {
+        final int p = pos;
+        CharSequence csName, encName, data;
+        if (sequence("=?") && (csName = atom()) != null && character('?') &&
+            (encName = atom()) != null && character('?') &&
+            (data = set(CharacterSet.ENCODED_CHARS)) != null &&
+            sequence("?=")) {
+            Charset cs = Charset.forName(csName.toString());
+            if (encName.equals("Q")) return QuotedPrintable.decode(data, cs);
+            if (encName.equals("B")) return Base64.decode(data, cs);
+        }
+        pos = p;
+        return null;
+    }
+
+    /**
+     * Parse a sequence of encoded words. Whitespace between words is
+     * discarded.
+     * 
+     * @return the concatenation of decoded adjacent words; or
+     * {@code null} if no encoded words were found
+     */
+    public String encodedWords() {
+        String first = encodedWord();
+        if (first == null) return null;
+        StringBuilder buf = new StringBuilder(first);
+        for (;;) {
+            int p = pos;
+            whitespace(0);
+            String next = encodedWord();
+            if (next == null) {
+                pos = p;
+                break;
+            }
+            buf.append(next);
+        }
+        return buf.toString();
+    }
+
+    /**
      * Parse a word (an atom or a quoted string).
      * 
      * @return the atom; or the string after de-quoting; or {@code null}
      * if no atom or quoted string is parsed
      */
     public String word() {
-        String r = atom();
+        CharSequence r = atom();
         if (r == null) return quotedString();
-        return r;
+        return r.toString();
     }
 
     /**
@@ -302,11 +430,11 @@ public final class Tokenizer {
      * @return the string of matching characters; or {@code null} if
      * none matched
      */
-    public String whitespaceSet(int min, CharacterSet set) {
+    public CharSequence whitespaceSet(int min, CharacterSet set) {
         final int p = pos;
         do {
             if (!whitespace(min)) break;
-            String t = set(set);
+            CharSequence t = set(set);
             if (t != null) return t;
         } while (false);
         pos = p;
@@ -321,7 +449,7 @@ public final class Tokenizer {
      * @return the atom; or {@code null} if no atom or insufficient
      * whitespace was encountered
      */
-    public String whitespaceAtom(int min) {
+    public CharSequence whitespaceAtom(int min) {
         return whitespaceSet(min, CharacterSet.ATOM_CHARS);
     }
 
@@ -381,6 +509,23 @@ public final class Tokenizer {
         } while (false);
         pos = p;
         return false;
+    }
+
+    /**
+     * Parse a sequence of characters.
+     * 
+     * @param seq the character sequence
+     * 
+     * @return {@code true} if the next characters match the sequence
+     * exactly; {@code false} otherwise
+     */
+    public boolean sequence(CharSequence seq) {
+        final int len = seq.length();
+        if (pos + len > text.length) return false;
+        for (int i = 0; i < len; i++)
+            if (text[pos + i] != seq.charAt(i)) return false;
+        pos += len;
+        return true;
     }
 
     /**
@@ -446,10 +591,11 @@ public final class Tokenizer {
      */
     public Map.Entry<String, String> parameter() {
         final int p = pos;
-        String name, value;
+        CharSequence name;
+        String value;
         if (whitespaceCharacter(0, ';') && (name = atom()) != null &&
             whitespaceCharacter(0, '=') && (value = word()) != null)
-            return Map.entry(name, value);
+            return Map.entry(name.toString(), value);
         pos = p;
         return null;
     }
@@ -466,10 +612,12 @@ public final class Tokenizer {
      */
     public boolean parameter(BiConsumer<? super String, ? super String> dest) {
         final int p = pos;
-        String name, value;
-        if (whitespaceCharacter(0, ';') && (name = atom()) != null &&
-            whitespaceCharacter(0, '=') && (value = word()) != null) {
-            dest.accept(name, value);
+        CharSequence name;
+        String value;
+        if (whitespaceCharacter(0, ';') && (name = whitespaceAtom(0)) != null &&
+            whitespaceCharacter(0, '=') &&
+            (value = whitespaceWord(0)) != null) {
+            dest.accept(name.toString(), value);
             return true;
         }
         pos = p;
@@ -522,14 +670,38 @@ public final class Tokenizer {
      * 
      * @param params where to store parameters
      * 
-     * @return the atom
+     * @return the atom; or {@code null} if not parsed
      */
-    public String atomParameters(Map<? super String, ? super String> params) {
+    public CharSequence
+        atomParameters(Map<? super String, ? super String> params) {
         final int p = pos;
         do {
-            String t = atom();
+            CharSequence t = atom();
             if (t == null) return null;
             if (parameters(params)) return t;
+        } while (false);
+        pos = p;
+        return null;
+    }
+
+    /**
+     * Parse whitespace, an atom and as many parameters as possible.
+     * 
+     * @param min minimum number of whitespace characters to parse
+     * 
+     * @param params where to store parameters
+     * 
+     * @return the atom; or {@code null} if not parsed
+     */
+    public CharSequence
+        whitespaceAtomParameters(int min,
+                                 Map<? super String, ? super String> params) {
+        final int p = pos;
+        do {
+            if (!whitespace(min)) break;
+            CharSequence t = atomParameters(params);
+            if (t == null) break;
+            return t;
         } while (false);
         pos = p;
         return null;
@@ -543,15 +715,64 @@ public final class Tokenizer {
      */
     public MediaType mediaType() {
         final int p = pos;
-        String major, minor;
+        CharSequence major, minor;
         Map<String, String> rawParams = new HashMap<>();
         if ((major = whitespaceAtom(0)) != null && character('/') &&
             (minor = atom()) != null && parameters(rawParams)) {
             Map<String, ParameterValue> decoded =
                 ParameterValue.decodeParameters(rawParams);
-            return new MediaType(major, minor, decoded);
+            return new MediaType(major.toString(), minor.toString(), decoded);
         }
         pos = p;
         return null;
+    }
+
+    /**
+     * Create a token or a quoted string (if necessary).
+     * 
+     * @param text the literal text of the token or string
+     * 
+     * @return the encoded text as either a token or a quoted string
+     */
+    public static String quoteOptionally(CharSequence text) {
+        final int len = text.length();
+        for (int i = 0; i < len; i++) {
+            char c = text.charAt(i);
+            if (!CharacterSet.TOKEN_CHARS.contains(c)) {
+                StringBuilder result = new StringBuilder("\"");
+                result.append(text.subSequence(0, i)).append('\\').append(c);
+                int last = ++i;
+                while (i < len) {
+                    c = text.charAt(i);
+                    if (!CharacterSet.TOKEN_CHARS.contains(c)) {
+                        result.append(text.subSequence(last, i)).append('\\')
+                            .append(c);
+                        last = i;
+                    }
+                }
+                result.append(text.subSequence(last, i)).append('\\').append(c);
+                return result.append('"').toString();
+            }
+        }
+        return text.toString();
+    }
+
+    /**
+     * Check whether a string contains only characters compatible with a
+     * token.
+     * 
+     * @param t the candidate token
+     * 
+     * @return {@code true} if the candidate is a token; {@code false}
+     * otherwise
+     */
+    public static boolean isAtom(CharSequence t) {
+        /* TODO: Are there different rules for the start of a token? */
+        final int len = t.length();
+        for (int i = 0; i < len; i++) {
+            char c = t.charAt(i);
+            if (!CharacterSet.TOKEN_CHARS.contains(c)) return false;
+        }
+        return true;
     }
 }

@@ -1,5 +1,3 @@
-// -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
-
 /*
  * Copyright (c) 2023, Lancaster University
  * All rights reserved.
@@ -36,51 +34,9 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.mime;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.ref.Cleaner;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.concurrent.atomic.AtomicLong;
-
 /**
- * Retrieves binary data from a file.
+ * Holds classes for writing role implementations.
  * 
  * @author simpsons
  */
-final class FileBinaryBody extends TransientFileElement implements BinaryBody {
-    /**
-     * Record the storage of binary data in a file. The size must be
-     * known beforehand, and the data must be in the file before
-     * {@link #recover()} is called.
-     * 
-     * @param path the path to the file
-     * 
-     * @param size the size of the file
-     */
-    public FileBinaryBody(Cleaner cleaner, Path path, long size,
-                          AtomicLong usage) {
-        super(cleaner, path, size, usage);
-    }
-
-    @Override
-    public long size() {
-        return super.size();
-    }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @throws AssertionError if there is an error in opening the file
-     */
-    @Override
-    public InputStream recover() {
-        try {
-            return Files.newInputStream(super.path());
-        } catch (IOException ex) {
-            throw new AssertionError("unreachable", ex);
-        }
-    }
-}
+package uk.ac.lancs.fastcgi.misc;

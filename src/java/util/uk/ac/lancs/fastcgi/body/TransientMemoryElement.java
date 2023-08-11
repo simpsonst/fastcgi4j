@@ -1,5 +1,7 @@
+// -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
+
 /*
- * Copyright (c) 2022,2023, Lancaster University
+ * Copyright (c) 2023, Lancaster University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,24 +33,64 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *
- *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
+ *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.context;
+package uk.ac.lancs.fastcgi.body;
 
-import java.io.InputStream;
+import java.lang.ref.Cleaner;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Presents the context of a FastCGI session to an application in a role
- * which receives a request body.
- *
+ * Accounts for in-memory storage when garbage-collected.
+ * 
  * @author simpsons
  */
-public interface RequestableSession {
+abstract class TransientMemoryElement {
+    private static class State implements Runnable {
+        protected final long size;
+
+        private final AtomicLong usage;
+
+        public State(long size, AtomicLong usage) {
+            this.size = size;
+            this.usage = usage;
+
+            this.usage.addAndGet(size);
+        }
+
+        @Override
+        public void run() {
+            usage.addAndGet(-size);
+        }
+    }
+
+    private final State state;
+
     /**
-     * Get the stream for reading the request body.
+     * Get the amount of member used in bytes.
      * 
-     * @return the input stream providing the request body
+     * @return the memory usage
      */
-    InputStream in();
+    protected long size() {
+        return state.size;
+    }
+
+    private final Cleaner.Cleanable cleanable;
+
+    /**
+     * Account for memory being released.
+     * 
+     * @param cleaner an object manager
+     * 
+     * @param size the number of bytes allocated
+     * 
+     * @param usage a counter to be incremented now by the size, and
+     * decremented by the same amount upon garbage collection
+     */
+    protected TransientMemoryElement(Cleaner cleaner, long size,
+                                     AtomicLong usage) {
+        this.state = new State(size, usage);
+        cleanable = cleaner.register(this, this.state);
+    }
 }

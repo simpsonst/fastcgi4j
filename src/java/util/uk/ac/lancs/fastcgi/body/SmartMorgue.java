@@ -36,7 +36,7 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.mime;
+package uk.ac.lancs.fastcgi.body;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,12 +48,15 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Stores large bodies in files, and keeps smaller ones in memory,
- * provided it's not already using a lot of memory.
+ * provided it's not already using a lot of memory. Any files created
+ * are set to delete on exit.
  *
  * @author simpsons
  */
@@ -80,10 +83,144 @@ public final class SmartMorgue implements Morgue {
      * 
      * @param memoryThreshold the maximum amount of memory to consume
      */
-    public SmartMorgue(Path cache, int singleThreshold, long memoryThreshold) {
+    SmartMorgue(Path cache, int singleThreshold, long memoryThreshold) {
         this.cache = cache;
         this.singleThreshold = singleThreshold;
         this.memoryThreshold = memoryThreshold;
+    }
+
+    private static final String DEFAULT_DIR_PROPERTY = "java.io.tmpdir";
+
+    private static final int DEFAULT_SINGLE_THRESHOLD = 4096;
+
+    private static final int DEFAULT_MEMORY_THRESHOLD = 2 * 1024 * 1024;
+
+    /**
+     * Prepare to build a smart morgue.
+     * 
+     * @return a builder set to use the system property
+     * {@value #DEFAULT_DIR_PROPERTY} to locate the directory for
+     * transient files, {@value #DEFAULT_SINGLE_THRESHOLD} as the
+     * single-body memory threshold, and
+     * {@value #DEFAULT_MEMORY_THRESHOLD} as the multi-body memory
+     * threshold
+     */
+    public static Builder start() {
+        return new Builder();
+    }
+
+    /**
+     * Constructs a smart morgue.
+     */
+    public static class Builder {
+        Path cache = Paths.get(System.getProperty(DEFAULT_DIR_PROPERTY));
+
+        int singleThreshold = DEFAULT_SINGLE_THRESHOLD;
+
+        long memoryThreshold = DEFAULT_MEMORY_THRESHOLD;
+
+        Builder() {}
+
+        /**
+         * Create the morgue with current settings.
+         * 
+         * @return the configured morgue
+         */
+        public SmartMorgue build() {
+            return new SmartMorgue(cache, singleThreshold, memoryThreshold);
+        }
+
+        /**
+         * Set the directory for transient files from a system property.
+         * 
+         * @param propName the name of the property
+         * 
+         * @return this object
+         * 
+         * @throws NullPointerException if the path is {@code null}
+         */
+        public Builder atProperty(String propName) {
+            return at(System.getProperty(propName));
+        }
+
+        /**
+         * Set the directory for transient files from a system property
+         * or from a default.
+         * 
+         * @param assumed the value to assume if the property is not set
+         * 
+         * @param propName the name of the property
+         * 
+         * @return this object
+         * 
+         * @throws NullPointerException if the path is {@code null}
+         */
+        public Builder atProperty(String propName, String assumed) {
+            return at(System.getProperty(propName, assumed));
+        }
+
+        /**
+         * Set the directory for transient files.
+         * 
+         * @param path the directory path
+         * 
+         * @return this object
+         * 
+         * @throws NullPointerException if the path is {@code null}
+         */
+        public Builder at(String path) {
+            return at(Paths.get(path));
+        }
+
+        /**
+         * Set the directory for transient files.
+         * 
+         * @param path the directory path
+         * 
+         * @return this object
+         * 
+         * @throws NullPointerException if the path is {@code null}
+         */
+        public Builder at(Path path) {
+            this.cache = Objects.requireNonNull(path, "at");
+            return this;
+        }
+
+        /**
+         * Set the single-body memory threshold.
+         * 
+         * @param amount the new amount
+         * 
+         * @return this object
+         * 
+         * @throws IllegalArgumentException if the amount is negative
+         */
+        public Builder singleThreshold(int amount) {
+            if (amount < 0)
+                throw new IllegalArgumentException("-ve threshold: " + amount);
+            this.singleThreshold = amount;
+            return this;
+        }
+
+        /**
+         * Set the multi-body memory threshold.
+         * 
+         * @param amount the new amount
+         * 
+         * @return this object
+         * 
+         * @throws IllegalArgumentException if the amount is negative
+         */
+        public Builder memoryThreshold(int amount) {
+            if (amount < 0)
+                throw new IllegalArgumentException("-ve threshold: " + amount);
+            this.memoryThreshold = amount;
+            return this;
+        }
+    }
+
+    public Cleaner.Cleanable register(Object ref, Runnable action) {
+        return cleaner.register(ref, action);
     }
 
     private BinaryBody createExternalBody(byte[] buf, int len, InputStream data)
@@ -112,7 +249,8 @@ public final class SmartMorgue implements Morgue {
         byte[] buf = new byte[singleThreshold + 1];
         int len = 0;
         int got;
-        while ((got = data.read(buf, len, buf.length - len)) >= 0)
+        while (len < buf.length &&
+            (got = data.read(buf, len, buf.length - len)) >= 0)
             len += got;
         if (len <= singleThreshold)
             return new MemoryBinaryBody(cleaner, Arrays.copyOf(buf, len),
@@ -150,7 +288,9 @@ public final class SmartMorgue implements Morgue {
         char[] buf = new char[singleThreshold / 2 + 1];
         int len = 0;
         int got;
-        while ((got = data.read(buf, len, buf.length - len)) >= 0)
+        System.err.printf("My buffer is %d chars%n", buf.length);
+        while (len < buf.length &&
+            (got = data.read(buf, len, buf.length - len)) >= 0)
             len += got;
         if (len * 2 <= singleThreshold)
             return new MemoryTextBody(cleaner, Arrays.copyOf(buf, len),

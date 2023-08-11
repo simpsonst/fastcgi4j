@@ -1,7 +1,5 @@
-// -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
-
 /*
- * Copyright (c) 2023, Lancaster University
+ * Copyright (c) 2022,2023, Lancaster University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,30 +31,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *
- *  Author: Steven Simpson <https://github.com/simpsonst>
+ *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-package uk.ac.lancs.fastcgi.mime;
-
-import java.io.InputStream;
+package uk.ac.lancs.fastcgi.context;
 
 /**
- * Stores a potentially large byte sequence.
+ * Presents the context of a FastCGI session to an application in the
+ * Responder role.
  * 
  * @author simpsons
+ * 
+ * @see <a href=
+ * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.2">FastCGI
+ * Specification &mdash; Responder</a>
  */
-public interface BinaryBody {
-    /**
-     * Get the body size in bytes.
-     * 
-     * @return the body size
-     */
-    long size();
-
-    /**
-     * Open a new byte stream of the body's contents.
-     * 
-     * @return the new stream
-     */
-    InputStream recover();
-}
+public interface ResponderSession extends RequestableSession {}

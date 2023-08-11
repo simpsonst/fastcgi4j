@@ -38,6 +38,8 @@
 
 package uk.ac.lancs.fastcgi.mime;
 
+import uk.ac.lancs.fastcgi.body.BinaryBody;
+
 /**
  * Returns a MIME message with a binary body.
  * 
@@ -50,4 +52,20 @@ public interface BinaryMessage extends Message {
      * @return the message body
      */
     BinaryBody body();
+
+    @Override
+    default BinaryMessage replaceHeader(Header newHeader) {
+        BinaryBody body = body();
+        return new BinaryMessage() {
+            @Override
+            public BinaryBody body() {
+                return body;
+            }
+
+            @Override
+            public Header header() {
+                return newHeader;
+            }
+        };
+    }
 }

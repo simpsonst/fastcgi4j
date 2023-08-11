@@ -351,8 +351,14 @@ public final class ParameterValue {
         return Integer.parseInt(text);
     }
 
+    /**
+     * Specifies the locale of the text. May be {@code null}.
+     */
     public final Locale locale;
 
+    /**
+     * Specifies the text.
+     */
     public final String text;
 
     private ParameterValue(Locale locale, String text) {
@@ -360,10 +366,30 @@ public final class ParameterValue {
         this.text = text;
     }
 
+    /**
+     * Create a locale-annotated parameter value.
+     * 
+     * @constructor
+     * 
+     * @param locale the locale of the text
+     * 
+     * @param text the text
+     * 
+     * @return the requested value
+     */
     public static ParameterValue of(Locale locale, String text) {
         return new ParameterValue(locale, text);
     }
 
+    /**
+     * Create an unannotated parameter value.
+     * 
+     * @constructor
+     * 
+     * @param text the text
+     * 
+     * @return the requested value
+     */
     public static ParameterValue of(String text) {
         return new ParameterValue(null, text);
     }
@@ -373,6 +399,11 @@ public final class ParameterValue {
         return text;
     }
 
+    /**
+     * Get the hash code for this object.
+     * 
+     * @return the hash code
+     */
     @Override
     public int hashCode() {
         int hash = 7;
@@ -381,6 +412,14 @@ public final class ParameterValue {
         return hash;
     }
 
+    /**
+     * Test whether this parameter value equals another object.
+     * 
+     * @param obj the object to test against
+     * 
+     * @return {@code true} if the other object is a parameter value
+     * with the same locale and text; {@code false} otherwise
+     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;

@@ -309,6 +309,7 @@ while [ $# -gt 0 ] ; do
 done
 
 ## Ensure our Java libraries are available.
+FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_contract.jar")
 FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_api.jar")
 FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_util.jar")
 FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_app.jar")

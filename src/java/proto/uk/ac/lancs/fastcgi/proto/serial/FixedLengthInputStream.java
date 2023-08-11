@@ -62,7 +62,7 @@ import java.io.InputStream;
 class FixedLengthInputStream extends InputStream {
     private final InputStream in;
 
-    private int rem;
+    private long rem;
 
     private IOException ex;
 
@@ -73,7 +73,7 @@ class FixedLengthInputStream extends InputStream {
      * 
      * @param in the stream to read from
      */
-    public FixedLengthInputStream(int rem, InputStream in) {
+    public FixedLengthInputStream(long rem, InputStream in) {
         this.rem = rem;
         this.in = in;
     }
@@ -118,7 +118,7 @@ class FixedLengthInputStream extends InputStream {
         if (ex != null) throw new IOException("already failed", ex);
         try {
             if (rem == 0) return -1;
-            if (len > rem) len = rem;
+            if (len > rem) len = (int) rem;
             int got = in.read(b, off, len);
             if (got > 0) rem -= got;
             return got;
@@ -133,6 +133,7 @@ class FixedLengthInputStream extends InputStream {
             long got = skip(rem);
             rem -= got;
             if (got == 0 && rem > 0) {
+                /* Read one byte to see if we've reached EOF. */
                 int c = read();
                 if (c < 0) break;
                 rem--;

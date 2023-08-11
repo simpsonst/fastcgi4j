@@ -36,84 +36,38 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.mime;
+package uk.ac.lancs.fastcgi.body;
 
-import java.io.IOException;
+import java.io.CharArrayReader;
+import java.io.Reader;
 import java.lang.ref.Cleaner;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Deletes a file when garbage-collected, and accounts for its size.
- *
+ * Retrieves character data from main memory.
+ * 
  * @author simpsons
  */
-abstract class TransientFileElement {
-    private static class State implements Runnable {
-        protected final Path path;
-
-        protected final long size;
-
-        private final AtomicLong usage;
-
-        State(Path path, long size, AtomicLong usage) {
-            this.path = path;
-            this.size = size;
-            this.usage = usage;
-
-            this.usage.addAndGet(size);
-        }
-
-        @Override
-        public void run() {
-            try {
-                Files.deleteIfExists(path);
-            } catch (IOException ex) {
-                throw new AssertionError("unreachable", ex);
-            } finally {
-                usage.addAndGet(-size);
-            }
-        }
-    }
-
-    private final State state;
+final class MemoryTextBody extends TransientMemoryElement implements TextBody {
+    private final char[] data;
 
     /**
-     * Get the file size.
+     * Store an array as a stream in memory.
      * 
-     * @return the file size
+     * @param data the data to store
      */
-    protected long size() {
-        return state.size;
+    public MemoryTextBody(Cleaner cleaner, char[] data, AtomicLong usage) {
+        super(cleaner, data.length * 2, usage);
+        this.data = data;
     }
 
-    /**
-     * Get the file path.
-     * 
-     * @return the file path
-     */
-    protected Path path() {
-        return state.path;
+    @Override
+    public long size() {
+        return data.length;
     }
 
-    private final Cleaner.Cleanable cleanable;
-
-    /**
-     * Set a file to be deleted upon garbage collection.
-     * 
-     * @param cleaner an object manager
-     * 
-     * @param path the path to the file
-     * 
-     * @param size the size of the file
-     * 
-     * @param usage a counter to be incremented now by the file size,
-     * and decremented by the same amount upon garbage collection
-     */
-    protected TransientFileElement(Cleaner cleaner, Path path, long size,
-                                   AtomicLong usage) {
-        this.state = new State(path, size, usage);
-        cleanable = cleaner.register(this, this.state);
+    @Override
+    public Reader recover() {
+        return new CharArrayReader(data);
     }
 }

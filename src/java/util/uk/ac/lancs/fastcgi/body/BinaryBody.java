@@ -36,36 +36,30 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.mime;
+package uk.ac.lancs.fastcgi.body;
 
-import uk.ac.lancs.fastcgi.body.TextBody;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
- * Retains a MIME message with a text body.
+ * Stores a potentially large byte sequence.
  * 
  * @author simpsons
  */
-public interface TextMessage extends Message {
+public interface BinaryBody {
     /**
-     * Get the message body as text.
+     * Get the body size in bytes.
      * 
-     * @return the message body
+     * @return the body size
      */
-    TextBody textBody();
+    long size();
 
-    @Override
-    default TextMessage replaceHeader(Header newHeader) {
-        TextBody body = textBody();
-        return new TextMessage() {
-            @Override
-            public TextBody textBody() {
-                return body;
-            }
-
-            @Override
-            public Header header() {
-                return newHeader;
-            }
-        };
-    }
+    /**
+     * Open a new byte stream of the body's content.
+     * 
+     * @return the new stream
+     * 
+     * @throws IOException if there's an error retrieving the content
+     */
+    InputStream recover() throws IOException;
 }

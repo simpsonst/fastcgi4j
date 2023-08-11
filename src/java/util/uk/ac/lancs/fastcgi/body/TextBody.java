@@ -36,36 +36,56 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.mime;
+package uk.ac.lancs.fastcgi.body;
 
-import uk.ac.lancs.fastcgi.body.TextBody;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringWriter;
 
 /**
- * Retains a MIME message with a text body.
+ * Stores a potentially large character sequence.
  * 
  * @author simpsons
  */
-public interface TextMessage extends Message {
+public interface TextBody {
     /**
-     * Get the message body as text.
+     * Get the body size in characters.
      * 
-     * @return the message body
+     * @return the body size
      */
-    TextBody textBody();
+    long size();
 
-    @Override
-    default TextMessage replaceHeader(Header newHeader) {
-        TextBody body = textBody();
-        return new TextMessage() {
-            @Override
-            public TextBody textBody() {
-                return body;
-            }
+    /**
+     * Open a new character stream of the body's content.
+     * 
+     * @return the new stream
+     * 
+     * @throws IOException if there's an error retrieving the content
+     */
+    Reader recover() throws IOException;
 
-            @Override
-            public Header header() {
-                return newHeader;
-            }
-        };
+    /**
+     * Get a copy of the body as a string. As strings are immutable, the
+     * method may return the same object on multiple calls.
+     * 
+     * @return the body as a string
+     * 
+     * @throws IOException if there's an error retrieving the content
+     * 
+     * @default This implementation calls {@link #size()} to see whether
+     * it can reasonably fit the string in memory. It then calls
+     * {@link #recover()} to build a new string.
+     */
+    default String get() throws IOException {
+        final long sz = size();
+
+        /* TODO: Choose a smaller size? */
+        if (sz > Integer.MAX_VALUE)
+            throw new IOException("body size too great for literal: " + sz);
+        try (StringWriter out = new StringWriter((int) sz);
+             Reader in = recover()) {
+            in.transferTo(out);
+            return out.toString();
+        }
     }
 }

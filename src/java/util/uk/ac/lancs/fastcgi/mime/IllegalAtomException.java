@@ -38,34 +38,19 @@
 
 package uk.ac.lancs.fastcgi.mime;
 
-import uk.ac.lancs.fastcgi.body.TextBody;
-
 /**
- * Retains a MIME message with a text body.
- * 
+ * Indicates that a string is unsuitable as an atom.
+ *
  * @author simpsons
  */
-public interface TextMessage extends Message {
+public class IllegalAtomException extends RuntimeException {
     /**
-     * Get the message body as text.
+     * Create an exception with a detail message.
      * 
-     * @return the message body
+     * @param message the detail message, normally the text unsuitable
+     * as an atom
      */
-    TextBody textBody();
-
-    @Override
-    default TextMessage replaceHeader(Header newHeader) {
-        TextBody body = textBody();
-        return new TextMessage() {
-            @Override
-            public TextBody textBody() {
-                return body;
-            }
-
-            @Override
-            public Header header() {
-                return newHeader;
-            }
-        };
+    public IllegalAtomException(String message) {
+        super(message);
     }
 }

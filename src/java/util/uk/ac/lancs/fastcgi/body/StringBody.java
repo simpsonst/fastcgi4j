@@ -1,5 +1,7 @@
+// -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
+
 /*
- * Copyright (c) 2022,2023, Lancaster University
+ * Copyright (c) 2023, Lancaster University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,19 +33,43 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *
- *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
+ *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.context;
+package uk.ac.lancs.fastcgi.body;
+
+import java.io.Reader;
+import java.io.StringReader;
 
 /**
- * Presents the context of a FastCGI session to an application in the
- * Responder role.
+ * Presents an in-memory string as a text body.
  * 
  * @author simpsons
- * 
- * @see <a href=
- * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.2">FastCGI
- * Specification &mdash; Responder</a>
  */
-public interface ResponderSession extends RequestableSession, Session {}
+public final class StringBody implements TextBody {
+    private final String content;
+
+    /**
+     * Create a string body.
+     * 
+     * @param content the body contents
+     */
+    public StringBody(String content) {
+        this.content = content;
+    }
+
+    @Override
+    public long size() {
+        return content.length();
+    }
+
+    @Override
+    public Reader recover() {
+        return new StringReader(content);
+    }
+
+    @Override
+    public String get() {
+        return content;
+    }
+}

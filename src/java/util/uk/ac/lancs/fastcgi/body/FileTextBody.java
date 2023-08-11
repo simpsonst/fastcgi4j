@@ -36,36 +36,58 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.mime;
+package uk.ac.lancs.fastcgi.body;
 
-import uk.ac.lancs.fastcgi.body.TextBody;
+import java.io.IOException;
+import java.io.Reader;
+import java.lang.ref.Cleaner;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Retains a MIME message with a text body.
+ * Retrieves text data from a file.
  * 
  * @author simpsons
  */
-public interface TextMessage extends Message {
+final class FileTextBody extends TransientFileElement implements TextBody {
+    private final Charset charset;
+
+    private final long size;
+
     /**
-     * Get the message body as text.
+     * Record the storage of text data in a file. The size and character
+     * encoding must be known beforehand, and the data must be in the
+     * file before {@link #recover()} is called.
      * 
-     * @return the message body
+     * @param path the path to the file
+     * 
+     * @param charset the character encoding
+     * 
+     * @param byteSize the size of the file in bytes
+     * 
+     * @param charSize the number of characters in the file
      */
-    TextBody textBody();
+    public FileTextBody(Cleaner cleaner, Path path, Charset charset,
+                        long byteSize, long charSize, AtomicLong usage) {
+        super(cleaner, path, byteSize, usage);
+        this.charset = charset;
+        this.size = charSize;
+    }
 
     @Override
-    default TextMessage replaceHeader(Header newHeader) {
-        TextBody body = textBody();
-        return new TextMessage() {
-            @Override
-            public TextBody textBody() {
-                return body;
-            }
+    public long size() {
+        return size;
+    }
 
-            @Override
-            public Header header() {
-                return newHeader;
-            }
-        };
+    /**
+     * {@inheritDoc}
+     * 
+     * @throws AssertionError if there is an error in opening the file
+     */
+    @Override
+    public Reader recover() throws IOException {
+        return Files.newBufferedReader(super.path(), charset);
     }
 }

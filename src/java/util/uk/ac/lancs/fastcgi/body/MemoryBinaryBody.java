@@ -36,36 +36,39 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.mime;
+package uk.ac.lancs.fastcgi.body;
 
-import uk.ac.lancs.fastcgi.body.TextBody;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.lang.ref.Cleaner;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Retains a MIME message with a text body.
+ * Retrieves binary data from main memory.
  * 
  * @author simpsons
  */
-public interface TextMessage extends Message {
+final class MemoryBinaryBody extends TransientMemoryElement
+    implements BinaryBody {
+    private final byte[] data;
+
     /**
-     * Get the message body as text.
+     * Store an array as a stream in memory.
      * 
-     * @return the message body
+     * @param data the data to store
      */
-    TextBody textBody();
+    public MemoryBinaryBody(Cleaner cleaner, byte[] data, AtomicLong usage) {
+        super(cleaner, data.length, usage);
+        this.data = data;
+    }
 
     @Override
-    default TextMessage replaceHeader(Header newHeader) {
-        TextBody body = textBody();
-        return new TextMessage() {
-            @Override
-            public TextBody textBody() {
-                return body;
-            }
+    public long size() {
+        return data.length;
+    }
 
-            @Override
-            public Header header() {
-                return newHeader;
-            }
-        };
+    @Override
+    public InputStream recover() {
+        return new ByteArrayInputStream(data);
     }
 }

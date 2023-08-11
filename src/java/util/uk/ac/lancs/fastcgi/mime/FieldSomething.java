@@ -40,14 +40,8 @@ package uk.ac.lancs.fastcgi.mime;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.CharacterCodingException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -55,7 +49,7 @@ import java.util.regex.Pattern;
  *
  * @author simpsons
  */
-public final class Field {
+final class FieldSomething {
     private static final Pattern QP_CHAR = Pattern.compile("_+|=([0-9A-F]{2})");
 
     private static final String QP_CHARS =
@@ -76,15 +70,15 @@ public final class Field {
     private static final String BASE64_SEQ_STRICT = "(?:" + BASE64_BLOCK
         + ")*(?:" + BASE64_TAIL1 + "|" + BASE64_TAIL2 + ")?";
 
-    private static final int BASE64_PADDING = -1;
-
-    private static final int BASE64_ILLEGAL_ASCII = -3;
-
     private static final Pattern ESCAPE_SEQUENCE =
         Pattern.compile("=\\?(?<charset>" + CHARSET_PATTERN + ")" + "\\?(?:"
             + "(?:[bB]\\?(?<base64>" + BASE64_CHARS + "*)=*)|"
             + "(?:[qQ]\\?(?<qp>(?:" + QP_CHARS + "|=[0-9A-F]{2})*?))"
             + ")\\?=");
+
+    private static final int BASE64_PADDING = -1;
+
+    private static final int BASE64_ILLEGAL_ASCII = -3;
 
     private static final int BASE64_WHITESPACE = -2;
 
@@ -257,13 +251,13 @@ public final class Field {
 
     public final String value;
 
-    private Field(String name, String value) {
+    private FieldSomething(String name, String value) {
         this.name = name;
         this.value = value;
     }
 
-    public static Field ofDecoded(String name, String value) {
-        return new Field(name.strip(), value.strip());
+    public static FieldSomething ofDecoded(String name, String value) {
+        return new FieldSomething(name.strip(), value.strip());
     }
 
 }

@@ -52,4 +52,20 @@ public interface MultipartMessage extends Message {
      * @return the message's parts
      */
     List<Message> multipartBody();
+
+    @Override
+    default MultipartMessage replaceHeader(Header newHeader) {
+        List<Message> body = multipartBody();
+        return new MultipartMessage() {
+            @Override
+            public List<Message> multipartBody() {
+                return body;
+            }
+
+            @Override
+            public Header header() {
+                return newHeader;
+            }
+        };
+    }
 }

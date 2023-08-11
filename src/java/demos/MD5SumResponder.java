@@ -47,10 +47,11 @@ import java.security.MessageDigest;
 import java.util.Properties;
 import java.util.TreeMap;
 import uk.ac.lancs.fastcgi.Responder;
+import uk.ac.lancs.fastcgi.context.ResponderSession;
+import uk.ac.lancs.fastcgi.misc.SessionAugment;
 import uk.ac.lancs.fastcgi.path.Navigator;
 import uk.ac.lancs.fastcgi.path.PathConfiguration;
 import uk.ac.lancs.fastcgi.path.PathContext;
-import uk.ac.lancs.fastcgi.context.ResponderSession;
 
 /**
  * Responds by echoing all headers, and displaying a hex MD5 sum of the
@@ -80,31 +81,31 @@ public class MD5SumResponder implements Responder {
     }
 
     @Override
-    public void respond(ResponderSession ctxt) throws Exception {
-        PathContext<String> pathCtxt = pathConfig.recognize(ctxt.parameters());
+    public void respond(ResponderSession session) throws Exception {
+        SessionAugment augment = new SessionAugment(session);
+        PathContext<String> pathCtxt =
+            pathConfig.recognize(session.parameters());
         Navigator navigator = pathCtxt.navigator();
 
         final byte[] dig;
         MessageDigest md = MessageDigest.getInstance("md5");
         byte[] buf = new byte[1024];
         int got;
-        while ((got = ctxt.in().read(buf)) >= 0) {
+        while ((got = session.in().read(buf)) >= 0) {
             md.update(buf, 0, got);
         }
         dig = md.digest();
 
         if (navigator.resource().isEmpty()) {
-            ctxt.setStatus(302);
-            ctxt.setHeader("Location",
-                           navigator.locate("/").absolute().toASCIIString());
+            augment.found(navigator.locate("/").absolute());
             return;
         }
 
-        ctxt.setHeader("Content-Type", "text/plain; charset=UTF-8");
+        session.setHeader("Content-Type", "text/plain; charset=UTF-8");
         try (PrintWriter out =
-            new PrintWriter(new OutputStreamWriter(ctxt.out(),
+            new PrintWriter(new OutputStreamWriter(session.out(),
                                                    StandardCharsets.UTF_8))) {
-            for (var entry : new TreeMap<>(ctxt.parameters()).entrySet()) {
+            for (var entry : new TreeMap<>(session.parameters()).entrySet()) {
                 out.printf("[%s] = [%s]\n", entry.getKey(), entry.getValue());
             }
 
@@ -127,7 +128,7 @@ public class MD5SumResponder implements Responder {
                 out.printf("%02x", dig[i] & 0xff);
             }
             out.printf("\n");
-            out.printf("\nDiagnostics: %s\n", ctxt.diagnostics());
+            out.printf("\nDiagnostics: %s\n", session.diagnostics());
         }
     }
 }

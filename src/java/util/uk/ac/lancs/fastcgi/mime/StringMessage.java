@@ -38,60 +38,66 @@
 
 package uk.ac.lancs.fastcgi.mime;
 
-import java.io.IOException;
-import java.io.Reader;
-import java.lang.ref.Cleaner;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.concurrent.atomic.AtomicLong;
+import uk.ac.lancs.fastcgi.body.TextBody;
+import uk.ac.lancs.fastcgi.body.StringBody;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
- * Retrieves text data from a file.
+ * Presents a string literal as a text message. The content type is
+ * <samp>text/plain</samp>. An optional disposition as form data with a
+ * name can be specified.
  * 
  * @author simpsons
  */
-final class FileTextBody extends TransientFileElement implements TextBody {
-    private final Charset charset;
+public final class StringMessage implements TextMessage {
+    private final Header header;
 
-    private final long size;
+    private final StringBody body;
 
-    /**
-     * Record the storage of text data in a file. The size and character
-     * encoding must be known beforehand, and the data must be in the
-     * file before {@link #recover()} is called.
-     * 
-     * @param path the path to the file
-     * 
-     * @param charset the character encoding
-     * 
-     * @param byteSize the size of the file in bytes
-     * 
-     * @param charSize the number of characters in the file
-     */
-    public FileTextBody(Cleaner cleaner, Path path, Charset charset,
-                        long byteSize, long charSize, AtomicLong usage) {
-        super(cleaner, path, byteSize, usage);
-        this.charset = charset;
-        this.size = charSize;
-    }
-
-    @Override
-    public long size() {
-        return size;
+    private void addField(Map<String, List<String>> fields, String name,
+                          String value) {
+        fields.computeIfAbsent(name, k -> new ArrayList<>()).add(value);
     }
 
     /**
-     * {@inheritDoc}
+     * Create a text message from a string.
      * 
-     * @throws AssertionError if there is an error in opening the file
+     * @param content the content
      */
+    public StringMessage(String content) {
+        this(null, content);
+    }
+
+    /**
+     * Create a text message as form data.
+     * 
+     * @param fieldName the name of the form field
+     * 
+     * @param content the content
+     */
+    public StringMessage(String fieldName, String content) {
+        this.body = new StringBody(content);
+        Header.Modification hdr =
+            Header.empty().modify().set("Content-Type", MediaType.FORMAT,
+                                        MediaType.of("text", "plain"));
+        Map<String, List<String>> fields = new HashMap<>();
+        addField(fields, "Content-Type", "text/plain");
+        if (fieldName != null)
+            hdr.set("Content-Disposition", Disposition.FORMAT,
+                    Disposition.formData(fieldName));
+        this.header = hdr.apply();
+    }
+
     @Override
-    public Reader recover() {
-        try {
-            return Files.newBufferedReader(super.path(), charset);
-        } catch (IOException ex) {
-            throw new AssertionError("unreachable", ex);
-        }
+    public TextBody textBody() {
+        return body;
+    }
+
+    @Override
+    public Header header() {
+        return header;
     }
 }

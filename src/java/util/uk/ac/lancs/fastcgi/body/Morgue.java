@@ -36,27 +36,39 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.mime;
+package uk.ac.lancs.fastcgi.body;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Reader;
 
 /**
- * Stores a potentially large character sequence.
- * 
+ * Stores bodies for later retrieval.
+ *
  * @author simpsons
  */
-public interface TextBody {
+public interface Morgue {
     /**
-     * Get the body size in characters.
+     * Store a byte stream. The stream is not closed after use. The call
+     * only returns after storing the entire stream.
      * 
-     * @return the body size
+     * @param data the source stream
+     * 
+     * @return a means to recover the data
+     * 
+     * @throws IOException if an I/O error occurs in storing the stream
      */
-    long size();
+    BinaryBody store(InputStream data) throws IOException;
 
     /**
-     * Open a new character stream of the body's contents.
+     * Store a character stream. The stream is not closed after use. The
+     * call only returns after storing the entire stream.
      * 
-     * @return the new stream
+     * @param data the source stream
+     * 
+     * @return a means to recover the data
+     * 
+     * @throws IOException if an I/O error occurs in storing the stream
      */
-    Reader recover();
+    TextBody store(Reader data) throws IOException;
 }

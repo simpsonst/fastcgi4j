@@ -74,11 +74,30 @@ public interface CharacterSet {
 
     /**
      * Identifies RFC822 ‘specials’. These include a range of US-ASCII
-     * punctuation, <samp>()[]:;,&lt;&gt;\&#64;</samp>.
+     * punctuation, <samp>()[]:;.,&lt;&gt;\/?&#64;=</samp>.
      */
     static CharacterSet SPECIALS = c -> switch (c) {
-    case '(', ')', '<', '>', '@', ',', ';', ':', '\\', '"', '.', '[', ']' ->
-        true;
+    case '(', ')', '<', '>', '@', ',', ';', ':', '\\', '?', '=', '/', '"', '.',
+        '[', ']' -> true;
+    default -> false;
+    };
+
+    static CharacterSet ENCODED_CHARS = c -> c >= '!' && c <= '~' && c != '?';
+
+    /**
+     * Identifies characters usable in a multipart boundary, excluding
+     * space U+0020.
+     * 
+     * @see <a href=
+     * "https://datatracker.ietf.org/doc/html/rfc2046">RFC2046</a>
+     */
+    static CharacterSet BOUNDARY_CHARS = c -> switch (c) {
+    case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd',
+        'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
+        's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F',
+        'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+        'U', 'V', 'W', 'X', 'Y', 'Z', '\'', '(', ')', '_', ',', '-', '.', '/',
+        ':', '=', '?' -> true;
     default -> false;
     };
 

@@ -50,4 +50,13 @@ public interface Message {
      * @return the header
      */
     Header header();
+
+    /**
+     * Create a message with the same body but an alternative header.
+     * 
+     * @param newHeader the new header
+     * 
+     * @return the new message with the new header and the original body
+     */
+    Message replaceHeader(Header newHeader);
 }

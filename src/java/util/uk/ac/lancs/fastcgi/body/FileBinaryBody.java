@@ -36,36 +36,47 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.mime;
+package uk.ac.lancs.fastcgi.body;
 
-import uk.ac.lancs.fastcgi.body.TextBody;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.ref.Cleaner;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Retains a MIME message with a text body.
+ * Retrieves binary data from a file.
  * 
  * @author simpsons
  */
-public interface TextMessage extends Message {
+final class FileBinaryBody extends TransientFileElement implements BinaryBody {
     /**
-     * Get the message body as text.
+     * Record the storage of binary data in a file. The size must be
+     * known beforehand, and the data must be in the file before
+     * {@link #recover()} is called.
      * 
-     * @return the message body
+     * @param path the path to the file
+     * 
+     * @param size the size of the file
      */
-    TextBody textBody();
+    public FileBinaryBody(Cleaner cleaner, Path path, long size,
+                          AtomicLong usage) {
+        super(cleaner, path, size, usage);
+    }
 
     @Override
-    default TextMessage replaceHeader(Header newHeader) {
-        TextBody body = textBody();
-        return new TextMessage() {
-            @Override
-            public TextBody textBody() {
-                return body;
-            }
+    public long size() {
+        return super.size();
+    }
 
-            @Override
-            public Header header() {
-                return newHeader;
-            }
-        };
+    /**
+     * {@inheritDoc}
+     * 
+     * @throws AssertionError if there is an error in opening the file
+     */
+    @Override
+    public InputStream recover() throws IOException {
+        return Files.newInputStream(super.path());
     }
 }

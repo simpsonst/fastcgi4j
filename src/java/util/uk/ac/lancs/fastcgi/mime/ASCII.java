@@ -72,6 +72,11 @@ final class ASCII {
     static final byte COLON = 0x3a;
 
     /**
+     * The byte value of the US-ASCII equals U+003D character
+     */
+    static final byte EQUALS = 0x3d;
+
+    /**
      * The byte value of the US-ASCII space U+0020 character
      */
     static final byte SPACE = 32;
