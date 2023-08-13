@@ -366,6 +366,23 @@ public final class SessionAugment {
         if (comp != null) compression = ENCODINGS.get(comp).getKey();
     }
 
+    /**
+     * Tell the client that the response has no content. The status is
+     * set to {@link HttpStatus#NO_CONTENT}, and the basic session's
+     * output stream is closed. Several content-related header fields
+     * are also cleared.
+     * 
+     * @throws IOException if an I/O error occurs opening or closing the
+     * stream
+     */
+    public void noContent() throws IOException {
+        session.setStatus(HttpStatus.NO_CONTENT);
+        session.clearField("Content-Type");
+        session.clearField("Content-Length");
+        session.clearField("Content-Encoding");
+        session.out().close();
+    }
+
     private void setLocation(URI location, int code) {
         session.addField("Location", location.toASCIIString());
         session.setStatus(code);
