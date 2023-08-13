@@ -45,6 +45,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPOutputStream;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
@@ -72,6 +73,7 @@ public final class SessionAugment {
     private static Map<String, Float> getCompressionOffer() {
         Map<String, Float> offer = new HashMap<>();
         offer.put("gzip", 1.0f);
+        offer.put("deflate", 0.7f);
         return offer;
     }
 
@@ -168,11 +170,16 @@ public final class SessionAugment {
     private boolean compressed = false;
 
     /**
-     * Turn on compression if the client accepts it. The output stream
-     * is wrapped in a compression filter.
+     * Turn on compression if the client accepts it. If applied, the
+     * output stream is wrapped in a compression filter, and the
+     * encoding name is added to <samp>Content-Encoding</samp>.
      * 
      * <p>
-     * In the current implementation, only <samp>gzip</samp> is offered.
+     * This method must be called before {@link #out()}.
+     * 
+     * <p>
+     * In the current implementation, only <samp>gzip</samp> and
+     * <samp>deflate</samp> are offered.
      */
     public void offerCompression() throws IOException {
         if (compressed) return;
@@ -182,6 +189,12 @@ public final class SessionAugment {
         switch (comp) {
         case "gzip":
             out = new GZIPOutputStream(out);
+            session.addHeader("Content-Encoding", comp);
+            break;
+
+        case "deflate":
+            out = new DeflaterOutputStream(out);
+            session.addHeader("Content-Encoding", comp);
             break;
         }
     }
