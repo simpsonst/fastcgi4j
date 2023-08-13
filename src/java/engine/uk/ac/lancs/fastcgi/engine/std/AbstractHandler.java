@@ -513,6 +513,12 @@ abstract class AbstractHandler implements SessionHandler, Session {
     }
 
     @Override
+    public void clearField(String name) {
+        Objects.requireNonNull(name, "name");
+        outHeaders.remove(name);
+    }
+
+    @Override
     public void setField(String name, String value) {
         Objects.requireNonNull(name, "name");
         Objects.requireNonNull(value, "value");

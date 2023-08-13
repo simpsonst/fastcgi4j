@@ -95,6 +95,19 @@ public interface Session {
     void addField(String name, String value);
 
     /**
+     * Remove all instances of a response header field.
+     * 
+     * @param name the header field name
+     * 
+     * @throws IllegalArgumentException if the field name is
+     * {@value #STATUS_FIELD}
+     * 
+     * @throws IllegalStateException if the response output has been
+     * started (with {@link #out()})
+     */
+    void clearField(String name);
+
+    /**
      * Set the response status. The default is 200.
      * 
      * @param code the new response status
