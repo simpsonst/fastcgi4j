@@ -101,9 +101,10 @@ public class MD5SumResponder implements Responder {
             return;
         }
 
+        augment.offerCompression();
         session.setHeader("Content-Type", "text/plain; charset=UTF-8");
         try (PrintWriter out =
-            new PrintWriter(new OutputStreamWriter(session.out(),
+            new PrintWriter(new OutputStreamWriter(augment.out(),
                                                    StandardCharsets.UTF_8))) {
             for (var entry : new TreeMap<>(session.parameters()).entrySet()) {
                 out.printf("[%s] = [%s]\n", entry.getKey(), entry.getValue());
