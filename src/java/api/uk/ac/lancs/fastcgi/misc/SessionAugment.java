@@ -56,6 +56,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Document;
 import uk.ac.lancs.fastcgi.context.Session;
+import uk.ac.lancs.fastcgi.mime.MediaGroup;
 import uk.ac.lancs.fastcgi.mime.Tokenizer;
 import uk.ac.lancs.fastcgi.util.HttpStatus;
 
@@ -78,41 +79,11 @@ public final class SessionAugment {
     }
 
     /**
-     * Resolve one-dimensional preferences against offers.
+     * Get the client's encoding preference. This is simply an
+     * application of {@link #getAtomPreference(CharSequence)} to the
+     * <samp>Accept-Encoding</samp> request header field.
      * 
-     * @param <T> the subject type
-     * 
-     * @param pref the set of preferences, mapping subjects to numeric
-     * values
-     * 
-     * @param offer the set of offers, mapping subjects to numeric
-     * values
-     * 
-     * @return the best offer, with the highest product of values in
-     * each map
-     */
-    public static <T> T
-        resolvePreference(Map<? extends T, ? extends Number> pref,
-                          Map<? extends T, ? extends Number> offer) {
-        T best = null;
-        float bestScore = 0.0f;
-        for (var oe : offer.entrySet()) {
-            var k = oe.getKey();
-            var pv = pref.get(k);
-            if (pv == null) continue;
-            var sc = pv.floatValue() * oe.getValue().floatValue();
-            if (sc > bestScore) {
-                best = k;
-                bestScore = sc;
-            }
-        }
-        return best;
-    }
-
-    /**
-     * Get the encoding preference of the client.
-     * 
-     * @return a map of encodings to quality parameters
+     * @return an immutable map of encodings to quality parameters
      */
     public Map<String, Float> getEncodingPreference() {
         return getAtomPreference(session.parameters()
@@ -124,9 +95,10 @@ public final class SessionAugment {
      * parameters, selecting the quality parameter.
      * 
      * @param fieldValue the string to split, usually the value of a
-     * request header field
+     * request header field; may be {@code null}
      * 
-     * @return a map from token token to quality parameter
+     * @return an immutable map from token token to quality parameter;
+     * an empty map if the argument is {@code null}
      */
     public static Map<String, Float>
         getAtomPreference(CharSequence fieldValue) {
@@ -149,7 +121,55 @@ public final class SessionAugment {
                 continue;
             }
             if (toks.end()) break;
-            throw new IllegalArgumentException("bad encoding preference: "
+            throw new IllegalArgumentException("bad atom preference: "
+                + fieldValue);
+        }
+        return Map.copyOf(result);
+    }
+
+    /**
+     * Get the client's media-type preferences. This simply passes the
+     * <samp>Accept</samp> request header field to
+     * {@link #getMediaTypePreference(CharSequence)}.
+     * 
+     * @return an immutable of the client's media-type preferences
+     */
+    public Map<MediaGroup, Float> getMediaTypePreference() {
+        return getMediaTypePreference(session.parameters().get("HTTP_ACCEPT"));
+    }
+
+    /**
+     * Split a string into comma-separated MIME types and optional
+     * parameters, selecting the quality parameter.
+     * 
+     * @param fieldValue the string to split, usually the value of a
+     * request header field; may be {@code null}
+     * 
+     * @return an immutable map from token token to quality parameter;
+     * an empty map if the argument is {@code null}
+     */
+    public static Map<MediaGroup, Float>
+        getMediaTypePreference(CharSequence fieldValue) {
+        if (fieldValue == null) return Collections.emptyMap();
+        Map<MediaGroup, Float> result = new HashMap<>();
+        Tokenizer toks = new Tokenizer(fieldValue);
+        while (true) {
+            var group = MediaGroup.from(toks);
+            toks.whitespace(0);
+            Map.Entry<String, String> param;
+            float q = 1.0f;
+            while (toks.character(';') && toks.whitespace(0) &&
+                (param = toks.parameter()) != null) {
+                if (param.getKey().equals("q"))
+                    q = Float.parseFloat(param.getValue());
+                toks.whitespace(0);
+            }
+            if (toks.character(',')) {
+                result.put(group, q);
+                continue;
+            }
+            if (toks.end()) break;
+            throw new IllegalArgumentException("bad media-group preference: "
                 + fieldValue);
         }
         return Map.copyOf(result);
@@ -185,7 +205,8 @@ public final class SessionAugment {
         if (compressed) return;
         compressed = true;
         Map<String, Float> pref = getEncodingPreference();
-        String comp = resolvePreference(pref, COMPRESSION_OFFER);
+        String comp =
+            Negotiation.resolveStringPreference(pref, COMPRESSION_OFFER);
         switch (comp) {
         case "gzip":
             out = new GZIPOutputStream(out);
