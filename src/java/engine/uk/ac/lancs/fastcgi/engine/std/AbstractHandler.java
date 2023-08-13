@@ -369,11 +369,11 @@ abstract class AbstractHandler implements SessionHandler, Session {
                 ex.unpack();
             } catch (InterruptedException ex) {
                 logger.warning(() -> msg("interrupt"));
-                appStatus = -1;
+                appStatus = 1;
                 completed = true;
             } catch (OverloadException ex) {
                 logger.warning(() -> msg("overload"));
-                appStatus = -2;
+                appStatus = 2;
                 pStat = ProtocolStatuses.OVERLOADED;
                 completed = true;
             } catch (Exception | Error ex) {
@@ -401,7 +401,7 @@ abstract class AbstractHandler implements SessionHandler, Session {
                         + "response body partially sent%n");
                 }
                 ex.printStackTrace(err());
-                appStatus = -2;
+                appStatus = 2;
                 completed = true;
             } finally {
                 try {
@@ -491,12 +491,6 @@ abstract class AbstractHandler implements SessionHandler, Session {
         /* We don't need to protect this. By the time the application is
          * called, this has already been made an immutable copy. */
         return params;
-    }
-
-    @Override
-    public void exit(int exitCode) {
-        if (exitCode < 0) throw new IllegalArgumentException("-ve exit code");
-        appStatus = exitCode;
     }
 
     @Override

@@ -47,17 +47,6 @@ import java.util.Map;
  */
 public interface Session {
     /**
-     * Complete the request. The exit code should be 0 to indicate a
-     * normal exit.
-     * 
-     * @param exitCode the exit code
-     * 
-     * @throws IllegalArgumentException if the exit code is negative;
-     * these are reserved for the library
-     */
-    void exit(int exitCode);
-
-    /**
      * Get diagnostics for this session. Applications should not
      * normally need this, except to annotate diagnostic messages so
      * they can be cross-referenced with other system-/library-generated
