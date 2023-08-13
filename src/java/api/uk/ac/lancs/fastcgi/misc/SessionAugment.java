@@ -263,7 +263,7 @@ public final class SessionAugment {
      * 
      * @throws IllegalStateException if {@link #out()} has been called
      */
-    void addPreEncoding(Encoding enc) {
+    void prefixEncoding(Encoding enc) {
         if (out != null)
             throw new IllegalStateException("too late to add encoding "
                 + enc.name());
@@ -277,7 +277,7 @@ public final class SessionAugment {
      * 
      * @throws IllegalStateException if {@link #out()} has been called
      */
-    void addPostEncoding(Encoding enc) {
+    void suffixEncoding(Encoding enc) {
         if (out != null)
             throw new IllegalStateException("too late to add encoding "
                 + enc.name());
