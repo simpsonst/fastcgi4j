@@ -66,24 +66,24 @@ class AuthorizerHandler extends AbstractHandler implements AuthorizerSession {
     }
 
     @Override
-    public void addHeader(String name, String value) {
+    public void addField(String name, String value) {
         Objects.requireNonNull(name, "name");
         Objects.requireNonNull(value, "value");
         name = name.trim();
         if (isVariable(name))
             throw new IllegalArgumentException("reserved name " + name);
-        addHeaderInternal(name, value);
+        addFieldInternal(name, value);
         if (statusCode == 200) statusCode = 401;
     }
 
     @Override
-    public void setHeader(String name, String value) {
+    public void setField(String name, String value) {
         Objects.requireNonNull(name, "name");
         Objects.requireNonNull(value, "value");
         name = name.trim();
         if (isVariable(name))
             throw new IllegalArgumentException("reserved name " + name);
-        setHeaderInternal(name, value);
+        setFieldInternal(name, value);
         if (statusCode == 200) statusCode = 401;
     }
 
@@ -92,7 +92,7 @@ class AuthorizerHandler extends AbstractHandler implements AuthorizerSession {
         Objects.requireNonNull(name, "name");
         Objects.requireNonNull(value, "value");
         name = name.trim();
-        setHeaderInternal(AuthorizerSession.VARIABLE_PREFIX + name, value);
+        setFieldInternal(AuthorizerSession.VARIABLE_PREFIX + name, value);
     }
 
     private static final int VARIABLE_PREFIX_LENGTH =

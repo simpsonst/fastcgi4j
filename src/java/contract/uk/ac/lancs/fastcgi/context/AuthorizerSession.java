@@ -46,7 +46,7 @@ public interface AuthorizerSession extends Session {
      * {@value Session#STATUS_FIELD}
      */
     @Override
-    void setHeader(String name, String value);
+    void setField(String name, String value);
 
     /**
      * {@inheritDoc} The status is set to 401 if currently 200.
@@ -56,7 +56,7 @@ public interface AuthorizerSession extends Session {
      * {@value Session#STATUS_FIELD}
      */
     @Override
-    public void addHeader(String name, String value);
+    public void addField(String name, String value);
 
     /**
      * Specifies the prefix for special header names that configure the

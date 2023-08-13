@@ -269,7 +269,7 @@ public final class SessionAugment {
             field.insert(0, enc.name());
         }
         if (!field.isEmpty())
-            session.setHeader("Content-Encoding", field.toString());
+            session.setField("Content-Encoding", field.toString());
 
         /* When we obtain the basic session's output stream, we can't
          * set any more header fields. Apply the listed encodings. */
@@ -296,7 +296,7 @@ public final class SessionAugment {
         throws IOException {
         MediaType mt = MediaType.of("text", minor).modify()
             .set("charset", charset.name()).apply();
-        session.setHeader("Content-Type", mt.toString());
+        session.setField("Content-Type", mt.toString());
         return new PrintWriter(new OutputStreamWriter(out(), charset));
     }
 
@@ -367,7 +367,7 @@ public final class SessionAugment {
     }
 
     private void setLocation(URI location, int code) {
-        session.addHeader("Location", location.toASCIIString());
+        session.addField("Location", location.toASCIIString());
         session.setStatus(code);
     }
 
@@ -475,7 +475,7 @@ public final class SessionAugment {
 
         try (var out = out()) {
             var dest = new StreamResult(out);
-            session.setHeader("Content-Type", contentType);
+            session.setField("Content-Type", contentType);
             xf.transform(src, dest);
         }
     }

@@ -56,11 +56,11 @@ import java.util.function.Predicate;
 import java.util.logging.Logger;
 import uk.ac.lancs.fastcgi.context.Diagnostics;
 import uk.ac.lancs.fastcgi.context.OverloadException;
+import uk.ac.lancs.fastcgi.context.Session;
 import uk.ac.lancs.fastcgi.proto.ProtocolStatuses;
 import uk.ac.lancs.fastcgi.proto.serial.ParamReader;
 import uk.ac.lancs.fastcgi.proto.serial.RecordIOException;
 import uk.ac.lancs.fastcgi.proto.serial.RecordWriter;
-import uk.ac.lancs.fastcgi.context.Session;
 
 /**
  * Implements session-specific behaviour functionality common to all
@@ -387,7 +387,7 @@ abstract class AbstractHandler implements SessionHandler, Session {
                 });
                 try {
                     setStatus(501);
-                    setHeader("Content-Type", "text/plain; charset=UTF-8");
+                    setField("Content-Type", "text/plain; charset=UTF-8");
                     /* TODO: Clear other headers. */
                     try (PrintWriter out =
                         new PrintWriter(new OutputStreamWriter(out(),
@@ -519,14 +519,14 @@ abstract class AbstractHandler implements SessionHandler, Session {
     }
 
     @Override
-    public void setHeader(String name, String value) {
+    public void setField(String name, String value) {
         Objects.requireNonNull(name, "name");
         Objects.requireNonNull(value, "value");
         name = name.trim();
-        setHeaderInternal(name, value);
+        setFieldInternal(name, value);
     }
 
-    void setHeaderInternal(String name, String value) {
+    void setFieldInternal(String name, String value) {
         if (name.equalsIgnoreCase(Session.STATUS_FIELD))
             throw new IllegalArgumentException("reserved name " + name);
         if (statusCode < 0) throw new IllegalStateException("header sent");
@@ -537,14 +537,14 @@ abstract class AbstractHandler implements SessionHandler, Session {
     }
 
     @Override
-    public void addHeader(String name, String value) {
+    public void addField(String name, String value) {
         Objects.requireNonNull(name, "name");
         Objects.requireNonNull(value, "value");
         name = name.trim();
-        addHeaderInternal(name, value);
+        addFieldInternal(name, value);
     }
 
-    void addHeaderInternal(String name, String value) {
+    void addFieldInternal(String name, String value) {
         if (name.equalsIgnoreCase(Session.STATUS_FIELD))
             throw new IllegalArgumentException("reserved name " + name);
         if (statusCode < 0) throw new IllegalStateException("header sent");

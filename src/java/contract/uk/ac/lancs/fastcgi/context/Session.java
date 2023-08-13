@@ -77,8 +77,11 @@ public interface Session {
      * 
      * @throws IllegalArgumentException if the field name is
      * {@value #STATUS_FIELD}
+     * 
+     * @throws IllegalStateException if the response output has been
+     * started (with {@link #out()})
      */
-    void setHeader(String name, String value);
+    void setField(String name, String value);
 
     /**
      * Specifies the header field name used to set the HTTP status code.
@@ -90,14 +93,17 @@ public interface Session {
      * Add a response header field, retaining earlier values as distinct
      * fields. Leading and trailing spaces are trimmed from the name.
      * 
-     * @param name the header name
+     * @param name the header field name
      * 
      * @param value the additional value
      * 
      * @throws IllegalArgumentException if the field name is
      * {@value #STATUS_FIELD}
+     * 
+     * @throws IllegalStateException if the response output has been
+     * started (with {@link #out()})
      */
-    void addHeader(String name, String value);
+    void addField(String name, String value);
 
     /**
      * Set the response status. The default is 200.
@@ -105,6 +111,9 @@ public interface Session {
      * @param code the new response status
      * 
      * @throws IllegalArgumentException if the status code is negative
+     * 
+     * @throws IllegalStateException if the response output has been
+     * started (with {@link #out()})
      */
     void setStatus(int code);
 
