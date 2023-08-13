@@ -49,6 +49,19 @@ public interface AuthorizerSession extends Session {
     void setField(String name, String value);
 
     /**
+     * {@inheritDoc} The response status is not changed.
+     * 
+     * @throws IllegalArgumentException if the name case-insensitively
+     * begins with {@value #VARIABLE_PREFIX} or matches
+     * {@value Session#STATUS_FIELD}
+     * 
+     * @throws IllegalStateException if the response output has been
+     * started (with {@link #out()})
+     */
+    @Override
+    public void clearField(String name);
+
+    /**
      * {@inheritDoc} The status is set to 401 if currently 200.
      * 
      * @throws IllegalArgumentException if the name case-insensitively

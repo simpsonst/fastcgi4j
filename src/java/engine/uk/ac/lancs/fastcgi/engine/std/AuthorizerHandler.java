@@ -88,6 +88,15 @@ class AuthorizerHandler extends AbstractHandler implements AuthorizerSession {
     }
 
     @Override
+    public void clearField(String name) {
+        Objects.requireNonNull(name, "name");
+        name = name.trim();
+        if (isVariable(name))
+            throw new IllegalArgumentException("reserved name " + name);
+        super.clearField(name);
+    }
+
+    @Override
     public void setVariable(String name, String value) {
         Objects.requireNonNull(name, "name");
         Objects.requireNonNull(value, "value");
