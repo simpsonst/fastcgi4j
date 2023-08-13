@@ -41,12 +41,13 @@ package uk.ac.lancs.fastcgi.misc;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.zip.DeflaterOutputStream;
-import java.util.zip.GZIPOutputStream;
+import java.util.stream.Collectors;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
@@ -68,15 +69,23 @@ import uk.ac.lancs.fastcgi.util.HttpStatus;
 public final class SessionAugment {
     private final Session session;
 
-    private static final Map<String, Float> COMPRESSION_OFFER =
-        Map.copyOf(getCompressionOffer());
-
-    private static Map<String, Float> getCompressionOffer() {
-        Map<String, Float> offer = new HashMap<>();
-        offer.put("gzip", 1.0f);
-        offer.put("deflate", 0.7f);
-        return offer;
+    private static void populate(Map<String, Map.Entry<Encoding, Float>> temp,
+                                 Encoding enc, float quality) {
+        temp.put(enc.name(), Map.entry(enc, quality));
     }
+
+    private static final Map<String, Map.Entry<Encoding, Float>> ENCODINGS;
+
+    static {
+        Map<String, Map.Entry<Encoding, Float>> temp = new HashMap<>();
+        populate(temp, GZIPEncoding.INSTANCE, 1.0f);
+        populate(temp, DeflateEncoding.INSTANCE, 0.7f);
+        ENCODINGS = Map.copyOf(temp);
+    }
+
+    private static final Map<String, Float> COMPRESSION_OFFER =
+        ENCODINGS.entrySet().stream().collect(Collectors
+            .toMap(Map.Entry::getKey, e -> e.getValue().getValue()));
 
     /**
      * Get the client's encoding preference. This is simply an
@@ -182,54 +191,107 @@ public final class SessionAugment {
      */
     public SessionAugment(Session session) {
         this.session = session;
-        this.out = session.out();
     }
 
-    private OutputStream out;
+    private final List<Encoding> encodings = new ArrayList<>();
+
+    private Encoding compression = null;
+
+    private OutputStream out = null;
+
+    /**
+     * Get the output stream with encodings applied. On the first call,
+     * encodings specified by other calls are applied to the basic
+     * session's stream, and the <samp>Content-Encoding</samp> header
+     * field is set. Subsequent calls will yield the same stream.
+     * Calling this method prevents the calling of other methods that
+     * modify encoding.
+     * 
+     * <p>
+     * Methods that modify encodings, and therefore cannot be called
+     * after this one, include:
+     * 
+     * <ul>
+     * 
+     * <li>{@link #offerCompression()}
+     * 
+     * </ul>
+     * 
+     * <p>
+     * Methods that implicitly call this method include:
+     * 
+     * <ul>
+     * 
+     * <li>{@link #sendDocument(Properties, Document))}
+     * 
+     * </ul>
+     * 
+     * @return the current head of the output stream chain
+     */
+    public OutputStream out() throws IOException {
+        if (out != null) return out;
+        if (compression != null) encodings.add(compression);
+        out = session.out();
+        List<String> field = new ArrayList<>(encodings.size());
+        for (Encoding enc : encodings) {
+            out = enc.encode(out);
+            field.add(0, enc.name());
+        }
+        session.setHeader("Content-Encoding",
+                          field.stream().collect(Collectors.joining(", ")));
+        return out;
+    }
+
+    /**
+     * Add an encoding to the head of the encoding chain.
+     * 
+     * @param enc the additional encoding
+     * 
+     * @throws IllegalStateException if {@link #out()} has been called
+     */
+    void addPreEncoding(Encoding enc) {
+        if (out != null)
+            throw new IllegalStateException("too late to add encoding "
+                + enc.name());
+        encodings.add(enc);
+    }
+
+    /**
+     * Add an encoding to the end of the encoding chain.
+     * 
+     * @param enc the additional encoding
+     * 
+     * @throws IllegalStateException if {@link #out()} has been called
+     */
+    void addPostEncoding(Encoding enc) {
+        if (out != null)
+            throw new IllegalStateException("too late to add encoding "
+                + enc.name());
+        encodings.add(0, enc);
+    }
 
     private boolean compressed = false;
 
     /**
      * Turn on compression if the client accepts it. If applied, the
-     * output stream is wrapped in a compression filter, and the
+     * output stream will be wrapped in a compression filter, and the
      * encoding name is added to <samp>Content-Encoding</samp>.
-     * 
-     * <p>
-     * This method must be called before {@link #out()}.
      * 
      * <p>
      * In the current implementation, only <samp>gzip</samp> and
      * <samp>deflate</samp> are offered.
+     * 
+     * @throws IllegalStateException if {@link #out()} has been called
      */
     public void offerCompression() throws IOException {
+        if (out != null)
+            throw new IllegalStateException("too late to add compression");
         if (compressed) return;
         compressed = true;
         Map<String, Float> pref = getEncodingPreference();
         String comp =
             Negotiation.resolveStringPreference(pref, COMPRESSION_OFFER);
-        switch (comp) {
-        case "gzip":
-            out = new GZIPOutputStream(out);
-            session.addHeader("Content-Encoding", comp);
-            break;
-
-        case "deflate":
-            out = new DeflaterOutputStream(out);
-            session.addHeader("Content-Encoding", comp);
-            break;
-        }
-    }
-
-    /**
-     * Get the output stream. This is the head of what could be a long
-     * chain of wrapping streams. For example,
-     * {@link #offerCompression()} may wrap a {@link GZIPOutputStream}
-     * around the current head.
-     * 
-     * @return the current head of the output stream chain
-     */
-    public OutputStream out() {
-        return out;
+        if (comp != null) compression = ENCODINGS.get(comp).getKey();
     }
 
     private void setLocation(URI location, int code) {
