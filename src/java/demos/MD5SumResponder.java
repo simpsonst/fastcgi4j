@@ -36,10 +36,8 @@
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Reader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -102,10 +100,7 @@ public class MD5SumResponder implements Responder {
         }
 
         augment.offerCompression();
-        session.setHeader("Content-Type", "text/plain; charset=UTF-8");
-        try (PrintWriter out =
-            new PrintWriter(new OutputStreamWriter(augment.out(),
-                                                   StandardCharsets.UTF_8))) {
+        try (PrintWriter out = augment.textOut("plain")) {
             for (var entry : new TreeMap<>(session.parameters()).entrySet()) {
                 out.printf("[%s] = [%s]\n", entry.getKey(), entry.getValue());
             }
