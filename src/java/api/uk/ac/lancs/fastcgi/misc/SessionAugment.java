@@ -230,15 +230,29 @@ public final class SessionAugment {
      */
     public OutputStream out() throws IOException {
         if (out != null) return out;
+
+        /* Compression must be the last in the list, so that it is
+         * applied first. */
         if (compression != null) encodings.add(compression);
-        out = session.out();
-        List<String> field = new ArrayList<>(encodings.size());
+
+        /* The encodings' names must specified in the response header.
+         * The last in our internal list must be the first in the
+         * comma-separated field value. */
+        StringBuilder field = new StringBuilder();
+        String sep = "";
         for (Encoding enc : encodings) {
-            out = enc.encode(out);
-            field.add(0, enc.name());
+            field.insert(0, sep);
+            sep = ", ";
+            field.insert(0, enc.name());
         }
-        session.setHeader("Content-Encoding",
-                          field.stream().collect(Collectors.joining(", ")));
+        session.setHeader("Content-Encoding", field.toString());
+
+        /* When we obtain the basic session's output stream, we can't
+         * set any more header fields. Apply the listed encodings. */
+        OutputStream out = session.out();
+        for (Encoding enc : encodings)
+            out = enc.encode(out);
+        this.out = out;
         return out;
     }
 
