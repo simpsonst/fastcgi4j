@@ -43,6 +43,15 @@ import java.util.Map;
 /**
  * Presents the context of a FastCGI session to an application.
  * 
+ * <p>
+ * All sessions produce a response header and a (possibly empty)
+ * response body. {@link #out()} provides a stream for writing the
+ * response body, and the header is written on the stream's first use.
+ * Until then, {@link #setField(String, String)},
+ * {@link #addField(String, String)} and {@link #clearField(String)}
+ * modify the header in preparation, but do not cause any fields to be
+ * immediately sent.
+ * 
  * @author simpsons
  */
 public interface Session {

@@ -35,6 +35,9 @@ public interface AuthorizerSession extends Session {
      * @param name the variable's name
      * 
      * @param value the variable's value
+     * 
+     * @throws IllegalStateException if the response output has been
+     * started (with {@link #out()})
      */
     void setVariable(String name, String value);
 
@@ -44,6 +47,9 @@ public interface AuthorizerSession extends Session {
      * @throws IllegalArgumentException if the name case-insensitively
      * begins with {@value #VARIABLE_PREFIX} or matches
      * {@value Session#STATUS_FIELD}
+     * 
+     * @throws IllegalStateException if the response output has been
+     * started (with {@link #out()})
      */
     @Override
     void setField(String name, String value);
@@ -67,13 +73,21 @@ public interface AuthorizerSession extends Session {
      * @throws IllegalArgumentException if the name case-insensitively
      * begins with {@value #VARIABLE_PREFIX} or matches
      * {@value Session#STATUS_FIELD}
+     * 
+     * @throws IllegalStateException if the response output has been
+     * started (with {@link #out()})
      */
     @Override
     public void addField(String name, String value);
 
     /**
-     * Specifies the prefix for special header names that configure the
-     * server on a successful authorization. The value is {@value}.
+     * Specifies the prefix for special header field names that
+     * configure the server on a successful authorization. These fields
+     * cannot be modified through {@link #setField(String, String)},
+     * {@link #addField(String, String)} and
+     * {@link #clearField(String)}. Use
+     * {@link #setVariable(String, String)} instead, without the prefix.
+     * The prefix is {@value}.
      */
     String VARIABLE_PREFIX = "Variable-";
 }
