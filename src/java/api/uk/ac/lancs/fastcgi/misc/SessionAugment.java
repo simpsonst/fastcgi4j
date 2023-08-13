@@ -40,7 +40,11 @@ package uk.ac.lancs.fastcgi.misc;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.net.URI;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -58,6 +62,7 @@ import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Document;
 import uk.ac.lancs.fastcgi.context.Session;
 import uk.ac.lancs.fastcgi.mime.MediaGroup;
+import uk.ac.lancs.fastcgi.mime.MediaType;
 import uk.ac.lancs.fastcgi.mime.Tokenizer;
 import uk.ac.lancs.fastcgi.util.HttpStatus;
 
@@ -224,9 +229,16 @@ public final class SessionAugment {
      * 
      * <li>{@link #sendDocument(Properties, Document))}
      * 
+     * <li>{@link #textOut(String, Charset)}
+     * 
+     * <li>{@link #textOut(String)}
+     * 
      * </ul>
      * 
      * @return the current head of the output stream chain
+     * 
+     * @throws IOException if an I/O error occurs in applying an
+     * encoding
      */
     public OutputStream out() throws IOException {
         if (out != null) return out;
@@ -254,6 +266,40 @@ public final class SessionAugment {
             out = enc.encode(out);
         this.out = out;
         return out;
+    }
+
+    /**
+     * Get a character stream for writing the response body.
+     * 
+     * @param minor the MIME subtype of <samp>text/*</samp>
+     * 
+     * @param charset the character encoding
+     * 
+     * @return the requested writer
+     * 
+     * @throws IOException if an I/O error occurs in applying an
+     * encoding
+     */
+    public PrintWriter textOut(String minor, Charset charset)
+        throws IOException {
+        MediaType mt = MediaType.of("text", minor).modify()
+            .set("charset", charset.name()).apply();
+        session.setHeader("Content-Type", mt.toString());
+        return new PrintWriter(new OutputStreamWriter(out(), charset));
+    }
+
+    /**
+     * Get a character stream for writing the response body as UTF-8.
+     * 
+     * @param minor the MIME subtype of <samp>text/*</samp>
+     * 
+     * @return the requested writer
+     * 
+     * @throws IOException if an I/O error occurs in applying an
+     * encoding
+     */
+    public PrintWriter textOut(String minor) throws IOException {
+        return textOut(minor, StandardCharsets.UTF_8);
     }
 
     /**
