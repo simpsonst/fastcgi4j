@@ -85,6 +85,7 @@ public final class SessionAugment {
         Map<String, Map.Entry<Encoding, Float>> temp = new HashMap<>();
         populate(temp, GZIPEncoding.INSTANCE, 1.0f);
         populate(temp, DeflateEncoding.INSTANCE, 0.7f);
+        populate(temp, IdentityEncoding.INSTANCE, 0.01f);
         ENCODINGS = Map.copyOf(temp);
     }
 
@@ -118,9 +119,18 @@ public final class SessionAugment {
         getAtomPreference(CharSequence fieldValue) {
         if (fieldValue == null) return Collections.emptyMap();
         Map<String, Float> result = new HashMap<>();
+        result.put(IdentityEncoding.INSTANCE.name(), 1.0f);
         Tokenizer toks = new Tokenizer(fieldValue);
         while (true) {
-            var name = toks.whitespaceAtom(0);
+            toks.whitespace(0);
+            var name = toks.atom();
+            if (name == null) {
+                if (toks.character('*'))
+                    name = "*";
+                else
+                    throw new IllegalArgumentException("bad atom preference: "
+                        + fieldValue);
+            }
             toks.whitespace(0);
             Map.Entry<String, String> param;
             float q = 1.0f;
@@ -253,11 +263,13 @@ public final class SessionAugment {
         StringBuilder field = new StringBuilder();
         String sep = "";
         for (Encoding enc : encodings) {
+            if (enc == IdentityEncoding.INSTANCE) continue;
             field.insert(0, sep);
             sep = ", ";
             field.insert(0, enc.name());
         }
-        session.setHeader("Content-Encoding", field.toString());
+        if (!field.isEmpty())
+            session.setHeader("Content-Encoding", field.toString());
 
         /* When we obtain the basic session's output stream, we can't
          * set any more header fields. Apply the listed encodings. */
@@ -350,7 +362,7 @@ public final class SessionAugment {
         compressed = true;
         Map<String, Float> pref = getEncodingPreference();
         String comp =
-            Negotiation.resolveStringPreference(pref, COMPRESSION_OFFER);
+            Negotiation.resolveAtomPreference(pref, COMPRESSION_OFFER);
         if (comp != null) compression = ENCODINGS.get(comp).getKey();
     }
 

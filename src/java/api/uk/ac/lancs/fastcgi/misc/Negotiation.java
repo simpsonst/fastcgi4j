@@ -289,6 +289,28 @@ public final class Negotiation {
                                  offer);
     }
 
+    private static int atomContains(String pref, String subj) {
+        if (pref.equals("*")) return 1;
+        return pref.equals(subj) ? 2 : 0;
+    }
+
+    /**
+     * Get the best string for a given set of preferences. This
+     * recognizes <samp>*</samp> as a wildcard.
+     * 
+     * @param pref the preferences and their qualities
+     * 
+     * @param offer the offered subjects and their qualities
+     * 
+     * @return the best offer; or {@code null} if none are suitable
+     */
+    public static String
+        resolveAtomPreference(Map<? extends String, ? extends Number> pref,
+                              Map<? extends String, ? extends Number> offer) {
+        return resolvePreference(makeQualitator(Negotiation::atomContains),
+                                 pref, offer);
+    }
+
     /**
      * Get the best exact string for a given set of preferences.
      * 
