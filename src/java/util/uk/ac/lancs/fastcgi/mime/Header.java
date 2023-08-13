@@ -324,7 +324,8 @@ public final class Header {
             Datum old = fields.get(key);
             Entry ent = replacements.get(key);
             if (ent == null) return old;
-            Object nv = ent.format.coalesce(old.getTyped(ent.format), ent.data);
+            Object nv = old == null ? ent.data :
+                ent.format.coalesce(old.getTyped(ent.format), ent.data);
             return new TypedDatum(nv, ent.format);
         }
 
