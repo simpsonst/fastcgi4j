@@ -36,16 +36,28 @@
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
+import java.time.Duration;
+import java.util.List;
 import java.util.Properties;
 import java.util.TreeMap;
 import uk.ac.lancs.fastcgi.Responder;
+import uk.ac.lancs.fastcgi.body.BinaryBody;
+import uk.ac.lancs.fastcgi.body.Morgue;
+import uk.ac.lancs.fastcgi.body.SmartMorgue;
 import uk.ac.lancs.fastcgi.context.ResponderSession;
+import uk.ac.lancs.fastcgi.mime.BinaryMessage;
+import uk.ac.lancs.fastcgi.mime.Message;
+import uk.ac.lancs.fastcgi.mime.MessageParser;
+import uk.ac.lancs.fastcgi.mime.TextMessage;
+import uk.ac.lancs.fastcgi.misc.FormSubmission;
 import uk.ac.lancs.fastcgi.misc.SessionAugment;
 import uk.ac.lancs.fastcgi.path.Navigator;
 import uk.ac.lancs.fastcgi.path.PathConfiguration;
@@ -78,6 +90,9 @@ public class MD5SumResponder implements Responder {
             .instances(props, "", s -> s).create();
     }
 
+    private static final Morgue morgue =
+        SmartMorgue.start().singleThreshold(20).build();
+
     @Override
     public void respond(ResponderSession session) throws Exception {
         SessionAugment augment = new SessionAugment(session);
@@ -86,17 +101,44 @@ public class MD5SumResponder implements Responder {
         Navigator navigator = pathCtxt.navigator();
 
         final byte[] dig;
-        MessageDigest md = MessageDigest.getInstance("md5");
-        byte[] buf = new byte[1024];
-        int got;
-        while ((got = session.in().read(buf)) >= 0) {
-            md.update(buf, 0, got);
+        if (false) {
+            dig = null;
+        } else {
+            MessageDigest md = MessageDigest.getInstance("md5");
+            byte[] buf = new byte[1024];
+            int got;
+            while ((got = session.in().read(buf)) >= 0) {
+                md.update(buf, 0, got);
+            }
+            dig = md.digest();
         }
-        dig = md.digest();
 
         if (navigator.resource().isEmpty()) {
             augment.found(navigator.locate("/").absolute());
             return;
+        }
+        final FormSubmission submission;
+        final BinaryBody body;
+        if (false) {
+            submission = null;
+            body = null;
+            System.err.printf("Message body!!!!%n");
+            try (var in = session.in(); var out = new PrintWriter(System.err)) {
+                dump("body ", out, in);
+            }
+        } else if (false) {
+            submission = null;
+            try (var in = session.in()) {
+                body = morgue.store(in);
+            }
+        } else if (false) {
+            body = null;
+            MessageParser parser = new MessageParser(morgue);
+            submission = FormSubmission
+                .fromSession(session, StandardCharsets.UTF_8, parser);
+        } else {
+            body = null;
+            submission = null;
         }
 
         augment.offerCompression();
@@ -119,12 +161,68 @@ public class MD5SumResponder implements Responder {
                 }
             }
 
-            out.printf("\nDigest: ");
-            for (int i = 0; i < dig.length; i++) {
-                out.printf("%02x", dig[i] & 0xff);
+            if (dig != null) {
+                out.printf("\nDigest: ");
+                for (int i = 0; i < dig.length; i++) {
+                    out.printf("%02x", dig[i] & 0xff);
+                }
+                out.printf("\n");
             }
-            out.printf("\n");
+
             out.printf("\nDiagnostics: %s\n", session.diagnostics());
+
+            if (body != null) {
+                try (var in = body.recover()) {
+                    dump("body ", out, in);
+                }
+            }
+
+            if (submission != null) {
+                out.printf("\nForm fields:\n");
+                for (var e : submission.map().entrySet()) {
+                    List<Message> values = e.getValue();
+                    out.printf("  %s (%d):\n", e.getKey(), values.size());
+                    int i = 0;
+                    for (Message msg : values) {
+                        final int pos = ++i;
+                        if (msg instanceof TextMessage tmsg) {
+                            out.printf("  %d: %s\n", pos,
+                                       tmsg.textBody().get());
+                        } else if (msg instanceof BinaryMessage bmsg) {
+                            dump(String.format("%4d ", pos), out,
+                                 bmsg.body().recover());
+                        }
+                    }
+                }
+                Thread.sleep(Duration.ofSeconds(30));
+            }
         }
+    }
+
+    private static void dump(String pfx, PrintWriter out, InputStream in)
+        throws IOException {
+        byte[] buf = new byte[16];
+        long off = 0;
+        do {
+            int got = 0;
+            while (got < buf.length) {
+                int n = in.read(buf, got, buf.length - got);
+                if (n < 0) break;
+                got += n;
+            }
+            if (got == 0) break;
+            out.printf("%s%08x", pfx, off);
+            for (int i = 0; i < buf.length; i++)
+                if (i < got)
+                    out.printf(" %02X", buf[i]);
+                else
+                    out.print("   ");
+            out.print(' ');
+            for (int i = 0; i < got; i++)
+                out.printf("%c", buf[i] > 32 ? (char) buf[i] : '.');
+            out.println();
+            off += got;
+        } while (true);
+        out.printf("%s total %d\n", pfx, off);
     }
 }
