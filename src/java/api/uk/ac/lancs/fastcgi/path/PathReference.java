@@ -39,6 +39,7 @@
 package uk.ac.lancs.fastcgi.path;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -94,8 +95,8 @@ public final class PathReference {
      * Holds the query parameters to be added when generating the URI,
      * or {@code null} if no query is to be added.
      */
-    private Collection<? extends Map.Entry<? extends String,
-                                           ? extends String>> query = null;
+    private Collection<Map.Entry<? extends String, ? extends String>> query =
+        null;
 
     /**
      * Set the fragment identifier.
@@ -116,15 +117,42 @@ public final class PathReference {
      * only occurs when building the URI with {@link #relative()},
      * {@link #local()} or {@link #absolute()}.
      * 
-     * @param query the new query parameters; or {@code null} to exclude
-     * query parameters
+     * @param query the new query parameters, which are copied
      * 
      * @return this object
      */
     public PathReference
         query(Collection<? extends Map.Entry<? extends String,
                                              ? extends String>> query) {
-        this.query = query;
+        this.query =
+            new ArrayList<>(query.stream().map(Map.Entry::copyOf).toList());
+        return this;
+    }
+
+    /**
+     * Append a query parameter.
+     * 
+     * @param name the parameter name
+     * 
+     * @param value the parameter value, which is converted with
+     * {@link Object#toString()} first
+     * 
+     * @return this object
+     */
+    public PathReference parameter(String name, Object value) {
+        if (query == null) query = new ArrayList<>();
+        query.add(Map.entry(name, value.toString()));
+        return this;
+    }
+
+    /**
+     * Clear the query parameters. In this state, no <samp>?</samp> will
+     * be appended.
+     * 
+     * @return this object
+     */
+    public PathReference noQuery() {
+        query = null;
         return this;
     }
 
