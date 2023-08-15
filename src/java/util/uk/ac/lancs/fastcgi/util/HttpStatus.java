@@ -65,6 +65,15 @@ public final class HttpStatus {
     public static final int SEE_OTHER = 303;
 
     /**
+     * Indicates that the client seems to have made a bad request.
+     * 
+     * @see <a href=
+     * "https://www.rfc-editor.org/rfc/rfc9110.html#name-400-bad-request">RFC9110
+     * 400 Bad Request</a>
+     */
+    public static final int BAD_REQUEST = 400;
+
+    /**
      * Indicates that the URI does not refer to a known resource.
      *
      * @see <a href=
