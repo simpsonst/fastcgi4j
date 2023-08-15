@@ -54,6 +54,9 @@ public final class HttpStatus {
     public static final int ACCEPTED = 202;
 
     /**
+     * Tells the client that it should get a representation of the
+     * result of its request by performing a GET on a URI, even if the
+     * original request used a different method.
      *
      * @see <a href=
      * "https://www.rfc-editor.org/rfc/rfc9110.html#name-303-see-other">RFC9110
