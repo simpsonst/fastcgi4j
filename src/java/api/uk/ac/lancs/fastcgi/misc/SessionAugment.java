@@ -479,9 +479,8 @@ public final class SessionAugment {
      * @throws IOException if an I/O error occurs in closing the
      * response
      */
-    public void sendDocument(Properties xformProps, Document doc)
-        throws TransformerConfigurationException,
-            TransformerException,
+    public void transmit(Document doc, Properties xformProps)
+        throws TransformerException,
             IOException {
         TransformerFactory tf = TransformerFactory.newInstance();
         Transformer xf = tf.newTransformer();
