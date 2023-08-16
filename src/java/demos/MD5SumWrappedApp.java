@@ -45,9 +45,10 @@ import uk.ac.lancs.fastcgi.app.FastCGIConfiguration;
  */
 public class MD5SumWrappedApp extends FastCGIApplication {
     @Override
-    public void init(FastCGIConfiguration config, String[] args) {
+    public boolean init(FastCGIConfiguration config, String[] args) {
         MD5SumResponder rsp = new MD5SumResponder();
         config.setResponder(rsp);
+        return true;
     }
 
     @Override

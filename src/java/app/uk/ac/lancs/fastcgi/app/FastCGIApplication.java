@@ -48,13 +48,14 @@ import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import uk.ac.lancs.fastcgi.engine.Attribute;
-import uk.ac.lancs.fastcgi.engine.Engine;
 import uk.ac.lancs.fastcgi.Authorizer;
 import uk.ac.lancs.fastcgi.Filter;
 import uk.ac.lancs.fastcgi.Responder;
-import uk.ac.lancs.scc.jardeps.Application;
+import uk.ac.lancs.fastcgi.engine.Attribute;
+import uk.ac.lancs.fastcgi.engine.Engine;
+import uk.ac.lancs.fastcgi.engine.EngineConfigurationException;
 import uk.ac.lancs.fastcgi.transport.Transport;
+import uk.ac.lancs.scc.jardeps.Application;
 
 /**
  * Acts as an entry point for FastCGI applications. Such an application
@@ -76,9 +77,15 @@ public class FastCGIApplication {
      * @param args command-line arguments to be interpreted by the
      * application
      * 
-     * @default This method does nothing by default.
+     * @return {@code true} if the FastCGI application should run;
+     * {@code false} if it should exit with a non-zero code
+     * 
+     * @default This method does nothing by default, and returns
+     * {@code false}.
      */
-    public void init(FastCGIConfiguration config, String[] args) {}
+    public boolean init(FastCGIConfiguration config, String[] args) {
+        return false;
+    }
 
     /**
      * Prepare to terminate.
@@ -168,6 +175,11 @@ public class FastCGIApplication {
      * 
      * </dl>
      * 
+     * <p>
+     * The application exits with 0 if it has terminated naturally, 1 if
+     * the application failed to start, 2 if engine configuration
+     * failed, and 3 if command-line switches failed to parse.
+     * 
      * @throws Exception if an error occurs, duh
      */
     public static void main(String[] args) throws Exception {
@@ -207,7 +219,7 @@ public class FastCGIApplication {
                 return builder;
             }
 
-            void run()
+            boolean run()
                 throws InstantiationException,
                     IllegalAccessException,
                     InvocationTargetException,
@@ -297,7 +309,7 @@ public class FastCGIApplication {
 
                     if (arg.startsWith("-") || arg.startsWith("+")) {
                         System.err.printf("unknown switch: %s%n", arg);
-                        System.exit(1);
+                        System.exit(3);
                     }
 
                     if (seek) {
@@ -331,7 +343,9 @@ public class FastCGIApplication {
                         .getConstructor().newInstance();
                 }
                 assert app != null;
-                app.init(this, appArgs.toArray(n -> new String[n]));
+                boolean okay =
+                    app.init(this, appArgs.toArray(n -> new String[n]));
+                if (!okay) return false;
 
                 /* Allow the application to implement roles directly. */
                 if (responder == null && app instanceof Responder)
@@ -366,6 +380,7 @@ public class FastCGIApplication {
                 try {
                     while (engine.process())
                         ;
+                    return true;
                 } finally {
                     app.term();
                 }
@@ -373,7 +388,12 @@ public class FastCGIApplication {
         }
 
         MyConfig mc = new MyConfig();
-        mc.run();
+        try {
+            if (!mc.run()) System.exit(1);
+        } catch (EngineConfigurationException ex) {
+            System.err.printf("no suitable engine%n");
+            System.exit(2);
+        }
     }
 
     private static final Pattern DEF_PATTERN =
