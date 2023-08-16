@@ -185,7 +185,7 @@ public final class PathConfiguration<I> {
          * <samp><var>prefix</var><var>instance</var>.external</samp>
          * specifies an external URI prefix for <var>instance</var>. A
          * corresponding property called
-         * <samp><var>prefix</var><var>instance</var>.external</samp>
+         * <samp><var>prefix</var><var>instance</var>.internal</samp>
          * may be set to specify an internal URI prefix for the
          * instance, but it is assumed to be the same as the external
          * URI prefix. The <var>instance</var> string is mapped to the
