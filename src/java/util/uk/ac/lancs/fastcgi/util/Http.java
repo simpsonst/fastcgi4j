@@ -38,6 +38,17 @@
 
 package uk.ac.lancs.fastcgi.util;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Locale;
+
 /**
  * Defines HTTP status codes, maps them to human-readable text, and
  * parses and generates HTTP timestamps.
@@ -184,6 +195,61 @@ public final class Http {
      * 201 Created</a>
      */
     public static final int CREATED = 201;
+
+    private static final Collection<DateTimeFormatter> HTTP_FORMATS;
+
+    static {
+        Collection<DateTimeFormatter> formats = new ArrayList<>();
+
+        /* RFC1123 "Sun, 06 Nov 1994 08:49:37 GMT" */
+        formats.add(DateTimeFormatter.RFC_1123_DATE_TIME);
+
+        /* RFC1036 "Sunday, 06-Nov-94 08:49:37 GMT" */
+        formats.add(DateTimeFormatter.ofPattern("EEEE, dd-LLL-uu kk:mm:ss z",
+                                                Locale.UK));
+
+        /* asctime() "Sun Nov 6 08:49:37 1994" */
+        formats.add(DateTimeFormatter
+            .ofPattern("EEE LLL d kk:mm:ss yyyy", Locale.US)
+            .withZone(ZoneOffset.UTC));
+
+        HTTP_FORMATS = List.copyOf(formats);
+    }
+
+    /**
+     * Parse a timestamp according to one of three formats that could be
+     * encountered in an HTTP header.
+     * 
+     * @param text the textual representation of the timestamp
+     * 
+     * @return the corresponding time in millisecond since the epoch; or
+     * {@link Long#MIN_VALUE} if it failed to parse
+     */
+    public static long parseTimestamp(CharSequence text) {
+        for (var f : HTTP_FORMATS) {
+            try {
+                ZonedDateTime z = ZonedDateTime.parse(text, f);
+                return Instant.from(z).toEpochMilli();
+            } catch (DateTimeParseException ex) {
+                /* Just try the next one. */
+            }
+        }
+        return Long.MIN_VALUE;
+    }
+
+    /**
+     * Generate a textual representation of a timestamp. The format is
+     * the subset of RFC1123. UTC is always used.
+     * 
+     * @param millis the timestamp in milliseconds since the epoch
+     * 
+     * @return the textual representation of the timestamp
+     */
+    public static String generateTimestamp(long millis) {
+        return ZonedDateTime
+            .ofInstant(Instant.ofEpochMilli(millis), ZoneId.of("Z"))
+            .format(DateTimeFormatter.RFC_1123_DATE_TIME);
+    }
 
     private static final String UNKNOWN_RESPONSE_PREFIX = "UNKNOWN-RESPONSE-";
 
