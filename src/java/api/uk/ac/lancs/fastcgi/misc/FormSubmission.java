@@ -314,7 +314,7 @@ public final class FormSubmission {
      */
     public Message getFirst(String name) {
         List<Message> vals = map().get(name);
-        if (vals.isEmpty()) return null;
+        if (vals == null || vals.isEmpty()) return null;
         return vals.get(0);
     }
 }
