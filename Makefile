@@ -108,6 +108,7 @@ deps_engine += contract
 deps_engine += app
 deps_engine += proto
 deps_engine += threads
+deps_engine += util
 
 ## These classes serialize and de-serialize FastCGI protocol messages.
 ## Stakeholders: engine

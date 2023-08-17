@@ -64,7 +64,7 @@ import uk.ac.lancs.fastcgi.context.Session;
 import uk.ac.lancs.fastcgi.mime.MediaGroup;
 import uk.ac.lancs.fastcgi.mime.MediaType;
 import uk.ac.lancs.fastcgi.mime.Tokenizer;
-import uk.ac.lancs.fastcgi.util.HttpStatus;
+import uk.ac.lancs.fastcgi.util.Http;
 
 /**
  * Provides an augmented session context.
@@ -368,7 +368,7 @@ public final class SessionAugment {
 
     /**
      * Tell the client that the response has no content. The status is
-     * set to {@link HttpStatus#NO_CONTENT}, and the basic session's
+     * set to {@link Http#NO_CONTENT}, and the basic session's
      * output stream is closed. Several content-related header fields
      * are also cleared.
      * 
@@ -376,7 +376,7 @@ public final class SessionAugment {
      * stream
      */
     public void noContent() throws IOException {
-        session.setStatus(HttpStatus.NO_CONTENT);
+        session.setStatus(Http.NO_CONTENT);
         session.clearField("Content-Type");
         session.clearField("Content-Length");
         session.clearField("Content-Encoding");
@@ -397,10 +397,10 @@ public final class SessionAugment {
      * 
      * @param location the location to redirect to
      * 
-     * @see HttpStatus#SEE_OTHER
+     * @see Http#SEE_OTHER
      */
     public void seeOther(URI location) {
-        setLocation(location, HttpStatus.SEE_OTHER);
+        setLocation(location, Http.SEE_OTHER);
     }
 
     /**
@@ -412,10 +412,10 @@ public final class SessionAugment {
      * 
      * @param location the location to redirect to
      * 
-     * @see HttpStatus#MOVED_PERMANENTLY
+     * @see Http#MOVED_PERMANENTLY
      */
     public void movedPermanently(URI location) {
-        setLocation(location, HttpStatus.MOVED_PERMANENTLY);
+        setLocation(location, Http.MOVED_PERMANENTLY);
     }
 
     /**
@@ -430,10 +430,10 @@ public final class SessionAugment {
      * 
      * @param location the location to redirect to
      * 
-     * @see HttpStatus#FOUND
+     * @see Http#FOUND
      */
     public void found(URI location) {
-        setLocation(location, HttpStatus.FOUND);
+        setLocation(location, Http.FOUND);
     }
 
     /**
@@ -443,10 +443,10 @@ public final class SessionAugment {
      * 
      * @param location the location to redirect to
      * 
-     * @see HttpStatus#TEMPORARY_REDIRECT
+     * @see Http#TEMPORARY_REDIRECT
      */
     public void temporaryRedirect(URI location) {
-        setLocation(location, HttpStatus.TEMPORARY_REDIRECT);
+        setLocation(location, Http.TEMPORARY_REDIRECT);
     }
 
     /**
@@ -456,10 +456,10 @@ public final class SessionAugment {
      * 
      * @param location the location to redirect to
      * 
-     * @see HttpStatus#PERMANENT_REDIRECT
+     * @see Http#PERMANENT_REDIRECT
      */
     public void permanentRedirect(URI location) {
-        setLocation(location, HttpStatus.PERMANENT_REDIRECT);
+        setLocation(location, Http.PERMANENT_REDIRECT);
     }
 
     /**
