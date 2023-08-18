@@ -1,5 +1,7 @@
+// -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
+
 /*
- * Copyright (c) 2022,2023, Lancaster University
+ * Copyright (c) 2023, Lancaster University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,28 +33,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *
- *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
+ *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
 import uk.ac.lancs.fastcgi.app.FastCGIApplication;
 import uk.ac.lancs.fastcgi.app.FastCGIConfiguration;
 
 /**
- * Sets up a responder that generates an MD5 sum of request content,
- * taking configuration from the script wrapper.
+ * Sets up an Apache lame authorizer/authenticator for testing Apache
+ * behaviour.
  * 
  * @author simpsons
  */
-public class MD5SumWrappedApp extends FastCGIApplication {
+public class DiagnosticAuthorizerApp extends FastCGIApplication {
     @Override
     public boolean init(FastCGIConfiguration config, String[] args) {
-        MD5SumResponder rsp = new MD5SumResponder();
-        config.setResponder(rsp);
+        DiagnosticAuthorizer auth = new DiagnosticAuthorizer();
+        config.setAuthorizer(auth);
         return true;
-    }
-
-    @Override
-    public void term() {
-        System.err.printf("terminating%n");
     }
 }
