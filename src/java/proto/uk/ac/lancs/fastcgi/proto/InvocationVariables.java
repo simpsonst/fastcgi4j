@@ -44,6 +44,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -62,11 +63,122 @@ public final class InvocationVariables {
 
     /**
      * Specifies the name of the environment variable identifying IP
-     * addresses of legitimate peers. The value is {@value}.
+     * addresses of legitimate peers. The variable is called {@value}.
      */
     public static final String WEB_SERVER_ADDRS = "FCGI_WEB_SERVER_ADDRS";
 
     private static final Pattern COMMA = Pattern.compile(",");
+
+    /**
+     * Holds lazily computed sets of Unix-domain principals, indexed by
+     * the variable name from which they are derived. Use only with
+     * {@link Map#computeIfAbsent(Object, java.util.function.Function)}
+     * to ensure consistency.
+     */
+    private static final Map<String,
+                             Supplier<Collection<PrincipalRequirement>>> permittedPrincipals =
+                                 new ConcurrentHashMap<>();
+
+    /**
+     * Get a set of principal requirements parsed from the
+     * comma-separated value of an environment variable, caching the
+     * value.
+     *
+     * @param varName the variable name
+     *
+     * @return the set of principal requirements
+     *
+     * @throws IllegalArgumentException if an item from which the
+     * requirements were to be generated did not parse as a requirement
+     */
+    private static Collection<PrincipalRequirement>
+        getAuthorizedPrincipals(String varName) {
+        Supplier<Collection<PrincipalRequirement>> result = permittedPrincipals
+            .computeIfAbsent(varName,
+                             InvocationVariables::parsePrincipalsEnvironmentResult);
+        return result.get();
+    }
+
+    /**
+     * Convert a comma-separated string into a set of legitimate
+     * principals. Each item is converted by
+     * {@link PrincipalRequirement#of(String)}.
+     *
+     * @param text the text to be converted
+     *
+     * @return the set of legitimate principals
+     *
+     * @throws IllegalArgumentException if an item did not parse as a
+     * principal requirement
+     */
+    private static Collection<PrincipalRequirement>
+        parsePrincipals(String text) {
+        if (text == null) return null;
+        Collection<PrincipalRequirement> result = new HashSet<>();
+        for (String item : COMMA.split(text)) {
+            PrincipalRequirement req = PrincipalRequirement.of(item);
+            result.add(req);
+        }
+        return Set.copyOf(result);
+    }
+
+    /**
+     * Read an environment variable, and parse its value as a
+     * comma-separated string of principal requirements.
+     *
+     * @param varName the variable name
+     *
+     * @return the set of principal requirements in the variable's value
+     *
+     * @throws IllegalArgumentException if an item did not parse as a
+     * principal requirement
+     *
+     * @see PrincipalRequirement
+     */
+    private static Collection<PrincipalRequirement>
+        parsePrincipalsEnvironment(String varName) {
+        String text = System.getenv(varName);
+        return parsePrincipals(text);
+    }
+
+    /**
+     * Get the set of legitimate principals from an environment
+     * variable, and package the result or an exception.
+     *
+     * @param varName the variable name
+     *
+     * @return the packaged result or exception
+     */
+    private static Supplier<Collection<PrincipalRequirement>>
+        parsePrincipalsEnvironmentResult(String varName) {
+        try {
+            Collection<PrincipalRequirement> value =
+                parsePrincipalsEnvironment(varName);
+            logger.info(() -> String.format("UNIX peers for %s detected as %s",
+                                            varName, value));
+            return () -> value;
+        } catch (IllegalArgumentException ex) {
+            return () -> {
+                throw ex;
+            };
+        }
+    }
+
+    /**
+     * Get the set of legitimate principals. This reads from the
+     * environment variable {@value #LEGIT_PEERS}. The result is cached,
+     * so only the first call will actually do anything.
+     *
+     * @return an unmodifiable set of legitimate principals; or
+     * {@code null} if the variable is not set
+     *
+     * @throws IllegalArgumentException if an element of the variable's
+     * value could not be parsed
+     */
+    public static Collection<PrincipalRequirement>
+        getAuthorizedStandalonePrincipals() {
+        return getAuthorizedPrincipals(LEGIT_PEERS);
+    }
 
     /**
      * Get the set of IP addresses of legitimate peers as a set of
@@ -86,17 +198,18 @@ public final class InvocationVariables {
      */
     public static Collection<InetAddress> getAuthorizedInetPeers()
         throws UnknownHostException {
-        return getPermittedPeers(WEB_SERVER_ADDRS);
+        return getAuthorizedInetPeersFromVariable(WEB_SERVER_ADDRS);
     }
 
     /**
      * Get the set of IP addresses of legitimate peers as a set of
      * structured data. This reads from the environment variable
-     * {@value #LEGIT_PEERS}, which is only to be used when operating in
-     * stand-alone mode. The result is cached, so only the first call
-     * will actually do anything. An exception in the first call is
-     * preserved for other calls, so its stack trace will not be
-     * correct.
+     * {@value #LEGIT_PEERS}, which is only to be used for the Internet
+     * domain when operating in stand-alone mode. (Use
+     * {@link #getAuthorizedInetPeers()} in forked mode.) The result is
+     * cached, so only the first call will actually do anything. An
+     * exception in the first call is preserved for other calls, so its
+     * stack trace will not be correct.
      * 
      * @return an unmodifiable set of IP addresses; or {@code null} if
      * the variable is not set
@@ -108,7 +221,7 @@ public final class InvocationVariables {
      */
     public static Collection<InetAddress> getAuthorizedStandaloneInetPeers()
         throws UnknownHostException {
-        return getPermittedPeers(LEGIT_PEERS);
+        return getAuthorizedInetPeersFromVariable(LEGIT_PEERS);
     }
 
     /**
@@ -209,8 +322,9 @@ public final class InvocationVariables {
      * were to be generated did not parse as an IP address, nor resolve
      * as a host name
      */
-    private static Collection<InetAddress> getPermittedPeers(String varName)
-        throws UnknownHostException {
+    private static Collection<InetAddress>
+        getAuthorizedInetPeersFromVariable(String varName)
+            throws UnknownHostException {
         PeersResult result = permittedPeers
             .computeIfAbsent(varName,
                              InvocationVariables::parsePeersEnvironmentResult);
@@ -219,39 +333,33 @@ public final class InvocationVariables {
 
     /**
      * Specifies the name of the environment variable identifying IP
-     * addresses of legitimate peers (Internet-domain) or names of
-     * legitimate users/groups (Unix-domain) when running in stand-alone
-     * mode. The value is {@value}.
+     * addresses of legitimate peers (Internet-domain, when running in
+     * stand-alone mode) or names of legitimate users/groups
+     * (Unix-domain). The variable is called {@value}.
+     * 
+     * <p>
+     * The value of the variable is a comma-separated list. For the
+     * Internet domain, each item is either an IP address or a hostname
+     * to be resolved as such. For the Unix domain, each item is of the
+     * form accepted by {@link PrincipalRequirement#of(String)}, i.e.,
+     * <samp><var>user</var></samp>, <samp>@<var>group</var></samp> or
+     * <samp><var>user</var>@<var>group</var></samp>.
      */
     public static final String LEGIT_PEERS = "FASTCGI4J_WEB_SERVER_ADDRS";
 
     /**
      * Specifies the name of the environment variable instructing the
      * application process to bind to an Internet-domain socket address.
-     * The value is {@value}.
+     * The variable is called {@value}.
      */
     public static final String INET_BIND_ADDR = "FASTCGI4J_INET_BIND";
 
     /**
      * Specifies the name of the environment variable instructing the
      * application process to bind to a Unix-domain socket address. The
-     * value is {@value}.
+     * variable is called {@value}.
      */
     public static final String UNIX_BIND_ADDR = "FASTCGI4J_UNIX_BIND";
-
-    private static final String DECIMAL_OCTET =
-        "(?:(?:[12][0-9]|[1-9])?[0-9]|25[0-5])";
-
-    private static final String DECIMAL_IPV4 =
-        "(?:" + DECIMAL_OCTET + "\\.){3}" + DECIMAL_OCTET;
-
-    private static final String HOST_NAME = "(?:)";
-
-    private static final String DOMAIN_NAME =
-        "(?:" + HOST_NAME + "\\.)*" + HOST_NAME;
-
-    private static final Pattern SOCK_ADDR =
-        Pattern.compile("^(\\[[0-9a-fA-F:]+\\]|[-0-9a-zA-Z.]+):([0-9]+)$");
 
     /**
      * Get the address that a stand-alone application process should

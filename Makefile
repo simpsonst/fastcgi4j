@@ -175,6 +175,8 @@ deps_tests += util
 
 jars += $(SELECTED_JARS)
 
+hidden_binaries.c += bindwrap
+bindwrap_obj += bindwrap
 
 # ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_UNIX))),)
 # hidden_libraries += main
@@ -184,7 +186,7 @@ jars += $(SELECTED_JARS)
 scripts += fastcgi4j
 
 SHAREDIR ?= $(PREFIX)/share/fastcgi4j
-# LIBEXECDIR ?= $(PREFIX)/libexec/fastcgi4j
+LIBEXECDIR ?= $(PREFIX)/libexec/fastcgi4j
 
 include binodeps.mk
 
@@ -235,7 +237,7 @@ VERSION: prepare-version
 # $(BINODEPS_OBJDIR)/native.lo: | tmp/tree-unix.compiled
 
 all:: VERSION BUILD installed-jars
-# all:: installed-libraries
+all:: installed-binaries
 installed-jars:: $(SELECTED_JARS:%=out/%.jar)
 installed-jars:: $(SELECTED_JARS:%=out/%-src.zip)
 
@@ -253,7 +255,7 @@ install-jar-%::
 install-jars:: $(SELECTED_JARS:%=install-jar-%)
 
 install:: install-jars install-scripts
-# install:: install-hidden-libraries
+install:: install-hidden-binaries
 
 tidy::
 	@$(PRINTF) 'Deleting trash\n'

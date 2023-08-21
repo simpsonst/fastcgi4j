@@ -52,11 +52,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 import jdk.net.ExtendedSocketOptions;
 import jdk.net.UnixDomainPrincipal;
 import uk.ac.lancs.fastcgi.proto.InvocationVariables;
+import uk.ac.lancs.fastcgi.proto.PrincipalRequirement;
 import uk.ac.lancs.fastcgi.transport.SocketChannelTransport;
 import uk.ac.lancs.fastcgi.transport.Transport;
 import uk.ac.lancs.fastcgi.transport.TransportConfigurationException;
@@ -80,134 +81,6 @@ import uk.ac.lancs.scc.jardeps.Service;
  */
 @Service(TransportFactory.class)
 public class StandaloneUnixTransportFactory implements TransportFactory {
-    private static final Pattern COMMA = Pattern.compile(",");
-
-    /**
-     * Holds a set of principal requirements, or the exception thrown
-     * when attempting to obtain them.
-     */
-    private interface PrincipalsResult {
-        /**
-         * Get the set of principal requirements.
-         * 
-         * @return the set of requirements
-         * 
-         * @throws IllegalArgumentException if an item from which the
-         * requirements were to be generated did not parse as a
-         * requirement
-         */
-        Collection<PrincipalRequirement> get();
-    }
-
-    /**
-     * Holds lazily computed sets of Unix-domain principals, indexed by
-     * the variable name from which they are derived. Use only with
-     * {@link Map#computeIfAbsent(Object, java.util.function.Function)}
-     * to ensure consistency.
-     */
-    private static final Map<String, PrincipalsResult> permittedPrincipals =
-        new ConcurrentHashMap<>();
-
-    /**
-     * Get a set of principal requirements parsed from the
-     * comma-separated value of an environment variable, caching the
-     * value.
-     *
-     * @param varName the variable name
-     *
-     * @return the set of principal requirements
-     *
-     * @throws IllegalArgumentException if an item from which the
-     * requirements were to be generated did not parse as a requirement
-     */
-    private static Collection<PrincipalRequirement>
-        getPermittedPrincipals(String varName) {
-        PrincipalsResult result = permittedPrincipals
-            .computeIfAbsent(varName,
-                             StandaloneUnixTransportFactory::parsePrincipalsEnvironmentResult);
-        return result.get();
-    }
-
-    /**
-     * Get the set of legitimate principals. This reads from the
-     * environment variable {@value #INET_SERVER_ADDRS}. The result is
-     * cached, so only the first call will actually do anything.
-     *
-     * @return an unmodifiable set of legitimate principals; or
-     * {@code null} if the variable is not set
-     *
-     * @throws IllegalArgumentException if an element of the variable's
-     * value could not be parsed
-     */
-    private static Collection<PrincipalRequirement>
-        getAuthorizedStandalonePrincipals() {
-        return getPermittedPrincipals(InvocationVariables.LEGIT_PEERS);
-    }
-
-    /**
-     * Convert a comma-separated string into a set of legitimate
-     * principals. Each item is converted by
-     * {@link PrincipalRequirement#of(String)}.
-     *
-     * @param text the text to be converted
-     *
-     * @return the set of legitimate principals
-     *
-     * @throws IllegalArgumentException if an item did not parse as a
-     * principal requirement
-     */
-    private static Collection<PrincipalRequirement>
-        parsePrincipals(String text) {
-        if (text == null) return null;
-        Collection<PrincipalRequirement> result = new HashSet<>();
-        for (String item : COMMA.split(text)) {
-            PrincipalRequirement req = PrincipalRequirement.of(item);
-            result.add(req);
-        }
-        return Set.copyOf(result);
-    }
-
-    /**
-     * Get the set of legitimate principals from an environment
-     * variable, and package the result or an exception.
-     *
-     * @param varName the variable name
-     *
-     * @return the packaged result or exception
-     */
-    private static PrincipalsResult
-        parsePrincipalsEnvironmentResult(String varName) {
-        try {
-            Collection<PrincipalRequirement> value =
-                parsePrincipalsEnvironment(varName);
-            logger.info(() -> String.format("UNIX peers for %s detected as %s",
-                                            varName, value));
-            return () -> value;
-        } catch (IllegalArgumentException ex) {
-            return () -> {
-                throw ex;
-            };
-        }
-    }
-
-    /**
-     * Read an environment variable, and parse its value as a
-     * comma-separated string of principal requirements.
-     *
-     * @param varName the variable name
-     *
-     * @return the set of principal requirements in the variable's value
-     *
-     * @throws IllegalArgumentException if an item did not parse as a
-     * principal requirement
-     *
-     * @see PrincipalRequirement
-     */
-    private static Collection<PrincipalRequirement>
-        parsePrincipalsEnvironment(String varName) {
-        String text = System.getenv(varName);
-        return parsePrincipals(text);
-    }
 
     @Override
     public Transport getTransport() {
@@ -217,7 +90,7 @@ public class StandaloneUnixTransportFactory implements TransportFactory {
 
             /* Determine who is allowed to connect. */
             Collection<PrincipalRequirement> allowedPeers =
-                getAuthorizedStandalonePrincipals();
+                InvocationVariables.getAuthorizedStandalonePrincipals();
             Predicate<UnixDomainPrincipal> peerOkay =
                 allowedPeers == null ? principal -> true : principal -> {
                     return allowedPeers.stream()

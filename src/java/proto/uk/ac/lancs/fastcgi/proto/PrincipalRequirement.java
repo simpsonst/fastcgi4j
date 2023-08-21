@@ -36,7 +36,7 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.transport.unix;
+package uk.ac.lancs.fastcgi.proto;
 
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -48,7 +48,7 @@ import jdk.net.UnixDomainPrincipal;
  *
  * @author simpsons
  */
-final class PrincipalRequirement {
+public final class PrincipalRequirement {
     static final String PRINCIPAL_TEXT = "^([^@]*)(?:@(.*))?$";
 
     private static final Pattern PRINCIPAL =

@@ -63,6 +63,7 @@ unset bindaddr
 peers=()
 unset seek
 unset demo
+unset wrap
 
 function add_library () {
     local stem="$1"
@@ -131,6 +132,11 @@ Usage: $SELF [options] [handler|--] [args...]
 	Add PEER to set of permitted peers in stand-alone mode.  For
 	Internet-domain, PEER is a hostname or IP address.  For
 	Unix-domain, PEER is USER, @GROUP, or USER@GROUP.
+--wrap
+	With --bind, open the socket as FD 0 and bind it before
+	invoking the command, which runs as if in forked mode.  This
+	saves starting up a JVM only to find the address is already in
+	use.
 -f FILE
 	Load properties in FILE, and push onto stack.
 +f
@@ -170,6 +176,10 @@ while [ $# -gt 0 ] ; do
 
 	(-n)
 	    dryrun=yes
+	    ;;
+
+	(--wrap)
+	    wrap=yes
 	    ;;
 
 	(--bind=*)
@@ -351,8 +361,12 @@ if [ -n "$dryrun" ] ; then
     # printf 'Lib path:'
     # printf ' %s' "${LD_LIBRARY_PATH[@]}"
     # printf '\n'
-    if [ -n "$bindaddr" ] ; then
-	printf 'Bind address: %s\n' "$FASTCGI4J_INET_BIND"
+    if [ -n "$FASTCGI4J_INET_BIND" ] ; then
+	printf 'Bind address (INET): %s\n' "$FASTCGI4J_INET_BIND"
+	printf 'Stand-alone peers: %s\n' "$FASTCGI4J_WEB_SERVER_ADDRS"
+    fi
+    if [ -n "$FASTCGI4J_UNIX_BIND" ] ; then
+	printf 'Bind address (UNIX): %s\n' "$FASTCGI4J_UNIX_BIND"
 	printf 'Stand-alone peers: %s\n' "$FASTCGI4J_WEB_SERVER_ADDRS"
     fi
     printf 'Forked peers: %s\n' "$FCGI_WEB_SERVER_ADDRS"
@@ -370,6 +384,21 @@ CLASSPATH="${CLASSPATH:1}"
 CMD=("$JVM" "${JVMARGS[@]}"
      --class-path "${CLASSPATH}"
      uk.ac.lancs.fastcgi.app.FastCGIApplication "${APPARGS[@]}" "$@")
+
+if [ -n "$wrap" ] ; then
+    if [ -n "$FASTCGI4J_INET_BIND" ] &&
+	   [ -n "$FASTCGI4J_WEB_SERVER_ADDRS" ] ; then
+	export FCGI_WEB_SERVER_ADDRS="$FASTCGI4J_WEB_SERVER_ADDRS"
+	unset FASTCGI4J_WEB_SERVER_ADDRS
+    fi
+    prog="$(which "${CMD[0]}")"
+    if [ -z "$prog" ] ; then
+	printf >&2 'Could not find %s\n' "${CMD[0]}"
+	exit 1
+    fi
+    CMD[0]="$prog"
+    CMD=("$HERE/libexec/fastcgi4j/bindwrap" "${CMD[@]}")
+fi
 
 if [ -n "$dryrun" ] ; then
     printf 'Command:'

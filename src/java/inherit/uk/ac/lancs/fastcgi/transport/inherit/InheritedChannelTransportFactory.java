@@ -45,7 +45,10 @@ import java.nio.channels.Channel;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Collection;
+import java.util.function.Predicate;
 import java.util.logging.Logger;
+import jdk.net.ExtendedSocketOptions;
+import jdk.net.UnixDomainPrincipal;
 import uk.ac.lancs.fastcgi.proto.InvocationVariables;
 import uk.ac.lancs.fastcgi.transport.SocketChannelTransport;
 import uk.ac.lancs.fastcgi.transport.Transport;
@@ -61,6 +64,21 @@ import uk.ac.lancs.scc.jardeps.Service;
  * {@value #INET_DESCRIPTION_PREFIX} plus the peer address for an
  * Internet-domain socket.
  * 
+ * <p>
+ * In the Internet domain, {@value InvocationVariables#WEB_SERVER_ADDRS}
+ * is consulted via {@link InvocationVariables#getAuthorizedInetPeers()}
+ * to get a list of IP addresses that a client may connect from.
+ * 
+ * <p>
+ * In the Unix domain, {@value InvocationVariables#LEGIT_PEERS} is
+ * consulted via
+ * {@link InvocationVariables#getAuthorizedStandalonePrincipals()} to
+ * get a list of Unix-domain principals that may connect as clients.
+ * This non-standard variable is consulted, as there shouldn't be a peer
+ * list for Unix-domain sockets. However, this allows for a stand-alone
+ * application to inherit from an initiating process which creates the
+ * socket itself, and fails early if the bind address is already in use.
+ * 
  * @author simpsons
  */
 @Service(TransportFactory.class)
@@ -73,9 +91,26 @@ public class InheritedChannelTransportFactory implements TransportFactory {
             if (ic instanceof ServerSocketChannel ssc) {
                 SocketAddress addr = ssc.getLocalAddress();
                 if (addr instanceof UnixDomainSocketAddress) {
+                    final var permittedCallers =
+                        InvocationVariables.getAuthorizedStandalonePrincipals();
+                    Predicate<UnixDomainPrincipal> peerOkay =
+                        permittedCallers == null ? principal -> true :
+                            principal -> {
+                                return permittedCallers.stream()
+                                    .anyMatch(t -> t.test(principal));
+                            };
                     return new SocketChannelTransport(ssc) {
                         @Override
-                        protected String describe(SocketChannel sock) {
+                        protected String describe(SocketChannel sock)
+                            throws IOException {
+                            UnixDomainPrincipal principal = sock
+                                .getOption(ExtendedSocketOptions.SO_PEERCRED);
+                            if (!peerOkay.test(principal)) {
+                                logger.warning(() -> String
+                                    .format("rejected connection from %s",
+                                            principal));
+                                return null;
+                            }
                             String result = UNIX_DESCRIPTION;
                             logger.info(() -> String
                                 .format("accepted connection to %s as %s", ssc,
