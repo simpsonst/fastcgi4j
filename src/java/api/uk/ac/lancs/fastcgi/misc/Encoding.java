@@ -57,9 +57,10 @@ interface Encoding {
     /**
      * Wrap an encoder around a stream.
      * 
-     * @param out the existing (unencoded) stream
+     * @param out the stream that encoded data will be written to
      * 
-     * @return the new (encoded) stream
+     * @return a stream that unencoded data can be written to, causing
+     * it to be encoded and written to the provided stream
      * 
      * @throws IOException if an I/O error occurs in creating the new
      * stream
