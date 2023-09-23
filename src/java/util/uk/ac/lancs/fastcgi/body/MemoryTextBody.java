@@ -55,6 +55,12 @@ final class MemoryTextBody extends TransientMemoryElement implements TextBody {
      * Store an array as a stream in memory.
      * 
      * @param data the data to store
+     * 
+     * @param cleaner an object manager against which this object and
+     * its clean-up state will be registered
+     * 
+     * @param usage a counter to be incremented now by the size, and
+     * decremented by the same amount upon garbage collection
      */
     public MemoryTextBody(Cleaner cleaner, char[] data, AtomicLong usage) {
         super(cleaner, data.length * 2, usage);

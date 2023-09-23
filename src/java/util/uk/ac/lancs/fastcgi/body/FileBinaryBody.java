@@ -59,6 +59,12 @@ final class FileBinaryBody extends TransientFileElement implements BinaryBody {
      * @param path the path to the file
      * 
      * @param size the size of the file
+     * 
+     * @param cleaner an object manager against which this object and
+     * its clean-up state will be registered
+     * 
+     * @param usage a counter to be incremented now by the size, and
+     * decremented by the same amount upon garbage collection
      */
     public FileBinaryBody(Cleaner cleaner, Path path, long size,
                           AtomicLong usage) {

@@ -56,6 +56,12 @@ final class MemoryBinaryBody extends TransientMemoryElement
      * Store an array as a stream in memory.
      * 
      * @param data the data to store
+     * 
+     * @param cleaner an object manager against which this object and
+     * its clean-up state will be registered
+     * 
+     * @param usage a counter to be incremented now by the size, and
+     * decremented by the same amount upon garbage collection
      */
     public MemoryBinaryBody(Cleaner cleaner, byte[] data, AtomicLong usage) {
         super(cleaner, data.length, usage);

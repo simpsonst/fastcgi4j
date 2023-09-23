@@ -43,7 +43,10 @@ import java.io.InputStream;
 import java.io.Reader;
 
 /**
- * Stores bodies for later retrieval.
+ * Stores bodies for later retrieval. A morgue can store binary bodies
+ * ({@code byte} sequences) or text bodies ({@code char} sequences).
+ * Discarding the references to the bodies is sufficient to discard any
+ * underlying resources allocated to represent them.
  *
  * @author simpsons
  */

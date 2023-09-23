@@ -81,7 +81,8 @@ abstract class TransientMemoryElement {
     /**
      * Account for memory being released.
      * 
-     * @param cleaner an object manager
+     * @param cleaner an object manager against which this object and
+     * its clean-up state will be registered
      * 
      * @param size the number of bytes allocated
      * 

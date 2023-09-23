@@ -68,6 +68,12 @@ final class FileTextBody extends TransientFileElement implements TextBody {
      * @param byteSize the size of the file in bytes
      * 
      * @param charSize the number of characters in the file
+     * 
+     * @param cleaner an object manager against which this object and
+     * its clean-up state will be registered
+     * 
+     * @param usage a counter to be incremented now by the size, and
+     * decremented by the same amount upon garbage collection
      */
     public FileTextBody(Cleaner cleaner, Path path, Charset charset,
                         long byteSize, long charSize, AtomicLong usage) {
