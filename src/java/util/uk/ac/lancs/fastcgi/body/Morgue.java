@@ -38,6 +38,8 @@
 
 package uk.ac.lancs.fastcgi.body;
 
+import java.io.ByteArrayInputStream;
+import java.io.CharArrayReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -64,6 +66,50 @@ public interface Morgue {
     BinaryBody store(InputStream data) throws IOException;
 
     /**
+     * Store part of a byte array.
+     * 
+     * @param buf the array containing the byte sequence to be stored
+     * 
+     * @param offset the offset into the array of the first byte to be
+     * stored
+     * 
+     * @param length the number of bytes to be stored
+     * 
+     * @return a means to recover the data
+     * 
+     * @throws IOException if an I/O error occurs in storing the
+     * sequence
+     * 
+     * @default This implementation wraps a {@link ByteArrayInputStream}
+     * around the supplied array, and passes it to
+     * {@link #store(InputStream)}, returning the result.
+     */
+    default BinaryBody store(byte[] buf, int offset, int length)
+        throws IOException {
+        try (var in = new ByteArrayInputStream(buf, offset, length)) {
+            return this.store(in);
+        }
+    }
+
+    /**
+     * Store a byte array.
+     * 
+     * @param buf the array containing the byte sequence to be stored
+     * 
+     * @return a means to recover the data
+     * 
+     * @throws IOException if an I/O error occurs in storing the
+     * sequence
+     * 
+     * @default This implementation calls
+     * <code>{@linkplain #store(byte[], int, int)}(buf, 0, buf.length)</code>,
+     * returning the result.
+     */
+    default BinaryBody store(byte[] buf) throws IOException {
+        return this.store(buf, 0, buf.length);
+    }
+
+    /**
      * Store a character stream. The stream is not closed after use. The
      * call only returns after storing the entire stream.
      * 
@@ -74,4 +120,66 @@ public interface Morgue {
      * @throws IOException if an I/O error occurs in storing the stream
      */
     TextBody store(Reader data) throws IOException;
+
+    /**
+     * Store part of a character array.
+     * 
+     * @param buf the array containing the character sequence to be
+     * stored
+     * 
+     * @param offset the offset into the array of the first character to
+     * be stored
+     * 
+     * @param length the number of character to be stored
+     * 
+     * @return a means to recover the data
+     * 
+     * @throws IOException if an I/O error occurs in storing the
+     * sequence
+     * 
+     * @default This implementation wraps a {@link CharArrayInputStream}
+     * around the supplied array, and passes it to
+     * {@link #store(Reader)}, returning the result.
+     */
+    default TextBody store(char[] buf, int offset, int length)
+        throws IOException {
+        try (var in = new CharArrayReader(buf, offset, length)) {
+            return this.store(in);
+        }
+    }
+
+    /**
+     * Store a character array.
+     * 
+     * @param buf the array containing the character sequence to be
+     * stored
+     * 
+     * @return a means to recover the data
+     * 
+     * @throws IOException if an I/O error occurs in storing the
+     * sequence
+     * 
+     * @default This implementation calls
+     * <code>{@linkplain #store(char[], int, int)}(buf, 0, buf.length)</code>,
+     * returning the result.
+     */
+    default TextBody store(char[] buf) throws IOException {
+        return this.store(buf, 0, buf.length);
+    }
+
+    /**
+     * Store a character sequence.
+     * 
+     * @param data the source sequence
+     * 
+     * @return a means to recover the data
+     * 
+     * @throws IOException if an I/O error occurs in storing the
+     * sequence
+     */
+    default TextBody store(CharSequence data) throws IOException {
+        try (var in = new CharSequenceReader(data)) {
+            return this.store(in);
+        }
+    }
 }

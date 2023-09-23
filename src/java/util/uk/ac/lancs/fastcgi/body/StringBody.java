@@ -52,10 +52,11 @@ public final class StringBody implements TextBody {
     /**
      * Create a string body.
      * 
-     * @param content the body contents
+     * @param content the body contents, to be converted to a string for
+     * storage
      */
-    public StringBody(String content) {
-        this.content = content;
+    public StringBody(CharSequence content) {
+        this.content = content.toString();
     }
 
     @Override
