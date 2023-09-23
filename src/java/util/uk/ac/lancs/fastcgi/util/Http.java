@@ -330,5 +330,21 @@ public final class Http {
         };
     }
 
+    /**
+     * Convert an HTTP header field name to a CGI environment variable
+     * name. This involves converting lower-case characters to
+     * upper-case, replacing U+002D HYPHEN-MINUS with U+005F LOW LINE,
+     * and prefixing with <samp>HTTP_</samp>. For example, the HTTP
+     * field <samp>Accept-Encoding</samp> is accessible in a CGI context
+     * as <samp>HTTP_ACCEPT_ENCODING</samp>.
+     * 
+     * @param fieldName the field name
+     * 
+     * @return the name of the equivalent CGI variable
+     */
+    public static String fieldNameAsCGI(CharSequence fieldName) {
+        return "HTTP_" + fieldName.toString().toUpperCase().replace("-", "_");
+    }
+
     private Http() {}
 }

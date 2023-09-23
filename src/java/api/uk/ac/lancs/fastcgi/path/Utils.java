@@ -50,6 +50,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import uk.ac.lancs.fastcgi.util.Http;
 
 /**
  * Provides static methods and regular expressions for handling paths.
@@ -253,12 +254,14 @@ class Utils {
         return output;
     }
 
+    static final String HOST_VAR_NAME = Http.fieldNameAsCGI("Host");
+
     /**
      * Append the host and port based on protocol.
      *
      * <p>
      * The protocol name <samp>HTTP</samp> is recognized, and the value
-     * of <samp>HTTP_HOST</samp> is appended if present.
+     * of {@value #HOST_VAR_NAME} is appended if present.
      *
      * @param result the string to append to
      *
@@ -274,7 +277,7 @@ class Utils {
                               Map<? super String, ? extends String> params) {
         switch (protocol) {
         case "HTTP" -> {
-            String httpHost = params.get("HTTP_HOST");
+            String httpHost = params.get(HOST_VAR_NAME);
             if (httpHost != null) {
                 result.append(httpHost);
                 return true;

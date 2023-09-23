@@ -394,7 +394,7 @@ public final class PathConfiguration<I> {
         params.put("SERVER_PROTOCOL", "HTTP/1.1");
         params.put("SERVER_NAME", "backend.local");
         params.put("SERVER_PORT", "3000");
-        params.put("HTTP_HOST", "backend.local:3000");
+        params.put(Utils.HOST_VAR_NAME, "backend.local:3000");
         params.put("GATEWAY_INTERFACE", "CGI/1.1");
         PathContext<String> pathCtxt = pathConfig.recognize(params);
         Navigator navigator = pathCtxt.navigator();

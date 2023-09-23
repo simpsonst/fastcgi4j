@@ -93,6 +93,9 @@ public final class SessionAugment {
         ENCODINGS.entrySet().stream().collect(Collectors
             .toMap(Map.Entry::getKey, e -> e.getValue().getValue()));
 
+    private static final String ACCEPT_ENCODING_VAR_NAME =
+        Http.fieldNameAsCGI("Accept-Encoding");
+
     /**
      * Get the client's encoding preference. This is simply an
      * application of {@link #getAtomPreference(CharSequence)} to the
@@ -102,7 +105,7 @@ public final class SessionAugment {
      */
     public Map<String, Float> getEncodingPreference() {
         return getAtomPreference(session.parameters()
-            .get("HTTP_ACCEPT_ENCODING"));
+            .get(ACCEPT_ENCODING_VAR_NAME));
     }
 
     /**
@@ -151,6 +154,8 @@ public final class SessionAugment {
         return Map.copyOf(result);
     }
 
+    private static final String ACCEPT_VAR_NAME = Http.fieldNameAsCGI("Accept");
+
     /**
      * Get the client's media-type preferences. This simply passes the
      * <samp>Accept</samp> request header field to
@@ -159,7 +164,8 @@ public final class SessionAugment {
      * @return an immutable of the client's media-type preferences
      */
     public Map<MediaGroup, Float> getMediaTypePreference() {
-        return getMediaTypePreference(session.parameters().get("HTTP_ACCEPT"));
+        return getMediaTypePreference(session.parameters()
+            .get(ACCEPT_VAR_NAME));
     }
 
     /**
@@ -368,9 +374,9 @@ public final class SessionAugment {
 
     /**
      * Tell the client that the response has no content. The status is
-     * set to {@link Http#NO_CONTENT}, and the basic session's
-     * output stream is closed. Several content-related header fields
-     * are also cleared.
+     * set to {@link Http#NO_CONTENT}, and the basic session's output
+     * stream is closed. Several content-related header fields are also
+     * cleared.
      * 
      * @throws IOException if an I/O error occurs opening or closing the
      * stream
