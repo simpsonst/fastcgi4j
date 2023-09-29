@@ -173,16 +173,20 @@ public final class FormSubmission {
         }
     }
 
+    private static final String QUERY_ENV = "QUERY_STRING";
+
+    private static final String TYPE_VAR = "CONTENT_TYPE";
+
     /**
      * Load form data from the session. Three sources are checked:
      * 
      * <ul>
      * 
-     * <li>If the request method is <samp>GET</samp> or
-     * <samp>HEAD</samp>, the <samp>QUERY_STRING</samp> parameter is
-     * parsed using {@link #fromQuery(CharSequence, Charset)}.</li>
+     * <li>The {@value #QUERY_ENV} parameter is parsed using
+     * {@link #fromQuery(CharSequence, Charset)}.</li>
      * 
-     * <li>Otherwise, <samp>CONTENT_TYPE</samp> is checked for
+     * <li>If the request method is neither <samp>GET</samp> nor
+     * <samp>HEAD</samp>, {@value #TYPE_VAR} is checked for
      * <samp>application/x-www-form-urlencoded</samp>. If set, the
      * request body is parsed as a query string.</li>
      * 
@@ -208,7 +212,7 @@ public final class FormSubmission {
                                              Charset assumedCharset,
                                              MessageParser parser)
         throws IOException {
-        final String qs = session.parameters().get("QUERY_STRING");
+        final String qs = session.parameters().get(QUERY_ENV);
         final List<Map.Entry<? extends String, ? extends Message>> list =
             new ArrayList<>();
         collectFieldsFromQuery(list, qs, assumedCharset);
@@ -223,7 +227,7 @@ public final class FormSubmission {
         default:
             /* Get the media type of the content. */
             final MediaType mt =
-                MediaType.fromString(session.parameters().get("CONTENT_TYPE"));
+                MediaType.fromString(session.parameters().get(TYPE_VAR));
 
             if (mt.is("application", "x-www-form-urlencoded")) {
                 /* The message body is a simple query string. */
