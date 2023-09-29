@@ -47,7 +47,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import uk.ac.lancs.fastcgi.context.RequestableSession;
@@ -120,45 +119,6 @@ public final class FormSubmission {
         }
     }
 
-    private static final Pattern PCENC = Pattern.compile("%([0-9A-F]{2})+");
-
-    private static int hexval(char c) {
-        return switch (c) {
-        case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> c - '0';
-        case 'A', 'B', 'C', 'D', 'E', 'F' -> c - 'A';
-        default -> -1;
-        };
-    }
-
-    private static final class PercentDecoder {
-        private final Charset charset;
-
-        private byte[] buf = new byte[10];
-
-        public PercentDecoder(Charset charset) {
-            this.charset = charset;
-        }
-
-        public String decode(CharSequence input) {
-            StringBuilder result = new StringBuilder();
-            int last = 0;
-            for (Matcher m = PCENC.matcher(input); m.find();) {
-                result.append(input.subSequence(last, m.start()));
-                final int slen = (m.end() - m.start()) / 3;
-                if (slen > buf.length) {
-                    final int nlen = slen + 12;
-                    buf = new byte[nlen];
-                }
-                for (int j = 0, i = m.start(); i < m.end(); j++, i += 3)
-                    buf[j] = (byte) ((hexval(input.charAt(i + 1)) << 4) |
-                        hexval(input.charAt(i + 2)));
-                result.append(new String(buf, 0, slen, charset));
-            }
-            result.append(input.subSequence(last, input.length()));
-            return result.toString();
-        }
-    }
-
     private static final Pattern AMPS = Pattern.compile("&");
 
     /**
@@ -205,8 +165,9 @@ public final class FormSubmission {
                 /* TODO: Maybe log this? */
                 continue;
             }
-            String name = dec.decode(bit.subSequence(0, eq));
-            String value = dec.decode(bit.subSequence(eq + 1, bit.length()));
+            String name = dec.decodeParameter(bit.subSequence(0, eq));
+            String value =
+                dec.decodeParameter(bit.subSequence(eq + 1, bit.length()));
             StringMessage msg = new StringMessage(value);
             dest.add(Map.entry(name, msg));
         }
