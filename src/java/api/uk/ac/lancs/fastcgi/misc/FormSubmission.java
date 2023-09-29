@@ -195,18 +195,24 @@ public final class FormSubmission {
      * 
      * </ul>
      * 
+     * <p>
+     * Parameters obtained from different sources (the query string and
+     * the message body) are merged.
+     * 
      * @param session the request session providing the method, query
      * string and request body
      * 
      * @param assumedCharset the character encoding assumed to be used
      * by the client in forming plain-text field values
      * 
-     * @param morgue a place to store bodies
+     * @param parser a means to parse the request body as a multipart
+     * message, if necessary
      * 
      * @return the submitted form field values; or {@code null} if no
      * form delivery mechanism was recognized
      * 
-     * @throws IOException
+     * @throws IOException if an I/O error occurs in reading the request
+     * body or storing any bodies
      */
     public static FormSubmission fromSession(RequestableSession session,
                                              Charset assumedCharset,
