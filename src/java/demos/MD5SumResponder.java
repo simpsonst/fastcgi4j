@@ -133,9 +133,9 @@ public class MD5SumResponder implements Responder {
             }
         } else if (false) {
             body = null;
-            MessageParser parser = new MessageParser(morgue);
-            submission = FormSubmission
-                .fromSession(session, StandardCharsets.UTF_8, parser);
+            submission =
+                FormSubmission.fromSession(session, StandardCharsets.UTF_8,
+                                           () -> new MessageParser(morgue));
         } else {
             body = null;
             submission = null;
