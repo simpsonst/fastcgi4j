@@ -47,7 +47,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import uk.ac.lancs.fastcgi.context.RequestableSession;
@@ -215,10 +214,10 @@ public final class FormSubmission {
      * @throws IOException if an I/O error occurs in reading the request
      * body or storing any bodies
      */
-    public static FormSubmission
-        fromSession(RequestableSession session, Charset assumedCharset,
-                    Supplier<? extends MessageParser> parser)
-            throws IOException {
+    public static FormSubmission fromSession(RequestableSession session,
+                                             Charset assumedCharset,
+                                             MessageParser parser)
+        throws IOException {
         final String qs = session.parameters().get(QUERY_ENV);
         final List<Map.Entry<? extends String, ? extends Message>> list =
             new ArrayList<>();
@@ -249,7 +248,7 @@ public final class FormSubmission {
                 collectFieldsFromQuery(list, text, assumedCharset);
             } else if (mt.isMultipart()) {
                 final String boundary = mt.parameter("boundary");
-                List<Message> parts = parser.get()
+                List<Message> parts = parser
                     .parseMultipartBody(session.in(), boundary, assumedCharset);
                 collectFromMultipart(list, parts);
             }
