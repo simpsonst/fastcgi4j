@@ -44,6 +44,8 @@ import uk.ac.lancs.fastcgi.mime.MediaGroup;
 import uk.ac.lancs.fastcgi.mime.MediaType;
 
 /**
+ * Provides procedures for negotiating content type, character encoding,
+ * locale, compression, etc.
  *
  * @author simpsons
  */
