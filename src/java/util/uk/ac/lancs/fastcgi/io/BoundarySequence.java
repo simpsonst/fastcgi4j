@@ -273,7 +273,7 @@ public final class BoundarySequence implements Iterator<InputStream> {
                 if (got < 0) {
                     if (false) System.err.printf("Closing base%n");
                     baseEnded = true;
-                    base.close();
+                    if (closeAfter) base.close();
                 } else {
                     lim += got;
                     rem -= got;
