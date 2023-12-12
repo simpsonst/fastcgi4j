@@ -52,9 +52,9 @@ class Base64DecodingInputStream extends FilterInputStream {
 
     private final byte[] buf = new byte[1024];
 
-    private int out = 0;
+    private int bytesOut = 0;
 
-    private int in = 0;
+    private int bytesIn = 0;
 
     private boolean receivedEnd = false;
 
@@ -87,23 +87,23 @@ class Base64DecodingInputStream extends FilterInputStream {
     @Override
     public int available() throws IOException {
         checkClosed();
-        return out - in + super.available() * 3 / 4;
+        return bytesOut - bytesIn + super.available() * 3 / 4;
     }
 
     private boolean populate() throws IOException {
-        if (out < in) return true;
+        if (bytesOut < bytesIn) return true;
         if (receivedEnd) return false;
-        assert out == in;
-        out = in = 0;
+        assert bytesOut == bytesIn;
+        bytesOut = bytesIn = 0;
         do {
-            int got = super.read(buf, in, buf.length - in);
+            int got = super.read(buf, bytesIn, buf.length - bytesIn);
             if (got < 0) {
                 receivedEnd = true;
                 return false;
             }
-            in += got;
-        } while (out == in);
-        assert out == 0;
+            bytesIn += got;
+        } while (bytesOut == bytesIn);
+        assert bytesOut == 0;
         return true;
     }
 
@@ -169,8 +169,8 @@ class Base64DecodingInputStream extends FilterInputStream {
     private void decode() {
         /* Keep going, as long as we have room in our int buffer
          * 'value', and we have encoded hextets to fill it with. */
-        while (width < 32 - 6 && out < in) {
-            int d = Base64.decode(buf[out++]);
+        while (width < 32 - 6 && bytesOut < bytesIn) {
+            int d = Base64.decode(buf[bytesOut++]);
             if (d >= 0) {
                 /* The byte corresponds to a legitimate hextet. Push it
                  * in as the lower 6 bits. */
