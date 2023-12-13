@@ -43,6 +43,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.logging.Logger;
 
 /**
  * Splits an input stream into parts separated by certain boundaries.
@@ -242,8 +243,8 @@ public final class BoundarySequence implements Iterator<InputStream> {
                 if (start > 0) {
                     /* Try to compact the buffer. Move the active part
                      * to the start. */
-                    if (false) System.err.printf("Compacting: %d, %d, %d, %d%n",
-                                                 start, cand, candEnd, lim);
+                    logger.finest(() -> "Compacting: %d, %d, %d, %d"
+                        .formatted(start, cand, candEnd, lim));
                     lim -= start;
                     System.arraycopy(buf, start, buf, 0, lim);
                     cand -= start;
@@ -252,9 +253,8 @@ public final class BoundarySequence implements Iterator<InputStream> {
                 } else {
                     /* We need a bigger boat! Re-allocate. */
                     int newSize = buf.length + buf.length / 2 + 1;
-                    if (false) System.err
-                        .printf("Re-allocating: %d, %d, %d, %d -> %d%n", start,
-                                cand, candEnd, lim, newSize);
+                    logger.finest(() -> "Re-allocating: %d, %d, %d, %d -> %d"
+                        .formatted(start, cand, candEnd, lim, newSize));
                     byte[] buf = new byte[newSize];
                     lim -= start;
                     System.arraycopy(this.buf, start, buf, 0, lim);
@@ -267,19 +267,19 @@ public final class BoundarySequence implements Iterator<InputStream> {
             rem = buf.length - lim;
             assert rem > 0;
             do {
-                if (false) System.err.printf("Reading %d: %d, %d, %d, %d%n",
-                                             rem, start, cand, candEnd, lim);
+                final var frem = rem;
+                logger.finest(() -> "Reading %d: %d, %d, %d, %d"
+                    .formatted(frem, start, cand, candEnd, lim));
                 int got = base.read(buf, lim, rem);
                 if (got < 0) {
-                    if (false) System.err.printf("Closing base%n");
+                    if (false) System.err.printf("Closing base");
                     baseEnded = true;
                     if (closeAfter) base.close();
                 } else {
                     lim += got;
                     rem -= got;
-                    if (false)
-                        System.err.printf("Got %d: %d, %d, %d, %d%n", got,
-                                          start, cand, candEnd, lim);
+                    logger.finest(() -> "Got %d: %d, %d, %d, %d"
+                        .formatted(got, start, cand, candEnd, lim));
                 }
             } while (rem > 0 && !baseEnded);
             recognize();
@@ -311,8 +311,8 @@ public final class BoundarySequence implements Iterator<InputStream> {
             } else {
                 go = false;
             }
-            if (false) System.err.printf("Recognized %d: %d, %d, %d, %d%n", rc,
-                                         start, cand, candEnd, lim);
+            logger.finest(() -> "Recognized %d: %d, %d, %d, %d"
+                .formatted(rc, start, cand, candEnd, lim));
         }
     }
 
@@ -332,13 +332,13 @@ public final class BoundarySequence implements Iterator<InputStream> {
 
         @Override
         public void close() throws IOException {
-            if (false) System.err.printf("Closing: %d, %d, %d, %d%n", start,
-                                         cand, candEnd, lim);
+            logger.finest(() -> "Closing: %d, %d, %d, %d"
+                .formatted(start, cand, candEnd, lim));
             /* Discard remaining data. */
             while (populate())
                 start = cand;
-            if (false) System.err.printf("Discarded: %d, %d, %d, %d%n", start,
-                                         cand, candEnd, lim);
+            logger.finest(() -> "Discarded: %d, %d, %d, %d"
+                .formatted(start, cand, candEnd, lim));
 
             /* Consume the terminator if present. */
             assert start == cand;
@@ -347,8 +347,8 @@ public final class BoundarySequence implements Iterator<InputStream> {
 
             /* Allow another part to proceed. */
             drop();
-            if (false) System.err.printf("Passed on: %d, %d, %d, %d%n", start,
-                                         cand, candEnd, lim);
+            logger.finest(() -> "Passed on: %d, %d, %d, %d"
+                .formatted(start, cand, candEnd, lim));
         }
 
         @Override
@@ -434,4 +434,7 @@ public final class BoundarySequence implements Iterator<InputStream> {
             throw new IllegalStateException("current stream in progress");
         return moreParts();
     }
+
+    private static final Logger logger =
+        Logger.getLogger(BoundarySequence.class.getPackageName());
 }
