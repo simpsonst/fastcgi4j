@@ -146,17 +146,7 @@ public final class MessageParser {
              * a text message. */
             Reader cin = new InputStreamReader(in, cs);
             TextBody body = morgue.store(cin);
-            return new TextMessage() {
-                @Override
-                public TextBody textBody() {
-                    return body;
-                }
-
-                @Override
-                public Header header() {
-                    return altHeader;
-                }
-            };
+            return TextMessage.of(altHeader, body);
         } else if (contentType.isMultipart()) {
             /* Extract the boundary, and remove the parameter. */
             String boundary = contentType.parameter("boundary");
@@ -185,31 +175,23 @@ public final class MessageParser {
              * checking media type. */
             Header altHeader = headerMod.apply();
             BinaryBody body = morgue.store(in);
-            return new BinaryMessage() {
-                @Override
-                public BinaryBody body() {
-                    return body;
-                }
-
-                @Override
-                public Header header() {
-                    return altHeader;
-                }
-            };
+            return BinaryMessage.of(altHeader, body);
         }
     }
 
     /**
      * Store a MIME multipart message body.
      * 
-     * @param in the multipart body as a byte stream
+     * @param in the multipart body as a byte stream, which is not
+     * closed after use
      * 
      * @param boundary the boundary separating the parts
      * 
      * @param assumedCharset the character encoding assumed for text
      * messages when unspecified
      * 
-     * @return a sequence of messages allowing retrieval of the parts
+     * @return an immutable sequence of messages allowing retrieval of
+     * the parts
      * 
      * @throws IOException if an I/O error occurs in storing the message
      * body

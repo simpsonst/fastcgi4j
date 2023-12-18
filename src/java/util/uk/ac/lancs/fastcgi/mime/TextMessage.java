@@ -53,9 +53,16 @@ public interface TextMessage extends Message {
      */
     TextBody textBody();
 
-    @Override
-    default TextMessage replaceHeader(Header newHeader) {
-        TextBody body = textBody();
+    /**
+     * Create a text message from existing parts.
+     * 
+     * @param body the message body
+     * 
+     * @param header the message header
+     * 
+     * @return the composed message
+     */
+    static TextMessage of(Header header, TextBody body) {
         return new TextMessage() {
             @Override
             public TextBody textBody() {
@@ -64,8 +71,13 @@ public interface TextMessage extends Message {
 
             @Override
             public Header header() {
-                return newHeader;
+                return header;
             }
         };
+    }
+
+    @Override
+    default TextMessage replaceHeader(Header newHeader) {
+        return of(newHeader, textBody());
     }
 }

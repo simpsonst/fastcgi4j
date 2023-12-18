@@ -53,6 +53,30 @@ public interface MultipartMessage extends Message {
      */
     List<Message> multipartBody();
 
+    /**
+     * Create a multipart message from existing parts.
+     * 
+     * @param header the message header
+     * 
+     * @param body the message body, which will be copied
+     * 
+     * @return the composed message
+     */
+    static MultipartMessage of(Header header, List<? extends Message> body) {
+        List<Message> copy = List.copyOf(body);
+        return new MultipartMessage() {
+            @Override
+            public List<Message> multipartBody() {
+                return copy;
+            }
+
+            @Override
+            public Header header() {
+                return header;
+            }
+        };
+    }
+
     @Override
     default MultipartMessage replaceHeader(Header newHeader) {
         List<Message> body = multipartBody();

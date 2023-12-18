@@ -53,9 +53,16 @@ public interface BinaryMessage extends Message {
      */
     BinaryBody body();
 
-    @Override
-    default BinaryMessage replaceHeader(Header newHeader) {
-        BinaryBody body = body();
+    /**
+     * Create a binary message from existing parts.
+     * 
+     * @param header the message header
+     * 
+     * @param body the message body
+     * 
+     * @return the composed message
+     */
+    static BinaryMessage of(Header header, BinaryBody body) {
         return new BinaryMessage() {
             @Override
             public BinaryBody body() {
@@ -64,8 +71,13 @@ public interface BinaryMessage extends Message {
 
             @Override
             public Header header() {
-                return newHeader;
+                return header;
             }
         };
+    }
+
+    @Override
+    default BinaryMessage replaceHeader(Header newHeader) {
+        return of(newHeader, body());
     }
 }
