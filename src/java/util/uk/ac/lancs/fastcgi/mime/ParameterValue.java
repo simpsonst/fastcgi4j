@@ -304,7 +304,8 @@ public final class ParameterValue {
              * is specified, 0 is assumed. */
             String name = ent.getKey();
             Matcher m = COMPLEX_PARAMETER_NAME.matcher(name);
-            assert m.matches();
+            boolean okay = m.matches();
+            assert okay;
             Job job = data.computeIfAbsent(m.group("name"), k -> new Job());
             int part = part(m);
             String value = ent.getValue();
