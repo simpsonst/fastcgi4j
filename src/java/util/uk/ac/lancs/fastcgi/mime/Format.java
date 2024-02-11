@@ -151,7 +151,6 @@ public final class Format<T> {
      */
     public T decode(List<? extends CharSequence> parts) {
         T result = decoder.apply(parts);
-        System.err.printf("decode: %s%n", result);
         return result;
     }
 
