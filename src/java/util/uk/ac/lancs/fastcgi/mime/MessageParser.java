@@ -47,6 +47,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 import uk.ac.lancs.fastcgi.body.BinaryBody;
 import uk.ac.lancs.fastcgi.body.Morgue;
 import uk.ac.lancs.fastcgi.body.SmartMorgue;
@@ -218,6 +219,9 @@ public final class MessageParser {
         }
         return List.copyOf(result);
     }
+
+    private static final Logger logger =
+        Logger.getLogger(MessageParser.class.getPackageName());
 
     /**
      * @undocumented
