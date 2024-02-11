@@ -103,7 +103,7 @@ public final class MessageParser {
             header.get("Content-Transfer-Encoding", Format.LAST_ATOM_FORMAT);
         if (cte != null) {
             if (cte.equalsIgnoreCase("base64")) {
-                in = Base64.decodeLeaveOpen(in);
+                in = java.util.Base64.getMimeDecoder().wrap(in);
                 headerMod.remove("Content-Transfer-Encoding");
             } else if (cte.equalsIgnoreCase("quoted-printable")) {
                 in = QuotedPrintable.decodeLeaveOpen(in);
