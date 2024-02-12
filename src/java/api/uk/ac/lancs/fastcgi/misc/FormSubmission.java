@@ -190,8 +190,9 @@ public final class FormSubmission {
      * <samp>application/x-www-form-urlencoded</samp>. If set, the
      * request body is parsed as a query string.</li>
      * 
-     * <li>Finally, if <samp>CONTENT_TYPE</samp> is multipart, the
-     * request body is parsed as a MIME multipart message.
+     * <li>Finally, if {@value #TYPE_VAR} is
+     * <samp>multipart/form-data</samp>, the request body is parsed as a
+     * MIME multipart message.</li>
      * 
      * </ul>
      * 
@@ -246,7 +247,7 @@ public final class FormSubmission {
                     text = out.toString();
                 }
                 collectFieldsFromQuery(list, text, assumedCharset);
-            } else if (mt.isMultipart()) {
+            } else if (mt.is("multipart", "form-data")) {
                 final String boundary = mt.parameter("boundary");
                 List<Message> parts = parser
                     .parseMultipartBody(session.in(), boundary, assumedCharset);
