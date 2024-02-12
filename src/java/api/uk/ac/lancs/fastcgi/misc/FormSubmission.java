@@ -92,6 +92,8 @@ public final class FormSubmission {
      * @param mpm the parts of the multipart message
      * 
      * @return the requested form data
+     * 
+     * @constructor
      */
     public static FormSubmission fromMultipart(List<? extends Message> mpm) {
         List<Map.Entry<? extends String, ? extends Message>> list =
@@ -134,6 +136,8 @@ public final class FormSubmission {
      * 
      * @return the form submission equivalent to the provided query
      * string
+     * 
+     * @constructor
      */
     public static FormSubmission fromQuery(CharSequence qs, Charset charset) {
         List<Map.Entry<? extends String, ? extends Message>> list =
@@ -219,6 +223,8 @@ public final class FormSubmission {
      * 
      * @throws IOException if an I/O error occurs in reading the request
      * body or storing any bodies
+     * 
+     * @constructor
      */
     public static FormSubmission fromSession(RequestableSession session,
                                              Charset assumedCharset,
