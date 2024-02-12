@@ -252,7 +252,8 @@ public final class SmartMorgue implements Morgue {
         while (len < buf.length &&
             (got = data.read(buf, len, buf.length - len)) >= 0)
             len += got;
-        if (len <= singleThreshold)
+        if (len < buf.length)
+            /* The stream has ended before filling the buffer. */
             return new MemoryBinaryBody(cleaner, Arrays.copyOf(buf, len),
                                         memUsage);
 
@@ -292,7 +293,8 @@ public final class SmartMorgue implements Morgue {
         while (len < buf.length &&
             (got = data.read(buf, len, buf.length - len)) >= 0)
             len += got;
-        if (len * 2 <= singleThreshold)
+        if (len < buf.length)
+            /* The stream has ended before filling the buffer. */
             return new MemoryTextBody(cleaner, Arrays.copyOf(buf, len),
                                       memUsage);
 
