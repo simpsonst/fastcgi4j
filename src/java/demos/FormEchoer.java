@@ -56,6 +56,7 @@ import uk.ac.lancs.fastcgi.mime.BinaryMessage;
 import uk.ac.lancs.fastcgi.mime.Message;
 import uk.ac.lancs.fastcgi.mime.MessageParser;
 import uk.ac.lancs.fastcgi.mime.TextMessage;
+import uk.ac.lancs.fastcgi.misc.FormHandler;
 import uk.ac.lancs.fastcgi.misc.FormSubmission;
 import uk.ac.lancs.fastcgi.misc.SessionAugment;
 import uk.ac.lancs.fastcgi.path.Navigator;
@@ -86,6 +87,9 @@ public class FormEchoer extends FastCGIApplication implements Responder {
     private static final Morgue morgue =
         SmartMorgue.start().singleThreshold(20).build();
 
+    private static final FormHandler formHandler =
+        new FormHandler(new MessageParser(morgue), StandardCharsets.UTF_8);
+
     @Override
     public boolean init(FastCGIConfiguration config, String[] args) {
         return true;
@@ -97,9 +101,7 @@ public class FormEchoer extends FastCGIApplication implements Responder {
         PathContext<String> pathCtxt =
             pathConfig.recognize(session.parameters());
         Navigator navigator = pathCtxt.navigator();
-        final FormSubmission submission =
-            FormSubmission.fromSession(session, StandardCharsets.UTF_8,
-                                       new MessageParser(morgue));
+        final FormSubmission submission = formHandler.get(session);
         try (PrintWriter out = augment.textOut("plain")) {
             out.printf("\nForm fields:\n");
             for (var e : submission.map().entrySet()) {

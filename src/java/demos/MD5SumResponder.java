@@ -57,6 +57,7 @@ import uk.ac.lancs.fastcgi.mime.BinaryMessage;
 import uk.ac.lancs.fastcgi.mime.Message;
 import uk.ac.lancs.fastcgi.mime.MessageParser;
 import uk.ac.lancs.fastcgi.mime.TextMessage;
+import uk.ac.lancs.fastcgi.misc.FormHandler;
 import uk.ac.lancs.fastcgi.misc.FormSubmission;
 import uk.ac.lancs.fastcgi.misc.SessionAugment;
 import uk.ac.lancs.fastcgi.path.Navigator;
@@ -92,6 +93,9 @@ public class MD5SumResponder implements Responder {
 
     private static final Morgue morgue =
         SmartMorgue.start().singleThreshold(20).build();
+
+    private static final FormHandler formHandler =
+        new FormHandler(new MessageParser(morgue), StandardCharsets.UTF_8);
 
     @Override
     public void respond(ResponderSession session) throws Exception {
@@ -133,9 +137,7 @@ public class MD5SumResponder implements Responder {
             }
         } else if (false) {
             body = null;
-            submission =
-                FormSubmission.fromSession(session, StandardCharsets.UTF_8,
-                                           new MessageParser(morgue));
+            submission = formHandler.get(session);
         } else {
             body = null;
             submission = null;
