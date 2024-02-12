@@ -289,7 +289,6 @@ public final class SmartMorgue implements Morgue {
         char[] buf = new char[singleThreshold / 2 + 1];
         int len = 0;
         int got;
-        System.err.printf("My buffer is %d chars%n", buf.length);
         while (len < buf.length &&
             (got = data.read(buf, len, buf.length - len)) >= 0)
             len += got;
