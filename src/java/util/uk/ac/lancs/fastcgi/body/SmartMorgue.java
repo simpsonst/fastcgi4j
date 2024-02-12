@@ -223,6 +223,23 @@ public final class SmartMorgue implements Morgue {
         return cleaner.register(ref, action);
     }
 
+    /**
+     * Given a partial buffer and a byte stream, write the contents to a
+     * temporary file. The supplied stream is not closed after use.
+     * 
+     * @param buf an array beginning with the initial bytes already
+     * taken from the stream; or {@code null} if the number of bytes
+     * already read is zero
+     * 
+     * @param len the number of bytes already taken from the stream
+     * 
+     * @param data the remaining bytes as a stream
+     * 
+     * @return the reference to the retrievable contents
+     * 
+     * @throws IOException if an I/O error occurs in reading from the
+     * stream or writing to the file
+     */
     private BinaryBody createExternalBody(byte[] buf, int len, InputStream data)
         throws IOException {
         Path path = Files.createTempFile(cache, "fastcgi4j-", ".body");
@@ -260,6 +277,23 @@ public final class SmartMorgue implements Morgue {
         return createExternalBody(buf, len, data);
     }
 
+    /**
+     * Given a partial buffer and a character stream, write the contents
+     * to a temporary file. The supplied stream is not closed after use.
+     * 
+     * @param buf an array beginning with the initial characters already
+     * taken from the stream; or {@code null} if the number of
+     * characters already read is zero
+     * 
+     * @param len the number of characters already taken from the stream
+     * 
+     * @param data the remaining characters as a stream
+     * 
+     * @return the reference to the retrievable contents
+     * 
+     * @throws IOException if an I/O error occurs in reading from the
+     * stream or writing to the file
+     */
     private TextBody createExternalBody(char[] buf, int len, Reader data)
         throws IOException {
         final Charset cs = StandardCharsets.UTF_8;
