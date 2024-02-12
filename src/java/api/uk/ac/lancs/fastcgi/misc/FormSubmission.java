@@ -69,8 +69,22 @@ public final class FormSubmission {
 
     private final Map<String, List<Message>> map;
 
+    private final boolean bodyConsumed;
+
+    /**
+     * Determine whether the request body was consumed.
+     * 
+     * @return {@code true} if the body was consumed; {@code false}
+     * otherwise
+     */
+    public boolean bodyConsumed() {
+        return bodyConsumed;
+    }
+
     private FormSubmission(List<? extends Map.Entry<? extends String,
-                                                    ? extends Message>> list) {
+                                                    ? extends Message>> list,
+                           boolean bodyConsumed) {
+        this.bodyConsumed = bodyConsumed;
         this.list = List.copyOf(list);
 
         /**
@@ -88,6 +102,7 @@ public final class FormSubmission {
 
     /**
      * Load form data from an already-parsed multipart message body.
+     * {@link #bodyConsumed()} will return {@code true}.
      * 
      * @param mpm the parts of the multipart message
      * 
@@ -99,7 +114,7 @@ public final class FormSubmission {
         List<Map.Entry<? extends String, ? extends Message>> list =
             new ArrayList<>();
         collectFromMultipart(list, mpm);
-        return new FormSubmission(list);
+        return new FormSubmission(list, true);
     }
 
     /**
@@ -127,7 +142,14 @@ public final class FormSubmission {
     private static final Pattern AMPS = Pattern.compile("&");
 
     /**
-     * Load form data from a query string.
+     * Load form data from a query string. {@link #bodyConsumed()} will
+     * return {@code false}. Use
+     * {@link #fromQuery(CharSequence, Charset, boolean)} to set that
+     * flag explicitly. This call is equivalent to:
+     * 
+     * <pre>
+     * {@linkplain #fromQuery(CharSequence, Charset, boolean) fromQuery}(qs, charset, false)
+     * </pre>
      * 
      * @param qs the query string
      * 
@@ -140,10 +162,31 @@ public final class FormSubmission {
      * @constructor
      */
     public static FormSubmission fromQuery(CharSequence qs, Charset charset) {
+        return fromQuery(qs, charset, false);
+    }
+
+    /**
+     * Load form data from a query string.
+     * 
+     * @param qs the query string
+     * 
+     * @param charset the encoding to assume for percent-encoded
+     * characters
+     * 
+     * @param bodyConsumed whether to indicate that the request body was
+     * consumed; the value to be returned by {@link #bodyConsumed()}
+     * 
+     * @return the form submission equivalent to the provided query
+     * string
+     * 
+     * @constructor
+     */
+    public static FormSubmission fromQuery(CharSequence qs, Charset charset,
+                                           boolean bodyConsumed) {
         List<Map.Entry<? extends String, ? extends Message>> list =
             new ArrayList<>();
         collectFieldsFromQuery(list, qs, charset);
-        return new FormSubmission(list);
+        return new FormSubmission(list, bodyConsumed);
     }
 
     /**
@@ -207,7 +250,8 @@ public final class FormSubmission {
      * Parameters obtained from different sources (the query string and
      * the message body) are merged. The request body stream
      * <code>session.{@linkplain RequestableSession#in() in()}</code> is
-     * closed if consumed.
+     * closed if consumed, and {@link #bodyConsumed()} can be used to
+     * determine this.
      * 
      * @param session the request session providing the method, query
      * string and request body
@@ -235,6 +279,7 @@ public final class FormSubmission {
             new ArrayList<>();
         collectFieldsFromQuery(list, qs, assumedCharset);
 
+        boolean consumed = false;
         final String rm = session.parameters().get("REQUEST_METHOD");
         switch (rm) {
         case "GET":
@@ -257,16 +302,18 @@ public final class FormSubmission {
                     in.transferTo(out);
                     text = out.toString();
                 }
+                consumed = true;
                 collectFieldsFromQuery(list, text, assumedCharset);
             } else if (mt.is("multipart", "form-data")) {
                 final String boundary = mt.parameter("boundary");
                 List<Message> parts = parser
                     .parseMultipartBody(session.in(), boundary, assumedCharset);
+                consumed = true;
                 collectFromMultipart(list, parts);
             }
         }
 
-        return new FormSubmission(list);
+        return new FormSubmission(list, consumed);
     }
 
     /**
