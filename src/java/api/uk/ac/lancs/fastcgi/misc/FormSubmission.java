@@ -57,7 +57,10 @@ import uk.ac.lancs.fastcgi.mime.MessageParser;
 import uk.ac.lancs.fastcgi.mime.StringMessage;
 
 /**
- * Presents form data as a list or a map.
+ * Presents form data as a list or a map. The list view presents
+ * key-value pairs in delivery order. The map view collects entries with
+ * identical keys, and presents the values as a list in relative
+ * delivery order.
  *
  * @author simpsons
  */
@@ -84,7 +87,7 @@ public final class FormSubmission {
     }
 
     /**
-     * Load form data from a multipart message body.
+     * Load form data from an already-parsed multipart message body.
      * 
      * @param mpm the parts of the multipart message
      * 
@@ -178,7 +181,7 @@ public final class FormSubmission {
     private static final String TYPE_VAR = "CONTENT_TYPE";
 
     /**
-     * Load form data from the session. Three sources are checked:
+     * Load form data from a session. Three sources are checked:
      * 
      * <ul>
      * 
