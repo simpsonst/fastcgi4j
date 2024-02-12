@@ -72,7 +72,7 @@ public final class MessageParser {
     }
 
     /**
-     * Store a MIME message. The source stream is not closed after use.
+     * Parse a MIME message, and store its body.
      * 
      * <p>
      * A header is parsed. The content type is extracted to determine
@@ -83,7 +83,8 @@ public final class MessageParser {
      * {@link TextMessage} is returned. Otherwise, the body is stored
      * unaltered, and an {@link BinaryMessage} is returned.
      * 
-     * @param in the MIME message as a byte stream
+     * @param in the MIME message as a byte stream, which is closed
+     * after use
      * 
      * @param assumedCharset the character encoding assumed for text
      * messages when unspecified
@@ -145,9 +146,10 @@ public final class MessageParser {
 
             /* Decode the body bytes into text, store, and reference as
              * a text message. */
-            Reader cin = new InputStreamReader(in, cs);
-            TextBody body = morgue.store(cin);
-            return TextMessage.of(altHeader, body);
+            try (Reader cin = new InputStreamReader(in, cs)) {
+                TextBody body = morgue.store(cin);
+                return TextMessage.of(altHeader, body);
+            }
         } else if (contentType.isMultipart()) {
             /* Extract the boundary, and remove the parameter. */
             String boundary = contentType.parameter("boundary");
@@ -175,16 +177,18 @@ public final class MessageParser {
              * message, using only header modificaions made before
              * checking media type. */
             Header altHeader = headerMod.apply();
-            BinaryBody body = morgue.store(in);
-            return BinaryMessage.of(altHeader, body);
+            try (var shadow = in) {
+                BinaryBody body = morgue.store(shadow);
+                return BinaryMessage.of(altHeader, body);
+            }
         }
     }
 
     /**
-     * Store a MIME multipart message body.
+     * Parse a MIME multipart message body, and store its parts.
      * 
-     * @param in the multipart body as a byte stream, which is not
-     * closed after use
+     * @param in the multipart body as a byte stream, which is closed
+     * after use
      * 
      * @param boundary the boundary separating the parts
      * 
@@ -203,20 +207,27 @@ public final class MessageParser {
         List<Message> result = new ArrayList<>();
         var recognizer = new MultipartBoundaryRecognizer(boundary);
         int mode = 0;
-        for (var shadow : BoundarySequence.ofUnclosed(in, recognizer, 80)) {
-            try (var subin = shadow) {
-                if (mode == 0) {
-                    /* Skip the preamble. */
-                    mode = 1;
-                } else if (mode == 1) {
-                    Message sub = parseMessage(subin, assumedCharset);
-                    result.add(sub);
+        for (var subin : BoundarySequence.of(in, recognizer, 80))
+            switch (mode) {
+            case 0:
+                /* This is the preamble. Record that we've passed it. */
+                mode = 1;
+            case 2:
+                /* This is the preamble or postscript, neither of which
+                 * we use. Closing the stream causes its remaining data
+                 * to be skipped. */
+                subin.close();
+                break;
 
-                    /* Cause the postscript to be skipped. */
-                    if (recognizer.isTerminal()) mode = 2;
-                }
+            default:
+                /* Parse the message in subin, and close the stream. */
+                Message sub = parseMessage(subin, assumedCharset);
+                result.add(sub);
+
+                /* Cause the postscript to be skipped. */
+                if (recognizer.isTerminal()) mode = 2;
+                break;
             }
-        }
         return List.copyOf(result);
     }
 

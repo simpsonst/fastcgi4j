@@ -201,7 +201,9 @@ public final class FormSubmission {
      * 
      * <p>
      * Parameters obtained from different sources (the query string and
-     * the message body) are merged.
+     * the message body) are merged. The request body stream
+     * <code>session.{@linkplain RequestableSession#in() in()}</code> is
+     * closed if consumed.
      * 
      * @param session the request session providing the method, query
      * string and request body
