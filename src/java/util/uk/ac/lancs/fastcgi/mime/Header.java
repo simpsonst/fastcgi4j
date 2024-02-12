@@ -64,7 +64,8 @@ import java.util.stream.Stream;
  */
 public final class Header {
     /**
-     * Create a header from a byte stream.
+     * Create a header from a byte stream. The stream is left open at
+     * the first byte after the header.
      * 
      * @param in the source stream
      *
