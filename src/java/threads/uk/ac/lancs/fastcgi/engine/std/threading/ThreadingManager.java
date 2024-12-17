@@ -65,5 +65,5 @@ public interface ThreadingManager {
      * 
      * @return the requested executor service
      */
-    ExecutorService newSessionExceutor(ThreadGroup group);
+    ExecutorService newSessionExecutor(ThreadGroup group);
 }

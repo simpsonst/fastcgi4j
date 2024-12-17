@@ -210,7 +210,7 @@ class MultiplexGenericEngine implements Engine {
                 optimizeBufferSize(stdoutBufferSize,
                                    this.recordsOut.optimumPayloadLength(),
                                    this.recordsOut.alignment());
-            this.executor = threading.newSessionExceutor(sesstg);
+            this.executor = threading.newSessionExecutor(sesstg);
             logger.info(() -> msg("on %s/%s", conn.description(),
                                   conn.internalDescription()));
         }

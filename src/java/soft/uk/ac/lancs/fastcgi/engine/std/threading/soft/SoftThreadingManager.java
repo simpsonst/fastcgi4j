@@ -113,7 +113,7 @@ final class SoftThreadingManager implements ThreadingManager {
     }
 
     @Override
-    public ExecutorService newSessionExceutor(ThreadGroup group) {
+    public ExecutorService newSessionExecutor(ThreadGroup group) {
         if (allSessions || maxReqsPerConn == 0) {
             ThreadFactory tf = r -> Thread.ofVirtual().unstarted(r);
             return Executors.newThreadPerTaskExecutor(tf);

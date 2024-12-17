@@ -79,7 +79,7 @@ final class DefaultThreadingManager implements ThreadingManager {
     }
 
     @Override
-    public ExecutorService newSessionExceutor(ThreadGroup group) {
+    public ExecutorService newSessionExecutor(ThreadGroup group) {
         if (maxReqsPerConn == 0) {
             return Executors.newCachedThreadPool();
         } else {
