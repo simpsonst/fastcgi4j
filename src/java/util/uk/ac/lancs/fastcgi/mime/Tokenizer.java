@@ -646,7 +646,7 @@ public final class Tokenizer {
      * 
      * @param params where to store parameters
      * 
-     * @return {@code true} if at least one parameter was parsed
+     * @return {@code true} if if the end of input was parsed
      */
     public boolean parameters(Map<? super String, ? super String> params) {
         final int p = pos;
