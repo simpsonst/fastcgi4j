@@ -124,6 +124,8 @@ public final class MediaGroup {
      * @param tokenizer the source of tokens
      * 
      * @return the media group; or {@code null} if not recognized
+     * 
+     * @contructor
      */
     public static MediaGroup from(Tokenizer tokenizer) {
         if (parseAny(tokenizer)) return new MediaGroup(null, null);

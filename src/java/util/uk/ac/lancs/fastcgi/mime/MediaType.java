@@ -241,6 +241,8 @@ public final class MediaType {
      * @return the requested media type
      * 
      * @throws NullPointerException if an argument is {@code null}
+     * 
+     * @constructor
      */
     public static MediaType of(String major, String minor) {
         return new MediaType(Objects.requireNonNull(major, "major"),
