@@ -134,13 +134,15 @@ public final class MediaGroup {
             if (major == null) return null;
             if (!tokenizer.character('/')) return null;
             if (tokenizer.character('*')) {
+                var r = new MediaGroup(major.toString(), null);
                 mark.pass();
-                return new MediaGroup(major.toString(), null);
+                return r;
             }
             CharSequence minor = tokenizer.atom();
             if (minor == null) return null;
+            var r = new MediaGroup(major.toString(), minor.toString());
             mark.pass();
-            return new MediaGroup(major.toString(), minor.toString());
+            return r;
         }
     }
 
