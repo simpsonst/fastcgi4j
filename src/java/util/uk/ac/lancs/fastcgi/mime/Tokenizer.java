@@ -712,7 +712,10 @@ public final class Tokenizer {
      * 
      * @return the media type; or {@code null} if no media type followed
      * by zero or more parameters are found
+     * 
+     * @deprecated Use {@link MediaType#from(Tokenizer)} instead.
      */
+    @Deprecated
     public MediaType mediaType() {
         final int p = pos;
         CharSequence major, minor;

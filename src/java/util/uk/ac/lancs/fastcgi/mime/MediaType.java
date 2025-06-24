@@ -197,6 +197,31 @@ public final class MediaType {
     }
 
     /**
+     * Parse a MIME media type, including decoded parameters.
+     * 
+     * @return the media type; or {@code null} if no media type followed
+     * by zero or more parameters are found
+     * 
+     * @contructor
+     */
+    public static MediaType from(Tokenizer tok) {
+        try (var mark = tok.mark()) {
+            CharSequence major = tok.whitespaceAtom(0);
+            if (major == null) return null;
+            if (!tok.character('/')) return null;
+            CharSequence minor = tok.atom();
+            if (minor == null) return null;
+            Map<String, String> rawParams = new HashMap<>();
+            if (!tok.parameters(rawParams)) return null;
+            Map<String, ParameterValue> decoded =
+                ParameterValue.decodeParameters(rawParams);
+            var r = new MediaType(major.toString(), minor.toString(), decoded);
+            mark.pass();
+            return r;
+        }
+    }
+
+    /**
      * @undocumented
      */
     public static void main(String[] args) throws Exception {
