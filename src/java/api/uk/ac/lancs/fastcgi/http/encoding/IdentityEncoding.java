@@ -36,26 +36,25 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.misc;
+package uk.ac.lancs.fastcgi.http.encoding;
 
-import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.zip.GZIPOutputStream;
 
 /**
- * Performs {@value #NAME} encoding.
- *
+ * Performs no encoding.
+ * 
  * @author simpsons
  */
-class GZIPEncoding implements Encoding {
-    private GZIPEncoding() {}
+public final class IdentityEncoding implements Encoding {
+    private IdentityEncoding() {}
 
     /**
      * The sole instance of this class
      */
-    public static final GZIPEncoding INSTANCE = new GZIPEncoding();
+    public static final IdentityEncoding INSTANCE = new IdentityEncoding();
 
-    private static final String NAME = "gzip";
+    private static final String NAME = "identity";
 
     @Override
     public String name() {
@@ -63,7 +62,12 @@ class GZIPEncoding implements Encoding {
     }
 
     @Override
-    public OutputStream encode(OutputStream out) throws IOException {
-        return new GZIPOutputStream(out);
+    public OutputStream encode(OutputStream out) {
+        return out;
+    }
+
+    @Override
+    public InputStream decode(InputStream in) {
+        return in;
     }
 }

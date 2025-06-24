@@ -1,3 +1,5 @@
+// -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
+
 /*
  * Copyright (c) 2023, Lancaster University
  * All rights reserved.
@@ -34,36 +36,41 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.misc;
+package uk.ac.lancs.fastcgi.http.encoding;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 /**
- * A named means of encoding an output stream
+ * Performs {@value #NAME} encoding.
  *
  * @author simpsons
  */
-interface Encoding {
-    /**
-     * Get the name of this encoding as used in the
-     * <samp>Content-Encoding</samp> and <samp>Accept-Encoding</samp>
-     * header fields.
-     * 
-     * @return the encoding name
-     */
-    String name();
+public final class GZIPEncoding implements Encoding {
+    private GZIPEncoding() {}
 
     /**
-     * Wrap an encoder around a stream.
-     * 
-     * @param out the stream that encoded data will be written to
-     * 
-     * @return a stream that unencoded data can be written to, causing
-     * it to be encoded and written to the provided stream
-     * 
-     * @throws IOException if an I/O error occurs in creating the new
-     * stream
+     * The sole instance of this class
      */
-    OutputStream encode(OutputStream out) throws IOException;
+    public static final GZIPEncoding INSTANCE = new GZIPEncoding();
+
+    private static final String NAME = "gzip";
+
+    @Override
+    public String name() {
+        return NAME;
+    }
+
+    @Override
+    public OutputStream encode(OutputStream out) throws IOException {
+        return new GZIPOutputStream(out);
+    }
+
+    @Override
+    public InputStream decode(InputStream in) throws IOException {
+        return new GZIPInputStream(in);
+    }
 }

@@ -1,5 +1,3 @@
-// -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
-
 /*
  * Copyright (c) 2023, Lancaster University
  * All rights reserved.
@@ -36,34 +34,49 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.misc;
+package uk.ac.lancs.fastcgi.http.encoding;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.zip.DeflaterOutputStream;
 
 /**
- * Performs {@value #NAME} encoding.
+ * A named means of encoding an output stream
  *
  * @author simpsons
  */
-class DeflateEncoding implements Encoding {
-    private DeflateEncoding() {}
+public interface Encoding {
+    /**
+     * Get the name of this encoding as used in the
+     * <samp>Content-Encoding</samp> and <samp>Accept-Encoding</samp>
+     * header fields.
+     * 
+     * @return the encoding name
+     */
+    String name();
 
     /**
-     * The sole instance of this class
+     * Wrap an encoder around a stream.
+     * 
+     * @param out the stream that encoded data will be written to
+     * 
+     * @return a stream that unencoded data can be written to, causing
+     * it to be encoded and written to the provided stream
+     * 
+     * @throws IOException if an I/O error occurs in creating the new
+     * stream
      */
-    public static final DeflateEncoding INSTANCE = new DeflateEncoding();
+    OutputStream encode(OutputStream out) throws IOException;
 
-    private static final String NAME = "deflate";
-
-    @Override
-    public String name() {
-        return NAME;
-    }
-
-    @Override
-    public OutputStream encode(OutputStream out) throws IOException {
-        return new DeflaterOutputStream(out);
-    }
+    /**
+     * Wrap a decoder around a stream.
+     * 
+     * @param in the encoded stream
+     * 
+     * @return the decoded stream
+     * 
+     * @throws IOException if an I/O error occurs in creating the new
+     * stream
+     */
+    InputStream decode(InputStream in) throws IOException;
 }

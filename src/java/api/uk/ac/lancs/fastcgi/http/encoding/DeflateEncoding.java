@@ -36,24 +36,28 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.misc;
+package uk.ac.lancs.fastcgi.http.encoding;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.zip.DeflaterInputStream;
+import java.util.zip.DeflaterOutputStream;
 
 /**
- * Performs no encoding.
- * 
+ * Performs {@value #NAME} encoding.
+ *
  * @author simpsons
  */
-final class IdentityEncoding implements Encoding {
-    private IdentityEncoding() {}
+public class DeflateEncoding implements Encoding {
+    private DeflateEncoding() {}
 
     /**
      * The sole instance of this class
      */
-    public static final IdentityEncoding INSTANCE = new IdentityEncoding();
+    public static final DeflateEncoding INSTANCE = new DeflateEncoding();
 
-    private static final String NAME = "identity";
+    private static final String NAME = "deflate";
 
     @Override
     public String name() {
@@ -61,7 +65,12 @@ final class IdentityEncoding implements Encoding {
     }
 
     @Override
-    public OutputStream encode(OutputStream out) {
-        return out;
+    public OutputStream encode(OutputStream out) throws IOException {
+        return new DeflaterOutputStream(out);
+    }
+
+    @Override
+    public InputStream decode(InputStream in) throws IOException {
+        return new DeflaterInputStream(in);
     }
 }
