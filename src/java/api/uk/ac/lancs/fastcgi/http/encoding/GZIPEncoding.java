@@ -63,6 +63,8 @@ public final class GZIPEncoding implements Encoding {
 
     private static final String NAME = "gzip";
 
+    private static final String OTHER_NAME = "x-" + NAME;
+
     @Override
     public String name() {
         return NAME;
@@ -78,8 +80,14 @@ public final class GZIPEncoding implements Encoding {
         return new GZIPInputStream(in);
     }
 
-    private static final Set<String> nameSet = Set.of(NAME, "x-" + NAME);
+    private static final Set<String> nameSet = Set.of(NAME, OTHER_NAME);
 
+    /**
+     * {@inheritDoc}
+     * 
+     * @return an immutable set containing {@value #NAME} and
+     * {@value #OTHER_NAME}
+     */
     @Override
     public Collection<? extends CharSequence> names() {
         return nameSet;
