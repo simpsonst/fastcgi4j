@@ -43,8 +43,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Set;
-import java.util.zip.DeflaterInputStream;
 import java.util.zip.DeflaterOutputStream;
+import java.util.zip.InflaterInputStream;
 import uk.ac.lancs.scc.jardeps.Service;
 
 /**
@@ -75,7 +75,7 @@ public class DeflateEncoding implements Encoding {
 
     @Override
     public InputStream decode(InputStream in) throws IOException {
-        return new DeflaterInputStream(in);
+        return new InflaterInputStream(in);
     }
 
     private static final Set<String> nameSet = Set.of(NAME);
