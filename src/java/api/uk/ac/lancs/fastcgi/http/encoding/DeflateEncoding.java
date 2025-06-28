@@ -41,14 +41,18 @@ package uk.ac.lancs.fastcgi.http.encoding;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Collection;
+import java.util.Set;
 import java.util.zip.DeflaterInputStream;
 import java.util.zip.DeflaterOutputStream;
+import uk.ac.lancs.scc.jardeps.Service;
 
 /**
  * Performs {@value #NAME} encoding.
  *
  * @author simpsons
  */
+@Service(Encoding.class)
 public class DeflateEncoding implements Encoding {
     private DeflateEncoding() {}
 
@@ -72,5 +76,17 @@ public class DeflateEncoding implements Encoding {
     @Override
     public InputStream decode(InputStream in) throws IOException {
         return new DeflaterInputStream(in);
+    }
+
+    private static final Set<String> nameSet = Set.of(NAME);
+
+    @Override
+    public Collection<? extends CharSequence> names() {
+        return nameSet;
+    }
+
+    @Override
+    public boolean encodingAvailable() {
+        return true;
     }
 }

@@ -39,6 +39,10 @@ package uk.ac.lancs.fastcgi.http.encoding;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Collection;
+import java.util.Map;
+import java.util.ServiceLoader;
+import java.util.TreeMap;
 
 /**
  * A named means of encoding an output stream
@@ -47,11 +51,23 @@ import java.io.OutputStream;
  */
 public interface Encoding {
     /**
-     * Get the name of this encoding as used in the
+     * Get the set of names recognized by this encoding. The returned
+     * set may be immutable.
+     * 
+     * @return the set of recognized names, including that returned by
+     * {@link #name()}
+     */
+    Collection<? extends CharSequence> names();
+
+    /**
+     * Get the canonical name of this encoding as used in the
      * <samp>Content-Encoding</samp> and <samp>Accept-Encoding</samp>
      * header fields.
      * 
      * @return the encoding name
+     * 
+     * @see https://www.rfc-editor.org/rfc/rfc9110.html#name-content-coding-registry
+     * IANA Content Coding Registry
      */
     String name();
 
@@ -65,8 +81,20 @@ public interface Encoding {
      * 
      * @throws IOException if an I/O error occurs in creating the new
      * stream
+     * 
+     * @throws UnsupportedOperationException if encoding is not
+     * implemented
      */
     OutputStream encode(OutputStream out) throws IOException;
+
+    /**
+     * Determine whether encoding is available.
+     * {@link #encode(OutputStream)} will throw an exception if not.
+     * 
+     * @return {@code true} if encoding is available; {@code false} if
+     * not
+     */
+    boolean encodingAvailable();
 
     /**
      * Wrap a decoder around a stream.
@@ -79,4 +107,31 @@ public interface Encoding {
      * stream
      */
     InputStream decode(InputStream in) throws IOException;
+
+    /**
+     * Create a mapping from names to known encoding.
+     * 
+     * @param loader the loader for locating services of type
+     * {@link Encoding}
+     * 
+     * @return a fresh, modifiable mapping, indexed case-insensitively
+     */
+    static Map<String, Encoding> getMapping(ClassLoader loader) {
+        Map<String, Encoding> result =
+            new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        for (var enc : ServiceLoader.load(Encoding.class, loader))
+            for (var name : enc.names())
+                result.put(name.toString(), enc);
+        return result;
+    }
+
+    /**
+     * Create a mapping from names to known encoding, using the calling
+     * thread's context class loader.
+     * 
+     * @return a fresh, modifiable mapping, indexed case-insensitively
+     */
+    static Map<String, Encoding> getMapping() {
+        return getMapping(Thread.currentThread().getContextClassLoader());
+    }
 }

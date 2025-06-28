@@ -40,12 +40,16 @@ package uk.ac.lancs.fastcgi.http.encoding;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Collection;
+import java.util.Set;
+import uk.ac.lancs.scc.jardeps.Service;
 
 /**
  * Performs no encoding.
  * 
  * @author simpsons
  */
+@Service(Encoding.class)
 public final class IdentityEncoding implements Encoding {
     private IdentityEncoding() {}
 
@@ -61,13 +65,35 @@ public final class IdentityEncoding implements Encoding {
         return NAME;
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * @throws UnsupportedOperationException always
+     */
     @Override
     public OutputStream encode(OutputStream out) {
-        return out;
+        throw new UnsupportedOperationException("identity encoding is unnecessary");
     }
 
     @Override
     public InputStream decode(InputStream in) {
         return in;
+    }
+
+    private static final Set<String> nameSet = Set.of(NAME);
+
+    @Override
+    public Collection<? extends CharSequence> names() {
+        return nameSet;
+    }
+
+    /**
+     * {@inheritDoc}
+     * 
+     * @return {@code false} always
+     */
+    @Override
+    public boolean encodingAvailable() {
+        return false;
     }
 }

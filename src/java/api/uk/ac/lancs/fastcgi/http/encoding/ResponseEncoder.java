@@ -162,7 +162,7 @@ public final class ResponseEncoder {
     }
 
     /**
-     * Turn on compression if the client accepts it.This is determined
+     * Turn on compression if the client accepts it. This is determined
      * by a call to {@link Context#preference()}. If applied, the output
      * stream will be wrapped in a compression filter, and the encoding
      * name is prefixed to the list of encoding names passed to

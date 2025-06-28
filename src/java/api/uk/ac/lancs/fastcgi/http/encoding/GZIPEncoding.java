@@ -41,14 +41,18 @@ package uk.ac.lancs.fastcgi.http.encoding;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Collection;
+import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
+import uk.ac.lancs.scc.jardeps.Service;
 
 /**
  * Performs {@value #NAME} encoding.
  *
  * @author simpsons
  */
+@Service(Encoding.class)
 public final class GZIPEncoding implements Encoding {
     private GZIPEncoding() {}
 
@@ -72,5 +76,17 @@ public final class GZIPEncoding implements Encoding {
     @Override
     public InputStream decode(InputStream in) throws IOException {
         return new GZIPInputStream(in);
+    }
+
+    private static final Set<String> nameSet = Set.of(NAME, "x-" + NAME);
+
+    @Override
+    public Collection<? extends CharSequence> names() {
+        return nameSet;
+    }
+
+    @Override
+    public boolean encodingAvailable() {
+        return true;
     }
 }
