@@ -320,11 +320,13 @@ done
 
 ## Ensure our Java libraries are available.
 FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_contract.jar")
+FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_transport.jar")
+FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_engine.jar")
 FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_api.jar")
 FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_util.jar")
 FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_app.jar")
 FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_threads.jar")
-FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_engine.jar")
+FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_stdeng.jar")
 FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_soft.jar")
 FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_proto.jar")
 CLASSPATH=("${FASTCGI_CLASSPATH[@]}" "${CLASSPATH[@]}")

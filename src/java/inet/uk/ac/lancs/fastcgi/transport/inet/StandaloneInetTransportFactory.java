@@ -41,7 +41,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.Collection;
-import uk.ac.lancs.fastcgi.proto.InvocationVariables;
+import uk.ac.lancs.fastcgi.proto.env.InvocationVariables;
 import uk.ac.lancs.fastcgi.transport.Transport;
 import uk.ac.lancs.fastcgi.transport.TransportConfigurationException;
 import uk.ac.lancs.fastcgi.transport.TransportFactory;

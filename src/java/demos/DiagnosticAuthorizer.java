@@ -3,7 +3,7 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import uk.ac.lancs.fastcgi.Authorizer;
 import uk.ac.lancs.fastcgi.context.AuthorizerSession;
-import uk.ac.lancs.fastcgi.util.Http;
+import uk.ac.lancs.http.ResponseCodes;
 
 // -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
 
@@ -49,10 +49,11 @@ import uk.ac.lancs.fastcgi.util.Http;
  * <samp>AUTHENTICATOR</samp>, it checks whether
  * <samp>REMOTE_PASSWD</samp> is <samp>ho</samp>. If it is, it sets
  * <samp>FLONG_USER</samp> and <samp>FLONG_METHOD</samp> as
- * authentication variables, and yields {@link Http#OK} response. If the
- * password is wrong it yields a {@link Http#FORBIDDEN} response with a
- * message. If the Apache role is <samp>AUTHORIZER</samp>, it yields a
- * {@link Http#FORBIDDEN} response with a message.
+ * authentication variables, and yields {@link ResponseCodes#OK}
+ * response. If the password is wrong it yields a
+ * {@link ResponseCodes#FORBIDDEN} response with a message. If the
+ * Apache role is <samp>AUTHORIZER</samp>, it yields a
+ * {@link ResponseCodes#FORBIDDEN} response with a message.
  * 
  * <p>
  * The primary purpose of this class is to explore whether Apache
@@ -81,17 +82,17 @@ public class DiagnosticAuthorizer implements Authorizer {
             }
             System.err.printf("   naughty user%n");
             session.setField("Content-Type", "text/plain; charset=UTF-8");
-            session.setStatus(Http.FORBIDDEN);
+            session.setStatus(ResponseCodes.FORBIDDEN);
             try (var out =
                 new PrintWriter(session.out(), false, StandardCharsets.UTF_8)) {
                 out.printf("Who are you?! Doo-dooo!\n");
             }
         } else if ("AUTHORIZER".equals(apacheRole)) {
             System.err.printf("We are a pure authorizer now: %d%n",
-                              Http.FORBIDDEN);
+                              ResponseCodes.FORBIDDEN);
             // session.setField("Content-Type", "text/plain;
             // charset=UTF-8");
-            session.setStatus(Http.FORBIDDEN);
+            session.setStatus(ResponseCodes.FORBIDDEN);
             // try (var out =
             // new PrintWriter(session.out(), false,
             // StandardCharsets.UTF_8)) {

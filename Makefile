@@ -50,6 +50,8 @@ JARDEPS_MERGEDIR=src/merge
 ## developers operating in a single role.  There's usually room for
 ## improvement.
 
+
+
 ## These classes have some general utility in building FastCGI
 ## applications, but have no dependency on them.  They include MIME
 ## multipart support.  Stakeholders: none, but potentially useful to
@@ -61,54 +63,9 @@ roots_util += $(found_util)
 ## These classes define the FastCGI roles and their contexts.  Role
 ## and framework implementations need these.  Stakeholders: role,
 ## engine
-SELECTED_JARS += fastcgi4j_contract
-trees_fastcgi4j_contract += contract
-roots_contract += $(found_contract)
-
-## These classes make use of role contexts, and help in the
-## implementation of roles.  Stakeholders: role
-SELECTED_JARS += fastcgi4j_api
-trees_fastcgi4j_api += api
-roots_api += $(found_api)
-deps_api += contract
-deps_api += util
-
-## These classes define the engine and transport frameworks.  They are
-## of use to application implementations, and bind together role
-## implementations with engines and transports.  Stakeholders: engine,
-## application, transport
-SELECTED_JARS += fastcgi4j_app
-trees_fastcgi4j_app += app
-roots_app += $(found_app)
-deps_app += contract
-
-## These provide an abstraction of thread provision, so that soft
-## thread/virtual thread/fibres can be used when available.
-## Stakeholders: engine, deployment
-SELECTED_JARS += fastcgi4j_threads
-trees_fastcgi4j_threads += threads
-roots_threads += $(found_threads)
-deps_threads += app
-
-## These provide soft threads automatically when included in the
-## classpath.  Stakeholders: deployment
-ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_SOFT))),)
-SELECTED_JARS += fastcgi4j_soft
-trees_fastcgi4j_soft += soft
-roots_soft += $(found_soft)
-deps_soft += app
-deps_soft += threads
-endif
-
-## These are engine plugins.  Stakeholders: deployment
-SELECTED_JARS += fastcgi4j_engine
-trees_fastcgi4j_engine += engine
-roots_engine += $(found_engine)
-deps_engine += contract
-deps_engine += app
-deps_engine += proto
-deps_engine += threads
-deps_engine += util
+SELECTED_JARS += fastcgi4j_role
+trees_fastcgi4j_role += role
+roots_role += $(found_role)
 
 ## These classes serialize and de-serialize FastCGI protocol messages.
 ## Stakeholders: engine
@@ -116,21 +73,92 @@ SELECTED_JARS += fastcgi4j_proto
 trees_fastcgi4j_proto += proto
 roots_proto += $(found_proto)
 
+## These classes define environmental control of FastCGI applications.
+## Stakeholders: transport
+SELECTED_JARS += fastcgi4j_env
+trees_fastcgi4j_env += env
+roots_env += $(found_env)
+
+## These classes define the engine framework.  Stakeholders: engine
+SELECTED_JARS += fastcgi4j_engine
+trees_fastcgi4j_engine += engine
+roots_engine += $(found_engine)
+deps_engine += role
+deps_engine += transport
+
+## These classes make use of role contexts, and help in the
+## implementation of roles.  Stakeholders: role
+SELECTED_JARS += fastcgi4j_augctxt
+trees_fastcgi4j_augctxt += augctxt
+roots_augctxt += $(found_augctxt)
+deps_augctxt += role
+deps_augctxt += util
+
+
+
+## These classes define an application shell.  They are of use to
+## application implementations, and bind together role implementations
+## with engines and transports.  Stakeholders: engine, application,
+## transport
+SELECTED_JARS += fastcgi4j_app
+trees_fastcgi4j_app += app
+roots_app += $(found_app)
+deps_app += role
+deps_app += transport
+deps_app += engine
+
+## These provide an abstraction of thread provision, so that soft
+## thread/virtual thread/fibres can be used when available.
+## Stakeholders: engine, deployment
+SELECTED_JARS += fastcgi4j_threads
+trees_fastcgi4j_threads += threads
+roots_threads += $(found_threads)
+deps_threads += engine
+
+## These provide soft threads automatically when included in the
+## classpath.  Stakeholders: deployment
+ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_SOFT))),)
+SELECTED_JARS += fastcgi4j_soft
+trees_fastcgi4j_soft += soft
+roots_soft += $(found_soft)
+deps_soft += engine
+deps_soft += threads
+endif
+
+## These are engine plugins.  Stakeholders: deployment
+SELECTED_JARS += fastcgi4j_stdeng
+trees_fastcgi4j_stdeng += stdeng
+roots_stdeng += $(found_stdeng)
+deps_stdeng += role
+deps_stdeng += transport
+deps_stdeng += engine
+deps_stdeng += proto
+deps_stdeng += threads
+deps_stdeng += util
+
+
+
+## These classes define the transport framework.  Stakeholders:
+## engine, transport
+SELECTED_JARS += fastcgi4j_transport
+trees_fastcgi4j_transport += transport
+roots_transport += $(found_transport)
+
 ## This is the stand-alone Internet-domain transport plugin.
 ## Stakeholders: deployment
 SELECTED_JARS += fastcgi4j_inet
 trees_fastcgi4j_inet += inet
 roots_inet += $(found_inet)
-deps_inet += app
-deps_inet += proto
+deps_inet += transport
+deps_inet += env
 
 ## This is the inherited-channel transport plugin.  Stakeholders:
 ## deployment
 SELECTED_JARS += fastcgi4j_inherit
 trees_fastcgi4j_inherit += inherit
 roots_inherit += $(found_inherit)
-deps_inherit += app
-deps_inherit += proto
+deps_inherit += transport
+deps_inherit += env
 
 ## This transport plugin was intended to allow server-forked
 ## applications, but it is obviated by the inherited-channel
@@ -145,32 +173,36 @@ deps_inherit += proto
 SELECTED_JARS += fastcgi4j_unix
 trees_fastcgi4j_unix += unix
 roots_unix += $(found_unix)
-deps_unix += app
-deps_unix += proto
+deps_unix += transport
+deps_unix += env
 
 ## This is the IIS transport plugin.  Stakeholders: deployment
 SELECTED_JARS += fastcgi4j_iis
 trees_fastcgi4j_iis += iis
 roots_iis += $(found_iis)
-deps_iis += app
-deps_iis += proto
+deps_iis += transport
+
+
 
 ## These are demonstration applications.  Stakeholders: role,
 ## application
 SELECTED_JARS += fastcgi4j_demos
 trees_fastcgi4j_demos += demos
 roots_demos += $(found_demos)
-deps_demos += contract
-deps_demos += api
+deps_demos += role
+deps_demos += transport
+deps_demos += augctxt
 deps_demos += app
+deps_demos += engine
 deps_demos += util
 
 ## These are unit tests.  Stakeholders: engine, transport
 jars += tests
 roots_tests += $(found_tests)
-deps_tests += contract
-deps_tests += api
+deps_tests += role
+deps_tests += augctxt
 deps_tests += app
+deps_tests += stdeng
 deps_tests += util
 
 jars += $(SELECTED_JARS)
@@ -201,6 +233,7 @@ DOC_PKGS += uk.ac.lancs.fastcgi
 DOC_PKGS += uk.ac.lancs.fastcgi.context
 DOC_PKGS += uk.ac.lancs.fastcgi.util
 DOC_PKGS += uk.ac.lancs.fastcgi.io
+DOC_PKGS += uk.ac.lancs.fastcgi.io.infpipe
 DOC_PKGS += uk.ac.lancs.fastcgi.mime
 DOC_PKGS += uk.ac.lancs.fastcgi.path
 DOC_PKGS += uk.ac.lancs.fastcgi.app
@@ -212,6 +245,7 @@ ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_SOFT))),)
 DOC_PKGS += uk.ac.lancs.fastcgi.engine.std.threading.soft
 endif
 DOC_PKGS += uk.ac.lancs.fastcgi.proto
+DOC_PKGS += uk.ac.lancs.fastcgi.proto.env
 DOC_PKGS += uk.ac.lancs.fastcgi.proto.serial
 DOC_PKGS += uk.ac.lancs.fastcgi.transport
 DOC_PKGS += uk.ac.lancs.fastcgi.transport.inet
