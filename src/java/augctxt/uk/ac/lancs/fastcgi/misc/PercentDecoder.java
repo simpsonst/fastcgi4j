@@ -59,7 +59,11 @@ import java.util.regex.Pattern;
  * first instead would be interestingly different.
  * 
  * @author simpsons
+ * 
+ * @deprecated Unless there is a need to decode path elements rather
+ * than query strings, just use {@link java.net.URLDecoder}.
  */
+@Deprecated
 final class PercentDecoder {
     private static final Pattern PCENC = Pattern.compile("(%[0-9A-F]{2})+");
 
