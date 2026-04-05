@@ -36,20 +36,22 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.misc;
+package uk.ac.lancs.cgi;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
+import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import uk.ac.lancs.fastcgi.context.RequestableSession;
 import uk.ac.lancs.mime.Disposition;
 import uk.ac.lancs.mime.MediaType;
 import uk.ac.lancs.mime.Message;
@@ -205,7 +207,6 @@ public final class FormSubmission {
                                                       ? extends Message>> dest,
                                CharSequence qs, Charset charset) {
         if (qs == null) return;
-        PercentDecoder dec = new PercentDecoder(charset);
 
         /* Split the query string on ampersands. */
         String[] bits = AMPS.split(qs);
@@ -215,9 +216,11 @@ public final class FormSubmission {
                 /* TODO: Maybe log this? */
                 continue;
             }
-            String name = dec.decodeParameter(bit.subSequence(0, eq));
-            String value =
-                dec.decodeParameter(bit.subSequence(eq + 1, bit.length()));
+            String name =
+                URLDecoder.decode(bit.subSequence(0, eq).toString(), charset);
+            String value = URLDecoder
+                .decode(bit.subSequence(eq + 1, bit.length()).toString(),
+                        charset);
             StringMessage msg = new StringMessage(value);
             dest.add(Map.entry(name, msg));
         }
@@ -227,8 +230,11 @@ public final class FormSubmission {
 
     private static final String TYPE_VAR = "CONTENT_TYPE";
 
+    private static final String METHOD_VAR = "REQUEST_METHOD";
+
     /**
-     * Load form data from a session. Three sources are checked:
+     * Load form data from elements of a CGI context. Three sources are
+     * checked:
      * 
      * <ul>
      * 
@@ -248,13 +254,16 @@ public final class FormSubmission {
      * 
      * <p>
      * Parameters obtained from different sources (the query string and
-     * the message body) are merged. The request body stream
+     * the message body) are merged. The CGI request body input stream
      * <code>session.{@linkplain RequestableSession#in() in()}</code> is
      * closed if consumed, and {@link #bodyConsumed()} can be used to
      * determine this.
      * 
-     * @param session the request session providing the method, query
-     * string and request body
+     * @param params the CGI parameters, including {@value #QUERY_ENV},
+     * {@value #METHOD_VAR} and {@value #TYPE_VAR}
+     * 
+     * @param inSupply a provider of the CGI input stream, invoked at
+     * most once
      * 
      * @param assumedCharset the character encoding assumed to be used
      * by the client in forming plain-text field values
@@ -267,20 +276,19 @@ public final class FormSubmission {
      * 
      * @throws IOException if an I/O error occurs in reading the request
      * body or storing any bodies
-     * 
-     * @constructor
      */
-    public static FormSubmission fromSession(RequestableSession session,
-                                             Charset assumedCharset,
-                                             MessageParser parser)
-        throws IOException {
-        final String qs = session.parameters().get(QUERY_ENV);
+    public static FormSubmission
+        fromCGI(Map<? super String, ? extends CharSequence> params,
+                Supplier<? extends InputStream> inSupply,
+                Charset assumedCharset, MessageParser parser)
+            throws IOException {
+        final var qs = params.get(QUERY_ENV);
         final List<Map.Entry<? extends String, ? extends Message>> list =
             new ArrayList<>();
         collectFieldsFromQuery(list, qs, assumedCharset);
 
         boolean consumed = false;
-        final String rm = session.parameters().get("REQUEST_METHOD");
+        final var rm = params.get(METHOD_VAR).toString();
         switch (rm) {
         case "GET":
         case "HEAD":
@@ -289,15 +297,14 @@ public final class FormSubmission {
 
         default:
             /* Get the media type of the content. */
-            final MediaType mt =
-                MediaType.fromString(session.parameters().get(TYPE_VAR));
+            final MediaType mt = MediaType.fromString(params.get(TYPE_VAR));
 
             if (mt.is("application", "x-www-form-urlencoded")) {
                 /* The message body is a simple query string. */
                 final String text;
                 try (StringWriter out = new StringWriter();
                      InputStreamReader in =
-                         new InputStreamReader(session.in(),
+                         new InputStreamReader(inSupply.get(),
                                                StandardCharsets.US_ASCII)) {
                     in.transferTo(out);
                     text = out.toString();
@@ -306,8 +313,9 @@ public final class FormSubmission {
                 collectFieldsFromQuery(list, text, assumedCharset);
             } else if (mt.is("multipart", "form-data")) {
                 final String boundary = mt.parameter("boundary");
-                List<Message> parts = parser
-                    .parseMultipartBody(session.in(), boundary, assumedCharset);
+                List<Message> parts =
+                    parser.parseMultipartBody(inSupply.get(), boundary,
+                                              assumedCharset);
                 consumed = true;
                 collectFromMultipart(list, parts);
             }
