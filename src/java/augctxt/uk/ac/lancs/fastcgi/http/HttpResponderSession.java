@@ -52,6 +52,7 @@ import java.util.Objects;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.Function;
+import uk.ac.lancs.cgi.ServerProtocol;
 import uk.ac.lancs.fastcgi.context.ResponderSession;
 import uk.ac.lancs.http.ChunkedInputStream;
 import uk.ac.lancs.http.cache.InboundCacheControl;
@@ -96,10 +97,14 @@ public class HttpResponderSession {
      */
     public HttpResponderSession(ResponderSession base,
                                 HttpResponderContext ctxt) {
-        /* TODO: Verify that the base session is compatible with
-         * HTTP. */
-        this.base = base;
+        /* Verify that the base session is compatible with HTTP. */
+        var srvProto = ServerProtocol.ofOptional(base.parameters());
+        if (srvProto == null)
+            throw new IllegalArgumentException("server protocol is not set");
+        if (!"HTTP".equals(srvProto.name()) && !srvProto.isIncluded())
+            throw new IllegalArgumentException(srvProto + " is not HTTP");
 
+        this.base = base;
         this.ctxt = ctxt;
     }
 
