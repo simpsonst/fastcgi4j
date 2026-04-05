@@ -90,12 +90,25 @@ class Utils {
         return result;
     }
 
+    /**
+     * Compose a path prefix from separate path elements in a list. For
+     * example,
+     * <code>composePathPrefix(Arrays.asList("foo", "bar", "baz"))</code>
+     * yields <samp>/foo/bar/baz/</samp>.
+     * 
+     * @param elems the sequence of path elements, which could be an
+     * empty list
+     * 
+     * @return the path prefix, always beginning and ending with a
+     * forward slash
+     */
     static String composePathPrefix(List<? extends String> elems) {
         return composePathPrefix(elems.stream());
     }
 
     /**
-     * Compose a path prefix from separate path elements. For example,
+     * Compose a path prefix from separate path elements in a stream.
+     * For example,
      * <code>composePathPrefix(Arrays.asList("foo", "bar", "baz"))</code>
      * yields <samp>/foo/bar/baz/</samp>.
      * 
@@ -166,6 +179,16 @@ class Utils {
         return elems;
     }
 
+    /**
+     * Escape a path element with percent encoding. Escaped characters
+     * include <samp>:/?#</samp> and space (U+0020).
+     * 
+     * @param output the destination for the escaped element
+     * 
+     * @param input the element to be escaped
+     * 
+     * @return the supplied destination
+     */
     static StringBuilder escapePathElement(StringBuilder output,
                                            CharSequence input) {
         for (int cp : input.codePoints().toArray()) {
@@ -178,6 +201,16 @@ class Utils {
         return output;
     }
 
+    /**
+     * Escape a fragment identifier. Escaped characters include
+     * <samp>#</samp> and space (U+0020).
+     * 
+     * @param output the destination for the escaped identifier
+     * 
+     * @param input the element to be escaped
+     * 
+     * @return the supplied destination
+     */
     static StringBuilder escapeFragment(StringBuilder output,
                                         CharSequence input) {
         for (int cp : input.codePoints().toArray()) {
@@ -190,6 +223,18 @@ class Utils {
         return output;
     }
 
+    /**
+     * Escape a query parameter name or value. Escaped characters
+     * include <samp>=&amp;+#:</samp>, and each space (U+0020) is
+     * converted to <samp>+</samp>.
+     * 
+     * @param output the destination for the escaped parameter name or
+     * value
+     * 
+     * @param input the element to be escaped
+     * 
+     * @return the supplied destination
+     */
     static StringBuilder escapeParam(StringBuilder output, CharSequence input) {
         for (int cp : input.codePoints().toArray()) {
             switch (cp) {
@@ -202,6 +247,16 @@ class Utils {
         return output;
     }
 
+    /**
+     * Append a single character as a Unicode codepoint using UTF-8
+     * encoding.
+     * 
+     * @param output the destination for the escaped codepoint
+     * 
+     * @param cp the Unicode codepoint
+     * 
+     * @return the supplied destination
+     */
     static StringBuilder appendPercentCodepoint(StringBuilder output, int cp) {
         if (cp < 128) {
             /* 0xxx:xxxx */
@@ -261,7 +316,7 @@ class Utils {
      *
      * <p>
      * The protocol name <samp>HTTP</samp> is recognized, and the value
-     * of {@value #HOST_VAR_NAME} is appended if present.
+     * of the parameter <samp>HTTP_HOST</samp> is appended if present.
      *
      * @param result the string to append to
      *
@@ -306,6 +361,9 @@ class Utils {
      *
      * @return a URI consisting of scheme, host and optional port, based
      * on the supplied CGI parameters
+     * 
+     * @throws NullPointerException if <samp>SERVER_PROTOCOL</samp> is
+     * not set in the CGI parameters
      */
     static URI getInternalServer(Map<? super String, ? extends String> params) {
         /* Identify the protocol and version. */
