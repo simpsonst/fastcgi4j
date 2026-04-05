@@ -118,8 +118,8 @@ public class HttpResponderSession {
         return false;
     }
 
-    private List<String> tokens(CharSequence fieldName) {
-        String field = base.parameters().get("HTTP_TRANSFER_ENCODING");
+    private List<String> tokens(String fieldName) {
+        String field = base.parameters().get(fieldName);
         if (field == null) return Collections.emptyList();
         List<String> result = new ArrayList<>(field.length() / 5);
         /* TODO: We should really use an *HTTP* tokenizer, not MIME.
