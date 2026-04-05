@@ -36,7 +36,7 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.misc;
+package uk.ac.lancs.mime;
 
 import java.util.Locale;
 import java.util.Map;

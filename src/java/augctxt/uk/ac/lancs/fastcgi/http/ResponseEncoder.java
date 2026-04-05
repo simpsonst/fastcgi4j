@@ -45,7 +45,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import uk.ac.lancs.fastcgi.misc.Negotiation;
+import uk.ac.lancs.mime.Negotiation;
 import uk.ac.lancs.http.encoding.DeflateEncoding;
 import uk.ac.lancs.http.encoding.Encoding;
 import uk.ac.lancs.http.encoding.GZIPEncoding;

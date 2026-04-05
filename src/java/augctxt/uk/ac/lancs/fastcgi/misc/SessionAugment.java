@@ -38,6 +38,7 @@
 
 package uk.ac.lancs.fastcgi.misc;
 
+import uk.ac.lancs.mime.Negotiation;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
