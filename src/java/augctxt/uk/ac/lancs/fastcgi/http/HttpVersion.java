@@ -38,12 +38,17 @@
 
 package uk.ac.lancs.fastcgi.http;
 
+import uk.ac.lancs.cgi.ServerProtocol;
+
 /**
  * Distinguishes versions of HTTP.
  *
  * @author simpsons
+ * 
+ * @deprecated Use {@link ServerProtocol} instead.
  */
-public enum HttpVersion {
+@Deprecated
+enum HttpVersion {
     /**
      * Identifies the original HTTP version.
      */

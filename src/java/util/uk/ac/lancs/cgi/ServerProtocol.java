@@ -52,10 +52,14 @@ import java.util.regex.Pattern;
  * characters: <samp>0</samp>-<samp>9</samp> (U+0030-U+0039),
  * <samp>A</samp>-<samp>Z</samp> (U+0041-U+005A),
  * <samp>a</samp>-<samp>z</samp> (U+0061-U+007A) and
- * <samp>!#$%&amp;'*+-.`^_{|}~</samp>. Alternatively, the plain string
- * <samp>INCLUDED</samp> is accepted to identify processing as part of a
- * composite document; this is referred to here as the <dfn>inclusion
- * protocol</dfn>.
+ * <samp>!#$%&amp;'*+-.`^_{|}~</samp>.
+ * 
+ * <p>
+ * Alternatively, the plain string {@value #INCLUDED_TOKEN} is accepted
+ * to identify processing as part of a composite document; this is
+ * referred to here as the <dfn>inclusion protocol</dfn>. The name is
+ * set to {@value #INCLUDED_NAME}, the major version set to
+ * {@value #INCLUDED_MAJOR}, and the minor to {@value #INCLUDED_MINOR}.
  *
  * @author simpsons
  * 
@@ -74,46 +78,79 @@ public final class ServerProtocol {
 
     private final int minor;
 
-    private ServerProtocol(CharSequence name, int major, int minor) {
+    private final boolean included;
+
+    private ServerProtocol(CharSequence name, int major, int minor,
+                           boolean included) {
         this.name = name.toString();
         this.major = major;
         this.minor = minor;
+        this.included = included;
     }
+
+    private static final String INCLUDED_TOKEN = "INCLUDED";
+
+    private static final String INCLUDED_NAME = "HTTP";
+
+    private static final int INCLUDED_MAJOR = 1;
+
+    private static final int INCLUDED_MINOR = 0;
 
     /**
      * Test whether this is the inclusion protocol.
      * 
-     * @return {@code true}
+     * @return {@code true} if this is the inclusion protocol
      */
     public boolean isIncluded() {
-        return "INCLUDED".equals(name) && major < 0 && minor < 0;
+        return included;
     }
 
     /**
-     * Get the protocol name.
+     * Get the protocol name. For the inclusion protocol, this is
+     * {@value #INCLUDED_NAME}.
      * 
-     * @return the protocol name; or <samp>INCLUDED</samp> if this is
-     * the inclusion protocol
+     * @return the protocol name
      */
     public String name() {
         return name;
     }
 
     /**
-     * Get the major version number.
+     * Determine whether this protocol meets minimum requirements.
      * 
-     * @return the major version number; or <code>-1</code> if this is
-     * the inclusion protocol
+     * @param text the required protocol name
+     * 
+     * @param major the required minimum major version
+     * 
+     * @param minor the required minimum minor version
+     * 
+     * @return {@code true} if the protocol name matches exactly, and
+     * the major number is at least the required value, and the minor
+     * number is at least the required value if the major numbers are
+     * the same; {@code false} otherwise
+     */
+    public boolean isMinimally(CharSequence text, int major, int minor) {
+        if (!name.equals(text)) return false;
+        if (this.major < major) return false;
+        if (this.major == major && this.minor < minor) return false;
+        return true;
+    }
+
+    /**
+     * Get the major version number. For the inclusion protocol, this is
+     * {@value #INCLUDED_MAJOR}.
+     * 
+     * @return the major version number
      */
     public int major() {
         return major;
     }
 
     /**
-     * Get the minor version number.
+     * Get the minor version number. For the inclusion protocol, this is
+     * {@value #INCLUDED_MINOR}.
      * 
-     * @return the minor version number; or <code>-1</code> if this is
-     * the inclusion protocol
+     * @return the minor version number
      */
     public int minor() {
         return minor;
@@ -130,17 +167,19 @@ public final class ServerProtocol {
      * @throws IllegalArgumentException if the text cannot be parsed
      */
     public static ServerProtocol of(CharSequence text) {
-        if ("INCLUDED".equals(text)) return new ServerProtocol(text, -1, -1);
+        if (INCLUDED_TOKEN.equals(text))
+            return new ServerProtocol(INCLUDED_NAME, INCLUDED_MAJOR,
+                                      INCLUDED_MINOR, true);
         Matcher m = FORMAT.matcher(text);
         if (!m.matches())
             throw new IllegalArgumentException("not server protocol: " + text);
-        var major = m.group("major");
-        var minor = m.group("minor");
-        return new ServerProtocol(m.group("name"),
-                                  Integer.parseUnsignedInt(major, 0,
-                                                           major.length(), 10),
-                                  Integer.parseUnsignedInt(minor, 0,
-                                                           minor.length(), 10));
+        var majorText = m.group("major");
+        var major =
+            Integer.parseUnsignedInt(majorText, 0, majorText.length(), 10);
+        var minorText = m.group("minor");
+        var minor =
+            Integer.parseUnsignedInt(minorText, 0, minorText.length(), 10);
+        return new ServerProtocol(m.group("name"), major, minor, false);
     }
 
     private static final String PROTO_VAR = "SERVER_PROTOCOL";
@@ -186,10 +225,11 @@ public final class ServerProtocol {
      */
     @Override
     public int hashCode() {
-        int hash = 5;
-        hash = 13 * hash + Objects.hashCode(this.name);
-        hash = 13 * hash + this.major;
-        hash = 13 * hash + this.minor;
+        int hash = 7;
+        hash = 19 * hash + Objects.hashCode(this.name);
+        hash = 19 * hash + this.major;
+        hash = 19 * hash + this.minor;
+        hash = 19 * hash + (this.included ? 1 : 0);
         return hash;
     }
 
@@ -198,8 +238,8 @@ public final class ServerProtocol {
      * 
      * @param obj the other object
      * 
-     * @return {@code true} if objects have identical name, major and
-     * minor fields; {@code false} otherwise
+     * @return {@code true} if objects have identical name, major, minor
+     * and inclusion fields; {@code false} otherwise
      */
     @Override
     public boolean equals(Object obj) {
@@ -209,13 +249,14 @@ public final class ServerProtocol {
         final ServerProtocol other = (ServerProtocol) obj;
         if (this.major != other.major) return false;
         if (this.minor != other.minor) return false;
+        if (this.included != other.included) return false;
         return Objects.equals(this.name, other.name);
     }
 
     /**
      * Get a string representation of the server protocol. For the
      * inclusion protocol, the representation is simply
-     * <samp>INCLUDED</samp>. For other values, the representation is
+     * {@value #INCLUDED_TOKEN}. For other values, the representation is
      * the name, followed by a slash <samp>/</samp> U+002F, the major
      * version in denary, a dot <samp>.</samp> U+002E, and the minor
      * version in denary, e.g. <smap>HTTP/1.0</samp>.
@@ -224,6 +265,7 @@ public final class ServerProtocol {
      */
     @Override
     public String toString() {
+        if (included) return INCLUDED_TOKEN;
         if (major < 0) return name;
         return name + '/' + major + '.' + minor;
     }

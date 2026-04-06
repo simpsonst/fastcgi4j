@@ -85,6 +85,8 @@ public class HttpResponderSession {
      */
     protected final HttpResponderContext ctxt;
 
+    protected final ServerProtocol protocol;
+
     /**
      * Create an HTTP responder session from an unspecialized session.
      * 
@@ -101,8 +103,9 @@ public class HttpResponderSession {
         var srvProto = ServerProtocol.ofOptional(base.parameters());
         if (srvProto == null)
             throw new IllegalArgumentException("server protocol is not set");
-        if (!"HTTP".equals(srvProto.name()) && !srvProto.isIncluded())
+        if (!srvProto.isMinimally("HTTP", 0, 9))
             throw new IllegalArgumentException(srvProto + " is not HTTP");
+        protocol = srvProto;
 
         this.base = base;
         this.ctxt = ctxt;
@@ -257,15 +260,31 @@ public class HttpResponderSession {
 
     /**
      * Determine whether the client is using a minimum version of HTTP.
+     * Note that if the session is part of an internal composition, the
+     * version will appear to be 1.0.
      * 
-     * @param v the minimum required version
+     * @param major the minimum required major version
+     * 
+     * @param minor the minimum required minor version
      * 
      * @return {@code true} if the client is using at least the
      * specified version; {@code false} otherwise
      */
-    public boolean minimumVersion(HttpVersion v) {
-        /* TODO */
-        throw new UnsupportedOperationException("unimplemented");
+    public boolean minimumVersion(int major, int minor) {
+        if (protocol.major() < major) return false;
+        if (protocol.major() == major && protocol.minor() < minor) return false;
+        return true;
+    }
+
+    /**
+     * Determine whether this session is part of an internal
+     * composition.
+     * 
+     * @return {@code true} if the session is included as part of an
+     * internal composition; {@code false} otherwise
+     */
+    public boolean isIncluded() {
+        return protocol.isIncluded();
     }
 
     private final Collection<String> acceptedEncodings =
