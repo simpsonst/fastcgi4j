@@ -60,9 +60,9 @@ import uk.ac.lancs.mime.TextMessage;
 import uk.ac.lancs.fastcgi.misc.FormHandler;
 import uk.ac.lancs.cgi.FormSubmission;
 import uk.ac.lancs.fastcgi.misc.SessionAugment;
-import uk.ac.lancs.fastcgi.path.Navigator;
-import uk.ac.lancs.fastcgi.path.PathConfiguration;
-import uk.ac.lancs.fastcgi.path.PathContext;
+import uk.ac.lancs.cgi.path.Navigator;
+import uk.ac.lancs.cgi.path.PathConfiguration;
+import uk.ac.lancs.cgi.path.PathContext;
 
 /**
  * Responds by echoing all headers, and displaying a hex MD5 sum of the

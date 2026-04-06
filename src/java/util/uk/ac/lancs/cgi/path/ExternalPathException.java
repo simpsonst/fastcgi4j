@@ -36,24 +36,20 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
+package uk.ac.lancs.cgi.path;
+
 /**
- * Provides utilities for understanding a script's location (possibly
- * behind a reverse proxy), and generating relative and absolute URIs to
- * its own internal resources.
- * 
- * <p>
- * The FastCGI program should begin by building a
- * {@link uk.ac.lancs.fastcgi.path.PathConfiguration} object,
- * configuring it with knowledge about internal and external URIs, and
- * how they relate. Then, on creation of each session, a
- * {@link uk.ac.lancs.fastcgi.path.PathContext} can be created from the
- * navigation object and the session's CGI parameters. This yields both
- * a user-defined instance context and a
- * {@link uk.ac.lancs.fastcgi.Navigator}. Given a path to an internal
- * resource, the latter yields a
- * {@link uk.ac.lancs.fastcgi.path.PathReference}, from which relative,
- * local or absolute URIs can be obtained.
+ * Indicates that a reference to an external resource was attempted.
  * 
  * @author simpsons
  */
-package uk.ac.lancs.fastcgi.path;
+public class ExternalPathException extends RuntimeException {
+    /**
+     * Create an exception.
+     * 
+     * @param message the detail message; normally the attempted path
+     */
+    public ExternalPathException(String message) {
+        super(message);
+    }
+}

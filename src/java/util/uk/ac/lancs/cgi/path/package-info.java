@@ -1,3 +1,5 @@
+// -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
+
 /*
  * Copyright (c) 2023, Lancaster University
  * All rights reserved.
@@ -34,45 +36,24 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.path;
-
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 /**
- * Combines a path pattern with an action to take on a matching resource
- * path.
+ * Provides utilities for understanding a script's location (possibly
+ * behind a reverse proxy), and generating relative and absolute URIs to
+ * its own internal resources.
+ * 
+ * <p>
+ * The FastCGI program should begin by building a
+ * {@link uk.ac.lancs.cgi.path.PathConfiguration} object, configuring it
+ * with knowledge about internal and external URIs, and how they relate.
+ * Then, on creation of each session, a
+ * {@link uk.ac.lancs.cgi.path.PathContext} can be created from the
+ * navigation object and the session's CGI parameters. This yields both
+ * a user-defined instance context and a
+ * {@link uk.ac.lancs.cgi.Navigator}. Given a path to an internal
+ * resource, the latter yields a
+ * {@link uk.ac.lancs.cgi.path.PathReference}, from which relative,
+ * local or absolute URIs can be obtained.
+ * 
+ * @author simpsons
  */
-public class Binding {
-    /**
-     * Create an action.
-     *
-     * @param pattern the pattern to match the resource path against
-     *
-     * @param action the action to take, given the successful matcher
-     * from the pattern
-     *
-     * @return the requested action
-     *
-     * @constructor
-     */
-    public static Binding of(Pattern pattern, PatternAction action) {
-        return new Binding(pattern, action);
-    }
-
-    final Pattern pattern;
-
-    final PatternAction action;
-
-    Binding(Pattern pattern, PatternAction action) {
-        this.pattern = pattern;
-        this.action = action;
-    }
-
-    boolean attempt(Navigator navigator) throws Exception {
-        Matcher m = navigator.recognize(pattern);
-        if (!m.matches()) return false;
-        action.accept(m);
-        return true;
-    }
-}
+package uk.ac.lancs.cgi.path;

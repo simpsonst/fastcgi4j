@@ -36,7 +36,7 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.path;
+package uk.ac.lancs.cgi.path;
 
 /**
  * Indicates an invalid path element.

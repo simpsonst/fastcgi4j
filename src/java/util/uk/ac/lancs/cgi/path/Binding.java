@@ -1,5 +1,3 @@
-// -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
-
 /*
  * Copyright (c) 2023, Lancaster University
  * All rights reserved.
@@ -36,20 +34,45 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.path;
+package uk.ac.lancs.cgi.path;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
- * Indicates that a reference to an external resource was attempted.
- * 
- * @author simpsons
+ * Combines a path pattern with an action to take on a matching resource
+ * path.
  */
-public class ExternalPathException extends RuntimeException {
+public class Binding {
     /**
-     * Create an exception.
-     * 
-     * @param message the detail message; normally the attempted path
+     * Create an action.
+     *
+     * @param pattern the pattern to match the resource path against
+     *
+     * @param action the action to take, given the successful matcher
+     * from the pattern
+     *
+     * @return the requested action
+     *
+     * @constructor
      */
-    public ExternalPathException(String message) {
-        super(message);
+    public static Binding of(Pattern pattern, PatternAction action) {
+        return new Binding(pattern, action);
+    }
+
+    final Pattern pattern;
+
+    final PatternAction action;
+
+    Binding(Pattern pattern, PatternAction action) {
+        this.pattern = pattern;
+        this.action = action;
+    }
+
+    boolean attempt(Navigator navigator) throws Exception {
+        Matcher m = navigator.recognize(pattern);
+        if (!m.matches()) return false;
+        action.accept(m);
+        return true;
     }
 }
