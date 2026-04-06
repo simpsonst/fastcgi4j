@@ -36,7 +36,7 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.http;
+package uk.ac.lancs.http.encoding;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -46,10 +46,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import uk.ac.lancs.mime.Negotiation;
-import uk.ac.lancs.http.encoding.DeflateEncoding;
-import uk.ac.lancs.http.encoding.Encoding;
-import uk.ac.lancs.http.encoding.GZIPEncoding;
-import uk.ac.lancs.http.encoding.IdentityEncoding;
 
 /**
  * Manages compression and other encodings on a response body.
@@ -119,7 +115,8 @@ public final class ResponseEncoder {
     }
 
     /**
-     * Holds the encoded output stream. If {@code null},
+     * Holds the encoded output stream. If {@code null}, the stream has
+     * not been requested through {@link #out()}.
      */
     private OutputStream out = null;
 
@@ -190,11 +187,11 @@ public final class ResponseEncoder {
     }
 
     /**
-     * Get the output stream with encodings applied. On the first call,
-     * encodings specified by other calls are applied to the raw stream
-     * obtained with {@link Context#raw()}, and the names of applied
-     * encodings are passed to {@link Context#setEncoding(List)} in
-     * reverse order. Subsequent calls will yield the same stream.
+     * Get the output stream to which encodings will be applied. On the
+     * first call, encodings specified by other calls are applied to the
+     * raw stream obtained with {@link Context#raw()}, and the names of
+     * applied encodings are passed to {@link Context#setEncoding(List)}
+     * in reverse order. Subsequent calls will yield the same stream.
      * Calling this method prevents the calling of other methods that
      * modify encoding.
      * 
@@ -218,22 +215,22 @@ public final class ResponseEncoder {
 
         /* The encodings' names must specified in the reverse order that
          * they were applied in. */
-        OutputStream out = ctxt.raw();
+        OutputStream cand = ctxt.raw();
         List<String> names = new ArrayList<>();
         for (Encoding enc : encodings) {
             if (enc == IdentityEncoding.INSTANCE) continue;
             names.add(0, enc.name());
-            out = enc.encode(out);
+            cand = enc.encode(cand);
         }
 
         /* Compression must be applied last, and listed first. */
         if (compression != null) {
             names.add(0, compression.name());
-            out = compression.encode(out);
+            cand = compression.encode(cand);
         }
 
-        this.out = out;
+        out = cand;
         if (!names.isEmpty()) ctxt.setEncoding(names);
-        return out;
+        return cand;
     }
 }
