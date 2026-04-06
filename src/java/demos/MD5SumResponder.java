@@ -57,7 +57,7 @@ import uk.ac.lancs.mime.BinaryMessage;
 import uk.ac.lancs.mime.Message;
 import uk.ac.lancs.mime.MessageParser;
 import uk.ac.lancs.mime.TextMessage;
-import uk.ac.lancs.fastcgi.misc.FormHandler;
+import uk.ac.lancs.fastcgi.util.FormHandler;
 import uk.ac.lancs.cgi.FormSubmission;
 import uk.ac.lancs.fastcgi.misc.SessionAugment;
 import uk.ac.lancs.cgi.path.Navigator;

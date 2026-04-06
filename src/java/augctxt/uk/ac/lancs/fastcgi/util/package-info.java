@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022,2023, Lancaster University
+ * Copyright (c) 2026, Lancaster University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,13 +31,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *
- *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
+ *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
 /**
- * Provides an assortment of classes useful, but not specific to,
- * FastCGI applications.
- *
+ * Provides miscellaneous utilities for FastCGI role implementations.
+ * 
  * @author simpsons
  */
 package uk.ac.lancs.fastcgi.util;

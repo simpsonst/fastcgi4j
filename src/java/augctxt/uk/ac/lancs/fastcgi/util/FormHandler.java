@@ -1,7 +1,7 @@
 // -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
 
 /*
- * Copyright (c) 2025, Lancaster University
+ * Copyright (c) 2024, Lancaster University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,36 +36,55 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.http;
+package uk.ac.lancs.fastcgi.util;
 
-import uk.ac.lancs.cgi.ServerProtocol;
+import uk.ac.lancs.cgi.FormSubmission;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import uk.ac.lancs.fastcgi.context.RequestableSession;
+import uk.ac.lancs.mime.MessageParser;
 
 /**
- * Distinguishes versions of HTTP.
- *
- * @author simpsons
+ * Retains context for parsing form submissions.
  * 
- * @deprecated Use {@link ServerProtocol} instead.
+ * @author simpsons
  */
-@Deprecated
-enum HttpVersion {
-    /**
-     * Identifies the original HTTP version.
-     */
-    V0_9,
+public final class FormHandler {
+    private final Charset assumedCharset;
+
+    private final MessageParser parser;
 
     /**
-     * Identifies HTTP/1.0.
+     * Create a handler that records the message parser and default
+     * character encoding for parsing form submissions.
+     * 
+     * @param parser the parser for <samp>multipart/form-data</samp>
+     * submissions
+     * 
+     * @param assumedCharset the character encoding to assume for
+     * percent-encoded submissions
      */
-    V1_0,
+    public FormHandler(MessageParser parser, Charset assumedCharset) {
+        this.assumedCharset = assumedCharset;
+        this.parser = parser;
+    }
 
     /**
-     * Identifies HTTP/1.1.
+     * Get the form submission from a session. This simply calls
+     * {@link FormSubmission#fromSession(RequestableSession, Charset, MessageParser)}
+     * using the parameters provided during construction.
+     * 
+     * @param session the request session providing the method, query
+     * string and request body
+     * 
+     * @return the submitted form field values; or {@code null} if no
+     * form delivery mechanism was recognized
+     * 
+     * @throws IOException if an I/O error occurs in reading the request
+     * body or storing any bodies
      */
-    V1_1,
-
-    /**
-     * Identifies a future, unknown version of HTTP.
-     */
-    FUTURE;
+    public FormSubmission get(RequestableSession session) throws IOException {
+        return FormSubmission.fromCGI(session.parameters(), session::in,
+                                   assumedCharset, parser);
+    }
 }

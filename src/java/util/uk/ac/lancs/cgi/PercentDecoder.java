@@ -34,7 +34,7 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.misc;
+package uk.ac.lancs.cgi;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
