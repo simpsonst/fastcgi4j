@@ -240,8 +240,9 @@ public class HttpResponderSession {
     private MediaType requestType = null;
 
     /**
-     * Get the content type of the request body. If a request body is
-     * expected, but not request content type has been specified,
+     * Get the content type of the request body. The parameter
+     * {@value #REQUEST_TYPE_PARAM} is consulted. If a request body is
+     * expected, but no request content type has been specified,
      * <samp>application/octet-stream</samp> is returned.
      * 
      * @return the request body's content type; or {@code null} if there
@@ -250,13 +251,19 @@ public class HttpResponderSession {
     public MediaType requestType() {
         if (methodIs("GET", "HEAD")) return null;
         if (requestType == null) {
-            String field = base.parameters().get("CONTENT_TYPE");
+            String field = base.parameters().get(REQUEST_TYPE_PARAM);
             requestType =
                 field == null ? MediaType.of("application", "octet-stream") :
                     MediaType.fromString(field);
         }
         return requestType;
     }
+
+    /**
+     * Specifies the parameter from which {@link #requestType()}'s value
+     * is derived.
+     */
+    private static final String REQUEST_TYPE_PARAM = "CONTENT_TYPE";
 
     /**
      * Determine whether the client is using a minimum version of HTTP.
