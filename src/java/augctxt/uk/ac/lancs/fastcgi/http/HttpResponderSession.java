@@ -390,16 +390,33 @@ public class HttpResponderSession {
             acceptedEncodings.add(e.toString());
     }
 
+    private long requestLength = -2;
+
     /**
-     * Get the request body's length.
+     * Get the request body's length. The parameter
+     * {@value #REQUEST_LENGTH_PARAM} is read as a decimal integer. If
+     * not present, or an empty string, the length is deemed unknown.
      * 
-     * @return the request body's length in bytes; zero if there is no
+     * @return the request body's length in bytes: zero if there is no
      * body; negative if the length is unknown
+     * 
+     * @throws NumberFormatException if the request body length has been
+     * set to an invalid value
      */
     public long requestLength() {
-        /* TODO */
-        throw new UnsupportedOperationException("unimplemented");
+        if (requestLength < -1) {
+            var text = base.parameters().get(REQUEST_LENGTH_PARAM);
+            requestLength =
+                text == null || text.isEmpty() ? -1 : Long.parseLong(text, 10);
+        }
+        return requestLength;
     }
+
+    /**
+     * Specifies the parameter from which {@link #requestLength()}'s
+     * value is derived.
+     */
+    private static final String REQUEST_LENGTH_PARAM = "CONTENT_LENGTH;";
 
     /**
      * Access the request header fields. Field values are obtained by
