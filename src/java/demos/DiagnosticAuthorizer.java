@@ -1,10 +1,3 @@
-
-import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
-import uk.ac.lancs.fastcgi.Authorizer;
-import uk.ac.lancs.fastcgi.context.AuthorizerSession;
-import uk.ac.lancs.http.ResponseCodes;
-
 // -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
 
 /*
@@ -42,6 +35,12 @@ import uk.ac.lancs.http.ResponseCodes;
  *
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
+
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
+import uk.ac.lancs.fastcgi.Authorizer;
+import uk.ac.lancs.fastcgi.context.AuthorizerSession;
+import uk.ac.lancs.http.ResponseCodes;
 
 /**
  * Acts as a really bad authenticator/authorizer. The session parameter

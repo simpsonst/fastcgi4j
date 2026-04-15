@@ -35,6 +35,7 @@
  *
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,24 +47,25 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Properties;
+import uk.ac.lancs.cgi.FormSubmission;
+import uk.ac.lancs.cgi.path.Navigator;
+import uk.ac.lancs.cgi.path.PathConfiguration;
+import uk.ac.lancs.cgi.path.PathContext;
 import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.app.FastCGIApplication;
 import uk.ac.lancs.fastcgi.app.FastCGIConfiguration;
-import uk.ac.lancs.mime.body.Morgue;
-import uk.ac.lancs.mime.body.SmartMorgue;
 import uk.ac.lancs.fastcgi.context.ResponderSession;
+import uk.ac.lancs.fastcgi.misc.SessionAugment;
+import uk.ac.lancs.fastcgi.util.FormHandler;
 import uk.ac.lancs.mime.BinaryMessage;
 import uk.ac.lancs.mime.Message;
 import uk.ac.lancs.mime.MessageParser;
 import uk.ac.lancs.mime.TextMessage;
-import uk.ac.lancs.fastcgi.util.FormHandler;
-import uk.ac.lancs.cgi.FormSubmission;
-import uk.ac.lancs.fastcgi.misc.SessionAugment;
-import uk.ac.lancs.cgi.path.Navigator;
-import uk.ac.lancs.cgi.path.PathConfiguration;
-import uk.ac.lancs.cgi.path.PathContext;
+import uk.ac.lancs.mime.body.Morgue;
+import uk.ac.lancs.mime.body.SmartMorgue;
 
 /**
+ * Assumes the request is a form submission, and echoes back the fields.
  *
  * @author simpsons
  */

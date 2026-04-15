@@ -1,3 +1,5 @@
+// -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
+
 /*
  * Copyright (C) 2022 Regents of the University of Lancaster
  *
@@ -18,8 +20,8 @@
 package uk.ac.lancs.fastcgi;
 
 import java.io.IOException;
-import uk.ac.lancs.fastcgi.context.SessionException;
 import uk.ac.lancs.fastcgi.context.AuthorizerSession;
+import uk.ac.lancs.fastcgi.context.SessionException;
 
 /**
  * Responds as an authorizer to FastCGI requests.

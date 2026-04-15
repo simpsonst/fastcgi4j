@@ -1,3 +1,5 @@
+// -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
+
 /*
  * Copyright (c) 2022,2023, Lancaster University
  * All rights reserved.
@@ -36,13 +38,13 @@
 
 package uk.ac.lancs.fastcgi.engine.std;
 
-import uk.ac.lancs.io.infpipe.Pipe;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.logging.Logger;
 import uk.ac.lancs.fastcgi.Responder;
-import uk.ac.lancs.fastcgi.context.SessionAbortedException;
 import uk.ac.lancs.fastcgi.context.ResponderSession;
+import uk.ac.lancs.fastcgi.context.SessionAbortedException;
+import uk.ac.lancs.io.infpipe.Pipe;
 
 /**
  * Handles Responder sessions.

@@ -1,7 +1,7 @@
 // -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
 
 /*
- * Copyright (c) 2024, Lancaster University
+ * Copyright (c) 2026, Lancaster University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,7 +37,6 @@
  */
 
 /**
- *
- * @author simpsons
+ * Manipulates HTTP's <samp>Cache-Control</samp> header field.
  */
-package uk.ac.lancs.fastcgi.http;
+package uk.ac.lancs.http.cache;

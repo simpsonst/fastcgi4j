@@ -1,3 +1,5 @@
+// -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
+
 /*
  * Copyright (c) 2022,2023, Lancaster University
  * All rights reserved.
@@ -48,21 +50,21 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Properties;
 import java.util.TreeMap;
+import uk.ac.lancs.cgi.FormSubmission;
+import uk.ac.lancs.cgi.path.Navigator;
+import uk.ac.lancs.cgi.path.PathConfiguration;
+import uk.ac.lancs.cgi.path.PathContext;
 import uk.ac.lancs.fastcgi.Responder;
-import uk.ac.lancs.mime.body.BinaryBody;
-import uk.ac.lancs.mime.body.Morgue;
-import uk.ac.lancs.mime.body.SmartMorgue;
 import uk.ac.lancs.fastcgi.context.ResponderSession;
+import uk.ac.lancs.fastcgi.misc.SessionAugment;
+import uk.ac.lancs.fastcgi.util.FormHandler;
 import uk.ac.lancs.mime.BinaryMessage;
 import uk.ac.lancs.mime.Message;
 import uk.ac.lancs.mime.MessageParser;
 import uk.ac.lancs.mime.TextMessage;
-import uk.ac.lancs.fastcgi.util.FormHandler;
-import uk.ac.lancs.cgi.FormSubmission;
-import uk.ac.lancs.fastcgi.misc.SessionAugment;
-import uk.ac.lancs.cgi.path.Navigator;
-import uk.ac.lancs.cgi.path.PathConfiguration;
-import uk.ac.lancs.cgi.path.PathContext;
+import uk.ac.lancs.mime.body.BinaryBody;
+import uk.ac.lancs.mime.body.Morgue;
+import uk.ac.lancs.mime.body.SmartMorgue;
 
 /**
  * Responds by echoing all headers, and displaying a hex MD5 sum of the

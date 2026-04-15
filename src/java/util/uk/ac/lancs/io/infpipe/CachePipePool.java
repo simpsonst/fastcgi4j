@@ -1,3 +1,5 @@
+// -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
+
 /*
  * Copyright (c) 2022,2023, Lancaster University
  * All rights reserved.
@@ -36,8 +38,6 @@
 
 package uk.ac.lancs.io.infpipe;
 
-import uk.ac.lancs.io.infpipe.PipePool;
-import uk.ac.lancs.io.infpipe.Pipe;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;

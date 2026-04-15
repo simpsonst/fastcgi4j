@@ -1,3 +1,5 @@
+// -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
+
 /*
  * Copyright (c) 2022,2023, Lancaster University
  * All rights reserved.
@@ -36,8 +38,6 @@
 
 package uk.ac.lancs.fastcgi.engine.std;
 
-import uk.ac.lancs.io.infpipe.CachePipePool;
-import uk.ac.lancs.io.infpipe.Pipe;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -64,6 +64,8 @@ import uk.ac.lancs.fastcgi.proto.serial.RecordReader;
 import uk.ac.lancs.fastcgi.proto.serial.RecordWriter;
 import uk.ac.lancs.fastcgi.transport.Connection;
 import uk.ac.lancs.fastcgi.transport.Transport;
+import uk.ac.lancs.io.infpipe.CachePipePool;
+import uk.ac.lancs.io.infpipe.Pipe;
 
 /**
  * Handles FastCGI records and delivers to all role types, supporting
