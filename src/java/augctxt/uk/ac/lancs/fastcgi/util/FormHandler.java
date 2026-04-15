@@ -38,9 +38,9 @@
 
 package uk.ac.lancs.fastcgi.util;
 
-import uk.ac.lancs.cgi.FormSubmission;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import uk.ac.lancs.cgi.FormSubmission;
 import uk.ac.lancs.fastcgi.context.RequestableSession;
 import uk.ac.lancs.mime.MessageParser;
 
@@ -85,6 +85,6 @@ public final class FormHandler {
      */
     public FormSubmission get(RequestableSession session) throws IOException {
         return FormSubmission.fromCGI(session.parameters(), session::in,
-                                   assumedCharset, parser);
+                                      assumedCharset, parser);
     }
 }
