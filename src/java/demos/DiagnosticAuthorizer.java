@@ -48,7 +48,7 @@ import uk.ac.lancs.http.ResponseCodes;
  * <samp>AUTHENTICATOR</samp>, it checks whether
  * <samp>REMOTE_PASSWD</samp> is <samp>ho</samp>. If it is, it sets
  * <samp>FLONG_USER</samp> and <samp>FLONG_METHOD</samp> as
- * authentication variables, and yields {@link ResponseCodes#OK}
+ * authentication variables, and yields an {@link ResponseCodes#OK}
  * response. If the password is wrong it yields a
  * {@link ResponseCodes#FORBIDDEN} response with a message. If the
  * Apache role is <samp>AUTHORIZER</samp>, it yields a
