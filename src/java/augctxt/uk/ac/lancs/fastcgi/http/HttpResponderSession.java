@@ -92,8 +92,7 @@ public class HttpResponderSession {
      * 
      * @param base the base session
      * 
-     * @param context re-usable context that can be shared between
-     * sessions
+     * @param ctxt re-usable context that can be shared between sessions
      * 
      * @throws IllegalArgumentException if the base session is not HTTP
      */
