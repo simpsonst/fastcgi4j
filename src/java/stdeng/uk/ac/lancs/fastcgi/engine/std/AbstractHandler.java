@@ -200,7 +200,8 @@ abstract class AbstractHandler implements SessionHandler, Session {
         public void write(int b) throws IOException {
             if (closed) throw new IOException("closed");
             buf1[0] = (byte) b;
-            recordsOut.writeStdout(id, buf1, 0, 1);
+            int done = recordsOut.writeStdout(id, buf1, 0, 1);
+            if (done != 1) throw new IOException("failed single byte");
         }
 
         @Override
@@ -213,10 +214,18 @@ abstract class AbstractHandler implements SessionHandler, Session {
         @Override
         public void write(byte[] b, int off, int len) throws IOException {
             if (closed) throw new IOException("closed");
+            checkBufferRange(b, "b", off, len);
 
-            /* TODO: For large values of len, break into multiple
-             * calls. */
-            recordsOut.writeStdout(id, b, off, len);
+            /* Repeatedly write some data, and consume whatever was
+             * sent. The data might be longer than what can be sent in a
+             * single FastCGI frame. */
+            while (len > 0) {
+                int done = recordsOut.writeStdout(id, b, off, len);
+                assert done >= 0;
+                assert done <= len;
+                off += done;
+                len -= done;
+            }
         }
     };
 
@@ -285,7 +294,8 @@ abstract class AbstractHandler implements SessionHandler, Session {
             public void write(int b) throws IOException {
                 if (closed) throw new IOException("closed");
                 buf1[0] = (byte) b;
-                recordsOut.writeStderr(id, buf1, 0, 1);
+                int done = recordsOut.writeStderr(id, buf1, 0, 1);
+                if (done != 1) throw new IOException("failed single byte");
             }
 
             @Override
@@ -298,9 +308,28 @@ abstract class AbstractHandler implements SessionHandler, Session {
             @Override
             public void write(byte[] b, int off, int len) throws IOException {
                 if (closed) throw new IOException("closed");
-                recordsOut.writeStderr(id, b, off, len);
+                checkBufferRange(b, "b", off, len);
+
+                /* Repeatedly write some data, and consume whatever was
+                 * sent. The data might be longer than what can be sent
+                 * in a single FastCGI frame. */
+                while (len > 0) {
+                    int done = recordsOut.writeStderr(id, b, off, len);
+                    assert done >= 0;
+                    assert done <= len;
+                    off += done;
+                    len -= done;
+                }
             }
         }, ctxt.stderrBufferSize), true, charset);
+    }
+
+    private static void checkBufferRange(byte[] b, String bName, int off,
+                                         int len) {
+        Objects.requireNonNull(b, bName);
+        if (off < 0 || off > b.length) throw new IndexOutOfBoundsException(off);
+        if (off + len >= b.length)
+            throw new IndexOutOfBoundsException(off + len);
     }
 
     @Override
