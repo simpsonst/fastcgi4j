@@ -41,6 +41,8 @@ package uk.ac.lancs.fastcgi.proto.serial;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import uk.ac.lancs.fastcgi.proto.RecordTypes;
+import uk.ac.lancs.fastcgi.proto.RequestFlags;
 
 /**
  * Accepts deserialized FastCGI records.
@@ -49,9 +51,8 @@ import java.util.Collection;
  */
 public interface RecordHandler {
     /**
-     * Inform of a request for a set of application variables.
-     * 
-     * @param id the request id, which should always be zero
+     * Inform of a request for a set of application variables. This is
+     * called on reception of a {@link RecordTypes#GET_VALUES} record.
      * 
      * @param names the names of the requested variables
      * 
@@ -61,11 +62,15 @@ public interface RecordHandler {
     void getValues(Collection<? extends String> names) throws IOException;
 
     /**
-     * Begin a request.
+     * Begin a request. This is called on reception of a
+     * {@link RecordTypes#BEGIN_REQUEST} record.
      * 
      * @param id the request id
      * 
      * @param role the role of the application in serving this request
+     * 
+     * @param flags the request flags, as defined by
+     * {@link RequestFlags}
      * 
      * @throws IOException if an I/O error occurs in transmitting a
      * responding record
@@ -73,7 +78,8 @@ public interface RecordHandler {
     void beginRequest(int id, int role, int flags) throws IOException;
 
     /**
-     * Abort a request.
+     * Abort a request. This is called on reception of a
+     * {@link RecordTypes#ABORT_REQUEST} record.
      * 
      * @param id the request id
      * 
@@ -83,7 +89,8 @@ public interface RecordHandler {
     void abortRequest(int id) throws IOException;
 
     /**
-     * Receive a stream of parameter data.
+     * Receive a stream of parameter data. This is called on reception
+     * of a non-empty {@link RecordTypes#PARAMS} record.
      * 
      * @default A recommended implementation is to call
      * {@link ParamReader#consume(InputStream)}.
@@ -100,7 +107,8 @@ public interface RecordHandler {
     void params(int id, int len, InputStream in) throws IOException;
 
     /**
-     * Indicate that parameter data is complete.
+     * Indicate that parameter data is complete. This is called on
+     * reception of an empty {@link RecordTypes#PARAMS} record.
      * 
      * @default A recommended implementation is to call
      * {@link ParamReader#complete()}.
@@ -113,7 +121,8 @@ public interface RecordHandler {
     void paramsEnd(int id) throws IOException;
 
     /**
-     * Receive a stream of standard-input data.
+     * Receive a stream of standard-input data. This is called on
+     * reception of a non-empty {@link RecordTypes#STDIN} record.
      * 
      * @param id the request id
      * 
@@ -127,7 +136,8 @@ public interface RecordHandler {
     void stdin(int id, int len, InputStream in) throws IOException;
 
     /**
-     * Indicate that standard input is complete.
+     * Indicate that standard input is complete. This is called on
+     * reception of an empty {@link RecordTypes#STDIN} record.
      * 
      * @param id the request id
      * 
@@ -137,7 +147,8 @@ public interface RecordHandler {
     void stdinEnd(int id) throws IOException;
 
     /**
-     * Receive a stream of extra data.
+     * Receive a stream of extra data. This is called on reception of a
+     * non-empty {@link RecordTypes#DATA} record.
      * 
      * @param id the request id
      * 
@@ -151,7 +162,8 @@ public interface RecordHandler {
     void data(int id, int len, InputStream in) throws IOException;
 
     /**
-     * Indicate that extra data is complete.
+     * Indicate that extra data is complete. This is called on reception
+     * of an empty {@link RecordTypes#DATA} record.
      * 
      * @param id the request id
      * 
@@ -164,7 +176,9 @@ public interface RecordHandler {
      * Report a bad record.
      * 
      * @param reasons flags identifying the reasons for rejecting the
-     * record
+     * record, as defined by {@link #TOO_NEW},
+     * {@link #BAD_VERSION},{@link #BAD_REQ_ID}, {@link #BAD_LENGTH} and
+     * {@link #UNKNOWN_TYPE}
      * 
      * @param version the record type version
      * 
