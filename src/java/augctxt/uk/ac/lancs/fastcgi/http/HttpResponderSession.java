@@ -46,6 +46,7 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -123,6 +124,67 @@ public class HttpResponderSession {
         for (var meth : meths)
             if (method.equals(meth)) return true;
         return false;
+    }
+
+    /**
+     * Caches the parsed value of the <samp>TE</samp> HTTP/1.1 request
+     * header. Call {@link #getAcceptedTransferEncodings()} to populate
+     * it lazily.
+     */
+    private Map<String, Map<String, String>> acceptedTransferEncodings = null;
+
+    /**
+     * Parse the <samp>TE</samp> request header field as a
+     * comma-separated sequence of tokens with optional parameters. The
+     * result is stored in {@link #acceptedTransferEncodings} if it is
+     * currently {@code null}, so only the first call actually does
+     * anything.
+     * 
+     * <p>
+     * For HTTP/2 and later, the field is ignored if it doesn't contain
+     * the token {@value #TRAILERS_TOKEN}.
+     */
+    private void getAcceptedTransferEncodings() {
+        if (acceptedTransferEncodings != null) return;
+        var txt = base.parameters().get("HTTP_TE");
+        Map<String, Map<String, String>> result = new HashMap<>();
+        if (txt != null) {
+            var toks = new Tokenizer(txt);
+            CharSequence name;
+            Map<String, String> params = new HashMap<>();
+            while (toks.whitespace(0) &&
+                (name = toks.atomParameters(params)) != null) {
+                result.put(name.toString(), Map.copyOf(params));
+                params.clear();
+                if (!toks.whitespaceCharacter(0, ',')) break;
+            }
+        }
+        if (protocol.isMinimally("HTTP", 2, 0) &&
+            !result.containsKey(TRAILERS_TOKEN)) {
+            /* Later versions require "trailers" to always be listed if
+             * the field is to be accepted. */
+            acceptedTransferEncodings = Collections.emptyMap();
+        } else {
+            acceptedTransferEncodings = Map.copyOf(result);
+        }
+    }
+
+    private static final String TRAILERS_TOKEN = "trailers";
+
+    /**
+     * Determine whether a response trailer can be sent.
+     * 
+     * @return {@code true} if a trailer can be sent; {@code false}
+     * otherwise
+     */
+    private boolean responseTrailerAllowed() {
+        /* For HTTP/2, trailers are always permitted. */
+        if (protocol.isMinimally("HTTP", 2, 0)) return true;
+
+        /* For earlier versions, look for a "trailers" token in the "TE"
+         * header field. */
+        getAcceptedTransferEncodings();
+        return acceptedTransferEncodings.containsKey("trailers");
     }
 
     private List<String> tokens(String fieldName) {
