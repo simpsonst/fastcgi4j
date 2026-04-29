@@ -37,13 +37,14 @@
  */
 
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.app.FastCGIApplication;
 import uk.ac.lancs.fastcgi.app.FastCGIConfiguration;
 import uk.ac.lancs.fastcgi.context.ResponderSession;
+import uk.ac.lancs.io.CountingInputStream;
+import uk.ac.lancs.io.CountingOutputStream;
 
 /**
  * Responds by displaying the request parameters and body.
@@ -59,13 +60,18 @@ public class RequestEchoer extends FastCGIApplication implements Responder {
     @Override
     public void respond(ResponderSession session) throws Exception {
         session.setField("Content-Type", "text/plain; charset=UTF-8");
-        try (var out = new PrintWriter(new BufferedOutputStream(session.out()),
-                                       false, StandardCharsets.UTF_8)) {
+        var outCounter = new Counter();
+        var inCounter = new Counter();
+        try (var out =
+            new PrintWriter(new CountingOutputStream(session.out(), outCounter),
+                            false, StandardCharsets.UTF_8)) {
             for (var item : session.parameters().entrySet()) {
                 out.printf("%s: %s\n", item.getKey(), item.getValue());
             }
             out.println();
-            try (var in = new BufferedInputStream(session.in())) {
+            try (var in =
+                new CountingInputStream(new BufferedInputStream(session.in()),
+                                        inCounter)) {
                 int c;
                 while ((c = in.read()) >= 0) {
                     switch (c) {
@@ -91,6 +97,8 @@ public class RequestEchoer extends FastCGIApplication implements Responder {
                     }
                 }
             }
+            System.err.printf("Bytes in: %d%n", inCounter.get());
         }
+        System.err.printf("Bytes out: %d%n", outCounter.get());
     }
 }
