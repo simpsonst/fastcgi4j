@@ -240,9 +240,12 @@ public class TrailingChunkingClient {
                 } while (false);
                 System.err.printf("bytes returned: %d%n", inCounter.get());
 
+                FieldSet trailer = new FieldSet();
+                FieldSetParser.of(sockIn, trailer).readAll();
                 System.err.println("Trailer:");
-                try (var trailerIn = sockIn) {
-                    trailerIn.transferTo(System.err);
+                for (var item : trailer.fields.entrySet()) {
+                    System.err.printf("%s: %s%n", item.getKey(),
+                                      item.getValue());
                 }
                 System.err.println("Complete.");
             }
