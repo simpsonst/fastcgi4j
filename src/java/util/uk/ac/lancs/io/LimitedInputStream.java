@@ -88,8 +88,9 @@ public class LimitedInputStream extends FilterInputStream {
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
         checkErrors();
+        if (remaining <= 0) return -1;
         try {
-            int got = super.read(b, off, len);
+            int got = in.read(b, off, (int) Long.min(remaining, len));
             if (got > 0) remaining -= got;
             return got;
         } catch (IOException ex) {
@@ -109,8 +110,9 @@ public class LimitedInputStream extends FilterInputStream {
     @Override
     public int read() throws IOException {
         checkErrors();
+        if (remaining <= 0) return -1;
         try {
-            int got = super.read();
+            int got = in.read();
             if (got >= 0) remaining--;
             return got;
         } catch (IOException ex) {
@@ -129,8 +131,7 @@ public class LimitedInputStream extends FilterInputStream {
     @Override
     public int available() throws IOException {
         try {
-            int base = super.available();
-            return remaining < base ? (int) remaining : base;
+            return (int) Long.min(remaining, in.available());
         } catch (IOException ex) {
             fault = ex;
             throw ex;
@@ -148,7 +149,7 @@ public class LimitedInputStream extends FilterInputStream {
         if (closed) return;
         closed = true;
         try {
-            super.close();
+            in.close();
         } catch (IOException ex) {
             /* Recording this error here has no real effect, as the
              * wrapping stream is now marked closed, but we'll do it
