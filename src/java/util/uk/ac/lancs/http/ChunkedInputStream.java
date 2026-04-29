@@ -44,7 +44,9 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HexFormat;
 import java.util.Map;
+import java.util.function.ObjLongConsumer;
 import uk.ac.lancs.mime.Tokenizer;
 
 /**
@@ -54,6 +56,26 @@ import uk.ac.lancs.mime.Tokenizer;
  * @author simpsons
  */
 public class ChunkedInputStream extends FilterInputStream {
+    private static final int MAX_CHUNK_HEADER = 1024;
+
+    private final ObjLongConsumer<? super Map<String, String>> paramConsumer;
+
+    /**
+     * Prepare to decode a chunked input stream, and act on chunk
+     * parameters.
+     * 
+     * @param base the base stream, which is in chunked format
+     * 
+     * @param paramConsumer to be invoked when chunk parameters are
+     * parsed, and including the total number of bytes delivered so far
+     */
+    public ChunkedInputStream(InputStream base,
+                              ObjLongConsumer<? super Map<String,
+                                                          String>> paramConsumer) {
+        super(base);
+        this.paramConsumer = paramConsumer;
+    }
+
     /**
      * Prepare to decode a chunked input stream.
      * 
@@ -61,6 +83,7 @@ public class ChunkedInputStream extends FilterInputStream {
      */
     public ChunkedInputStream(InputStream base) {
         super(base);
+        this.paramConsumer = (x, y) -> {};
     }
 
     /**
@@ -71,16 +94,48 @@ public class ChunkedInputStream extends FilterInputStream {
     private long remaining = 0;
 
     /**
+     * Records the exception that prevented successful parsing.
+     */
+    private IOException abortion = null;
+
+    /**
+     * Form an I/O exception with the given message format an arguments,
+     * record it, and throw it.
+     * 
+     * @param msg the message format for the exception
+     * 
+     * @param args arguments to be applied to the message format
+     * 
+     * @throws IOException always
+     */
+    private void abort(String msg, Object... args) throws IOException {
+        abortion = new IOException(msg.formatted(args));
+        throw abortion;
+    }
+
+    /**
+     * Check if parsing has been aborted.
+     * 
+     * @throws IOException if parsing has been aborted, including the
+     * original cause
+     */
+    private void checkAbortion() throws IOException {
+        if (abortion != null) throw new IOException("aborted", abortion);
+    }
+
+    /**
+     * Records how much space is required for the CRLF chunk terminator
+     * of the current chunk. Initially, this is zero, as there is no
+     * current chunk, but it becomes 2 after the first chunk header is
+     * parsed.
+     */
+    private int termSpace = 0;
+
+    /**
      * Holds a (partial) chunk header line. {@link #lineLength}
      * indicates how many bytes are occupied from position 0.
      */
     private byte[] line = new byte[128];
-
-    /**
-     * Specifies the number of bytes already read from the chunk header
-     * line. This indicates the next unused byte of {@link #line}.
-     */
-    private int lineLength = 0;
 
     /**
      * Indicates that the base stream has delivered its final (empty)
@@ -105,10 +160,7 @@ public class ChunkedInputStream extends FilterInputStream {
      */
     private static final String DIGIT_CHARS = "0123456789abcdefABCDEF";
 
-    /**
-     * Provides a dumping ground for ignored chunk extensions.
-     */
-    private static final Map<String, String> exts = new HashMap<>();
+    private long total = 0;
 
     /**
      * Ensure we know how many bytes remain in the current chunk. If we
@@ -125,18 +177,60 @@ public class ChunkedInputStream extends FilterInputStream {
         if (terminated) return true;
         if (remaining > 0) return false;
 
-        /* Attempt to complete the length line. */
-        while (lineLength < 2 || line[lineLength - 2] != 13 ||
-            line[lineLength - 1] != 10) {
+        /* Attempt to read the length line and preceding chunk
+         * terminator (CRLF). Stop when we have the minimum number of
+         * bytes, ending with CRLF. */
+        int len = 0;
+        while (len < termSpace + 2 || line[len - 2] != 13 ||
+            line[len - 1] != 10) {
+
             /* Use a bigger buffer if necessary. */
-            if (lineLength == line.length)
-                line = Arrays.copyOf(line, lineLength * 2);
+            if (len == line.length) {
+                /* Check for a practical upper limit, and abort if
+                 * already reached. */
+                if (line.length >= MAX_CHUNK_HEADER) {
+                    abort("excessive chunk header: (%d) %s", len,
+                          HexFormat.of().formatHex(line, 0, len));
+                    throw new AssertionError("unreachable");
+                }
+                line =
+                    Arrays.copyOf(line, Integer.min(len * 2, MAX_CHUNK_HEADER));
+            }
+
+            /* Read and store the byte. EOF here is a fatal error. */
             int rc = in.read();
-            if (rc < 0) throw new IOException("input terminated mid-header");
-            line[lineLength++] = (byte) rc;
+            if (rc < 0) {
+                abort("input terminated mid-header: %s",
+                      HexFormat.of().formatHex(line, 0, len));
+                throw new AssertionError("unreachable");
+            }
+            line[len++] = (byte) rc;
         }
-        String text =
-            new String(line, 0, lineLength - 2, StandardCharsets.US_ASCII);
+
+        /* Abort if we don't have enough bytes for 2xCRLF. */
+        if (len < termSpace + 2) {
+            abort("bad chunk separator: %s",
+                  HexFormat.of().formatHex(line, 0, len));
+            throw new AssertionError("unreachable");
+        }
+
+        /* Abort if a CRLF terminator is expected but not present. */
+        if (termSpace == 2) {
+            if (line[0] != 13 || line[1] != 10) {
+                abort("bad chunk terminator: %s",
+                      HexFormat.of().formatHex(line, 0, len));
+                throw new AssertionError("unreachable");
+            }
+        }
+
+        /* Extract the text between the CRLFs, and remember that all
+         * subsequent chunk separators begin with a CRLF terminator. */
+        String text = new String(line, termSpace, len - 2 - termSpace,
+                                 StandardCharsets.US_ASCII);
+        termSpace = 2;
+
+        /* Parse the length line as a hex number followed by optional
+         * parameters. */
         var tokens = new Tokenizer(text);
         int dig;
         while ((dig = tokens.character(DIGIT_CHARS)) >= 0) {
@@ -144,39 +238,91 @@ public class ChunkedInputStream extends FilterInputStream {
             if (dig >= 16) dig -= 6;
             remaining += dig;
         }
-        if (!tokens.parameters(exts))
-            throw new IOException("bad chunk header: " + text);
-        lineLength = 0;
+        final Map<String, String> exts = new HashMap<>();
+        if (!tokens.parameters(exts)) {
+            abort("bad chunk header: %s", text);
+            throw new AssertionError("unreachable");
+        }
+        paramConsumer.accept(exts, total);
+
+        /* Detect and report EOF. */
         if (remaining == 0) {
             terminated = true;
             return true;
         }
+
+        /* There is still some data to read. */
         return false;
     }
 
+    /**
+     * Read a byte.
+     * 
+     * <p>
+     * If a chunk header is processed, the parameters and current offset
+     * into the content are passed to the configured consumer.
+     * 
+     * @return the next byte as an unsigned value; or {@code -1} on EOF
+     * 
+     * @throws IOException if an I/O error occurs
+     */
     @Override
     public int read() throws IOException {
         if (closed) throw new IOException("closed");
+        checkAbortion();
         if (getRemaining()) return -1;
         int rc = in.read();
-        if (rc < 0) throw new IOException("input terminated mid-chunk");
+        if (rc < 0) {
+            abort("input terminated after %d with %d of chunk remaining", total,
+                  remaining);
+            throw new AssertionError("unreachable");
+        }
         remaining--;
+        total++;
         return rc;
     }
 
+    /**
+     * Read bytes into part of an array.
+     * 
+     * <p>
+     * If a chunk header is processed, the parameters and current offset
+     * into the content are passed to the configured consumer.
+     * 
+     * @param b the array to populate
+     * 
+     * @param off the index into the array of the first byte to read
+     * into
+     * 
+     * @param len the maximum number of bytes to read
+     * 
+     * @return the number of bytes read; or {@code -1} on EOF
+     * 
+     * @throws IOException if an I/O error occurs
+     */
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
         if (closed) throw new IOException("closed");
+        checkAbortion();
         if (getRemaining()) return -1;
         assert remaining > 0;
         int got = in.read(b, off, (int) Long.min(len, remaining));
-        if (got < 0) throw new IOException("input terminated mid-chunk");
+        if (got < 0) {
+            abort("input terminated after %d with %d of chunk remaining", total,
+                  remaining);
+            throw new AssertionError("unreachable");
+        }
         remaining -= got;
+        total += got;
         return got;
     }
 
     /**
      * Discard bytes from the stream.
+     * 
+     * <p>
+     * If a chunk header is processed, the parameters and current offset
+     * into the content are passed to the configured consumer.
      * 
      * @param n the maximum number of bytes to skip
      * 
@@ -187,6 +333,7 @@ public class ChunkedInputStream extends FilterInputStream {
     @Override
     public long skip(long n) throws IOException {
         if (closed) throw new IOException("closed");
+        checkAbortion();
         if (getRemaining()) return -1;
         assert remaining > 0;
         long got = in.skip(Long.min(n, remaining));
@@ -231,6 +378,7 @@ public class ChunkedInputStream extends FilterInputStream {
     @Override
     public int available() throws IOException {
         if (closed) throw new IOException("closed");
+        checkAbortion();
         return (int) Long.min(in.available(), remaining);
     }
 }
