@@ -122,6 +122,22 @@ public class LimitedInputStream extends FilterInputStream {
     }
 
     /**
+     * Skip bytes.
+     * 
+     * @param n the maximum number of bytes to skip
+     * 
+     * @return the number of bytes skipped
+     * 
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    public long skip(long n) throws IOException {
+        checkErrors();
+        if (remaining <= 0) return 0;
+        return in.skip((int) Long.min(remaining, n));
+    }
+
+    /**
      * Estimate the number of bytes that can be read without blocking.
      * 
      * @return the estimated number of bytes
