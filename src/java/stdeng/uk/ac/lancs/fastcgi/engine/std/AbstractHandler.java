@@ -328,7 +328,7 @@ abstract class AbstractHandler implements SessionHandler, Session {
                                          int len) {
         Objects.requireNonNull(b, bName);
         if (off < 0 || off > b.length) throw new IndexOutOfBoundsException(off);
-        if (off + len >= b.length)
+        if (off + len > b.length)
             throw new IndexOutOfBoundsException(off + len);
     }
 
