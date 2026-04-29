@@ -54,6 +54,9 @@ import java.nio.charset.StandardCharsets;
 public class ChunkedOutputStream extends FilterOutputStream {
     private static final byte[] CRLF = { 13, 10 };
 
+    /* TODO: Allow the user to specify parameters to place in the chunk
+     * header. */
+
     /**
      * Create a chunked output stream.
      * 
