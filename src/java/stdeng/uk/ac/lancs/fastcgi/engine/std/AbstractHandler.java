@@ -593,6 +593,7 @@ abstract class AbstractHandler implements SessionHandler, Session {
     }
 
     private void ensureResponseHeader() throws IOException {
+        /* A negative status code means we've already done this. */
         if (statusCode < 0) return;
 
         assert bufferedOut == null;
