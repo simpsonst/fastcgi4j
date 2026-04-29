@@ -465,6 +465,7 @@ abstract class AbstractHandler implements SessionHandler, Session {
         } catch (IOException ex) {
             /* The application was unable to write a record, so we have
              * to terminate all handlers on this connection. */
+            logger.warning(() -> msg("aborting connection"));
             connAbort.run();
         } finally {
             logger.fine(() -> msg("app-thread-exit"));
