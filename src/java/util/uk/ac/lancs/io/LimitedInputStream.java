@@ -122,6 +122,18 @@ public class LimitedInputStream extends FilterInputStream {
     }
 
     /**
+     * Reset the stream to a previous mark.
+     * 
+     * @throws IOException if the stream has not been marked or the mark
+     * has been invalidated
+     */
+    @Override
+    public void reset() throws IOException {
+        checkErrors();
+        in.reset();
+    }
+
+    /**
      * Skip bytes.
      * 
      * @param n the maximum number of bytes to skip
