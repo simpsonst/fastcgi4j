@@ -64,6 +64,7 @@ import uk.ac.lancs.fastcgi.proto.serial.ParamReader;
 import uk.ac.lancs.fastcgi.proto.serial.RecordIOException;
 import uk.ac.lancs.fastcgi.proto.serial.RecordWriter;
 import uk.ac.lancs.http.ResponseCodes;
+import uk.ac.lancs.io.UnclosedOutputStream;
 
 /**
  * Implements session-specific behaviour functionality common to all
@@ -600,10 +601,11 @@ abstract class AbstractHandler implements SessionHandler, Session {
 
         /* Don't autoclose this stream; we need the base to remain
          * open. */
-        PrintStream pout = new PrintStream(bufferedOut, false, charset);
         final int fsc = statusCode;
         final String fsm = ResponseCodes.getStatusMessage(statusCode);
-        try {
+        try (PrintStream pout =
+            new PrintStream(new UnclosedOutputStream(bufferedOut), false,
+                            charset)) {
             pout.printf("Status: %d %s%n", statusCode, fsm);
             for (var entry : outHeaders.entrySet()) {
                 List<String> values = entry.getValue();
@@ -614,7 +616,6 @@ abstract class AbstractHandler implements SessionHandler, Session {
             }
             pout.println();
         } finally {
-            pout.flush();
             statusCode = -1;
         }
         logger.fine(() -> msg("rsp-hdr-sent %d %s", fsc, fsm));
