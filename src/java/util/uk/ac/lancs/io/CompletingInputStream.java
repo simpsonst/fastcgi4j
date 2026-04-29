@@ -59,6 +59,82 @@ public class CompletingInputStream extends FilterInputStream {
 
     private boolean closed = false;
 
+    private void checkClosed() throws IOException {
+        if (closed) throw new IOException("closed");
+    }
+
+    /**
+     * Reset the stream to its last marked position.
+     * 
+     * @throws IOException if the stream has not been marked or the mark
+     * has been invalidated
+     */
+    @Override
+    public void reset() throws IOException {
+        checkClosed();
+        in.reset();
+    }
+
+    /**
+     * Get an estimate of bytes immediately available.
+     * 
+     * @return the requested estimate
+     * 
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    public int available() throws IOException {
+        checkClosed();
+        return in.available();
+    }
+
+    /**
+     * Skip bytes.
+     * 
+     * @param n the maximum number of bytes to skip
+     * 
+     * @return the number of bytes skipped
+     * 
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    public long skip(long n) throws IOException {
+        checkClosed();
+        return in.skip(n);
+    }
+
+    /**
+     * Read bytes into a portion of an array.
+     * 
+     * @param b the array to read into
+     * 
+     * @param off the index of the first byte to overwrite
+     * 
+     * @param len the maximum number of bytes to read
+     * 
+     * @return the number of bytes read; or {@code -1} on EOF
+     * 
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    public int read(byte[] b, int off, int len) throws IOException {
+        checkClosed();
+        return in.read(b, off, len);
+    }
+
+    /**
+     * Read a single byte.
+     * 
+     * @return the next byte; or {@code -1} on EOF
+     * 
+     * @throws IOException if an I/O error occurs
+     */
+    @Override
+    public int read() throws IOException {
+        checkClosed();
+        return in.read();
+    }
+
     /**
      * Discard all remaining bytes of the base stream, and then close
      * it. A second call to this method has no effect.
@@ -71,11 +147,11 @@ public class CompletingInputStream extends FilterInputStream {
         if (closed) return;
         closed = true;
         for (;;) {
-            long amount = super.skip(65536);
+            long amount = in.skip(65536);
             if (amount > 0) continue;
-            int c = super.read();
+            int c = in.read();
             if (c < 0) break;
         }
-        super.close();
+        in.close();
     }
 }
