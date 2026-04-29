@@ -51,7 +51,8 @@ import uk.ac.lancs.mime.Tokenizer;
 
 /**
  * Reads and decodes a chunked input stream. When closed, the base
- * stream is not closed, but left in a position to read the trailer.
+ * stream is also closed. Use {@link UnclosedInputStream} so that the
+ * base stream is left in a position to read the trailer.
  * 
  * @author simpsons
  */
@@ -343,8 +344,7 @@ public class ChunkedInputStream extends FilterInputStream {
 
     /**
      * Close the stream. The base stream continues to be read until the
-     * final chunk header is received. It is then left open in a
-     * position to read the trailer.
+     * final chunk header is received.
      * 
      * <p>
      * Calling close more than once has no further effect.
@@ -361,6 +361,8 @@ public class ChunkedInputStream extends FilterInputStream {
             long got = in.skip(remaining);
             remaining -= got;
         }
+
+        in.close();
     }
 
     /**

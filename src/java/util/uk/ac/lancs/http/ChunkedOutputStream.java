@@ -46,8 +46,9 @@ import java.nio.charset.StandardCharsets;
 
 /**
  * Writes a chunked message to an output stream. Each write operation on
- * this stream generates a chunk. No trailer is generated, and the base
- * stream is not closed when this filter is closed.
+ * this stream generates a chunk. No trailer is generated. When closed,
+ * the base stream is closed. Use {@link UnclosedOutputStream} to
+ * prevent that.
  *
  * @author simpsons
  */
@@ -83,7 +84,7 @@ public class ChunkedOutputStream extends FilterOutputStream {
         closed = true;
         out.write(48);
         out.write(CRLF);
-        out.flush();
+        out.close();
     }
 
     /**
