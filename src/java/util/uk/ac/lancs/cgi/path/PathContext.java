@@ -207,7 +207,7 @@ public final class PathContext<I> {
      * 
      * @deprecated The application should be able to do without this. In
      * any case, calling
-     * <code>{@linkplain #locate(String)}("").local()</code> should
+     * <code>{@linkplain #navigator() navigator}().{@linkplain Navigator#locate(String) locate}("").local()</code> should
      * yield the same value.
      */
     @Deprecated
