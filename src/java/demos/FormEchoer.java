@@ -48,9 +48,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Properties;
 import uk.ac.lancs.cgi.FormSubmission;
-import uk.ac.lancs.cgi.path.Navigator;
 import uk.ac.lancs.cgi.path.PathConfiguration;
-import uk.ac.lancs.cgi.path.PathContext;
 import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.app.FastCGIApplication;
 import uk.ac.lancs.fastcgi.app.FastCGIConfiguration;
@@ -100,9 +98,6 @@ public class FormEchoer extends FastCGIApplication implements Responder {
     @Override
     public void respond(ResponderSession session) throws Exception {
         SessionAugment augment = new SessionAugment(session);
-        PathContext<String> pathCtxt =
-            pathConfig.recognize(session.parameters());
-        Navigator navigator = pathCtxt.navigator();
         final FormSubmission submission = formHandler.get(session);
         try (PrintWriter out = augment.textOut("plain")) {
             out.printf("\nForm fields:\n");
