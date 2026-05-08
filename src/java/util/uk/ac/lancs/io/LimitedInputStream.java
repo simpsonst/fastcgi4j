@@ -158,6 +158,7 @@ public class LimitedInputStream extends FilterInputStream {
      */
     @Override
     public int available() throws IOException {
+        checkErrors();
         try {
             return (int) Long.min(remaining, in.available());
         } catch (IOException ex) {
