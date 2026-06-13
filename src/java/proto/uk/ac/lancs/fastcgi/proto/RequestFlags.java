@@ -72,8 +72,45 @@ public final class RequestFlags {
             flags &= ~KEEP_CONN;
             result.append("|KEEP_CONN");
         }
+        if ((flags & EXPECT_TRAILER) != 0) {
+            flags &= ~EXPECT_TRAILER;
+            result.append("|EXPECT_TRAILER");
+        }
+        if ((flags & SUPPLY_TRAILER) != 0) {
+            flags &= ~SUPPLY_TRAILER;
+            result.append("|SUPPLY_TRAILER");
+        }
         for (int i = 0; i < 8; i++)
             if ((flags & (1 << i)) != 0) result.append("|FLAG_").append(i);
         return result.toString();
     }
+
+    /**
+     * Specifies whether the standard input is followed by a request
+     * trailer. If set, then the application should await a second
+     * sequence of {@link RecordTypes#PARAMS} immediately after
+     * completing the {@link RecordTypes#STDIN} sequence.
+     * 
+     * <p>
+     * This flag will not be set unless the application has provided
+     * {@link ApplicationVariables#FIELD_HANDLING} with a value that
+     * includes the token
+     * {@value ApplicationVariables#FIELD_HANDLING_REQUEST_TRAILER}.
+     * 
+     * <p>
+     * This is an experimental extension to FastCGI/1.0.
+     */
+    public static final int EXPECT_TRAILER = 2;
+
+    /**
+     * Specifies whether the application may attach a response trailer
+     * after completing standard output. If set, the application may
+     * send a {@link RecordTypes#PARAMS} sequence immediately after
+     * completing the {@link RecordTypes#STDOUT} sequence but before the
+     * {@link RecordTypes#END_REQUEST} record.
+     * 
+     * <p>
+     * This is an experimental extension to FastCGI/1.0.
+     */
+    public static final int SUPPLY_TRAILER = 4;
 }
