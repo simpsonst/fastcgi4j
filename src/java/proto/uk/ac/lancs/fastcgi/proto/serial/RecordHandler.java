@@ -90,7 +90,10 @@ public interface RecordHandler {
 
     /**
      * Receive a stream of parameter data. This is called on reception
-     * of a non-empty {@link RecordTypes#PARAMS} record.
+     * of a non-empty {@link RecordTypes#PARAMS} record. The provided
+     * stream will provide the exact number of bytes expected, and can
+     * be closed early without disrupting any underlying stream it is
+     * based on.
      * 
      * @default A recommended implementation is to call
      * {@link ParamReader#consume(InputStream)}.
@@ -122,7 +125,10 @@ public interface RecordHandler {
 
     /**
      * Receive a stream of standard-input data. This is called on
-     * reception of a non-empty {@link RecordTypes#STDIN} record.
+     * reception of a non-empty {@link RecordTypes#STDIN} record. The
+     * provided stream will provide the exact number of bytes expected,
+     * and can be closed early without disrupting any underlying stream
+     * it is based on.
      * 
      * @param id the request id
      * 
@@ -148,7 +154,10 @@ public interface RecordHandler {
 
     /**
      * Receive a stream of extra data. This is called on reception of a
-     * non-empty {@link RecordTypes#DATA} record.
+     * non-empty {@link RecordTypes#DATA} record. The provided stream
+     * will provide the exact number of bytes expected, and can be
+     * closed early without disrupting any underlying stream it is based
+     * on.
      * 
      * @param id the request id
      * 
