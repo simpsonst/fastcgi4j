@@ -38,9 +38,6 @@
 
 package uk.ac.lancs.fastcgi.context;
 
-import java.util.Collections;
-import java.util.Map;
-
 /**
  * Presents the context of a FastCGI session to an application in the
  * Responder role.
@@ -51,51 +48,4 @@ import java.util.Map;
  * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.2">FastCGI
  * Specification &mdash; Responder</a>
  */
-public interface ResponderSession extends RequestableSession {
-    /**
-     * Get the trailing parameters. These can only be received after EOF
-     * has been delivered on the request body stream to the application,
-     * as it arrives after closing the request body. An implementation
-     * could block if called too early, but then it would have to buffer
-     * the remainder of the stream to avoid deadlock. For these reasons,
-     * implementations of this method have the option of throwing a
-     * run-time exception if called too early, rather than blocking. The
-     * application is therefore responsible for avoiding this condition
-     * by not attempting the call until it has received the body itself.
-     * 
-     * <p>
-     * This is considered an experimental extension to the FastCGI
-     * specification. Because CGI (and therefore FastCGI) requires that
-     * the server present the <samp>CONTENT_LENGTH</samp> parameter to
-     * the application, the server is forced to buffer the entire
-     * request body if the client sends it over HTTP/1.1 with
-     * <samp>chunked</samp> transfer encoding, which precludes the
-     * sending of a <samp>Content-Length</samp> header field from which
-     * that parameter is derived. However, in HTTP/2, chunking is
-     * obviated as a side-effect of its stream multiplexing, so a client
-     * can effectively chunk the request, send a trailer (only possible
-     * in HTTP/1.1 with chunking), and provide a
-     * <samp>Content-Length</samp>. This should allow a server to invoke
-     * the application before it has received the entire request, and
-     * the FastCGI specification could be extended by defining a flag in
-     * the <samp>FCGI_BEGIN_REQUEST</samp> record indicating that a
-     * second <samp>FCGI_PARAM</samp> cluster will follow the
-     * termination of the <samp>FCGI_STDIN</samp> stream. There should
-     * also be a capability test performed by the server on the
-     * application before setting the bit, so that it can fall back to
-     * receiving the entire request and merging the trailer into the
-     * initial parameters when dealing with applications and libraries
-     * unaware of this facility.
-     * 
-     * @return an immutable set of parameters
-     * 
-     * @throws IllegalStateException if called before EOF has been
-     * delivered on {@link RequestableSession#in()}, when a trailer is
-     * expected
-     * 
-     * @default By default, this method returns an empty map.
-     */
-    default Map<String, String> trailingParameters() {
-        return Collections.emptyMap();
-    }
-}
+public interface ResponderSession extends RequestableSession {}

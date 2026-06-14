@@ -39,6 +39,9 @@
 package uk.ac.lancs.fastcgi.context;
 
 import java.io.InputStream;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Presents the context of a FastCGI session to an application in a role
@@ -53,4 +56,47 @@ public interface RequestableSession extends Session {
      * @return the input stream providing the request body
      */
     InputStream in();
+
+    /**
+     * Get the request trailer.
+     * 
+     * <p>
+     * This can only be received after EOF has been delivered on the
+     * request body stream to the application, as it arrives after
+     * closing the request body. An implementation could block if called
+     * too early, but then it would have to buffer the remainder of the
+     * stream to avoid deadlock. For these reasons, implementations of
+     * this method have the option of throwing a run-time exception if
+     * called too early, rather than blocking. The application is
+     * therefore responsible for avoiding this condition by not
+     * attempting the call until it has received the body itself.
+     * 
+     * <p>
+     * Request trailer field names are not encoded like the main request
+     * parameters. There is no upper-casing of the names, nor any
+     * translation from dashes to underscores.
+     * 
+     * <p>
+     * This is an experimental extension to FastCGI/1.0. It will only be
+     * enabled if the server requests an application value
+     * {@value uk.ac.lancs.fastcgi.proto.ApplicationVariables#FIELD_HANDLING},
+     * and recognizes the token
+     * {@value uk.ac.lancs.fastcgi.proto.ApplicationVariables#FIELD_HANDLING_REQUEST_TRAILER}
+     * in response.
+     * 
+     * @return an immutable set of trailer fields
+     * 
+     * @throws IllegalStateException if called before EOF has been
+     * delivered on {@link RequestableSession#in()}, when a trailer is
+     * expected
+     * 
+     * @throws InterruptedException if interrupted while waiting for the
+     * trailer to be received
+     * 
+     * @default By default, this method returns an empty map.
+     */
+    default Map<String, List<String>> requestTrailer()
+        throws InterruptedException {
+        return Collections.emptyMap();
+    }
 }
