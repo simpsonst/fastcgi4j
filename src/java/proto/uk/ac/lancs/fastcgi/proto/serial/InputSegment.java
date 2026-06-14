@@ -60,7 +60,7 @@ import java.io.InputStream;
  *
  * @author simpsons
  */
-class FixedLengthInputStream extends InputStream {
+class InputSegment extends InputStream {
     private final InputStream in;
 
     private long rem;
@@ -74,7 +74,7 @@ class FixedLengthInputStream extends InputStream {
      * 
      * @param in the stream to read from
      */
-    public FixedLengthInputStream(long rem, InputStream in) {
+    public InputSegment(long rem, InputStream in) {
         this.rem = rem;
         this.in = in;
     }
