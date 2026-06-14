@@ -352,10 +352,34 @@ public class RecordReader {
         return true;
     }
 
+    /**
+     * Unpack a sequence of bytes into an integer.
+     * 
+     * @param buf the bytes to read from
+     * 
+     * @param off offset of the next byte to read
+     * 
+     * @param len the number of bytes to read
+     * 
+     * @return the unpacked value
+     */
     private static int unser(byte[] buf, int off, int len) {
         return unser(0, buf, off, len);
     }
 
+    /**
+     * Unpack a sequence of bytes into an existing integer.
+     * 
+     * @param r an initial value
+     * 
+     * @param buf the bytes to read from
+     * 
+     * @param off offset of the next byte to read
+     * 
+     * @param len the number of bytes to read
+     * 
+     * @return the unpacked value
+     */
     private static int unser(int r, byte[] buf, int off, int len) {
         while (len-- > 0) {
             r <<= 8;
@@ -364,6 +388,15 @@ public class RecordReader {
         return r;
     }
 
+    /**
+     * Format a message prefixed with this object's context.
+     * 
+     * @param fmt the message format
+     * 
+     * @param args arguments to fulfil the format
+     * 
+     * @return the formatted string
+     */
     private String msg(String fmt, Object... args) {
         return tag + ":in:" + String.format(fmt, args);
     }
