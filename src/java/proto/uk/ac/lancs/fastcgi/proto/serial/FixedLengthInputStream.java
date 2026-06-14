@@ -81,6 +81,17 @@ class FixedLengthInputStream extends InputStream {
     }
 
     /**
+     * Check for an existing error, and throw a new one with it as the
+     * cause.
+     * 
+     * @throws IOException an exception whose cause is the existing
+     * error
+     */
+    private void check() throws IOException {
+        if (ex != null) throw new IOException("already failed", ex);
+    }
+
+    /**
      * Read at most one byte.
      * 
      * @return the byte as an unsigned value; or {@code -1} on
@@ -90,7 +101,7 @@ class FixedLengthInputStream extends InputStream {
      */
     @Override
     public int read() throws IOException {
-        if (ex != null) throw new IOException("already failed", ex);
+        check();
         try {
             if (rem == 0) return -1;
             int c = in.read();
@@ -117,7 +128,7 @@ class FixedLengthInputStream extends InputStream {
      */
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
-        if (ex != null) throw new IOException("already failed", ex);
+        check();
         try {
             if (rem == 0) return -1;
             if (len > rem) len = (int) rem;
@@ -150,7 +161,7 @@ class FixedLengthInputStream extends InputStream {
      */
     @Override
     public void close() throws IOException {
-        if (ex != null) throw new IOException("already failed", ex);
+        check();
         try {
             clear();
         } catch (IOException ex) {
