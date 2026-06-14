@@ -189,7 +189,7 @@ public class RecordReader {
             if (rid == 0) reasons |= RecordHandler.BAD_REQ_ID;
             if (reasons != 0) {
                 skip(clen);
-                rejectMessage(rver, rtype, rid, clen, plen, reasons);
+                rejectRecord(rver, rtype, rid, clen, plen, reasons);
                 handler.bad(reasons, rver, rtype, clen, rid);
                 break;
             }
@@ -203,7 +203,7 @@ public class RecordReader {
             if (rid == 0) reasons |= RecordHandler.BAD_REQ_ID;
             if (reasons != 0) {
                 skip(clen);
-                rejectMessage(rver, rtype, rid, clen, plen, reasons);
+                rejectRecord(rver, rtype, rid, clen, plen, reasons);
                 handler.bad(reasons, rver, rtype, clen, rid);
                 break;
             }
@@ -221,7 +221,7 @@ public class RecordReader {
             if (rid == 0) reasons |= RecordHandler.BAD_REQ_ID;
             if (reasons != 0) {
                 skip(clen);
-                rejectMessage(rver, rtype, rid, clen, plen, reasons);
+                rejectRecord(rver, rtype, rid, clen, plen, reasons);
                 handler.bad(reasons, rver, rtype, clen, rid);
                 break;
             }
@@ -281,7 +281,7 @@ public class RecordReader {
             if (rid == 0) reasons |= RecordHandler.BAD_REQ_ID;
             if (reasons != 0) {
                 skip(clen);
-                rejectMessage(rver, rtype, rid, clen, plen, reasons);
+                rejectRecord(rver, rtype, rid, clen, plen, reasons);
                 handler.bad(reasons, rver, rtype, clen, rid);
             } else if (clen == 0) {
                 logger.fine(() -> msg("PARAMS(%d) end", rid));
@@ -301,7 +301,7 @@ public class RecordReader {
             if (rid == 0) reasons |= RecordHandler.BAD_REQ_ID;
             if (reasons != 0) {
                 skip(clen);
-                rejectMessage(rver, rtype, rid, clen, plen, reasons);
+                rejectRecord(rver, rtype, rid, clen, plen, reasons);
                 handler.bad(reasons, rver, rtype, clen, rid);
             } else if (clen == 0) {
                 logger.fine(() -> msg("STDIN(%d) end", rid));
@@ -321,7 +321,7 @@ public class RecordReader {
             if (rid == 0) reasons |= RecordHandler.BAD_REQ_ID;
             if (reasons != 0) {
                 skip(clen);
-                rejectMessage(rver, rtype, rid, clen, plen, reasons);
+                rejectRecord(rver, rtype, rid, clen, plen, reasons);
                 handler.bad(reasons, rver, rtype, clen, rid);
             } else if (clen == 0) {
                 logger.fine(() -> msg("DATA(%d) end", rid));
@@ -338,7 +338,7 @@ public class RecordReader {
 
         default -> {
             if (!require(() -> msg("unknown-%d", rtype), clen)) return false;
-            rejectMessage(rver, rtype, rid, clen, plen, reasons);
+            rejectRecord(rver, rtype, rid, clen, plen, reasons);
             handler.bad(RecordHandler.UNKNOWN_TYPE, rver, rtype, clen, rid);
         }
         }
@@ -365,8 +365,24 @@ public class RecordReader {
         return tag + ":in:" + String.format(fmt, args);
     }
 
-    private void rejectMessage(int rver, int rtype, int rid, int iclen,
-                               int iplen, int fr) {
+    /**
+     * Log that a record has been rejected.
+     * 
+     * @param rver the version number
+     * 
+     * @param rtype the record type
+     * 
+     * @param rid the request id
+     * 
+     * @param iclen the content length
+     * 
+     * @param iplen the padding length
+     * 
+     * @param fr the set of reasons for rejection, as defined by
+     * {@link RecordHandler}
+     */
+    private void rejectRecord(int rver, int rtype, int rid, int iclen,
+                              int iplen, int fr) {
         logger.warning(() -> msg(
                                  "rejected %s ver=%d"
                                      + " rid=%d clen=%d plen=%d%s%s%s",
