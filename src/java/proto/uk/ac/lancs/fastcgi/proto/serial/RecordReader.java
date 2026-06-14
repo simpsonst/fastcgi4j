@@ -289,12 +289,11 @@ public class RecordReader {
                 logger.fine(() -> msg("PARAMS(%d) end", rid));
                 handler.paramsEnd(rid);
             } else {
-                FixedLengthInputStream out =
-                    new FixedLengthInputStream(clen, in);
-                final int fclen = clen;
-                logger.fine(() -> msg("PARAMS(%d, %d)", rid, fclen));
-                handler.params(rid, clen, out);
-                out.skipRemaining();
+                try (var out = new FixedLengthInputStream(clen, in)) {
+                    final int fclen = clen;
+                    logger.fine(() -> msg("PARAMS(%d, %d)", rid, fclen));
+                    handler.params(rid, clen, out);
+                }
             }
             break;
 
@@ -309,12 +308,11 @@ public class RecordReader {
                 logger.fine(() -> msg("STDIN(%d) end", rid));
                 handler.stdinEnd(rid);
             } else {
-                FixedLengthInputStream out =
-                    new FixedLengthInputStream(clen, in);
-                final int fclen = clen;
-                logger.fine(() -> msg("STDIN(%d, %d)", rid, fclen));
-                handler.stdin(rid, clen, out);
-                out.skipRemaining();
+                try (var out = new FixedLengthInputStream(clen, in)) {
+                    final int fclen = clen;
+                    logger.fine(() -> msg("STDIN(%d, %d)", rid, fclen));
+                    handler.stdin(rid, clen, out);
+                }
             }
             break;
 
@@ -329,12 +327,11 @@ public class RecordReader {
                 logger.fine(() -> msg("DATA(%d) end", rid));
                 handler.dataEnd(rid);
             } else {
-                FixedLengthInputStream out =
-                    new FixedLengthInputStream(clen, in);
-                final int fclen = clen;
-                logger.fine(() -> msg("DATA(%d, %d)", rid, fclen));
-                handler.data(rid, clen, out);
-                out.skipRemaining();
+                try (var out = new FixedLengthInputStream(clen, in)) {
+                    final int fclen = clen;
+                    logger.fine(() -> msg("DATA(%d, %d)", rid, fclen));
+                    handler.data(rid, clen, out);
+                }
             }
             break;
 

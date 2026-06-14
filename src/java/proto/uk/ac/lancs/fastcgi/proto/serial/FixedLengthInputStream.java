@@ -43,21 +43,20 @@ import java.io.InputStream;
 
 /**
  * Reads an exact number of bytes from a base stream. Closing this
- * stream does not close the base stream. The intent is to temporarily
- * pass an internal stream to a user (in the form of a new view of the
- * stream), so that it can read an exact number of bytes, before
- * returning control. The user will not be permitted to read more than
- * the specified amount, and the presented stream will appear to have
- * reached end-of-file. If the user closes the presented stream,
- * remaining bytes from those allocated will be skipped, but the
- * internal stream will not be closed. The provider should call
- * {@link #skipRemaining()} when control has returned from the user, to
- * ensure that remaining bytes are consumed, in case the user did not
- * close the presented stream.
+ * stream consumes remaining bytes, but does not close the base stream.
  * 
  * <p>
- * On error, the provider should regard its internal stream as corrupt,
- * and use it no further.
+ * The intent is to temporarily pass an internal stream to a user (in
+ * the form of a new view of the stream), so that it can read an exact
+ * number of bytes, before returning control. The user will not be
+ * permitted to read more than the specified amount, and the presented
+ * stream will appear to have reached end-of-file. If the user closes
+ * the presented stream, remaining bytes from those allocated will be
+ * skipped, but the base stream will not be closed.
+ * 
+ * <p>
+ * The first error from the base stream is recorded, and prevents all
+ * operations from completing, including closing the wrapping stream.
  *
  * @author simpsons
  */
@@ -168,15 +167,5 @@ class FixedLengthInputStream extends InputStream {
             this.ex = ex;
             throw ex;
         }
-    }
-
-    /**
-     * Clear remaining bytes left unconsumed by the user.
-     * 
-     * @throws IOException if an I/O error occurs
-     */
-    public void skipRemaining() throws IOException {
-        assert ex == null;
-        clear();
     }
 }
