@@ -340,8 +340,9 @@ public class RecordReader {
 
         default:
             if (!require(() -> msg("unknown-%d", rtype), clen)) return false;
+            reasons |= RecordHandler.UNKNOWN_TYPE;
             rejectRecord(rver, rtype, rid, clen, plen, reasons);
-            handler.bad(RecordHandler.UNKNOWN_TYPE, rver, rtype, clen, rid);
+            handler.bad(reasons, rver, rtype, clen, rid);
             break;
         }
 
