@@ -50,20 +50,45 @@ import uk.ac.lancs.fastcgi.engine.EngineConfiguration;
 import uk.ac.lancs.fastcgi.engine.EngineFactory;
 import uk.ac.lancs.fastcgi.engine.std.threading.ThreadingManager;
 import uk.ac.lancs.fastcgi.engine.std.threading.ThreadingManagerFactory;
+import uk.ac.lancs.fastcgi.proto.ApplicationVariables;
 import uk.ac.lancs.fastcgi.transport.Transport;
 import uk.ac.lancs.scc.jardeps.Service;
 
 /**
  * Provides engines which can handle responders, authorizers and
- * filters, supporting multiplexed sessions on each connection. This
- * implementation reads the attributes {@link Attribute#RESPONDER},
+ * filters, supporting multiplexed sessions on each connection.
+ * 
+ * <p>
+ * This implementation reads the attributes {@link Attribute#RESPONDER},
  * {@link Attribute#AUTHORIZER}, {@link Attribute#FILTER},
- * {@link Attribute#MAX_CONN} (must be non-positive if set),
- * {@link Attribute#MAX_SESS} (non-positive if set) and
- * {@link Attribute#MAX_SESS_PER_CONN} (non-positive if set). All are
+ * {@link Attribute#MAX_CONN} (must be positive if set),
+ * {@link Attribute#MAX_SESS} (positive if set) and
+ * {@link Attribute#MAX_SESS_PER_CONN} (positive if set). All are
  * optional, except that at least one role must be specified. The
  * attribute {@link Attribute#BUFFER_SIZE} is also read, and is not
  * optional.
+ * 
+ * <p>
+ * This implementation also recognizes the following application
+ * variables:
+ * 
+ * <ul>
+ * 
+ * <li>{@value ApplicationVariables#MAX_CONNS} is set to
+ * {@link Attribute#MAX_CONN} if positive.
+ * 
+ * <li>{@value ApplicationVariables#MAX_REQS} is set to
+ * {@link Attribute#MAX_SESS} if positive.
+ * 
+ * <li>{@value ApplicationVariables#MPXS_CONNS} is set to <samp>1</samp>
+ * if {@link Attribute#MAX_SESS_PER_CONN} is 1, or to <samp>0</samp>
+ * otherwise.
+ * 
+ * <li>{@value ApplicationVariables#FIELD_HANDLING} is set to
+ * {@value ApplicationVariables#FIELD_HANDLING_REQUEST_TRAILER}. This is
+ * an experimental extension to FastCGI/1.0.
+ * 
+ * </ul>
  * 
  * @author simpsons
  */

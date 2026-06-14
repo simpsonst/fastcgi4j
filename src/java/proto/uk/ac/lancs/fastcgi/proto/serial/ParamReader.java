@@ -42,7 +42,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.Arrays;
-import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
@@ -52,7 +52,7 @@ import java.util.logging.Logger;
  * @author simpsons
  */
 public class ParamReader {
-    private final Map<? super String, ? super String> params;
+    private final BiConsumer<? super String, ? super String> dest;
 
     private final Consumer<byte[]> pool;
 
@@ -78,10 +78,10 @@ public class ParamReader {
      * 
      * @param tag a tag to include in logging messages
      */
-    public ParamReader(Map<? super String, ? super String> dest,
+    public ParamReader(BiConsumer<? super String, ? super String> dest,
                        Charset charset, byte[] buf, Consumer<byte[]> pool,
                        String tag) {
-        this.params = dest;
+        this.dest = dest;
         this.charset = charset;
         this.buf = buf;
         this.pool = pool;
@@ -100,7 +100,6 @@ public class ParamReader {
         while (recordParam(in))
             while (decodeParam())
                 ;
-        logger.fine(() -> msg("params: %s", params));
     }
 
     /**
@@ -221,7 +220,7 @@ public class ParamReader {
         final String name = new String(buf, nameStart, nameLen, charset);
         final int valueStart = nameStart + nameLen;
         final String value = new String(buf, valueStart, valueLen, charset);
-        params.put(name, value);
+        dest.accept(name, value);
         logger.finer(() -> msg("PARAM[%s]=%s", name, value));
 
         /* Move the trailing bytes to the head of the array. */

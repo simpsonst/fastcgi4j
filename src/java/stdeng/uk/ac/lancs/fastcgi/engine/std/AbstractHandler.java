@@ -48,12 +48,16 @@ import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 import java.util.concurrent.Executor;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
 import uk.ac.lancs.fastcgi.context.Diagnostics;
@@ -135,6 +139,22 @@ abstract class AbstractHandler implements SessionHandler, Session {
      * parameters. Each decoded parameter is written to {@link #params}.
      */
     ParamReader paramReader;
+
+    /**
+     * Holds the accumulated request trailer. Once complete, the map is
+     * frozen, and the user is notified. Keys are case-insensitive.
+     */
+    Map<String, List<String>> trailer;
+
+    /**
+     * Holds context while parsing records that provide trailer fields,
+     * if expected. Each decoded field is written to {@link #trailer}.
+     */
+    ParamReader trailerReader;
+
+    private final Lock trailerLock = new ReentrantLock();
+
+    private final Condition trailerReady = trailerLock.newCondition();
 
     /**
      * Holds the 'exit' status of the application for this
@@ -281,8 +301,25 @@ abstract class AbstractHandler implements SessionHandler, Session {
         this.charset = ctxt.charset;
         this.checkLastSession = ctxt.checkLastSession;
 
+        if (ctxt.expectTrailer) {
+            /* Create a case-insensitive trailer reader. */
+            this.trailer = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+            this.trailerReader =
+                new ParamReader((k, v) -> this.trailer
+                    .computeIfAbsent(k, k1 -> new ArrayList<>()).add(v),
+                                ctxt.charset, ctxt.paramBufs.getBuffer(),
+                                ctxt.paramBufs::returnParamBuf,
+                                "conn-" + this.connId + "-" + this.id);
+        } else {
+            /* Set the trailer to be an empty map, and mark it as ready
+             * to read by cancelling the reader. */
+            this.trailer = Collections.emptyMap();
+            this.trailerReader = null;
+        }
+
         this.paramReader =
-            new ParamReader(params, ctxt.charset, ctxt.paramBufs.getBuffer(),
+            new ParamReader(params::put, ctxt.charset,
+                            ctxt.paramBufs.getBuffer(),
                             ctxt.paramBufs::returnParamBuf,
                             "conn-" + this.connId + "-" + this.id);
         this.bufferSize = ctxt.stdoutBufferSize;
@@ -498,26 +535,64 @@ abstract class AbstractHandler implements SessionHandler, Session {
     @Override
     @SuppressWarnings("empty-statement")
     public void params(int len, InputStream in) throws IOException {
-        logger.finer(() -> msg("params(%d)", len));
-        assert len > 0;
-        paramReader.consume(in);
+        if (paramReader != null) {
+            logger.finer(() -> msg("params(%d)", len));
+            assert len > 0;
+            paramReader.consume(in);
+            return;
+        }
+
+        if (trailerReader != null) {
+            logger.finer(() -> msg("trailer(%d)", len));
+            assert len > 0;
+            trailerReader.consume(in);
+            return;
+        }
+
+        /* We don't know what this is, so discard. */
+        logger.warning(() -> msg("params(%d) unexpected after trailer", len));
+        in.close();
     }
 
     @Override
     public void paramsEnd() throws IOException {
-        logger.finer(() -> msg("params-end"));
-        try {
-            paramReader.complete();
-        } catch (IllegalStateException ex) {
-            ex.printStackTrace(err());
+        if (paramReader != null) {
+            logger.finer(() -> msg("params-end"));
+            try {
+                paramReader.complete();
+            } catch (IllegalStateException ex) {
+                ex.printStackTrace(err());
+            }
+            paramReader = null;
+
+            /* Freeze the parameters, */
+            params = Map.copyOf(params);
+
+            /* Let the application run. */
+            executor.execute(this::run);
+            return;
         }
-        paramReader = null;
 
-        /* Freeze the parameters, */
-        params = Map.copyOf(params);
+        if (trailerReader != null) {
+            logger.finer(() -> msg("trailer-end"));
+            try {
+                trailerReader.complete();
+            } catch (IllegalStateException ex) {
+                ex.printStackTrace(err());
+            }
+            trailer = Collections.unmodifiableMap(trailer);
+            try {
+                trailerLock.lock();
+                trailerReader = null;
+                trailerReady.signal();
+            } finally {
+                trailerLock.unlock();
+            }
+            return;
+        }
 
-        /* Let the application run. */
-        executor.execute(this::run);
+        /* We don't know what this is, so discard. */
+        logger.warning(() -> msg("params-end unexpected after trailer"));
     }
 
     @Override
@@ -525,6 +600,28 @@ abstract class AbstractHandler implements SessionHandler, Session {
         /* We don't need to protect this. By the time the application is
          * called, this has already been made an immutable copy. */
         return params;
+    }
+
+    /**
+     * Get the request trailer. This call may block while waiting for
+     * the end of the standard input stream, as the trailer does not
+     * appear until then. It may return earlier, but only because a
+     * trailer is not expected.
+     * 
+     * @return the request trailer, which may be empty if not provided
+     * 
+     * @throws InterruptedException if the thread is interrupted
+     */
+    protected Map<String, List<String>> trailer() throws InterruptedException {
+        try {
+            trailerLock.lock();
+            while (trailerReader != null) {
+                trailerReady.await();
+            }
+            return trailer;
+        } finally {
+            trailerLock.unlock();
+        }
     }
 
     @Override

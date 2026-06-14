@@ -77,6 +77,8 @@ class HandlerContext {
 
     final int stderrBufferSize;
 
+    final boolean expectTrailer;
+
     /**
      * Create a handler context.
      * 
@@ -114,6 +116,9 @@ class HandlerContext {
      * output
      * 
      * @param stderrBufferSize the buffer size of standard error output
+     * 
+     * @param expectTrailer {@code true} if the standard input shall be
+     * followed by a request trailer; {@code false} otherwise
      */
     public HandlerContext(int connId, int id, Package impl, String connDescr,
                           String intConnDescr, Runnable connAbort,
@@ -121,7 +126,7 @@ class HandlerContext {
                           Runnable checkLastSession, RecordWriter recordsOut,
                           Executor executor, Charset charset,
                           BufferPool paramBufs, int stdoutBufferSize,
-                          int stderrBufferSize) {
+                          int stderrBufferSize, boolean expectTrailer) {
         this.connId = connId;
         this.id = id;
         this.impl = impl;
@@ -136,5 +141,6 @@ class HandlerContext {
         this.paramBufs = paramBufs;
         this.stdoutBufferSize = stdoutBufferSize;
         this.stderrBufferSize = stderrBufferSize;
+        this.expectTrailer = expectTrailer;
     }
 }

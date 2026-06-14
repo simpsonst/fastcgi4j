@@ -40,6 +40,8 @@ package uk.ac.lancs.fastcgi.engine.std;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 import uk.ac.lancs.fastcgi.Filter;
 import uk.ac.lancs.fastcgi.context.FilterSession;
@@ -104,15 +106,25 @@ class FilterHandler extends AbstractHandler implements FilterSession {
         in.transferTo(stdinPipe.getOutputStream());
     }
 
+    private boolean stdinEnded = false;
+
     @Override
     public void stdinEnd() throws IOException {
         logger.finer(() -> msg("stdin-end"));
         stdinPipe.getOutputStream().close();
+        stdinEnded = true;
     }
 
     @Override
     public InputStream in() {
         return stdinPipe.getInputStream();
+    }
+
+    @Override
+    public Map<String, List<String>> requestTrailer()
+        throws InterruptedException {
+        if (!stdinEnded) throw new IllegalStateException("STDIN incomplete");
+        return super.trailer();
     }
 
     @Override

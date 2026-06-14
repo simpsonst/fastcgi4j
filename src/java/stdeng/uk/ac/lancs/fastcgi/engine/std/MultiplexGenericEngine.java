@@ -267,6 +267,13 @@ class MultiplexGenericEngine implements Engine {
                     outMap.put(ApplicationVariables.MPXS_CONNS, "0");
             }
 
+            if (names.contains(ApplicationVariables.FIELD_HANDLING)) {
+                /* We recognize the flag indicating that a request
+                 * trailer will be available. */
+                outMap.put(ApplicationVariables.FIELD_HANDLING,
+                           ApplicationVariables.FIELD_HANDLING_REQUEST_TRAILER);
+            }
+
             recordsOut.writeValues(outMap);
         }
 
@@ -311,6 +318,10 @@ class MultiplexGenericEngine implements Engine {
                     }
                 }
 
+                final boolean expectTrailer =
+                    (role == RoleTypes.RESPONDER || role == RoleTypes.FILTER) &&
+                        (flags & RequestFlags.EXPECT_TRAILER) != 0;
+
                 /* Package components required by all roles. */
                 Supplier<HandlerContext> ctxt =
                     () -> new HandlerContext(this.id, id, conn.implementation(),
@@ -321,7 +332,7 @@ class MultiplexGenericEngine implements Engine {
                                              this::checkLastCall, recordsOut,
                                              executor, charset, paramBufs,
                                              optimizedBufferSize,
-                                             stderrBufferSize);
+                                             stderrBufferSize, expectTrailer);
 
                 /* Create the session if there isn't one with the
                  * specified id, and the role type is recognized. */
