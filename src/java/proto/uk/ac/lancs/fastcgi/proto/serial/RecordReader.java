@@ -183,7 +183,7 @@ public class RecordReader {
         int clen = iclen, plen = iplen;
         int reasons = 0;
         switch (rtype) {
-        case RecordTypes.ABORT_REQUEST -> {
+        case RecordTypes.ABORT_REQUEST:
             if (rver < 1) reasons |= RecordHandler.BAD_VERSION;
             if (clen != 0) reasons |= RecordHandler.BAD_LENGTH;
             if (rid == 0) reasons |= RecordHandler.BAD_REQ_ID;
@@ -195,9 +195,9 @@ public class RecordReader {
             }
             logger.fine(() -> msg("ABORT_REQUEST(%d)", rid));
             handler.abortRequest(rid);
-        }
+            break;
 
-        case RecordTypes.BEGIN_REQUEST -> {
+        case RecordTypes.BEGIN_REQUEST: {
             if (rver < 1) reasons |= RecordHandler.BAD_VERSION;
             if (clen != 8) reasons |= RecordHandler.BAD_LENGTH;
             if (rid == 0) reasons |= RecordHandler.BAD_REQ_ID;
@@ -214,9 +214,10 @@ public class RecordReader {
                                   RoleTypes.toString(role),
                                   RequestFlags.toString(flags)));
             handler.beginRequest(rid, role, flags);
+            break;
         }
 
-        case RecordTypes.GET_VALUES -> {
+        case RecordTypes.GET_VALUES: {
             if (rver < 1) reasons |= RecordHandler.BAD_VERSION;
             if (rid == 0) reasons |= RecordHandler.BAD_REQ_ID;
             if (reasons != 0) {
@@ -274,9 +275,10 @@ public class RecordReader {
             }
             logger.fine(() -> msg("GET_VALUES(%s)", vars.keySet()));
             handler.getValues(vars.keySet());
+            break;
         }
 
-        case RecordTypes.PARAMS -> {
+        case RecordTypes.PARAMS:
             if (rver < 1) reasons |= RecordHandler.BAD_VERSION;
             if (rid == 0) reasons |= RecordHandler.BAD_REQ_ID;
             if (reasons != 0) {
@@ -294,9 +296,9 @@ public class RecordReader {
                 handler.params(rid, clen, out);
                 out.skipRemaining();
             }
-        }
+            break;
 
-        case RecordTypes.STDIN -> {
+        case RecordTypes.STDIN:
             if (rver < 1) reasons |= RecordHandler.BAD_VERSION;
             if (rid == 0) reasons |= RecordHandler.BAD_REQ_ID;
             if (reasons != 0) {
@@ -314,9 +316,9 @@ public class RecordReader {
                 handler.stdin(rid, clen, out);
                 out.skipRemaining();
             }
-        }
+            break;
 
-        case RecordTypes.DATA -> {
+        case RecordTypes.DATA:
             if (rver < 1) reasons |= RecordHandler.BAD_VERSION;
             if (rid == 0) reasons |= RecordHandler.BAD_REQ_ID;
             if (reasons != 0) {
@@ -334,13 +336,13 @@ public class RecordReader {
                 handler.data(rid, clen, out);
                 out.skipRemaining();
             }
-        }
+            break;
 
-        default -> {
+        default:
             if (!require(() -> msg("unknown-%d", rtype), clen)) return false;
             rejectRecord(rver, rtype, rid, clen, plen, reasons);
             handler.bad(RecordHandler.UNKNOWN_TYPE, rver, rtype, clen, rid);
-        }
+            break;
         }
 
         /* Skip over trailing padding. */
