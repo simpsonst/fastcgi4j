@@ -57,4 +57,70 @@ public interface FilterSession extends RequestableSession {
      * @return the input stream providing the file data
      */
     InputStream data();
+
+    /**
+     * Get the last-modified time of the data if specified. This is
+     * obtained through the request parameter
+     * {@value FastCGIRequestParameters#DATA_LAST_MOD_PARAM}.
+     * 
+     * @return the number of seconds after 1970-01-01T00:00:00Z when the
+     * data was last modified; or {@link #DATA_UNSPECIFIED} if not
+     * specified; or {@link #DATA_MALFORMED} if not specified as a
+     * non-negative decimal integer
+     * 
+     * @default The default implementation calls {@link #parameters()}
+     * and selects {@link FastCGIRequestParameters#DATA_LAST_MOD_PARAM}.
+     * It then parses the result as a decimal integer.
+     */
+    default long dataLastModified() {
+        var text =
+            parameters().get(FastCGIRequestParameters.DATA_LAST_MOD_PARAM);
+        if (text == null) return DATA_UNSPECIFIED;
+        try {
+            long rc = Long.parseLong(text, 10);
+            if (rc < 0) return DATA_MALFORMED;
+            return rc;
+        } catch (NumberFormatException ex) {
+            return DATA_MALFORMED;
+        }
+    }
+
+    /**
+     * Get the data length if specified. This is obtained through the
+     * request parameter
+     * {@value FastCGIRequestParameters#DATA_LENGTH_PARAM}.
+     * 
+     * @return the data length in bytes; or {@link #DATA_UNSPECIFIED} if
+     * not specified; or {@link #DATA_MALFORMED} if not specified as a
+     * non-negative decimal integer
+     * 
+     * @default The default implementation calls {@link #parameters()}
+     * and selects {@link FastCGIRequestParameters#DATA_LENGTH_PARAM}.
+     * It then parses the result as a decimal integer.
+     */
+    default long dataLength() {
+        var text = parameters().get(FastCGIRequestParameters.DATA_LENGTH_PARAM);
+        if (text == null) return DATA_UNSPECIFIED;
+        try {
+            long rc = Long.parseLong(text, 10);
+            if (rc < 0) return DATA_MALFORMED;
+            return rc;
+        } catch (NumberFormatException ex) {
+            return DATA_MALFORMED;
+        }
+    }
+
+    /**
+     * Indicates that the data length was not specified. This constant
+     * has a negative value, and is returned by {@link #dataLength()}
+     * and {@link #dataLastModified()}.
+     */
+    long DATA_UNSPECIFIED = -1;
+
+    /**
+     * Indicates that the data length was malformed. This constant has a
+     * negative value, and is returned by {@link #dataLength()} and
+     * {@link #dataLastModified()}.
+     */
+    long DATA_MALFORMED = -2;
 }
