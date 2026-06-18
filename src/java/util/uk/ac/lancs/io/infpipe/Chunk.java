@@ -56,7 +56,8 @@ interface Chunk {
      * 
      * @param len the maximum number of bytes to be added
      * 
-     * @return the number of bytes to be added
+     * @return the number of bytes added; or {@code 0} if the chunk is
+     * full
      * 
      * @throws IOException if an I/O error occurs
      */
