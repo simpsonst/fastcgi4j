@@ -330,14 +330,13 @@ public final class CachePipePool implements PipePool {
         private final OutputStream outputStream = new OutputStream() {
             @Override
             public void flush() throws IOException {
+                if (closed) throw new IOException("closed");
                 if (abortedReason != null)
                     throw new IOException("stream aborted", abortedReason);
-                if (closed) throw new IOException("closed");
             }
 
             @Override
             public void close() throws IOException {
-                if (abortedReason != null) return;
                 if (closed) return;
                 closed = true;
                 if (lastChunk != null) clearLastChunk();
@@ -346,9 +345,9 @@ public final class CachePipePool implements PipePool {
 
             @Override
             public void write(byte[] b, int off, int len) throws IOException {
+                if (closed) throw new IOException("closed");
                 if (abortedReason != null)
                     throw new IOException("stream aborted", abortedReason);
-                if (closed) throw new IOException("closed");
                 while (len > 0) {
                     Chunk chunk = getLastChunk();
                     int done = chunk.write(b, off, len);
@@ -362,9 +361,9 @@ public final class CachePipePool implements PipePool {
 
             @Override
             public void write(int b) throws IOException {
+                if (closed) throw new IOException("closed");
                 if (abortedReason != null)
                     throw new IOException("stream aborted", abortedReason);
-                if (closed) throw new IOException("closed");
                 buf[0] = (byte) b;
                 write(buf, 0, 1);
             }
