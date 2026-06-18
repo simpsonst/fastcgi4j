@@ -344,6 +344,7 @@ class LazyAbortableSequenceInputStream extends InputStream {
      */
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
+        Objects.checkFromIndexSize(off, len, b.length);
         try {
             do {
                 if (ensure(true)) return -1;

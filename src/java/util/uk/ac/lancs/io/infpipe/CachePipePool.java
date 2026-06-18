@@ -345,6 +345,7 @@ public final class CachePipePool implements PipePool {
 
             @Override
             public void write(byte[] b, int off, int len) throws IOException {
+                Objects.checkFromIndexSize(off, len, b.length);
                 if (closed) throw new IOException("closed");
                 if (abortedReason != null)
                     throw new IOException("stream aborted", abortedReason);
