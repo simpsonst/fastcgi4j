@@ -309,7 +309,8 @@ public final class CachePipePool implements PipePool {
                         Files.deleteIfExists(path);
                     } catch (IOException ex) {
                         Logger.getLogger(CachePipePool.class.getName())
-                            .log(Level.SEVERE, null, ex);
+                            .log(Level.SEVERE,
+                                 "deleting chunk " + path.toString(), ex);
                     }
                 });
 
