@@ -366,7 +366,12 @@ public final class CachePipePool implements PipePool {
                 if (abortedReason != null)
                     throw new IOException("stream aborted", abortedReason);
                 buf[0] = (byte) b;
-                write(buf, 0, 1);
+                do {
+                    Chunk chunk = getLastChunk();
+                    int done = chunk.write(buf, 0, 1);
+                    if (done == 1) return;
+                    assert done == 0;
+                } while (true);
             }
         };
 
