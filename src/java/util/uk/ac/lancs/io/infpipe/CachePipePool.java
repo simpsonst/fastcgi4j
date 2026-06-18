@@ -322,7 +322,7 @@ public final class CachePipePool implements PipePool {
             return lastChunk;
         }
 
-        private void clearLastChunk() throws IOException {
+        private void clearLastChunk() {
             lastChunk.complete();
             lastChunk = null;
         }

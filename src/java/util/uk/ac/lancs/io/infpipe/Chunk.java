@@ -65,10 +65,8 @@ interface Chunk {
 
     /**
      * Indicate that no more bytes will be added to the chunk.
-     * 
-     * @throws IOException if an I/O error occurs
      */
-    void complete() throws IOException;
+    void complete();
 
     /**
      * Cause subsequent reads of the content of this chunk to fail with
