@@ -71,10 +71,7 @@ class LazyAbortableSequenceInputStream extends InputStream {
     private Throwable abortedReason;
 
     /**
-     * Create a sequence input stream. This constructor does not invoke
-     * the argument, so it will not block.
-     * 
-     * @param source the source of contributing streams
+     * Create a sequence input stream.
      * 
      * @param closeOnError {@code true} if all remaining source streams
      * are to be closed on the first exception
@@ -180,6 +177,17 @@ class LazyAbortableSequenceInputStream extends InputStream {
         }
     }
 
+    /**
+     * Close the current source, and record that there is no current
+     * source. Do not call this if
+     * <code>{@linkplain current} == null</code>.
+     * 
+     * @throws IOException if an I/O error occurs in closing the current
+     * source
+     * 
+     * @throws NullPointerException if
+     * <code>{@linkplain current} == null</code>
+     */
     private void clear() throws IOException {
         current.close();
         current = null;
@@ -211,6 +219,25 @@ class LazyAbortableSequenceInputStream extends InputStream {
         }
     }
 
+    /**
+     * Close all remaining source streams if instructed to do so during
+     * construction, or throw a given exception. If the stream is
+     * configured to close on error, {@link #cleanUp(Throwable)} is
+     * called with the provided exception.
+     * 
+     * @param t an exception of type {@link Error} or
+     * {@link IOException} to throw after cleaning up; must not be
+     * {@code null}
+     * 
+     * @throws IOException if the supplied exception is of this type, or
+     * if an exception is thrown during clean-up
+     * 
+     * @throws AssertionError if the supplied exception is not an
+     * {@link IOException} or an {@link Error}
+     * 
+     * @throws NullPointerException if the supplied exception is
+     * {@code null}
+     */
     private void optionalCleanUp(Throwable t) throws IOException {
         if (closeOnError) {
             cleanUp(t);
@@ -226,11 +253,17 @@ class LazyAbortableSequenceInputStream extends InputStream {
     }
 
     /**
-     * Close all remaining source streams.
+     * Close all remaining source streams. A cause for cleaning up can
+     * be provided, but should be {@code null} for normal termination,
+     * e.g., when the user closes the stream. If an exception occurs in
+     * closing a source stream, it is suppressed by the supplied
+     * exception, or it becomes the suppressing exception which is later
+     * thrown.
      * 
-     * @param suppressor an exception that instigated the closing of the
-     * remaining streams, and suppresses further exceptions; or
-     * {@code null} if no exception instigated the closure
+     * @param suppressor an {@link IOException} or {@link Error} that
+     * instigated the closing of the remaining streams, and suppresses
+     * further exceptions; or {@code null} if no exception instigated
+     * the closure
      * 
      * @throws IOException if an I/O error occurred in closing a source
      * stream; or the supplied suppressing exception
