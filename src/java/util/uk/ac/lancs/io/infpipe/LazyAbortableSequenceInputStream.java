@@ -242,6 +242,7 @@ class LazyAbortableSequenceInputStream extends InputStream {
      * {@code null}
      */
     private void optionalCleanUp(Throwable t) throws IOException {
+        assert t != null;
         if (closeOnError) {
             cleanUp(t);
             throw new AssertionError("unreachable");
