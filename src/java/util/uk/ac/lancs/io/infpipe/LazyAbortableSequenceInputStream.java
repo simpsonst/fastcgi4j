@@ -321,6 +321,8 @@ class LazyAbortableSequenceInputStream extends InputStream {
      */
     @Override
     public int available() throws IOException {
+        if (abortedReason != null)
+            throw new StreamAbortedException(abortedReason);
         try {
             if (ensure(true)) return 0;
             return current.available();
