@@ -189,8 +189,11 @@ class LazyAbortableSequenceInputStream extends InputStream {
      * <code>{@linkplain current} == null</code>
      */
     private void clear() throws IOException {
-        current.close();
-        current = null;
+        try {
+            current.close();
+        } finally {
+            current = null;
+        }
     }
 
     /**
