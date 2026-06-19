@@ -324,7 +324,7 @@ class LazyAbortableSequenceInputStream extends InputStream {
         if (abortedReason != null)
             throw new StreamAbortedException(abortedReason);
         try {
-            if (ensure(true)) return 0;
+            if (current == null) return 0;
             return current.available();
         } catch (IOException | Error | RuntimeException ex) {
             cleanUp(ex);
