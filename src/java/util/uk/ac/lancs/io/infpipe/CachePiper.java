@@ -53,7 +53,43 @@ import java.util.logging.Logger;
 
 /**
  * Generates pipes that store small amounts in RAM and the rest to the
- * file system.
+ * file system. The stream is split into chunks as it is provided. Three
+ * parameters determine the policy for using RAM or backing store for a
+ * given chunk:
+ * 
+ * <dl>
+ * 
+ * <dt>memory chunk size
+ * 
+ * <dd>This is the size of each memory chunk (a byte array). Data exists
+ * between a read index and a write index, and is moved back to the
+ * start of the array to reclaim space. This parameter is controlled
+ * with {@link Builder#memChunkSize}, and defaults to
+ * {@value #MEM_CHUNK_SIZE}.
+ * 
+ * <dt>RAM threshold
+ * 
+ * <dd>The amount of memory in use by all chunks created by this piper
+ * is tracked. When it exceeds this threshold, the next chunk created
+ * will likely be a file chunk. This parameter is controlled with
+ * {@link Builder#ramThreshold}, and defaults to
+ * {@value #RAM_THRESHOLD}.
+ * 
+ * <dt>max file size
+ * 
+ * <dd>When the file backing a chunk reaches this size, no more bytes
+ * are written to it, and a new chunk is required. This parameter is
+ * controlled with {@link Builder#maxFileSize}, and defaults to
+ * {@value #MAX_FILE_SIZE}.
+ * 
+ * </dl>
+ * 
+ * <p>
+ * Note that if the reader of a pipe catches up with the writer while in
+ * a file chunk, the chunk switches to a read-only mode, and a new chunk
+ * is required. If the old chunk stored fewer bytes than the memory
+ * chunk size, the reader is deemed to be close enough to the writer for
+ * a memory chunk to be used, regardless of the current memory tally.
  *
  * @author simpsons
  */
