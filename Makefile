@@ -300,7 +300,7 @@ clean:: tidy
 distclean:: blank
 	$(RM) VERSION BUILD
 
-test_suite += uk.ac.lancs.fastcgi.engine.util.TestCachePipePool
+test_suite += uk.ac.lancs.io.infpipe.TestCachePipePool
 
 jtests: $(jars:%=$(JARDEPS_OUTDIR)/%.jar)
 	@for class in $(test_suite) ; do \
