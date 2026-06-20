@@ -56,9 +56,9 @@ import org.junit.Test;
  *
  * @author simpsons
  */
-public class TestCachePipePool extends TestCase {
-    final PipePool pool =
-        CachePipePool.start().ramThreshold(200).maxFileSize(1000).create();
+public class TestCachePiper extends TestCase {
+    final Piper pool =
+        CachePiper.start().ramThreshold(200).maxFileSize(1000).create();
 
     @Test
     public void testMemoryChunk() throws IOException {
@@ -92,10 +92,10 @@ public class TestCachePipePool extends TestCase {
 
     @Test
     public void testFileChunk() throws IOException {
-        Path dir = Paths.get(System.getProperty(CachePipePool.TMPDIR_SYSPROP));
+        Path dir = Paths.get(System.getProperty(CachePiper.TMPDIR_SYSPROP));
         final long seed = 42;
-        Path path = Files.createTempFile(dir, CachePipePool.PREFIX,
-                                         CachePipePool.SUFFIX);
+        Path path = Files.createTempFile(dir, CachePiper.PREFIX,
+                                         CachePiper.SUFFIX);
         RandomAccessFile file = new RandomAccessFile(path.toFile(), "rw");
         path.toFile().deleteOnExit();
         FileChunk chunk = new FileChunk(file, 256);

@@ -43,7 +43,7 @@ package uk.ac.lancs.io.infpipe;
  *
  * @author simpsons
  */
-public interface PipePool {
+public interface Piper {
     /**
      * Create a new pipe.
      *

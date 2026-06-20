@@ -57,7 +57,7 @@ import java.util.logging.Logger;
  *
  * @author simpsons
  */
-public final class CachePipePool implements PipePool {
+public final class CachePiper implements Piper {
     private static final Cleaner cleaner = Cleaner.create();
 
     private final Path dir;
@@ -239,8 +239,8 @@ public final class CachePipePool implements PipePool {
          * 
          * @constructor
          */
-        public CachePipePool create() {
-            return new CachePipePool(dir, prefix, suffix, maxFileSize,
+        public CachePiper create() {
+            return new CachePiper(dir, prefix, suffix, maxFileSize,
                                      memChunkSize, ramThreshold);
         }
     }
@@ -258,7 +258,7 @@ public final class CachePipePool implements PipePool {
      * 
      * @param memChunkSize the size of an internal chunk
      */
-    CachePipePool(Path dir, String prefix, String suffix, long maxFileSize,
+    CachePiper(Path dir, String prefix, String suffix, long maxFileSize,
                   int memChunkSize, int ramThreshold) {
         this.dir = dir;
         this.prefix = prefix;
@@ -313,7 +313,7 @@ public final class CachePipePool implements PipePool {
                     try {
                         Files.deleteIfExists(path);
                     } catch (IOException ex) {
-                        Logger.getLogger(CachePipePool.class.getName())
+                        Logger.getLogger(CachePiper.class.getName())
                             .log(Level.SEVERE,
                                  "deleting chunk " + path.toString(), ex);
                     }

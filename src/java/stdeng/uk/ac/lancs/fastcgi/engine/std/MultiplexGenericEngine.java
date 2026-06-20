@@ -64,7 +64,7 @@ import uk.ac.lancs.fastcgi.proto.serial.RecordReader;
 import uk.ac.lancs.fastcgi.proto.serial.RecordWriter;
 import uk.ac.lancs.fastcgi.transport.Connection;
 import uk.ac.lancs.fastcgi.transport.Transport;
-import uk.ac.lancs.io.infpipe.CachePipePool;
+import uk.ac.lancs.io.infpipe.CachePiper;
 import uk.ac.lancs.io.infpipe.Pipe;
 
 /**
@@ -97,7 +97,7 @@ class MultiplexGenericEngine implements Engine {
     private final int stdoutBufferSize;
 
     private final Supplier<? extends Pipe> pipes =
-        CachePipePool.start().create()::newPipe;
+        CachePiper.start().create()::newPipe;
 
     private final ThreadGroup conntg = new ThreadGroup("connections");
 
