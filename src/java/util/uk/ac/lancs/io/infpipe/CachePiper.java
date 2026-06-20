@@ -241,7 +241,7 @@ public final class CachePiper implements Piper {
          */
         public CachePiper create() {
             return new CachePiper(dir, prefix, suffix, maxFileSize,
-                                     memChunkSize, ramThreshold);
+                                  memChunkSize, ramThreshold);
         }
     }
 
@@ -259,7 +259,7 @@ public final class CachePiper implements Piper {
      * @param memChunkSize the size of an internal chunk
      */
     CachePiper(Path dir, String prefix, String suffix, long maxFileSize,
-                  int memChunkSize, int ramThreshold) {
+               int memChunkSize, int ramThreshold) {
         this.dir = dir;
         this.prefix = prefix;
         this.suffix = suffix;
