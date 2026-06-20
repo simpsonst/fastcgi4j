@@ -45,13 +45,13 @@ import java.io.IOException;
  * 
  * @author simpsons
  */
-public class StreamAbortedException extends IOException {
+public class SourceAbortedException extends IOException {
     /**
      * Indicate abortion for a specific reason.
      * 
      * @param cause the reason for this exception
      */
-    public StreamAbortedException(Throwable cause) {
+    public SourceAbortedException(Throwable cause) {
         super(cause);
     }
 }

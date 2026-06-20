@@ -62,11 +62,15 @@ class LazyAbortableSequenceInputStream extends InputStream {
 
     private final List<InputStream> sequence = new ArrayList<>();
 
+    private final Runnable onClose;
+
     private final boolean closeOnError;
 
     private InputStream current;
 
     private boolean completed;
+
+    private boolean closed;
 
     private Throwable abortedReason;
 
@@ -76,8 +80,10 @@ class LazyAbortableSequenceInputStream extends InputStream {
      * @param closeOnError {@code true} if all remaining source streams
      * are to be closed on the first exception
      */
-    public LazyAbortableSequenceInputStream(boolean closeOnError) {
+    public LazyAbortableSequenceInputStream(boolean closeOnError,
+                                            Runnable onClose) {
         this.closeOnError = closeOnError;
+        this.onClose = onClose == null ? () -> {} : onClose;
     }
 
     /**
@@ -149,10 +155,10 @@ class LazyAbortableSequenceInputStream extends InputStream {
      * @return {@code false} if a source stream is ready; {@code true}
      * if there are no more source streams
      * 
-     * @throws StreamAbortedException if the stream has been aborted and
+     * @throws SourceAbortedException if the stream has been aborted and
      * {@code throwAbort} is set
      */
-    private boolean ensure(boolean throwAbort) throws StreamAbortedException {
+    private boolean ensure(boolean throwAbort) throws SourceAbortedException {
         if (current != null) return false;
         boolean interrupted = false;
         try {
@@ -168,7 +174,7 @@ class LazyAbortableSequenceInputStream extends InputStream {
             }
             if (interrupted) Thread.currentThread().interrupt();
             if (throwAbort && abortedReason != null)
-                throw new StreamAbortedException(abortedReason);
+                throw new SourceAbortedException(abortedReason);
             if (r) return true;
             current = sequence.remove(0);
             return false;
@@ -302,6 +308,9 @@ class LazyAbortableSequenceInputStream extends InputStream {
      */
     @Override
     public void close() throws IOException {
+        if (closed) return;
+        closed = true;
+        onClose.run();
         cleanUp(null);
     }
 
@@ -322,7 +331,7 @@ class LazyAbortableSequenceInputStream extends InputStream {
     @Override
     public int available() throws IOException {
         if (abortedReason != null)
-            throw new StreamAbortedException(abortedReason);
+            throw new SourceAbortedException(abortedReason);
         try {
             if (current == null) return 0;
             return current.available();

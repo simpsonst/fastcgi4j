@@ -40,13 +40,16 @@ package uk.ac.lancs.fastcgi.engine.std;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.context.ResponderSession;
 import uk.ac.lancs.fastcgi.context.SessionAbortedException;
 import uk.ac.lancs.io.infpipe.Pipe;
+import uk.ac.lancs.io.infpipe.SinkClosedException;
 
 /**
  * Handles Responder sessions.
@@ -57,6 +60,10 @@ class ResponderHandler extends AbstractHandler implements ResponderSession {
     private final Responder app;
 
     private final Pipe stdinPipe;
+
+    private final InputStream stdinSink;
+
+    private OutputStream stdinSource;
 
     /**
      * Create a Responder handler.
@@ -71,6 +78,8 @@ class ResponderHandler extends AbstractHandler implements ResponderSession {
                             Pipe stdinPipe) {
         super(ctxt);
         this.app = app;
+        this.stdinSink = stdinPipe.getInputStream();
+        this.stdinSource = stdinPipe.getOutputStream();
         this.stdinPipe = stdinPipe;
     }
 
@@ -96,7 +105,19 @@ class ResponderHandler extends AbstractHandler implements ResponderSession {
     @Override
     public void stdin(int len, InputStream in) throws IOException {
         logger.finer(() -> msg("stdin(%d)", len));
-        in.transferTo(stdinPipe.getOutputStream());
+        if (stdinSource == null) return;
+        try {
+            in.transferTo(stdinSource);
+        } catch (SinkClosedException ex) {
+            /* It's normal for the application to close stdin
+             * prematurely, so just discard the data. */
+            stdinSource = null;
+        } catch (IOException ex) {
+            /* Log other errors. */
+            logger.log(Level.SEVERE, ex,
+                       () -> "sess-" + connId + "." + id + ":stdin");
+            stdinSource = null;
+        }
     }
 
     private boolean stdinEnded = false;
@@ -104,13 +125,25 @@ class ResponderHandler extends AbstractHandler implements ResponderSession {
     @Override
     public void stdinEnd() throws IOException {
         logger.finer(() -> msg("stdin-end"));
-        stdinPipe.getOutputStream().close();
-        stdinEnded = true;
+        try {
+            if (stdinSource != null) stdinSource.close();
+        } catch (SinkClosedException ex) {
+            /* It's normal for the application to close stdin
+             * prematurely, so just discard the data. */
+            stdinSource = null;
+        } catch (IOException ex) {
+            /* Log other errors. */
+            logger.log(Level.SEVERE, ex,
+                       () -> "sess-" + connId + "." + id + ":stdin");
+            stdinSource = null;
+        } finally {
+            stdinEnded = true;
+        }
     }
 
     @Override
     public InputStream in() {
-        return stdinPipe.getInputStream();
+        return stdinSink;
     }
 
     @Override

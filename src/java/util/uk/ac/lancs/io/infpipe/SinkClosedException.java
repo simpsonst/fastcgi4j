@@ -1,7 +1,7 @@
 // -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
 
 /*
- * Copyright (c) 2022,2023, Lancaster University
+ * Copyright (c) 2026, Lancaster University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,43 +33,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *
- *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
+ *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
 package uk.ac.lancs.io.infpipe;
 
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.IOException;
 
 /**
- * Provides an indefinitely long pipe with stream access.
- * 
+ * Indicates that a pipe has been closed by the sink.
+ *
  * @author simpsons
  */
-public interface Pipe {
+public class SinkClosedException extends IOException {
     /**
-     * Get the output stream.
-     * 
-     * @return the output stream
+     * Indicate that the sink of a pipe closed it.
      */
-    OutputStream getOutputStream();
-
-    /**
-     * Abort the stream. Subsequent calls on the other end of the stream
-     * will throw a {@link StreamAbortedException} with the provided
-     * reason as the cause.
-     * 
-     * @param reason the reason for termination
-     */
-    void abort(Throwable reason);
-
-    /**
-     * Get the input stream.
-     * 
-     * If this stream is closed, attempts to write to the output stream
-     * will throw {@link SinkClosedException}.
-     * 
-     * @return the input stream
-     */
-    InputStream getInputStream();
+    public SinkClosedException() {}
 }

@@ -40,13 +40,16 @@ package uk.ac.lancs.fastcgi.engine.std;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import uk.ac.lancs.fastcgi.Filter;
 import uk.ac.lancs.fastcgi.context.FilterSession;
 import uk.ac.lancs.fastcgi.context.SessionAbortedException;
 import uk.ac.lancs.io.infpipe.Pipe;
+import uk.ac.lancs.io.infpipe.SinkClosedException;
 
 /**
  * Handles Filter sessions.
@@ -72,7 +75,11 @@ class FilterHandler extends AbstractHandler implements FilterSession {
         super(ctxt);
         this.app = app;
         this.stdinPipe = stdinPipe;
+        this.stdinSink = stdinPipe.getInputStream();
+        this.stdinSource = stdinPipe.getOutputStream();
         this.dataPipe = dataPipe;
+        this.dataSink = dataPipe.getInputStream();
+        this.dataSource = dataPipe.getOutputStream();
     }
 
     @Override
@@ -82,7 +89,15 @@ class FilterHandler extends AbstractHandler implements FilterSession {
 
     private final Pipe stdinPipe;
 
+    private final InputStream stdinSink;
+
+    private OutputStream stdinSource;
+
     private final Pipe dataPipe;
+
+    private final InputStream dataSink;
+
+    private OutputStream dataSource;
 
     @Override
     public void abortRequest() throws IOException {
@@ -103,7 +118,19 @@ class FilterHandler extends AbstractHandler implements FilterSession {
     @Override
     public void stdin(int len, InputStream in) throws IOException {
         logger.finer(() -> msg("stdin(%d)", len));
-        in.transferTo(stdinPipe.getOutputStream());
+        if (stdinSource == null) return;
+        try {
+            in.transferTo(stdinSource);
+        } catch (SinkClosedException ex) {
+            /* It's normal for the application to close stdin
+             * prematurely, so just discard the data. */
+            stdinSource = null;
+        } catch (IOException ex) {
+            /* Log other errors. */
+            logger.log(Level.SEVERE, ex,
+                       () -> "sess-" + connId + "." + id + ":stdin");
+            stdinSource = null;
+        }
     }
 
     private boolean stdinEnded = false;
@@ -111,13 +138,25 @@ class FilterHandler extends AbstractHandler implements FilterSession {
     @Override
     public void stdinEnd() throws IOException {
         logger.finer(() -> msg("stdin-end"));
-        stdinPipe.getOutputStream().close();
-        stdinEnded = true;
+        try {
+            if (stdinSource != null) stdinSource.close();
+        } catch (SinkClosedException ex) {
+            /* It's normal for the application to close stdin
+             * prematurely, so just discard the data. */
+            stdinSource = null;
+        } catch (IOException ex) {
+            /* Log other errors. */
+            logger.log(Level.SEVERE, ex,
+                       () -> "sess-" + connId + "." + id + ":stdin");
+            stdinSource = null;
+        } finally {
+            stdinEnded = true;
+        }
     }
 
     @Override
     public InputStream in() {
-        return stdinPipe.getInputStream();
+        return stdinSink;
     }
 
     @Override
@@ -130,18 +169,42 @@ class FilterHandler extends AbstractHandler implements FilterSession {
     @Override
     public void data(int len, InputStream in) throws IOException {
         logger.finer(() -> msg("data(%d)", len));
-        in.transferTo(dataPipe.getOutputStream());
+        if (dataSource == null) return;
+        try {
+            in.transferTo(dataSource);
+        } catch (SinkClosedException ex) {
+            /* It's normal for the application to close data
+             * prematurely, so just discard the data. */
+            dataSource = null;
+        } catch (IOException ex) {
+            /* Log other errors. */
+            logger.log(Level.SEVERE, ex,
+                       () -> "sess-" + connId + "." + id + ":data");
+            dataSource = null;
+        }
     }
 
     @Override
     public void dataEnd() throws IOException {
         logger.finer(() -> msg("data-end"));
-        dataPipe.getOutputStream().close();
+        if (dataSource == null) return;
+        try {
+            dataSource.close();
+        } catch (SinkClosedException ex) {
+            /* It's normal for the application to close data
+             * prematurely, so just discard the data. */
+            dataSource = null;
+        } catch (IOException ex) {
+            /* Log other errors. */
+            logger.log(Level.SEVERE, ex,
+                       () -> "sess-" + connId + "." + id + ":data");
+            dataSource = null;
+        }
     }
 
     @Override
     public InputStream data() {
-        return dataPipe.getInputStream();
+        return dataSink;
     }
 
     private static final Logger logger =

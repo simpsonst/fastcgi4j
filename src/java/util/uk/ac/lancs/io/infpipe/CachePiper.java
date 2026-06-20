@@ -322,7 +322,14 @@ public final class CachePiper implements Piper {
             // queue = new BlockingEnumeration<>();
             // queue.submit(new EmptyInputStream());
             // inputStream = new SequenceInputStream(queue);
-            sequence = new LazyAbortableSequenceInputStream(false);
+            sequence =
+                new LazyAbortableSequenceInputStream(false, this::sinkClosed);
+        }
+
+        private volatile boolean sinkClosed = false;
+
+        private void sinkClosed() {
+            this.sinkClosed = true;
         }
 
         private Chunk lastChunk;
@@ -382,13 +389,16 @@ public final class CachePiper implements Piper {
                 sequence.complete();
             }
 
-            @Override
-            public void write(byte[] b, int off, int len) throws IOException {
-                Objects.checkFromIndexSize(off, len, b.length);
-                if (closed) throw new IOException("closed");
-                if (abortedReason != null)
-                    throw new IOException("stream aborted", abortedReason);
+            private void innerWrite(byte[] b, int off, int len)
+                throws IOException {
                 while (len > 0) {
+                    if (sinkClosed) {
+                        /* The reader has closed the other end of the
+                         * pipe. None of our data goes anywhere now */
+                        if (lastChunk != null) lastChunk.complete();
+                        lastChunk = null;
+                        throw new SinkClosedException();
+                    }
                     Chunk chunk = getLastChunk();
                     int done = chunk.write(b, off, len);
                     if (done == 0) lastChunk = null;
@@ -396,6 +406,15 @@ public final class CachePiper implements Piper {
                     off += done;
                     len -= done;
                 }
+            }
+
+            @Override
+            public void write(byte[] b, int off, int len) throws IOException {
+                Objects.checkFromIndexSize(off, len, b.length);
+                if (closed) throw new IOException("closed");
+                if (abortedReason != null)
+                    throw new IOException("stream aborted", abortedReason);
+                innerWrite(b, off, len);
             }
 
             private final byte[] buf = new byte[1];
@@ -406,15 +425,7 @@ public final class CachePiper implements Piper {
                 if (abortedReason != null)
                     throw new IOException("stream aborted", abortedReason);
                 buf[0] = (byte) b;
-                do {
-                    Chunk chunk = getLastChunk();
-                    int done = chunk.write(buf, 0, 1);
-                    if (done == 1) {
-                        if (lastWritten >= 0) lastWritten++;
-                        return;
-                    }
-                    assert done == 0;
-                } while (true);
+                innerWrite(buf, 0, 1);
             }
         };
 

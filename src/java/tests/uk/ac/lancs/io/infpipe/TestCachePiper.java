@@ -221,7 +221,7 @@ public class TestCachePiper extends TestCase {
                 Thread.sleep(70);
             }
             assertFalse("unreached", true);
-        } catch (StreamAbortedException ex) {
+        } catch (SourceAbortedException ex) {
             assertTrue("reached", true);
         }
 
