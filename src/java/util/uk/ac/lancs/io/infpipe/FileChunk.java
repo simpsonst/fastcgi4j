@@ -200,43 +200,6 @@ public class FileChunk implements Chunk {
         }
     }
 
-    private int read() throws IOException {
-        claim();
-        int rc = file.read();
-        if (rc >= 0) remaining--;
-        return rc;
-    }
-
-    private int available() throws IOException {
-        claim();
-        return (int) Long.min(Integer.MAX_VALUE, remaining);
-    }
-
-    private long skip(long n) throws IOException {
-        claim();
-        long amount = Long.min(remaining, n);
-        file.seek(file.getFilePointer() + amount);
-        remaining -= amount;
-        return amount;
-    }
-
-    private int read(byte[] b, int off, int len) throws IOException {
-        claim();
-        int rc = file.read(b, off, len);
-        if (rc >= 0) remaining -= rc;
-        return rc;
-    }
-
-    private void close() throws IOException {
-        claim();
-        if (file == null) return;
-        try {
-            file.close();
-        } finally {
-            file = null;
-        }
-    }
-
     @Override
     public InputStream getStream() {
         return stream;
@@ -245,27 +208,44 @@ public class FileChunk implements Chunk {
     private final InputStream stream = new InputStream() {
         @Override
         public void close() throws IOException {
-            FileChunk.this.close();
+            claim();
+            if (file == null) return;
+            try {
+                file.close();
+            } finally {
+                file = null;
+            }
         }
 
         @Override
         public int available() throws IOException {
-            return FileChunk.this.available();
+            claim();
+            return (int) Long.min(Integer.MAX_VALUE, remaining);
         }
 
         @Override
         public long skip(long n) throws IOException {
-            return FileChunk.this.skip(n);
+            claim();
+            long amount = Long.min(remaining, n);
+            file.seek(file.getFilePointer() + amount);
+            remaining -= amount;
+            return amount;
         }
 
         @Override
         public int read(byte[] b, int off, int len) throws IOException {
-            return FileChunk.this.read(b, off, len);
+            claim();
+            int rc = file.read(b, off, len);
+            if (rc >= 0) remaining -= rc;
+            return rc;
         }
 
         @Override
         public int read() throws IOException {
-            return FileChunk.this.read();
+            claim();
+            int rc = file.read();
+            if (rc >= 0) remaining--;
+            return rc;
         }
     };
 }
