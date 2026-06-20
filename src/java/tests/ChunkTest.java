@@ -16,7 +16,6 @@ import uk.ac.lancs.http.ChunkedInputStream;
 import uk.ac.lancs.http.ChunkedOutputStream;
 import uk.ac.lancs.io.CountingInputStream;
 import uk.ac.lancs.io.CountingOutputStream;
-import uk.ac.lancs.io.NullOutputStream;
 
 // -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
 
@@ -115,7 +114,7 @@ public class ChunkTest {
         var decodeOut = new PipedOutputStream();
 
         try (/* Count and digest the result. */ var out =
-            count(digest(new NullOutputStream(), digOut), outCounter);
+            count(digest(OutputStream.nullOutputStream(), digOut), outCounter);
              /* Decode the output of the pipe. */ var decodeIn =
                  decode(count(new PipedInputStream(decodeOut), midCounter));
              /* Count and digest the file. */
