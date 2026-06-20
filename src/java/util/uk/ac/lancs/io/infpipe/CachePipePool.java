@@ -157,7 +157,7 @@ public final class CachePipePool implements PipePool {
 
         /**
          * Set the prefix and suffix of chunk files. The defaults are
-         * defined by {@link #PREFIX} and {@link #SUFFIX}.
+         * {@value #PREFIX} and {@value #SUFFIX}.
          * 
          * @param prefix the prefix of all chunk files
          * 
@@ -236,6 +236,8 @@ public final class CachePipePool implements PipePool {
          * Create a pool with the current configuration.
          * 
          * @return a pool with the required configuration
+         * 
+         * @constructor
          */
         public CachePipePool create() {
             return new CachePipePool(dir, prefix, suffix, maxFileSize,
@@ -289,13 +291,16 @@ public final class CachePipePool implements PipePool {
 
         private Chunk lastChunk;
 
+        private long lastWritten = -1;
+
         private Throwable abortedReason;
 
         private boolean closed;
 
         private Chunk getLastChunk() throws IOException {
             if (lastChunk != null) return lastChunk;
-            if (memoryUsage.get() >= ramThreshold) {
+            if ((lastWritten < 0 || lastWritten >= memChunkSize) &&
+                memoryUsage.get() >= ramThreshold) {
                 /* Create a temporary random-access file. */
                 Path path = Files.createTempFile(dir, prefix, suffix);
                 RandomAccessFile file =
@@ -315,16 +320,13 @@ public final class CachePipePool implements PipePool {
                 });
 
                 lastChunk = new FileChunk(file, maxFileSize);
+                lastWritten = 0;
             } else {
                 lastChunk = new MemoryChunk(memChunkSize, memoryUsage);
+                lastWritten = -1;
             }
             sequence.submit(lastChunk.getStream());
             return lastChunk;
-        }
-
-        private void clearLastChunk() {
-            lastChunk.complete();
-            lastChunk = null;
         }
 
         private final OutputStream outputStream = new OutputStream() {
@@ -339,7 +341,8 @@ public final class CachePipePool implements PipePool {
             public void close() throws IOException {
                 if (closed) return;
                 closed = true;
-                if (lastChunk != null) clearLastChunk();
+                if (lastChunk != null) lastChunk.complete();
+                lastChunk = null;
                 sequence.complete();
             }
 
@@ -352,7 +355,8 @@ public final class CachePipePool implements PipePool {
                 while (len > 0) {
                     Chunk chunk = getLastChunk();
                     int done = chunk.write(b, off, len);
-                    if (done == 0) clearLastChunk();
+                    if (done == 0) lastChunk = null;
+                    if (lastWritten >= 0) lastWritten += done;
                     off += done;
                     len -= done;
                 }
@@ -369,7 +373,10 @@ public final class CachePipePool implements PipePool {
                 do {
                     Chunk chunk = getLastChunk();
                     int done = chunk.write(buf, 0, 1);
-                    if (done == 1) return;
+                    if (done == 1) {
+                        if (lastWritten >= 0) lastWritten++;
+                        return;
+                    }
                     assert done == 0;
                 } while (true);
             }
@@ -386,7 +393,6 @@ public final class CachePipePool implements PipePool {
             if (abortedReason != null) return;
             abortedReason = reason;
             sequence.abort(reason);
-            if (lastChunk != null) lastChunk.abort(reason);
         }
 
         @Override

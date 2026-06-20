@@ -78,10 +78,11 @@ public class TestCachePipePool extends TestCase {
             int rc3 = chunk.write(buf, rc1 + rc2, 100);
             assertEquals("write 3 truncated", 86, rc3);
             assertEquals("usage 3", 1256, usage.get());
+            chunk.complete();
         }
         {
             byte[] buf2 = new byte[1024];
-            int rc = chunk.read(buf2, 0, buf2.length);
+            int rc = chunk.getStream().read(buf2, 0, buf2.length);
             assertEquals("read all", 256, rc);
             assertEquals("usage read all", 1000, usage.get());
             assertEquals("preserved", 0,
@@ -108,10 +109,11 @@ public class TestCachePipePool extends TestCase {
             assertEquals("write 2", 90, rc2);
             int rc3 = chunk.write(buf, rc1 + rc2, 100);
             assertEquals("write 3 truncated", 86, rc3);
+            chunk.complete();
         }
         {
             byte[] buf2 = new byte[1024];
-            int rc = chunk.read(buf2, 0, buf2.length);
+            int rc = chunk.getStream().read(buf2, 0, buf2.length);
             assertEquals("read all", 256, rc);
             assertEquals("preserved", 0,
                          Arrays.compare(buf, 0, rc, buf2, 0, rc));

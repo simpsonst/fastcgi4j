@@ -54,19 +54,22 @@ interface Chunk {
      * 
      * @param off the offset to the first byte in the array to be added
      * 
-     * @param len the maximum number of bytes to be added
+     * @param len the maximum number of bytes to be added; must be
+     * positive
      * 
      * @return the number of bytes added; or {@code 0} if the chunk is
      * full
      * 
      * @throws IOException if an I/O error occurs
+     * 
+     * @throws IllegalArgumentException if the length is not positive
      */
     int write(byte[] buf, int off, int len) throws IOException;
 
     /**
      * Indicate that no more bytes will be added to the chunk.
      */
-    void complete();
+    void complete() throws IOException;
 
     /**
      * Cause subsequent reads of the content of this chunk to fail with
@@ -75,7 +78,7 @@ interface Chunk {
      * @param reason the cause of I/O errors when reading from this
      * chunk
      */
-    void abort(Throwable reason);
+    // void abort(Throwable reason);
 
     /**
      * Get the input stream of the contents of this chunk. All calls of

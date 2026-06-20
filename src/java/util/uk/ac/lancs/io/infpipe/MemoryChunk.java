@@ -84,8 +84,6 @@ final class MemoryChunk implements Chunk {
 
     private boolean complete = false;
 
-    private Throwable reason = null;
-
     private void check() {
         assert readPos <= writePos;
         assert readPos >= 0;
@@ -105,6 +103,8 @@ final class MemoryChunk implements Chunk {
      */
     @Override
     public int write(byte[] buf, int off, int len) {
+        if (len == 0)
+            throw new IllegalArgumentException("non-positive length: " + len);
         try {
             lock.lock();
             /* The content provider should not be supplying more content
@@ -135,6 +135,12 @@ final class MemoryChunk implements Chunk {
                 } else {
                     /* Just use what we have left. */
                     amount = Integer.min(len, rem);
+                }
+
+                if (amount == 0) {
+                    complete = true;
+                    ready.signal();
+                    return 0;
                 }
 
                 /* Consume some of the supplied content. */
@@ -250,8 +256,7 @@ final class MemoryChunk implements Chunk {
         /* Wait until there's no reason to block. */
         boolean interrupted = false;
         int rem = -1;
-        while (array != null && reason == null &&
-            (rem = writePos - readPos) == 0 && !complete) {
+        while (array != null && (rem = writePos - readPos) == 0 && !complete) {
             try {
                 ready.await();
             } catch (InterruptedException ex) {
@@ -264,7 +269,6 @@ final class MemoryChunk implements Chunk {
 
         /* Detect errors and end-of-file. */
         if (array == null) throw new IOException("closed");
-        if (reason != null) throw new StreamAbortedException(reason);
         assert rem >= 0;
         return rem;
     }
@@ -345,16 +349,4 @@ final class MemoryChunk implements Chunk {
             return MemoryChunk.this.read(b, off, len);
         }
     };
-
-    @Override
-    public void abort(Throwable reason) {
-        try {
-            lock.lock();
-            if (this.reason != null) return;
-            this.reason = reason;
-            ready.signal();
-        } finally {
-            lock.unlock();
-        }
-    }
 }
