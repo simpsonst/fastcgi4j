@@ -35,55 +35,32 @@
  *
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
-import java.io.FileNotFoundException;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
-import java.io.Reader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
-import java.util.Properties;
+import uk.ac.lancs.cgi.FormSubmission;
 import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.app.FastCGIApplication;
 import uk.ac.lancs.fastcgi.app.FastCGIConfiguration;
-import uk.ac.lancs.fastcgi.body.Morgue;
-import uk.ac.lancs.fastcgi.body.SmartMorgue;
 import uk.ac.lancs.fastcgi.context.ResponderSession;
-import uk.ac.lancs.fastcgi.mime.BinaryMessage;
-import uk.ac.lancs.fastcgi.mime.Message;
-import uk.ac.lancs.fastcgi.mime.MessageParser;
-import uk.ac.lancs.fastcgi.mime.TextMessage;
-import uk.ac.lancs.fastcgi.misc.FormHandler;
-import uk.ac.lancs.fastcgi.misc.FormSubmission;
 import uk.ac.lancs.fastcgi.misc.SessionAugment;
-import uk.ac.lancs.fastcgi.path.Navigator;
-import uk.ac.lancs.fastcgi.path.PathConfiguration;
-import uk.ac.lancs.fastcgi.path.PathContext;
+import uk.ac.lancs.fastcgi.util.FormHandler;
+import uk.ac.lancs.mime.BinaryMessage;
+import uk.ac.lancs.mime.Message;
+import uk.ac.lancs.mime.MessageParser;
+import uk.ac.lancs.mime.TextMessage;
+import uk.ac.lancs.mime.body.Morgue;
+import uk.ac.lancs.mime.body.SmartMorgue;
 
 /**
+ * Assumes the request is a form submission, and echoes back the fields.
  *
  * @author simpsons
  */
 public class FormEchoer extends FastCGIApplication implements Responder {
-    private static final PathConfiguration<String> pathConfig;
-
-    static {
-        Properties props = new Properties();
-        Path propPath = Paths.get("scratch", "instances.properties");
-        try (Reader in = Files.newBufferedReader(propPath)) {
-            props.load(in);
-        } catch (FileNotFoundException ex) {
-            /* Ignore. */
-        } catch (IOException ex) {
-            System.err.printf("failed to load from %s%n", propPath);
-        }
-        pathConfig = PathConfiguration.<String>start()
-            .instances(props, "", s -> s).create();
-    }
-
     private static final Morgue morgue =
         SmartMorgue.start().singleThreshold(20).build();
 
@@ -98,9 +75,6 @@ public class FormEchoer extends FastCGIApplication implements Responder {
     @Override
     public void respond(ResponderSession session) throws Exception {
         SessionAugment augment = new SessionAugment(session);
-        PathContext<String> pathCtxt =
-            pathConfig.recognize(session.parameters());
-        Navigator navigator = pathCtxt.navigator();
         final FormSubmission submission = formHandler.get(session);
         try (PrintWriter out = augment.textOut("plain")) {
             out.printf("\nForm fields:\n");

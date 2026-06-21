@@ -1,3 +1,5 @@
+// -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
+
 /*
  * Copyright (c) 2022,2023, Lancaster University
  * All rights reserved.
@@ -311,7 +313,7 @@ public class RecordWriter {
      * @todo Is this the correct behaviour when the record overflows?
      * The <a href=
      * "http://www.mit.edu/~yandros/doc/specs/fcgi-spec.html#S4.1"
-     * >specification</ a> says that unrecognized variables are simply
+     * >specification</a> says that unrecognized variables are simply
      * not sent from the application, so if the results are incomplete,
      * won't the server assume they are unrecognized? It could ask again
      * for anything missing, and only stop when an empty result is

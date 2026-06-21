@@ -1,3 +1,5 @@
+// -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
+
 /*
  * Copyright (c) 2022,2023, Lancaster University
  * All rights reserved.
@@ -34,11 +36,11 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
+import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.engine.Attribute;
 import uk.ac.lancs.fastcgi.engine.Engine;
-import uk.ac.lancs.fastcgi.Responder;
-import uk.ac.lancs.scc.jardeps.Application;
 import uk.ac.lancs.fastcgi.transport.Transport;
+import uk.ac.lancs.scc.jardeps.Application;
 
 /**
  * Provides a responder that yields MD5 sums of the request content.

@@ -1,3 +1,5 @@
+// -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
+
 /*
  * Copyright (c) 2022,2023, Lancaster University
  * All rights reserved.
@@ -69,4 +71,38 @@ public final class ApplicationVariables {
      * {@value}.
      */
     public static final String MPXS_CONNS = "FCGI_MPXS_CONNS";
+
+    /**
+     * Identifies the variable that specifies how the application
+     * expects to receive and send protocol fields.
+     * 
+     * <p>
+     * The value must be a comma-separated list of tokens. The following
+     * tokens are recognized:
+     * 
+     * <dl>
+     * 
+     * <dt>{@value #FIELD_HANDLING_REQUEST_TRAILER}</dt>
+     * 
+     * <dd>
+     * <p>
+     * The application will recognize the flag
+     * {@link RequestFlags#EXPECT_TRAILER}, allowing it to receive the
+     * request trailer as a separate {@link RecordTypes#PARAMS} sequence
+     * after {@link RecordTypes#STDIN}. The web server must not set flag
+     * if this token is missing.
+     * 
+     * </dl>
+     * 
+     * <p>
+     * This is an experimental extension to FastCGI/1.0.
+     */
+    public static final String FIELD_HANDLING = "FCGI_FIELD_HANDLING";
+
+    /**
+     * Identifies an application capable of understanding the flag
+     * {@link RequestFlags#EXPECT_TRAILER}.
+     */
+    public static final String FIELD_HANDLING_REQUEST_TRAILER =
+        "request-trailer";
 }

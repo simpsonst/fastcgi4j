@@ -1,3 +1,5 @@
+// -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
+
 /*
  * Copyright (c) 2022,2023, Lancaster University
  * All rights reserved.
@@ -181,27 +183,27 @@ public class RecordReader {
         int clen = iclen, plen = iplen;
         int reasons = 0;
         switch (rtype) {
-        case RecordTypes.ABORT_REQUEST -> {
+        case RecordTypes.ABORT_REQUEST:
             if (rver < 1) reasons |= RecordHandler.BAD_VERSION;
             if (clen != 0) reasons |= RecordHandler.BAD_LENGTH;
             if (rid == 0) reasons |= RecordHandler.BAD_REQ_ID;
             if (reasons != 0) {
                 skip(clen);
-                rejectMessage(rver, rtype, rid, clen, plen, reasons);
+                rejectRecord(rver, rtype, rid, clen, plen, reasons);
                 handler.bad(reasons, rver, rtype, clen, rid);
                 break;
             }
             logger.fine(() -> msg("ABORT_REQUEST(%d)", rid));
             handler.abortRequest(rid);
-        }
+            break;
 
-        case RecordTypes.BEGIN_REQUEST -> {
+        case RecordTypes.BEGIN_REQUEST: {
             if (rver < 1) reasons |= RecordHandler.BAD_VERSION;
             if (clen != 8) reasons |= RecordHandler.BAD_LENGTH;
             if (rid == 0) reasons |= RecordHandler.BAD_REQ_ID;
             if (reasons != 0) {
                 skip(clen);
-                rejectMessage(rver, rtype, rid, clen, plen, reasons);
+                rejectRecord(rver, rtype, rid, clen, plen, reasons);
                 handler.bad(reasons, rver, rtype, clen, rid);
                 break;
             }
@@ -212,14 +214,15 @@ public class RecordReader {
                                   RoleTypes.toString(role),
                                   RequestFlags.toString(flags)));
             handler.beginRequest(rid, role, flags);
+            break;
         }
 
-        case RecordTypes.GET_VALUES -> {
+        case RecordTypes.GET_VALUES: {
             if (rver < 1) reasons |= RecordHandler.BAD_VERSION;
             if (rid == 0) reasons |= RecordHandler.BAD_REQ_ID;
             if (reasons != 0) {
                 skip(clen);
-                rejectMessage(rver, rtype, rid, clen, plen, reasons);
+                rejectRecord(rver, rtype, rid, clen, plen, reasons);
                 handler.bad(reasons, rver, rtype, clen, rid);
                 break;
             }
@@ -272,73 +275,72 @@ public class RecordReader {
             }
             logger.fine(() -> msg("GET_VALUES(%s)", vars.keySet()));
             handler.getValues(vars.keySet());
+            break;
         }
 
-        case RecordTypes.PARAMS -> {
+        case RecordTypes.PARAMS:
             if (rver < 1) reasons |= RecordHandler.BAD_VERSION;
             if (rid == 0) reasons |= RecordHandler.BAD_REQ_ID;
             if (reasons != 0) {
                 skip(clen);
-                rejectMessage(rver, rtype, rid, clen, plen, reasons);
+                rejectRecord(rver, rtype, rid, clen, plen, reasons);
                 handler.bad(reasons, rver, rtype, clen, rid);
             } else if (clen == 0) {
                 logger.fine(() -> msg("PARAMS(%d) end", rid));
                 handler.paramsEnd(rid);
             } else {
-                FixedLengthInputStream out =
-                    new FixedLengthInputStream(clen, in);
-                final int fclen = clen;
-                logger.fine(() -> msg("PARAMS(%d, %d)", rid, fclen));
-                handler.params(rid, clen, out);
-                out.skipRemaining();
+                try (var out = new InputSegment(clen, in)) {
+                    final int fclen = clen;
+                    logger.fine(() -> msg("PARAMS(%d, %d)", rid, fclen));
+                    handler.params(rid, clen, out);
+                }
             }
-        }
+            break;
 
-        case RecordTypes.STDIN -> {
+        case RecordTypes.STDIN:
             if (rver < 1) reasons |= RecordHandler.BAD_VERSION;
             if (rid == 0) reasons |= RecordHandler.BAD_REQ_ID;
             if (reasons != 0) {
                 skip(clen);
-                rejectMessage(rver, rtype, rid, clen, plen, reasons);
+                rejectRecord(rver, rtype, rid, clen, plen, reasons);
                 handler.bad(reasons, rver, rtype, clen, rid);
             } else if (clen == 0) {
                 logger.fine(() -> msg("STDIN(%d) end", rid));
                 handler.stdinEnd(rid);
             } else {
-                FixedLengthInputStream out =
-                    new FixedLengthInputStream(clen, in);
-                final int fclen = clen;
-                logger.fine(() -> msg("STDIN(%d, %d)", rid, fclen));
-                handler.stdin(rid, clen, out);
-                out.skipRemaining();
+                try (var out = new InputSegment(clen, in)) {
+                    final int fclen = clen;
+                    logger.fine(() -> msg("STDIN(%d, %d)", rid, fclen));
+                    handler.stdin(rid, clen, out);
+                }
             }
-        }
+            break;
 
-        case RecordTypes.DATA -> {
+        case RecordTypes.DATA:
             if (rver < 1) reasons |= RecordHandler.BAD_VERSION;
             if (rid == 0) reasons |= RecordHandler.BAD_REQ_ID;
             if (reasons != 0) {
                 skip(clen);
-                rejectMessage(rver, rtype, rid, clen, plen, reasons);
+                rejectRecord(rver, rtype, rid, clen, plen, reasons);
                 handler.bad(reasons, rver, rtype, clen, rid);
             } else if (clen == 0) {
                 logger.fine(() -> msg("DATA(%d) end", rid));
                 handler.dataEnd(rid);
             } else {
-                FixedLengthInputStream out =
-                    new FixedLengthInputStream(clen, in);
-                final int fclen = clen;
-                logger.fine(() -> msg("DATA(%d, %d)", rid, fclen));
-                handler.data(rid, clen, out);
-                out.skipRemaining();
+                try (var out = new InputSegment(clen, in)) {
+                    final int fclen = clen;
+                    logger.fine(() -> msg("DATA(%d, %d)", rid, fclen));
+                    handler.data(rid, clen, out);
+                }
             }
-        }
+            break;
 
-        default -> {
+        default:
             if (!require(() -> msg("unknown-%d", rtype), clen)) return false;
-            rejectMessage(rver, rtype, rid, clen, plen, reasons);
-            handler.bad(RecordHandler.UNKNOWN_TYPE, rver, rtype, clen, rid);
-        }
+            reasons |= RecordHandler.UNKNOWN_TYPE;
+            rejectRecord(rver, rtype, rid, clen, plen, reasons);
+            handler.bad(reasons, rver, rtype, clen, rid);
+            break;
         }
 
         /* Skip over trailing padding. */
@@ -347,10 +349,34 @@ public class RecordReader {
         return true;
     }
 
+    /**
+     * Unpack a sequence of bytes into an integer.
+     * 
+     * @param buf the bytes to read from
+     * 
+     * @param off offset of the next byte to read
+     * 
+     * @param len the number of bytes to read
+     * 
+     * @return the unpacked value
+     */
     private static int unser(byte[] buf, int off, int len) {
         return unser(0, buf, off, len);
     }
 
+    /**
+     * Unpack a sequence of bytes into an existing integer.
+     * 
+     * @param r an initial value
+     * 
+     * @param buf the bytes to read from
+     * 
+     * @param off offset of the next byte to read
+     * 
+     * @param len the number of bytes to read
+     * 
+     * @return the unpacked value
+     */
     private static int unser(int r, byte[] buf, int off, int len) {
         while (len-- > 0) {
             r <<= 8;
@@ -359,12 +385,37 @@ public class RecordReader {
         return r;
     }
 
+    /**
+     * Format a message prefixed with this object's context.
+     * 
+     * @param fmt the message format
+     * 
+     * @param args arguments to fulfil the format
+     * 
+     * @return the formatted string
+     */
     private String msg(String fmt, Object... args) {
         return tag + ":in:" + String.format(fmt, args);
     }
 
-    private void rejectMessage(int rver, int rtype, int rid, int iclen,
-                               int iplen, int fr) {
+    /**
+     * Log that a record has been rejected.
+     * 
+     * @param rver the version number
+     * 
+     * @param rtype the record type
+     * 
+     * @param rid the request id
+     * 
+     * @param iclen the content length
+     * 
+     * @param iplen the padding length
+     * 
+     * @param fr the set of reasons for rejection, as defined by
+     * {@link RecordHandler}
+     */
+    private void rejectRecord(int rver, int rtype, int rid, int iclen,
+                              int iplen, int fr) {
         logger.warning(() -> msg(
                                  "rejected %s ver=%d"
                                      + " rid=%d clen=%d plen=%d%s%s%s",

@@ -1,3 +1,5 @@
+// -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
+
 /*
  * Copyright (c) 2022,2023, Lancaster University
  * All rights reserved.
@@ -37,32 +39,34 @@
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.time.Duration;
 import java.util.List;
 import java.util.Properties;
 import java.util.TreeMap;
+import uk.ac.lancs.cgi.FormSubmission;
+import uk.ac.lancs.cgi.path.Navigator;
+import uk.ac.lancs.cgi.path.PathConfiguration;
+import uk.ac.lancs.cgi.path.PathContext;
 import uk.ac.lancs.fastcgi.Responder;
-import uk.ac.lancs.fastcgi.body.BinaryBody;
-import uk.ac.lancs.fastcgi.body.Morgue;
-import uk.ac.lancs.fastcgi.body.SmartMorgue;
 import uk.ac.lancs.fastcgi.context.ResponderSession;
-import uk.ac.lancs.fastcgi.mime.BinaryMessage;
-import uk.ac.lancs.fastcgi.mime.Message;
-import uk.ac.lancs.fastcgi.mime.MessageParser;
-import uk.ac.lancs.fastcgi.mime.TextMessage;
-import uk.ac.lancs.fastcgi.misc.FormHandler;
-import uk.ac.lancs.fastcgi.misc.FormSubmission;
 import uk.ac.lancs.fastcgi.misc.SessionAugment;
-import uk.ac.lancs.fastcgi.path.Navigator;
-import uk.ac.lancs.fastcgi.path.PathConfiguration;
-import uk.ac.lancs.fastcgi.path.PathContext;
+import uk.ac.lancs.fastcgi.util.FormHandler;
+import uk.ac.lancs.mime.BinaryMessage;
+import uk.ac.lancs.mime.Message;
+import uk.ac.lancs.mime.MessageParser;
+import uk.ac.lancs.mime.TextMessage;
+import uk.ac.lancs.mime.body.BinaryBody;
+import uk.ac.lancs.mime.body.Morgue;
+import uk.ac.lancs.mime.body.SmartMorgue;
 
 /**
  * Responds by echoing all headers, and displaying a hex MD5 sum of the
@@ -105,14 +109,10 @@ public class MD5SumResponder implements Responder {
         Navigator navigator = pathCtxt.navigator();
 
         final byte[] dig;
-        if (false) {
-            dig = null;
-        } else {
-            MessageDigest md = MessageDigest.getInstance("md5");
-            byte[] buf = new byte[1024];
-            int got;
-            while ((got = session.in().read(buf)) >= 0) {
-                md.update(buf, 0, got);
+        {
+            var md = MessageDigest.getInstance("md5");
+            try (var mdis = new DigestInputStream(session.in(), md)) {
+                mdis.transferTo(OutputStream.nullOutputStream());
             }
             dig = md.digest();
         }

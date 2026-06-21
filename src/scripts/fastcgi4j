@@ -58,6 +58,7 @@ readarray -t CLASSPATH < <(split_path "$CLASSPATH")
 
 JVM=java
 JVMARGS=()
+FCGI4JARGS=()
 unset dryrun
 unset bindaddr
 peers=()
@@ -222,10 +223,10 @@ while [ $# -gt 0 ] ; do
 	    ;;
 	(-c)
 	    shift
-	    APPARGS+=(-Duk.ac.lancs.fastcgi.nconn="$1")
+	    FCGI4JARGS+=(-Duk.ac.lancs.fastcgi.nconn="$1")
 	    ;;
 	(+c)
-	    APPARGS+=(-Uuk.ac.lancs.fastcgi.nconn)
+	    FCGI4JARGS+=(-Uuk.ac.lancs.fastcgi.nconn)
 	    ;;
 
 	(--demo)
@@ -234,26 +235,26 @@ while [ $# -gt 0 ] ; do
 
 	(-s)
 	    shift
-	    APPARGS+=(-Duk.ac.lancs.fastcgi.nsess="$1")
+	    FCGI4JARGS+=(-Duk.ac.lancs.fastcgi.nsess="$1")
 	    ;;
 	(+s)
-	    APPARGS+=(-Uuk.ac.lancs.fastcgi.nsess)
+	    FCGI4JARGS+=(-Uuk.ac.lancs.fastcgi.nsess)
 	    ;;
 
 	(-p)
 	    shift
-	    APPARGS+=(-Duk.ac.lancs.fastcgi.nspc="$1")
+	    FCGI4JARGS+=(-Duk.ac.lancs.fastcgi.nspc="$1")
 	    ;;
 	(+p)
-	    APPARGS+=(-Uuk.ac.lancs.fastcgi.nspc)
+	    FCGI4JARGS+=(-Uuk.ac.lancs.fastcgi.nspc)
 	    ;;
 
 	(-b)
 	    shift
-	    APPARGS+=(-Duk.ac.lancs.fastcgi.buffer="$1")
+	    FCGI4JARGS+=(-Duk.ac.lancs.fastcgi.buffer="$1")
 	    ;;
 	(+b)
-	    APPARGS+=(-Uuk.ac.lancs.fastcgi.buffer)
+	    FCGI4JARGS+=(-Uuk.ac.lancs.fastcgi.buffer)
 	    ;;
 
 	(-J*)
@@ -319,14 +320,17 @@ while [ $# -gt 0 ] ; do
 done
 
 ## Ensure our Java libraries are available.
-FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_contract.jar")
-FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_api.jar")
+FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_augctxt.jar")
+FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_transport.jar")
+FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_engine.jar")
+FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_role.jar")
 FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_util.jar")
 FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_app.jar")
 FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_threads.jar")
-FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_engine.jar")
+FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_stdeng.jar")
 FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_soft.jar")
 FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_proto.jar")
+FASTCGI_CLASSPATH+=("$HERE/share/java/fastcgi4j_env.jar")
 CLASSPATH=("${FASTCGI_CLASSPATH[@]}" "${CLASSPATH[@]}")
 CLASSPATH+=("$HERE/share/java/fastcgi4j_inet.jar")
 CLASSPATH+=("$HERE/share/java/fastcgi4j_unix.jar")
@@ -381,7 +385,7 @@ CLASSPATH="${CLASSPATH:1}"
 
 # -Duk.ac.lancs.fastcgi.transport.native_unix.library="$HERE/libexec/fastcgi4j/libfastcgi4j.so"
 
-CMD=("$JVM" "${JVMARGS[@]}"
+CMD=("$JVM" "${JVMARGS[@]}" "${FCGI4JARGS[@]}"
      --class-path "${CLASSPATH}"
      uk.ac.lancs.fastcgi.app.FastCGIApplication "${APPARGS[@]}" "$@")
 

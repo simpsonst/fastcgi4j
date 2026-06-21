@@ -47,54 +47,68 @@
 
   @plink simpsons https://github.com/simpsonst
 
-  @group api Application interface
+  @group service Services
+
+  @package service uk.ac.lancs.fastcgi
+
+  @package service uk.ac.lancs.fastcgi.context
+
+  @package service uk.ac.lancs.fastcgi.path
+
+  @package service uk.ac.lancs.fastcgi.misc
+
+  @package service uk.ac.lancs.fastcgi.util
+
+  @package service uk.ac.lancs.fastcgi.http
+
+  @group transport Transports
+
+  @package transport uk.ac.lancs.fastcgi.transport
+
+  @package transport uk.ac.lancs.fastcgi.transport.inet
+
+  @package transport uk.ac.lancs.fastcgi.transport.iis
+
+  @package transport uk.ac.lancs.fastcgi.transport.unix
+
+  @package transport uk.ac.lancs.fastcgi.transport.inherit
+
+  @group engine Engines
+
+  @package engine uk.ac.lancs.fastcgi.proto
+
+  @package engine uk.ac.lancs.fastcgi.proto.serial
+
+  @package engine uk.ac.lancs.fastcgi.engine
+
+  @package engine uk.ac.lancs.fastcgi.engine.std
+
+  @package engine uk.ac.lancs.fastcgi.engine.std.threading
+
+  @package engine uk.ac.lancs.fastcgi.engine.std.threading.soft
+
+  @group deploy Deployment
+
+  @package deploy uk.ac.lancs.fastcgi.app
+
+  @package deploy uk.ac.lancs.fastcgi.proto.env
 
   @group utils Implementation utilities
 
-  @group impl Implementations
+  @package utils uk.ac.lancs.http
 
-  @package api uk.ac.lancs.fastcgi
+  @package utils uk.ac.lancs.http.cache
 
-  @package api uk.ac.lancs.fastcgi.context
+  @package utils uk.ac.lancs.http.encoding
 
-  @package api uk.ac.lancs.fastcgi.transport
+  @package utils uk.ac.lancs.http.field
 
-  @package api uk.ac.lancs.fastcgi.engine
+  @package utils uk.ac.lancs.mime
 
-  @package api uk.ac.lancs.fastcgi.path
+  @package utils uk.ac.lancs.mime.body
 
-  @package api uk.ac.lancs.fastcgi.misc
+  @package utils uk.ac.lancs.io
 
-  @package api uk.ac.lancs.fastcgi.app
-
-  @package utils uk.ac.lancs.fastcgi.util
-
-  @package utils uk.ac.lancs.fastcgi.mime
-
-  @package utils uk.ac.lancs.fastcgi.io
-
-  @package utils uk.ac.lancs.fastcgi.body
-
-  @package utils uk.ac.lancs.fastcgi.proto
-
-  @package utils uk.ac.lancs.fastcgi.proto.serial
-
-  @package utils uk.ac.lancs.fastcgi.engine.util
-
-  @package impl uk.ac.lancs.fastcgi.transport.inet
-
-  @package impl uk.ac.lancs.fastcgi.transport.iis
-
-  @package impl uk.ac.lancs.fastcgi.transport.unix
-
-  @package impl uk.ac.lancs.fastcgi.transport.fork
-
-  @package impl uk.ac.lancs.fastcgi.transport.inherit
-
-  @package impl uk.ac.lancs.fastcgi.engine.std
-
-  @package impl uk.ac.lancs.fastcgi.engine.std.threading
-
-  @package impl uk.ac.lancs.fastcgi.engine.std.threading.soft
+  @package utils uk.ac.lancs.io.infpipe
 
 </body>

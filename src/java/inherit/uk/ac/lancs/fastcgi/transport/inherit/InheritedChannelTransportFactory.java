@@ -1,3 +1,5 @@
+// -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
+
 /*
  * Copyright (c) 2022,2023, Lancaster University
  * All rights reserved.
@@ -49,7 +51,7 @@ import java.util.function.Predicate;
 import java.util.logging.Logger;
 import jdk.net.ExtendedSocketOptions;
 import jdk.net.UnixDomainPrincipal;
-import uk.ac.lancs.fastcgi.proto.InvocationVariables;
+import uk.ac.lancs.fastcgi.proto.env.InvocationVariables;
 import uk.ac.lancs.fastcgi.transport.SocketChannelTransport;
 import uk.ac.lancs.fastcgi.transport.Transport;
 import uk.ac.lancs.fastcgi.transport.TransportConfigurationException;

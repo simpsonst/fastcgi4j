@@ -1,0 +1,358 @@
+// -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
+
+/*
+ * Copyright (c) 2023, Lancaster University
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ * * Redistributions of source code must retain the above copyright
+ *   notice, this list of conditions and the following disclaimer.
+ *
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in the
+ *   documentation and/or other materials provided with the
+ *   distribution.
+ *
+ * * Neither the name of the copyright holder nor the names of its
+ *   contributors may be used to endorse or promote products derived
+ *   from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *
+ *  Author: Steven Simpson <https://github.com/simpsonst>
+ */
+
+package uk.ac.lancs.cgi;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringWriter;
+import java.net.URLDecoder;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import uk.ac.lancs.mime.Disposition;
+import uk.ac.lancs.mime.MediaType;
+import uk.ac.lancs.mime.Message;
+import uk.ac.lancs.mime.MessageParser;
+import uk.ac.lancs.mime.StringMessage;
+
+/**
+ * Presents form data as a list or a map. The list view presents
+ * key-value pairs in delivery order. The map view collects entries with
+ * identical keys, and presents the values as a list in relative
+ * delivery order.
+ *
+ * @author simpsons
+ */
+public final class FormSubmission {
+    private final List<Map.Entry<? extends String, ? extends Message>> list;
+
+    private final Map<String, List<Message>> map;
+
+    private final boolean bodyConsumed;
+
+    /**
+     * Determine whether the request body was consumed.
+     * 
+     * @return {@code true} if the body was consumed; {@code false}
+     * otherwise
+     */
+    public boolean bodyConsumed() {
+        return bodyConsumed;
+    }
+
+    private FormSubmission(List<? extends Map.Entry<? extends String,
+                                                    ? extends Message>> list,
+                           boolean bodyConsumed) {
+        this.bodyConsumed = bodyConsumed;
+        this.list = List.copyOf(list);
+
+        /**
+         * Create an immutable index of the data.
+         */
+        Map<String, List<Message>> map = new HashMap<>();
+        for (var e : list) {
+            var k = e.getKey();
+            var v = e.getValue();
+            map.computeIfAbsent(k, dummy -> new ArrayList<>()).add(v);
+        }
+        this.map = map.entrySet().stream().collect(Collectors
+            .toMap(Map.Entry::getKey, e -> List.copyOf(e.getValue())));
+    }
+
+    /**
+     * Load form data from an already-parsed multipart message body.
+     * {@link #bodyConsumed()} will return {@code true}.
+     * 
+     * @param mpm the parts of the multipart message
+     * 
+     * @return the requested form data
+     * 
+     * @constructor
+     */
+    public static FormSubmission fromMultipart(List<? extends Message> mpm) {
+        List<Map.Entry<? extends String, ? extends Message>> list =
+            new ArrayList<>();
+        collectFromMultipart(list, mpm);
+        return new FormSubmission(list, true);
+    }
+
+    /**
+     * Collect fields from a multipart message body.
+     * 
+     * @param dest the destination for detected fields
+     * 
+     * @param mpm the parts of the multipart message
+     */
+    private static void
+        collectFromMultipart(List<Map.Entry<? extends String,
+                                            ? extends Message>> dest,
+                             List<? extends Message> mpm) {
+        for (Message msg : mpm) {
+            Disposition disp =
+                msg.header().get("Content-Disposition", Disposition.FORMAT);
+            if (disp == null) continue;
+            if (!disp.type().equals("form-data")) continue;
+            String name = disp.name();
+            if (name == null) continue;
+            dest.add(Map.entry(name, msg));
+        }
+    }
+
+    private static final Pattern AMPS = Pattern.compile("&");
+
+    /**
+     * Load form data from a query string. {@link #bodyConsumed()} will
+     * return {@code false}. Use
+     * {@link #fromQuery(CharSequence, Charset, boolean)} to set that
+     * flag explicitly. This call is equivalent to:
+     * 
+     * <pre>
+     * {@linkplain #fromQuery(CharSequence, Charset, boolean) fromQuery}(qs, charset, false)
+     * </pre>
+     * 
+     * @param qs the query string
+     * 
+     * @param charset the encoding to assume for percent-encoded
+     * characters
+     * 
+     * @return the form submission equivalent to the provided query
+     * string
+     * 
+     * @constructor
+     */
+    public static FormSubmission fromQuery(CharSequence qs, Charset charset) {
+        return fromQuery(qs, charset, false);
+    }
+
+    /**
+     * Load form data from a query string.
+     * 
+     * @param qs the query string
+     * 
+     * @param charset the encoding to assume for percent-encoded
+     * characters
+     * 
+     * @param bodyConsumed whether to indicate that the request body was
+     * consumed; the value to be returned by {@link #bodyConsumed()}
+     * 
+     * @return the form submission equivalent to the provided query
+     * string
+     * 
+     * @constructor
+     */
+    public static FormSubmission fromQuery(CharSequence qs, Charset charset,
+                                           boolean bodyConsumed) {
+        List<Map.Entry<? extends String, ? extends Message>> list =
+            new ArrayList<>();
+        collectFieldsFromQuery(list, qs, charset);
+        return new FormSubmission(list, bodyConsumed);
+    }
+
+    /**
+     * Collect fields from a query string. No fields are added if the
+     * query string is {@code null}.
+     * 
+     * @param dest the destination for detected fields
+     * 
+     * @param qs the query string
+     * 
+     * @param charset the encoding to assume for percent-encoded
+     * characters
+     */
+    private static void
+        collectFieldsFromQuery(List<? super Map.Entry<? extends String,
+                                                      ? extends Message>> dest,
+                               CharSequence qs, Charset charset) {
+        if (qs == null) return;
+
+        /* Split the query string on ampersands. */
+        String[] bits = AMPS.split(qs);
+        for (String bit : bits) {
+            int eq = bit.indexOf('=');
+            if (eq < 0) {
+                /* TODO: Maybe log this? */
+                continue;
+            }
+            String name =
+                URLDecoder.decode(bit.subSequence(0, eq).toString(), charset);
+            String value = URLDecoder
+                .decode(bit.subSequence(eq + 1, bit.length()).toString(),
+                        charset);
+            StringMessage msg = new StringMessage(value);
+            dest.add(Map.entry(name, msg));
+        }
+    }
+
+    private static final String QUERY_ENV = "QUERY_STRING";
+
+    private static final String TYPE_VAR = "CONTENT_TYPE";
+
+    private static final String METHOD_VAR = "REQUEST_METHOD";
+
+    /**
+     * Load form data from elements of a CGI context. Three sources are
+     * checked:
+     * 
+     * <ul>
+     * 
+     * <li>The {@value #QUERY_ENV} parameter is parsed using
+     * {@link #fromQuery(CharSequence, Charset)}.</li>
+     * 
+     * <li>If the request method is neither <samp>GET</samp> nor
+     * <samp>HEAD</samp>, {@value #TYPE_VAR} is checked for
+     * <samp>application/x-www-form-urlencoded</samp>. If set, the
+     * request body is parsed as a query string.</li>
+     * 
+     * <li>Finally, if {@value #TYPE_VAR} is
+     * <samp>multipart/form-data</samp>, the request body is parsed as a
+     * MIME multipart message.</li>
+     * 
+     * </ul>
+     * 
+     * <p>
+     * Parameters obtained from different sources (the query string and
+     * the message body) are merged. The CGI request body input stream
+     * <code>session.{@linkplain RequestableSession#in() in()}</code> is
+     * closed if consumed, and {@link #bodyConsumed()} can be used to
+     * determine this.
+     * 
+     * @param params the CGI parameters, including {@value #QUERY_ENV},
+     * {@value #METHOD_VAR} and {@value #TYPE_VAR}
+     * 
+     * @param inSupply a provider of the CGI input stream, invoked at
+     * most once
+     * 
+     * @param assumedCharset the character encoding assumed to be used
+     * by the client in forming plain-text field values
+     * 
+     * @param parser a means to parse the request body as a multipart
+     * message, if necessary
+     * 
+     * @return the submitted form field values; or {@code null} if no
+     * form delivery mechanism was recognized
+     * 
+     * @throws IOException if an I/O error occurs in reading the request
+     * body or storing any bodies
+     */
+    public static FormSubmission
+        fromCGI(Map<? super String, ? extends CharSequence> params,
+                Supplier<? extends InputStream> inSupply,
+                Charset assumedCharset, MessageParser parser)
+            throws IOException {
+        final var qs = params.get(QUERY_ENV);
+        final List<Map.Entry<? extends String, ? extends Message>> list =
+            new ArrayList<>();
+        collectFieldsFromQuery(list, qs, assumedCharset);
+
+        boolean consumed = false;
+        final var rm = params.get(METHOD_VAR).toString();
+        switch (rm) {
+        case "GET":
+        case "HEAD":
+            /* There is no request body to get fields from. */
+            break;
+
+        default:
+            /* Get the media type of the content. */
+            final MediaType mt = MediaType.fromString(params.get(TYPE_VAR));
+
+            if (mt.is("application", "x-www-form-urlencoded")) {
+                /* The message body is a simple query string. */
+                final String text;
+                try (StringWriter out = new StringWriter();
+                     InputStreamReader in =
+                         new InputStreamReader(inSupply.get(),
+                                               StandardCharsets.US_ASCII)) {
+                    in.transferTo(out);
+                    text = out.toString();
+                }
+                consumed = true;
+                collectFieldsFromQuery(list, text, assumedCharset);
+            } else if (mt.is("multipart", "form-data")) {
+                final String boundary = mt.parameter("boundary");
+                List<Message> parts =
+                    parser.parseMultipartBody(inSupply.get(), boundary,
+                                              assumedCharset);
+                consumed = true;
+                collectFromMultipart(list, parts);
+            }
+        }
+
+        return new FormSubmission(list, consumed);
+    }
+
+    /**
+     * Get the immutable list view of the form data.
+     * 
+     * @return the list view of the form data
+     */
+    public List<Map.Entry<? extends String, ? extends Message>> list() {
+        return list;
+    }
+
+    /**
+     * Get the map view of the form data.
+     * 
+     * @return the map view of the form data
+     */
+    public Map<String, List<Message>> map() {
+        return map;
+    }
+
+    /**
+     * Get the first message with a given name.
+     * 
+     * @param name the form field name
+     * 
+     * @return the first message with the requested name; or
+     * {@code null} if no fields exist with that name
+     */
+    public Message getFirst(String name) {
+        List<Message> vals = map().get(name);
+        if (vals == null || vals.isEmpty()) return null;
+        return vals.get(0);
+    }
+}
