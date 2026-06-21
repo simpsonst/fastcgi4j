@@ -182,7 +182,7 @@ public final class SmartMorgue implements Morgue {
          * @throws NullPointerException if the path is {@code null}
          */
         public Builder at(Path path) {
-            this.cache = Objects.requireNonNull(path, "at");
+            this.cache = Objects.requireNonNull(path, "path");
             return this;
         }
 
