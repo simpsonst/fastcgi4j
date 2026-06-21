@@ -72,6 +72,9 @@ import uk.ac.lancs.mime.Tokenizer;
  * transparently de-chunking the request body and reading the request
  * trailer, chunking the response body and writing the response trailer,
  * namespaced access to header/trailer fields, and so on.
+ * 
+ * <p>
+ * <strong>This class is incomplete!</strong>
  *
  * @author simpsons
  */
