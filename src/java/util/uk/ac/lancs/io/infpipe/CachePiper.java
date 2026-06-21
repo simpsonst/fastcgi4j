@@ -310,18 +310,10 @@ public final class CachePiper implements Piper {
     }
 
     private class MyPipe implements Pipe {
-        // final BlockingEnumeration<InputStream> queue;
-
         final LazyAbortableSequenceInputStream sequence;
 
         public MyPipe() {
-            /* Create an enumeration initially with one empty input
-             * stream. When passed to SequenceInputStream, it will be
-             * called straight away, and would block if the enumeration
-             * was empty. */
-            // queue = new BlockingEnumeration<>();
-            // queue.submit(new EmptyInputStream());
-            // inputStream = new SequenceInputStream(queue);
+            /* Create an input stream from an extensible sequence. */
             sequence =
                 new LazyAbortableSequenceInputStream(false, this::sinkClosed);
         }

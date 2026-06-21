@@ -36,19 +36,12 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
-import java.io.Reader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
-import java.util.Properties;
 import uk.ac.lancs.cgi.FormSubmission;
-import uk.ac.lancs.cgi.path.PathConfiguration;
 import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.app.FastCGIApplication;
 import uk.ac.lancs.fastcgi.app.FastCGIConfiguration;
@@ -68,22 +61,6 @@ import uk.ac.lancs.mime.body.SmartMorgue;
  * @author simpsons
  */
 public class FormEchoer extends FastCGIApplication implements Responder {
-    private static final PathConfiguration<String> pathConfig;
-
-    static {
-        Properties props = new Properties();
-        Path propPath = Paths.get("scratch", "instances.properties");
-        try (Reader in = Files.newBufferedReader(propPath)) {
-            props.load(in);
-        } catch (FileNotFoundException ex) {
-            /* Ignore. */
-        } catch (IOException ex) {
-            System.err.printf("failed to load from %s%n", propPath);
-        }
-        pathConfig = PathConfiguration.<String>start()
-            .instances(props, "", s -> s).create();
-    }
-
     private static final Morgue morgue =
         SmartMorgue.start().singleThreshold(20).build();
 
