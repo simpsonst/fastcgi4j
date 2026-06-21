@@ -211,7 +211,7 @@ public final class SmartMorgue implements Morgue {
          * 
          * @throws IllegalArgumentException if the amount is negative
          */
-        public Builder memoryThreshold(int amount) {
+        public Builder memoryThreshold(long amount) {
             if (amount < 0)
                 throw new IllegalArgumentException("-ve threshold: " + amount);
             this.memoryThreshold = amount;
