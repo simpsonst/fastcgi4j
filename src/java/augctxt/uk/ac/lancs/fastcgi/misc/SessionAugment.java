@@ -38,7 +38,6 @@
 
 package uk.ac.lancs.fastcgi.misc;
 
-import uk.ac.lancs.mime.Negotiation;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -61,6 +60,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Document;
+import uk.ac.lancs.cgi.Http;
 import uk.ac.lancs.fastcgi.context.Session;
 import uk.ac.lancs.http.ResponseCodes;
 import uk.ac.lancs.http.encoding.DeflateEncoding;
@@ -69,6 +69,7 @@ import uk.ac.lancs.http.encoding.GZIPEncoding;
 import uk.ac.lancs.http.encoding.IdentityEncoding;
 import uk.ac.lancs.mime.MediaGroup;
 import uk.ac.lancs.mime.MediaType;
+import uk.ac.lancs.mime.Negotiation;
 import uk.ac.lancs.mime.Tokenizer;
 
 /**
@@ -103,7 +104,7 @@ public final class SessionAugment {
             .toMap(Map.Entry::getKey, e -> e.getValue().getValue()));
 
     private static final String ACCEPT_ENCODING_VAR_NAME =
-        ResponseCodes.fieldNameAsCGI("Accept-Encoding");
+        Http.fieldNameAsCGI("Accept-Encoding");
 
     /**
      * Get the client's encoding preference. This is simply an
@@ -163,8 +164,7 @@ public final class SessionAugment {
         return Map.copyOf(result);
     }
 
-    private static final String ACCEPT_VAR_NAME =
-        ResponseCodes.fieldNameAsCGI("Accept");
+    private static final String ACCEPT_VAR_NAME = Http.fieldNameAsCGI("Accept");
 
     /**
      * Get the client's media-type preferences. This simply passes the

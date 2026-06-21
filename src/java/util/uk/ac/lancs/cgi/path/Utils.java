@@ -50,7 +50,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import uk.ac.lancs.http.ResponseCodes;
+import uk.ac.lancs.cgi.Http;
 
 /**
  * Provides static methods and regular expressions for handling paths.
@@ -309,7 +309,7 @@ class Utils {
         return output;
     }
 
-    static final String HOST_VAR_NAME = ResponseCodes.fieldNameAsCGI("Host");
+    static final String HOST_VAR_NAME = Http.fieldNameAsCGI("Host");
 
     /**
      * Append the host and port based on protocol.
