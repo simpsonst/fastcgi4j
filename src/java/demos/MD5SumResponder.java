@@ -39,12 +39,14 @@
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.time.Duration;
 import java.util.List;
@@ -107,14 +109,10 @@ public class MD5SumResponder implements Responder {
         Navigator navigator = pathCtxt.navigator();
 
         final byte[] dig;
-        if (false) {
-            dig = null;
-        } else {
-            MessageDigest md = MessageDigest.getInstance("md5");
-            byte[] buf = new byte[1024];
-            int got;
-            while ((got = session.in().read(buf)) >= 0) {
-                md.update(buf, 0, got);
+        {
+            var md = MessageDigest.getInstance("md5");
+            try (var mdis = new DigestInputStream(session.in(), md)) {
+                mdis.transferTo(OutputStream.nullOutputStream());
             }
             dig = md.digest();
         }
