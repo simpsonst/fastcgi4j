@@ -348,9 +348,8 @@ public final class CachePiper implements Piper {
                     try {
                         Files.deleteIfExists(path);
                     } catch (IOException ex) {
-                        Logger.getLogger(CachePiper.class.getName())
-                            .log(Level.SEVERE,
-                                 "deleting chunk " + path.toString(), ex);
+                        logger.log(Level.SEVERE,
+                                   "deleting chunk " + path.toString(), ex);
                     }
                 });
 
@@ -439,4 +438,7 @@ public final class CachePiper implements Piper {
             return sequence;
         }
     }
+
+    private static final Logger logger =
+        Logger.getLogger(CachePiper.class.getName());
 }
