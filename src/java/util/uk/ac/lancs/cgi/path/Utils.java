@@ -46,11 +46,11 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import uk.ac.lancs.cgi.Http;
+import uk.ac.lancs.cgi.ServerProtocol;
 
 /**
  * Provides static methods and regular expressions for handling paths.
@@ -64,9 +64,6 @@ class Utils {
     static final Pattern PATH_SEPS = Pattern.compile("/+");
 
     private static final char[] hexes = "0123456789ABCDEF".toCharArray();
-
-    static final Pattern SERVER_PROTOCOL_FORMAT =
-        Pattern.compile("^(?<name>[^/]+)/(?<major>[0-9]+)\\.(?<minor>[0-9]+)$");
 
     /**
      * Convert a path prefix to a list of elements. Empty elements are
@@ -349,9 +346,9 @@ class Utils {
      * Get the internal server address from CGI parameters. The
      * parameters <samp>REQUEST_SCHEME</samp>, <samp>SERVER_NAME</samp>
      * and <samp>SERVER_PORT</samp> are used. However, if the protocol
-     * is recognized, and supports virtual hosting, the virtual host is
-     * used instead of <samp>SERVER_NAME</samp> and
-     * <samp>SERVER_PORT</samp>.
+     * in <samp>SERVER_PROTOCOL</samp> is recognized, and supports
+     * virtual hosting, the virtual host is used instead of
+     * <samp>SERVER_NAME</samp> and <samp>SERVER_PORT</samp>.
      *
      * <p>
      * Only HTTP is recognized, and the value of <samp>HTTP_HOST</samp>
@@ -364,19 +361,19 @@ class Utils {
      * 
      * @throws NullPointerException if <samp>SERVER_PROTOCOL</samp> is
      * not set in the CGI parameters
+     * 
+     * @throws IllegalArgumentException if <samp>SERVER_PROTOCOL</samp>
+     * is malformed
      */
     static URI getInternalServer(Map<? super String, ? extends String> params) {
         /* Identify the protocol and version. */
         String protocolText = Objects
             .requireNonNull(params.get("SERVER_PROTOCOL"), "SERVER_PROTOCOL");
-        Matcher protocol = SERVER_PROTOCOL_FORMAT.matcher(protocolText);
-        if (!protocol.matches())
-            throw new IllegalArgumentException("bad SERVER_PROTOCOL: "
-                + protocolText);
+        var protocol = ServerProtocol.of(protocolText);
         StringBuilder result = new StringBuilder();
         final String scheme = params.get("REQUEST_SCHEME");
         result.append(scheme).append("://");
-        if (!appendProtocolAddress(result, protocol.group("name"), params)) {
+        if (!appendProtocolAddress(result, protocol.name(), params)) {
             /* We don't understand the protocol, so just use the generic
              * name and port. Omit the port if we know it's the default
              * for the scheme. */
