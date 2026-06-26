@@ -95,6 +95,13 @@ public class TrailingChunkingClient {
         };
     }
 
+    private static String getVirtualHost(URI loc) {
+        var r = new StringBuilder(loc.getHost());
+        final var p = loc.getPort();
+        if (p > 0) r.append(':').append(p);
+        return r.toString();
+    }
+
     /**
      * Attempt to PUT a file to a URI, attaching a SHA-512 digest in the
      * trailer. The first argument is a path to a local file to be sent.
@@ -121,7 +128,7 @@ public class TrailingChunkingClient {
                 System.err.println("Transmitting header...");
                 try (var out = fieldSetWriter(sockOut)) {
                     out.printf("PUT %s HTTP/1.1\r\n", dest.getRawPath());
-                    out.printf("Host: %s\r\n", dest.getHost());
+                    out.printf("Host: %s\r\n", getVirtualHost(dest));
                     out.printf("Date: %s\r\n", Timing
                         .generateTimestamp(System.currentTimeMillis()));
                     out.print("Transfer-Encoding: chunked\r\n");
