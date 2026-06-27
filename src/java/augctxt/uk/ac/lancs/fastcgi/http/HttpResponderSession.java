@@ -115,18 +115,36 @@ public class HttpResponderSession {
     }
 
     /**
-     * Test the request method.
+     * Test whether the method is one of several specified.
      * 
-     * @param meths the expected methods
+     * @param methods the set of expected methods
      * 
-     * @return {@code true} if the request method is one of those
-     * provided; {@code false} otherwise
+     * @return {@code true} if the method is among those listed;
+     * {@code false} otherwise
+     * 
+     * @throws IllegalStateException if the request method is not set
      */
-    public boolean methodIs(CharSequence... meths) {
-        String method = base.parameters().get("REQUEST_METHOD");
-        for (var meth : meths)
+    public boolean methodIs(CharSequence... methods) {
+        String method = method();
+        for (var meth : methods)
             if (method.equals(meth)) return true;
         return false;
+    }
+
+    /**
+     * Get the request method. The parameter
+     * {@value FastCGIParameters#REQUEST_METHOD_PARAM} is returned.
+     * 
+     * @return the request method
+     * 
+     * @throws IllegalStateException if the request method is not set
+     */
+    public String method() {
+        var r = base.parameters()
+            .get(uk.ac.lancs.cgi.CGIParameters.REQUEST_METHOD_PARAM);
+        if (r == null) throw new IllegalStateException("CGI parameter not set: "
+            + uk.ac.lancs.cgi.CGIParameters.REQUEST_METHOD_PARAM);
+        return r;
     }
 
     /**
