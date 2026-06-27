@@ -53,6 +53,8 @@ import java.util.Objects;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.Function;
+import uk.ac.lancs.cgi.CGIParameters;
+import uk.ac.lancs.cgi.Http;
 import uk.ac.lancs.cgi.ServerProtocol;
 import uk.ac.lancs.fastcgi.context.ResponderSession;
 import uk.ac.lancs.http.ChunkedInputStream;
@@ -75,7 +77,7 @@ import uk.ac.lancs.mime.Tokenizer;
  * 
  * <p>
  * <strong>This class is incomplete!</strong>
- *
+ * 
  * @author simpsons
  */
 public class HttpResponderSession {
@@ -133,17 +135,16 @@ public class HttpResponderSession {
 
     /**
      * Get the request method. The parameter
-     * {@value FastCGIParameters#REQUEST_METHOD_PARAM} is returned.
+     * {@value CGIParameters#REQUEST_METHOD_PARAM} is returned.
      * 
      * @return the request method
      * 
      * @throws IllegalStateException if the request method is not set
      */
     public String method() {
-        var r = base.parameters()
-            .get(uk.ac.lancs.cgi.CGIParameters.REQUEST_METHOD_PARAM);
+        var r = base.parameters().get(CGIParameters.REQUEST_METHOD_PARAM);
         if (r == null) throw new IllegalStateException("CGI parameter not set: "
-            + uk.ac.lancs.cgi.CGIParameters.REQUEST_METHOD_PARAM);
+            + CGIParameters.REQUEST_METHOD_PARAM);
         return r;
     }
 
@@ -154,12 +155,16 @@ public class HttpResponderSession {
      */
     private Map<String, Map<String, String>> acceptedTransferEncodings = null;
 
+    private static final String TE_FIELD = "TE";
+
+    private static final String TE_PARAM = Http.fieldNameAsCGI(TE_FIELD);
+
     /**
-     * Parse the <samp>TE</samp> request header field as a
+     * Parse the {@value #TE_FIELD} request header field as a
      * comma-separated sequence of tokens with optional parameters. The
-     * result is stored in {@link #acceptedTransferEncodings} if it is
-     * currently {@code null}, so only the first call actually does
-     * anything.
+     * field is obtained through the CGI parameter. The result is stored
+     * in {@link #acceptedTransferEncodings} if it is currently
+     * {@code null}, so only the first call actually does anything.
      * 
      * <p>
      * For HTTP/2 and later, the field is ignored if it doesn't contain
@@ -167,7 +172,7 @@ public class HttpResponderSession {
      */
     private void getAcceptedTransferEncodings() {
         if (acceptedTransferEncodings != null) return;
-        var txt = base.parameters().get("HTTP_TE");
+        var txt = base.parameters().get(TE_PARAM);
         Map<String, Map<String, String>> result = new HashMap<>();
         if (txt != null) {
             var toks = new Tokenizer(txt);
@@ -208,6 +213,17 @@ public class HttpResponderSession {
         return acceptedTransferEncodings.containsKey("trailers");
     }
 
+    /**
+     * Parse a CGI parameter as HTTP comma-separated tokens. If the
+     * parameter is not set, an empty list is returned.
+     * 
+     * @param fieldName the name of the request parameter
+     * 
+     * @return a list of tokens from the parameter
+     * 
+     * @throws IllegalArgumentException if the parameter is present, but
+     * does not parse as comma-separated tokens
+     */
     private List<String> tokens(String fieldName) {
         String field = base.parameters().get(fieldName);
         if (field == null) return Collections.emptyList();
@@ -235,11 +251,16 @@ public class HttpResponderSession {
 
     private List<String> rawRequestEncodings = null;
 
+    private static final String TRANSFER_ENCODING_FIELD = "Transfer-Encoding";
+
+    private static final String TRANSFER_ENCODING_PARAM =
+        Http.fieldNameAsCGI(TRANSFER_ENCODING_FIELD);
+
     private InputStream makeIn() throws IOException {
         InputStream in = base.in();
 
         /* Apply all transfer encodings. */
-        List<String> transferEncodings = tokens("HTTP_TRANSFER_ENCODING");
+        List<String> transferEncodings = tokens(TRANSFER_ENCODING_PARAM);
         if (!transferEncodings.isEmpty()) {
             var sz = transferEncodings.size();
 
@@ -266,7 +287,7 @@ public class HttpResponderSession {
 
         /* Apply unhandled content decoding. */
         if (rawRequestEncodings == null)
-            rawRequestEncodings = tokens("HTTP_CONTENT_ENCODIING");
+            rawRequestEncodings = tokens(CONTENT_ENCODING_PARAM);
         unhandledRequestEncodings =
             getApplicationHandledEncodings(rawRequestEncodings);
         int sz = rawRequestEncodings.size();
@@ -322,9 +343,9 @@ public class HttpResponderSession {
 
     /**
      * Get the content type of the request body. The parameter
-     * {@value #REQUEST_TYPE_PARAM} is consulted. If a request body is
-     * expected, but no request content type has been specified,
-     * <samp>application/octet-stream</samp> is returned.
+     * {@value CGIParameters#REQUEST_TYPE_PARAM} is consulted. If a
+     * request body is expected, but no request content type has been
+     * specified, <samp>application/octet-stream</samp> is returned.
      * 
      * @return the request body's content type; or {@code null} if there
      * is no body
@@ -332,19 +353,14 @@ public class HttpResponderSession {
     public MediaType requestType() {
         if (methodIs("GET", "HEAD")) return null;
         if (requestType == null) {
-            String field = base.parameters().get(REQUEST_TYPE_PARAM);
+            String field =
+                base.parameters().get(CGIParameters.REQUEST_TYPE_PARAM);
             requestType =
                 field == null ? MediaType.of("application", "octet-stream") :
                     MediaType.fromString(field);
         }
         return requestType;
     }
-
-    /**
-     * Specifies the parameter from which {@link #requestType()}'s value
-     * is derived.
-     */
-    private static final String REQUEST_TYPE_PARAM = "CONTENT_TYPE";
 
     /**
      * Determine whether the client is using a minimum version of HTTP.
@@ -380,9 +396,16 @@ public class HttpResponderSession {
 
     private List<String> unhandledRequestEncodings = null;
 
+    private static final String CONTENT_ENCODING_FIELD = "Content-Encoding";
+
+    private static final String CONTENT_ENCODING_PARAM =
+        Http.fieldNameAsCGI(CONTENT_ENCODING_FIELD);
+
     /**
-     * Get the sequence of encodings required to decode the request. The
-     * first entry was applied first.
+     * Get the sequence of encodings required to decode the request.
+     * This is obtained by parsing the HTTP request field
+     * {@value #CONTENT_ENCODING_FIELD} as comma-separated tokens. The
+     * first entry was applied first to request body.
      * 
      * <p>
      * This method takes into account the application's calls to
@@ -399,7 +422,7 @@ public class HttpResponderSession {
         if (unhandledRequestEncodings != null)
             return new ArrayList<>(unhandledRequestEncodings);
         if (rawRequestEncodings == null)
-            rawRequestEncodings = tokens("HTTP_CONTENT_ENCODIING");
+            rawRequestEncodings = tokens(CONTENT_ENCODING_PARAM);
         List<String> contentEncodings = new ArrayList<>(rawRequestEncodings);
         return getApplicationHandledEncodings(contentEncodings);
     }
@@ -471,33 +494,43 @@ public class HttpResponderSession {
             acceptedEncodings.add(e.toString());
     }
 
+    /**
+     * Holds the cached request length. A value of {@code -1} means that
+     * the request length is unknown. Other non-negative values indicate
+     * the actual request length. Other negative values mean that no
+     * value has been cached (the default). The method
+     * {@link #requestLength()} consults and sets this field.
+     */
     private long requestLength = -2;
 
     /**
      * Get the request body's length. The parameter
-     * {@value #REQUEST_LENGTH_PARAM} is read as a decimal integer. If
-     * not present, or an empty string, the length is deemed unknown.
+     * {@value CGIParameters#REQUEST_LENGTH_PARAM} is read as a decimal
+     * integer. If not present, or an empty string, the length is deemed
+     * unknown.
+     * 
+     * <p>
+     * The result is cached.
      * 
      * @return the request body's length in bytes: zero if there is no
      * body; negative if the length is unknown
      * 
-     * @throws NumberFormatException if the request body length has been
+     * @throws IllegalStateException if the request body length has been
      * set to an invalid value
      */
     public long requestLength() {
-        if (requestLength < -1) {
-            var text = base.parameters().get(REQUEST_LENGTH_PARAM);
-            requestLength =
-                text == null || text.isEmpty() ? -1 : Long.parseLong(text, 10);
+        if (requestLength >= -1) return requestLength;
+        String text = base.parameters().get(CGIParameters.REQUEST_LENGTH_PARAM);
+        if (text == null || text.isEmpty()) return -1L;
+        try {
+            long r = Long.parseLong(text, 10);
+            if (r >= 0) return requestLength = r;
+        } catch (NumberFormatException ex) {
+            // Fall through.
         }
-        return requestLength;
+        throw new IllegalStateException("invalid CGI parameter "
+            + CGIParameters.REQUEST_LENGTH_PARAM + ": " + text);
     }
-
-    /**
-     * Specifies the parameter from which {@link #requestLength()}'s
-     * value is derived.
-     */
-    private static final String REQUEST_LENGTH_PARAM = "CONTENT_LENGTH;";
 
     /**
      * Access the request header fields. Field values are obtained by
