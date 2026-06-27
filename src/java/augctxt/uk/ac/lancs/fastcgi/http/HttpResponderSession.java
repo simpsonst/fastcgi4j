@@ -218,15 +218,14 @@ public class HttpResponderSession {
         tokens.whitespace(0);
         for (;;) {
             var token = tokens.atom();
-            if (token == null)
-                /* TODO: Including remaining string in error message. */
-                throw new IllegalArgumentException("no atom at ");
+            if (token == null) throw new IllegalArgumentException("no atom at "
+                + tokens.remnant());
             result.add(token.toString());
             tokens.whitespace(0);
             if (tokens.end()) break;
             if (!tokens.character(','))
-                /* TODO: Including remaining string in error message. */
-                throw new IllegalArgumentException("no comma at ");
+                throw new IllegalArgumentException("no comma at "
+                    + tokens.remnant());
             tokens.whitespace(0);
         }
         return result;
