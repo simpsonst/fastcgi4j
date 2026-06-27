@@ -51,6 +51,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import uk.ac.lancs.cgi.CGIParameters;
 
 /**
  * Understands how to navigate based on future invocations of a service.
@@ -85,11 +86,12 @@ public final class PathConfiguration<I> {
                              m -> m.get("SCRIPT_FILENAME");
 
         private Function<? super Map<? super String, ? extends String>,
-                         ? extends String> pathInfo = m -> m.get("PATH_INFO");
+                         ? extends String> pathInfo =
+                             m -> m.get(CGIParameters.PATH_INFO_PARAM);
 
         private Function<? super Map<? super String, ? extends String>,
                          ? extends String> scriptName =
-                             m -> m.get("SCRIPT_NAME");
+                             m -> m.get(CGIParameters.SCRIPT_NAME_PARAM);
 
         private final Map<URI, Map<List<String>, Instance<I>>> instances =
             new HashMap<>();
