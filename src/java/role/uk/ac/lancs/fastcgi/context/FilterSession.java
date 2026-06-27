@@ -39,6 +39,7 @@
 package uk.ac.lancs.fastcgi.context;
 
 import java.io.InputStream;
+import uk.ac.lancs.fastcgi.FastCGIParameters;
 
 /**
  * Presents the context of a FastCGI session to an application in the
@@ -61,7 +62,7 @@ public interface FilterSession extends RequestableSession {
     /**
      * Get the last-modified time of the data if specified. This is
      * obtained through the request parameter
-     * {@value FastCGIRequestParameters#DATA_LAST_MOD_PARAM}.
+     * {@value FastCGIParameters#DATA_LAST_MOD_PARAM}.
      * 
      * @return the number of seconds after 1970-01-01T00:00:00Z when the
      * data was last modified; or {@link #DATA_UNSPECIFIED} if not
@@ -73,8 +74,7 @@ public interface FilterSession extends RequestableSession {
      * It then parses the result as a decimal integer.
      */
     default long dataLastModified() {
-        var text =
-            parameters().get(FastCGIRequestParameters.DATA_LAST_MOD_PARAM);
+        var text = parameters().get(FastCGIParameters.DATA_LAST_MOD_PARAM);
         if (text == null) return DATA_UNSPECIFIED;
         try {
             long rc = Long.parseLong(text, 10);
@@ -87,8 +87,7 @@ public interface FilterSession extends RequestableSession {
 
     /**
      * Get the data length if specified. This is obtained through the
-     * request parameter
-     * {@value FastCGIRequestParameters#DATA_LENGTH_PARAM}.
+     * request parameter {@value FastCGIParameters#DATA_LENGTH_PARAM}.
      * 
      * @return the data length in bytes; or {@link #DATA_UNSPECIFIED} if
      * not specified; or {@link #DATA_MALFORMED} if not specified as a
@@ -99,7 +98,7 @@ public interface FilterSession extends RequestableSession {
      * It then parses the result as a decimal integer.
      */
     default long dataLength() {
-        var text = parameters().get(FastCGIRequestParameters.DATA_LENGTH_PARAM);
+        var text = parameters().get(FastCGIParameters.DATA_LENGTH_PARAM);
         if (text == null) return DATA_UNSPECIFIED;
         try {
             long rc = Long.parseLong(text, 10);
