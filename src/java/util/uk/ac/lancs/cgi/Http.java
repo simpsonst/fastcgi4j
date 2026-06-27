@@ -39,7 +39,7 @@
 package uk.ac.lancs.cgi;
 
 /**
- * Provides HTTP-specific aspects of CGI.
+ * Supports HTTP-specific aspects of CGI.
  * 
  * @author simpsons
  */
