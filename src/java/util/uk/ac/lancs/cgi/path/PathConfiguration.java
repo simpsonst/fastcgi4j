@@ -97,7 +97,8 @@ public final class PathConfiguration<I> {
         Builder() {}
 
         /**
-         * Specify how to obtain the script filename.
+         * Specify how to obtain the script filename from CGI
+         * parameters.
          * 
          * @param func a function taking CGI parameters and returning
          * the script filename
@@ -113,7 +114,7 @@ public final class PathConfiguration<I> {
         }
 
         /**
-         * Specify how to obtain the script name.
+         * Specify how to obtain the script name from CGI parameters.
          * 
          * @param func a function taking CGI parameters and returning
          * the script name
@@ -132,7 +133,8 @@ public final class PathConfiguration<I> {
         }
 
         /**
-         * Specify how to obtain the path information.
+         * Specify how to obtain the path information from CGI
+         * parameters.
          * 
          * @param func a function taking CGI parameters and returning
          * the path information, or {@code null} if not available
