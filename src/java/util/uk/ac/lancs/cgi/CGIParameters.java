@@ -108,8 +108,8 @@ public final class CGIParameters {
     public static final String SERVER_PORT_PARAM = "SERVER_PORT";
 
     /**
-     * Names the CGI parameter indicating the request method, namely
-     * {@value}
+     * Names the CGI parameter indicating the request method. The value
+     * is {@value}.
      * 
      * @see <a href=
      * "https://datatracker.ietf.org/doc/html/rfc3875/#section-4.1.12">RFC3875
@@ -118,8 +118,8 @@ public final class CGIParameters {
     public static final String METHOD_PARAM = "REQUEST_METHOD";
 
     /**
-     * Names the CGI parameter giving the request body's content type,
-     * namely {@value}
+     * Names the CGI parameter giving the request body's content type.
+     * The value is {@value}.
      * 
      * @see <a href=
      * "https://datatracker.ietf.org/doc/html/rfc3875/#section-4.1.3">RFC3875
@@ -128,8 +128,8 @@ public final class CGIParameters {
     public static final String REQUEST_TYPE_PARAM = "CONTENT_TYPE";
 
     /**
-     * Names the CGI parameter giving the length of the request body,
-     * namely {@value}
+     * Names the CGI parameter giving the length of the request body.
+     * The value is {@value}.
      * 
      * @see <a href=
      * "https://datatracker.ietf.org/doc/html/rfc3875/#section-4.1.2">RFC3875
