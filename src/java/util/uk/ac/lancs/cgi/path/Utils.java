@@ -246,12 +246,12 @@ class Utils {
     }
 
     /**
-     * Append a single character as a Unicode codepoint using UTF-8
+     * Append a single character as a Unicode code point using UTF-8
      * encoding.
      * 
-     * @param output the destination for the escaped codepoint
+     * @param output the destination for the escaped code point
      * 
-     * @param cp the Unicode codepoint
+     * @param cp the Unicode code point
      * 
      * @return the supplied destination
      */
