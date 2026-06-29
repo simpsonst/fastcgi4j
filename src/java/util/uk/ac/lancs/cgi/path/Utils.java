@@ -49,6 +49,7 @@ import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import uk.ac.lancs.cgi.CGIParameters;
 import uk.ac.lancs.cgi.Http;
 import uk.ac.lancs.cgi.ServerProtocol;
 
@@ -344,11 +345,13 @@ class Utils {
 
     /**
      * Get the internal server address from CGI parameters. The
-     * parameters <samp>REQUEST_SCHEME</samp>, <samp>SERVER_NAME</samp>
-     * and <samp>SERVER_PORT</samp> are used. However, if the protocol
-     * in <samp>SERVER_PROTOCOL</samp> is recognized, and supports
-     * virtual hosting, the virtual host is used instead of
-     * <samp>SERVER_NAME</samp> and <samp>SERVER_PORT</samp>.
+     * parameters {@value CGIParameters#SCHEME_PARAM},
+     * {@value CGIParameters#SERVER_NAME_PARAM} and
+     * {@value CGIParameters#SERVER_PORT_PARAM} are used. However, if
+     * the protocol in {@value CGIParameters#SERVER_PROTOCOL_PARAM} is
+     * recognized, and supports virtual hosting, the virtual host is
+     * used instead of {@value CGIParameters#SERVER_NAME_PARAM} and
+     * {@value CGIParameters#SERVER_PORT_PARAM}.
      *
      * <p>
      * Only HTTP is recognized, and the value of <samp>HTTP_HOST</samp>
@@ -359,26 +362,29 @@ class Utils {
      * @return a URI consisting of scheme, host and optional port, based
      * on the supplied CGI parameters
      * 
-     * @throws NullPointerException if <samp>SERVER_PROTOCOL</samp> is
-     * not set in the CGI parameters
+     * @throws NullPointerException if
+     * {@value CGIParameters#SERVER_PROTOCOL_PARAM} is not set in the
+     * CGI parameters
      * 
-     * @throws IllegalArgumentException if <samp>SERVER_PROTOCOL</samp>
-     * is malformed
+     * @throws IllegalArgumentException if
+     * {@value CGIParameters#SERVER_PROTOCOL_PARAM} is malformed
      */
     static URI getInternalServer(Map<? super String, ? extends String> params) {
         /* Identify the protocol and version. */
         String protocolText = Objects
-            .requireNonNull(params.get("SERVER_PROTOCOL"), "SERVER_PROTOCOL");
+            .requireNonNull(params.get(CGIParameters.SERVER_PROTOCOL_PARAM),
+                            CGIParameters.SERVER_PROTOCOL_PARAM);
         var protocol = ServerProtocol.of(protocolText);
         StringBuilder result = new StringBuilder();
-        final String scheme = params.get("REQUEST_SCHEME");
+        final String scheme = params.get(CGIParameters.SCHEME_PARAM);
         result.append(scheme).append("://");
         if (!appendProtocolAddress(result, protocol.name(), params)) {
             /* We don't understand the protocol, so just use the generic
              * name and port. Omit the port if we know it's the default
              * for the scheme. */
-            result.append(params.get("SERVER_NAME"));
-            int port = Integer.parseInt(params.get("SERVER_PORT"));
+            result.append(params.get(CGIParameters.SERVER_NAME_PARAM));
+            int port =
+                Integer.parseInt(params.get(CGIParameters.SERVER_PORT_PARAM));
             if (port != defaultPort(scheme)) result.append(':').append(port);
         }
         return URI.create(result.toString());
