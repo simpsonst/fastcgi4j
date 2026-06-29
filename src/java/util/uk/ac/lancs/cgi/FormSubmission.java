@@ -226,27 +226,21 @@ public final class FormSubmission {
         }
     }
 
-    private static final String QUERY_ENV = "QUERY_STRING";
-
-    private static final String TYPE_VAR = "CONTENT_TYPE";
-
-    private static final String METHOD_VAR = "REQUEST_METHOD";
-
     /**
      * Load form data from elements of a CGI context. Three sources are
      * checked:
      * 
      * <ul>
      * 
-     * <li>The {@value #QUERY_ENV} parameter is parsed using
-     * {@link #fromQuery(CharSequence, Charset)}.</li>
+     * <li>The {@value CGIParameters#QUERY_STRING_PARAM} parameter is
+     * parsed using {@link #fromQuery(CharSequence, Charset)}.</li>
      * 
      * <li>If the request method is neither <samp>GET</samp> nor
-     * <samp>HEAD</samp>, {@value #TYPE_VAR} is checked for
-     * <samp>application/x-www-form-urlencoded</samp>. If set, the
-     * request body is parsed as a query string.</li>
+     * <samp>HEAD</samp>, {@value CGIParameters#REQUEST_TYPE_PARAM} is
+     * checked for <samp>application/x-www-form-urlencoded</samp>. If
+     * set, the request body is parsed as a query string.</li>
      * 
-     * <li>Finally, if {@value #TYPE_VAR} is
+     * <li>Finally, if {@value CGIParameters#REQUEST_TYPE_PARAM} is
      * <samp>multipart/form-data</samp>, the request body is parsed as a
      * MIME multipart message.</li>
      * 
@@ -259,8 +253,10 @@ public final class FormSubmission {
      * closed if consumed, and {@link #bodyConsumed()} can be used to
      * determine this.
      * 
-     * @param params the CGI parameters, including {@value #QUERY_ENV},
-     * {@value #METHOD_VAR} and {@value #TYPE_VAR}
+     * @param params the CGI parameters, including
+     * {@value CGIParameters#QUERY_STRING_PARAM},
+     * {@value CGIParameters#REQUEST_METHOD_PARAM} and
+     * {@value CGIParameters#REQUEST_TYPE_PARAM}
      * 
      * @param inSupply a provider of the CGI input stream, invoked at
      * most once
@@ -282,13 +278,14 @@ public final class FormSubmission {
                 Supplier<? extends InputStream> inSupply,
                 Charset assumedCharset, MessageParser parser)
             throws IOException {
-        final var qs = params.get(QUERY_ENV);
+        final var qs = params.get(CGIParameters.QUERY_STRING_PARAM);
         final List<Map.Entry<? extends String, ? extends Message>> list =
             new ArrayList<>();
         collectFieldsFromQuery(list, qs, assumedCharset);
 
         boolean consumed = false;
-        final var rm = params.get(METHOD_VAR).toString();
+        final var rm =
+            params.get(CGIParameters.REQUEST_METHOD_PARAM).toString();
         switch (rm) {
         case "GET":
         case "HEAD":
@@ -297,7 +294,8 @@ public final class FormSubmission {
 
         default:
             /* Get the media type of the content. */
-            final MediaType mt = MediaType.fromString(params.get(TYPE_VAR));
+            final MediaType mt = MediaType
+                .fromString(params.get(CGIParameters.REQUEST_TYPE_PARAM));
 
             if (mt.is("application", "x-www-form-urlencoded")) {
                 /* The message body is a simple query string. */

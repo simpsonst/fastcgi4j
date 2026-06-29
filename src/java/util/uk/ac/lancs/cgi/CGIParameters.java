@@ -47,7 +47,7 @@ public final class CGIParameters {
     private CGIParameters() {}
 
     /**
-     * Names the CGI parameter static the scheme of the URI. The value
+     * Names the CGI parameter stating the scheme of the URI. The value
      * is {@value}.
      * 
      * <p>
@@ -66,6 +66,16 @@ public final class CGIParameters {
      * </blockquote>
      */
     public static final String SCHEME_PARAM = "REQUEST_SCHEME";
+
+    /**
+     * Names the CGI parameter providing the query string. The value is
+     * {@value}.
+     * 
+     * @see <a href=
+     * "https://datatracker.ietf.org/doc/html/rfc3875#section-4.1.7">RFC3875
+     * &sect;4.1.7</a>
+     */
+    public static final String QUERY_STRING_PARAM = "QUERY_STRING";
 
     /**
      * Names the CGI parameter stating the protocol used between server
