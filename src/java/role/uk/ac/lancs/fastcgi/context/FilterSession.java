@@ -70,8 +70,8 @@ public interface FilterSession extends RequestableSession {
      * non-negative decimal integer
      * 
      * @default The default implementation calls {@link #parameters()}
-     * and selects {@link FastCGIRequestParameters#DATA_LAST_MOD_PARAM}.
-     * It then parses the result as a decimal integer.
+     * and selects {@value FastCGIParameters#DATA_LAST_MOD_PARAM}. It
+     * then parses the result as a decimal integer.
      */
     default long dataLastModified() {
         var text = parameters().get(FastCGIParameters.DATA_LAST_MOD_PARAM);
@@ -94,8 +94,8 @@ public interface FilterSession extends RequestableSession {
      * non-negative decimal integer
      * 
      * @default The default implementation calls {@link #parameters()}
-     * and selects {@link FastCGIRequestParameters#DATA_LENGTH_PARAM}.
-     * It then parses the result as a decimal integer.
+     * and selects {@value FastCGIParameters#DATA_LENGTH_PARAM}. It then
+     * parses the result as a decimal integer.
      */
     default long dataLength() {
         var text = parameters().get(FastCGIParameters.DATA_LENGTH_PARAM);
