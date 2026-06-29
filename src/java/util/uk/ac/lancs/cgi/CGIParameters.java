@@ -115,7 +115,7 @@ public final class CGIParameters {
      * "https://datatracker.ietf.org/doc/html/rfc3875/#section-4.1.12">RFC3875
      * &sect;4.1.12</a>
      */
-    public static final String REQUEST_METHOD_PARAM = "REQUEST_METHOD";
+    public static final String METHOD_PARAM = "REQUEST_METHOD";
 
     /**
      * Names the CGI parameter giving the request body's content type,

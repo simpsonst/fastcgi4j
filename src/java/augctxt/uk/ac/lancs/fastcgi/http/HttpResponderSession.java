@@ -135,16 +135,16 @@ public class HttpResponderSession {
 
     /**
      * Get the request method. The parameter
-     * {@value CGIParameters#REQUEST_METHOD_PARAM} is returned.
+     * {@value CGIParameters#METHOD_PARAM} is returned.
      * 
      * @return the request method
      * 
      * @throws IllegalStateException if the request method is not set
      */
     public String method() {
-        var r = base.parameters().get(CGIParameters.REQUEST_METHOD_PARAM);
+        var r = base.parameters().get(CGIParameters.METHOD_PARAM);
         if (r == null) throw new IllegalStateException("CGI parameter not set: "
-            + CGIParameters.REQUEST_METHOD_PARAM);
+            + CGIParameters.METHOD_PARAM);
         return r;
     }
 

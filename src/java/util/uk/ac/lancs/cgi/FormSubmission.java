@@ -255,7 +255,7 @@ public final class FormSubmission {
      * 
      * @param params the CGI parameters, including
      * {@value CGIParameters#QUERY_STRING_PARAM},
-     * {@value CGIParameters#REQUEST_METHOD_PARAM} and
+     * {@value CGIParameters#METHOD_PARAM} and
      * {@value CGIParameters#REQUEST_TYPE_PARAM}
      * 
      * @param inSupply a provider of the CGI input stream, invoked at
@@ -285,7 +285,7 @@ public final class FormSubmission {
 
         boolean consumed = false;
         final var rm =
-            params.get(CGIParameters.REQUEST_METHOD_PARAM).toString();
+            params.get(CGIParameters.METHOD_PARAM).toString();
         switch (rm) {
         case "GET":
         case "HEAD":
