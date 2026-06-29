@@ -94,8 +94,8 @@ public class TestCachePiper extends TestCase {
     public void testFileChunk() throws IOException {
         Path dir = Paths.get(System.getProperty(CachePiper.TMPDIR_SYSPROP));
         final long seed = 42;
-        Path path = Files.createTempFile(dir, CachePiper.PREFIX,
-                                         CachePiper.SUFFIX);
+        Path path =
+            Files.createTempFile(dir, CachePiper.PREFIX, CachePiper.SUFFIX);
         RandomAccessFile file = new RandomAccessFile(path.toFile(), "rw");
         path.toFile().deleteOnExit();
         FileChunk chunk = new FileChunk(file, 256);

@@ -284,8 +284,7 @@ public final class FormSubmission {
         collectFieldsFromQuery(list, qs, assumedCharset);
 
         boolean consumed = false;
-        final var rm =
-            params.get(CGIParameters.METHOD_PARAM).toString();
+        final var rm = params.get(CGIParameters.METHOD_PARAM).toString();
         switch (rm) {
         case "GET":
         case "HEAD":
