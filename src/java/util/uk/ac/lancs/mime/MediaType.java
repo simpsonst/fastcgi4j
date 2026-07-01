@@ -190,7 +190,7 @@ public final class MediaType {
     public static MediaType fromString(CharSequence text) {
         if (text == null) return null;
         Tokenizer tok = new Tokenizer(text);
-        MediaType res = tok.mediaType();
+        MediaType res = from(tok);
         if (res == null)
             throw new IllegalArgumentException("not MIME type: " + text);
         return res;
