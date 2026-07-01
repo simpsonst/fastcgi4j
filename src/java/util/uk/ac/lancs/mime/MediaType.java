@@ -199,6 +199,13 @@ public final class MediaType {
     /**
      * Parse a MIME media type, including decoded parameters.
      * 
+     * <p>
+     * This matches optional white space, an atom, a forward slash,
+     * another atom, and optional semicolon-separated parameters.
+     * Failure to parse leaves the tokenizer in its original position.
+     * 
+     * @param tok the source to parse from
+     * 
      * @return the media type; or {@code null} if no media type followed
      * by zero or more parameters are found
      * 
