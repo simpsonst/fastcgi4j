@@ -371,7 +371,7 @@ public final class SessionAugment {
      * 
      * @throws IllegalStateException if {@link #out()} has been called
      */
-    public void offerCompression() throws IOException {
+    public void offerCompression() {
         if (out != null)
             throw new IllegalStateException("too late to add compression");
         if (compressed) return;
