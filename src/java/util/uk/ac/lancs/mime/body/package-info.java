@@ -38,15 +38,15 @@
 
 /**
  * Provides transient storage for binary and text bodies. A
- * {@link uk.ac.lancs.fastcgi.body.Morgue} can be used to store either
+ * {@link uk.ac.lancs.mime.body.Morgue} can be used to store either
  * bytes from an {@link java.io.InputStream} in a
- * {@link uk.ac.lancs.fastcgi.body.BinaryBody}, or characters from a
- * {@link java.io.Reader} in a
- * {@link uk.ac.lancs.fastcgi.body.TextBody}. These can then yield their
- * content on demand as a fresh byte/character stream.
+ * {@link uk.ac.lancs.mime.body.BinaryBody}, or characters from a
+ * {@link java.io.Reader} in a {@link uk.ac.lancs.mime.body.TextBody}.
+ * These can then yield their content on demand as a fresh
+ * byte/character stream.
  * 
  * <p>
- * A {@link uk.ac.lancs.fastcgi.body.SmartMorgue} will attempt to store
+ * A {@link uk.ac.lancs.mime.body.SmartMorgue} will attempt to store
  * bodies in memory, but will switch to storing in temporary files as
  * individual streams offer more bytes/characters than expected. It also
  * keeps track of the total sizes of in-memory bodies, and switches to

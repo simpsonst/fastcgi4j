@@ -47,6 +47,7 @@ import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.Map;
 import java.util.function.ObjLongConsumer;
+import uk.ac.lancs.io.UnclosedInputStream;
 import uk.ac.lancs.mime.Tokenizer;
 
 /**

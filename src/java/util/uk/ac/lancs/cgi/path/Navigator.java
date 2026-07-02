@@ -94,10 +94,11 @@ public interface Navigator {
     PathReference locate(String path);
 
     /**
-     * Identify the resource as a slash-separated string. This is either
-     * an empty string (meaning the service root) or a sequence of path
-     * elements prefixed by forward slashes. The last path element may
-     * be empty.
+     * Identify the resource as a slash-separated string. This is a
+     * possibly empty sequence of path elements, each prefixed by a
+     * forward slash, e.g., the empty string (identifying the service
+     * root) or <samp>/foo/bar/baz</samp>. The last path element may be
+     * empty, e.g., <samp>/foo/bar/baz/</samp> or <samp>/</samp>.
      * 
      * @return the resource identifier
      * 
@@ -141,6 +142,9 @@ public interface Navigator {
      * @return {@code true} if the pattern matched and the action was
      * performed; {@code false} if the pattern did not match
      * 
+     * @throws Exception if the pattern is recognized, but an error
+     * occurs while performing the action
+     * 
      * @default By default, {@link #recognize(Pattern)} is called. If
      * the resource matches, the {@link Matcher} is passed to the second
      * argument, and then {@code true} is returned. Otherwise
@@ -158,17 +162,21 @@ public interface Navigator {
      * Match the resource against a sequence of regular expressions, and
      * take a corresponding action on the first match.
      * 
-     * @param actions the sequence of actions to take
+     * @param bindings the sequence of bindings (of actions to patterns)
+     * to take
      * 
      * @return {@code true} if a match was found; {@code false}
      * otherwise
      * 
-     * @default By default, {@link Action#attempt(Locator)} is called on
-     * each action in sequence, until one returns {@code true}.
+     * @throws Exception if a match was found, but an error occurred in
+     * processing it
+     * 
+     * @default By default, this object submits itself to each action in
+     * sequence, until one returns {@code true}.
      */
-    default boolean recognize(Binding... actions) throws Exception {
-        for (var action : actions)
-            if (action.attempt(this)) return true;
+    default boolean recognize(Binding... bindings) throws Exception {
+        for (var binding : bindings)
+            if (binding.attempt(this)) return true;
         return false;
     }
 }

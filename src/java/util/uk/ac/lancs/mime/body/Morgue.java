@@ -137,7 +137,7 @@ public interface Morgue {
      * @throws IOException if an I/O error occurs in storing the
      * sequence
      * 
-     * @default This implementation wraps a {@link CharArrayInputStream}
+     * @default This implementation wraps a {@link CharArrayReader}
      * around the supplied array, and passes it to
      * {@link #store(Reader)}, returning the result.
      */

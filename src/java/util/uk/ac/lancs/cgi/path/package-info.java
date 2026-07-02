@@ -49,7 +49,7 @@
  * {@link uk.ac.lancs.cgi.path.PathContext} can be created from the
  * navigation object and the session's CGI parameters. This yields both
  * a user-defined instance context and a
- * {@link uk.ac.lancs.cgi.Navigator}. Given a path to an internal
+ * {@link uk.ac.lancs.cgi.path.Navigator}. Given a path to an internal
  * resource, the latter yields a
  * {@link uk.ac.lancs.cgi.path.PathReference}, from which relative,
  * local or absolute URIs can be obtained.

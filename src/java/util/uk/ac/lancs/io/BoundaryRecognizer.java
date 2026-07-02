@@ -41,13 +41,13 @@ package uk.ac.lancs.io;
 /**
  * Recognizes boundaries and partial boundaries in byte arrays. Portions
  * of a byte sequence are to be presented in order. On each call to
- * {@link #recognize(byte[], int, int, int, boolean)}, two adjacent
- * areas of a byte array are identified. The first begins at the
- * <dfn>start</dfn> position, and is being considered as the start of a
- * boundary. It ends at the <dfn>done</dfn> position, which reminds the
- * recognizer of bytes it has already identified as being the potential
- * start of a boundary (everything from the inclusive start to the
- * exclusive done position). The second area begins from here, and
+ * {@link #recognize(byte[], int, int, int, boolean, boolean)}, two
+ * adjacent areas of a byte array are identified. The first begins at
+ * the <dfn>start</dfn> position, and is being considered as the start
+ * of a boundary. It ends at the <dfn>done</dfn> position, which reminds
+ * the recognizer of bytes it has already identified as being the
+ * potential start of a boundary (everything from the inclusive start to
+ * the exclusive done position). The second area begins from here, and
  * terminates at the <dfn>limit</dfn>. Bytes outside these areas should
  * be considered undefined, and no bytes may be modified.
  * 
@@ -105,7 +105,7 @@ public interface BoundaryRecognizer {
      * the last byte in the sequence
      * 
      * @param init {@code true} if the first byte presented is at the
-     * start of the sequence; {@cpde false} otherwise
+     * start of the sequence; {@code false} otherwise
      * 
      * @return a negative number if the region of the array does not
      * start with a boundary, indicating how many bytes to skip before

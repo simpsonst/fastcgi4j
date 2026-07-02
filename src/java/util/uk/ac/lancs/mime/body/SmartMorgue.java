@@ -219,9 +219,9 @@ public final class SmartMorgue implements Morgue {
         }
     }
 
-    public Cleaner.Cleanable register(Object ref, Runnable action) {
-        return cleaner.register(ref, action);
-    }
+    // public Cleaner.Cleanable register(Object ref, Runnable action) {
+    // return cleaner.register(ref, action);
+    // }
 
     /**
      * Given a partial buffer and a byte stream, write the contents to a

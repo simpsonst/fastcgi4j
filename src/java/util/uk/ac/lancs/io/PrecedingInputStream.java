@@ -52,6 +52,11 @@ import java.io.InputStream;
  * @author simpsons
  */
 public class PrecedingInputStream extends FilterInputStream {
+    /**
+     * Create a stream which will be the head of a base stream.
+     * 
+     * @param in the base stream
+     */
     public PrecedingInputStream(InputStream in) {
         super(in);
         this.tail = new FilterInputStream(in) {

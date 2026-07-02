@@ -48,6 +48,9 @@ import java.io.OutputStream;
  * @author simpsons
  */
 public class TeeOutputStream extends FilterOutputStream {
+    /**
+     * Identifies the secondary stream to be written to.
+     */
     protected final OutputStream other;
 
     /**

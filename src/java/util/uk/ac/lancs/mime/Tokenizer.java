@@ -308,7 +308,7 @@ public final class Tokenizer {
     }
 
     /**
-     * Parsed an encoded word. This has the form
+     * Parse an encoded word. This has the form
      * <samp>=?<var>charset</var>?<var>encoding</var>?<var>data</var>?=</samp>.
      * 
      * <p>
@@ -370,7 +370,7 @@ public final class Tokenizer {
     }
 
     /**
-     * Parse a sequence of encoded words. Whitespace between words is
+     * Parse a sequence of encoded words. White space between words is
      * discarded.
      * 
      * @return the concatenation of decoded adjacent words; or
@@ -558,6 +558,9 @@ public final class Tokenizer {
      * Parse a specific character.
      * 
      * @param c the character to parse, normally a separator
+     * 
+     * @return {@code true} if the specific character was parsed;
+     * {@code false} otherwise
      */
     public boolean character(char c) {
         if (pos >= text.length || text[pos] != c) return false;

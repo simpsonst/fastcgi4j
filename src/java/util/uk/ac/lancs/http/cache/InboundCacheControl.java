@@ -96,8 +96,15 @@ public final class InboundCacheControl {
         }
     }
 
+    /**
+     * Specifies that a resource never goes stale. This means that
+     * {@value Directives#MAX_STALE} was specified without a value.
+     */
     public static final int UNLIMITED = -2;
 
+    /**
+     * Indicates that no maximum age or staleness was specified.
+     */
     public static final int UNSPECIFIED = -1;
 
     /**
@@ -270,9 +277,10 @@ public final class InboundCacheControl {
     private final Collection<FieldId> noCacheFields = new HashSet<>();
 
     /**
-     * Determine whether a specific field name has been
+     * Determine whether a specific field name has been marked for not
+     * caching.
      * 
-     * @param fieldId
+     * @param fieldId the field to test
      * 
      * @return {@code true} if an unqualified
      * {@value Directives#NO_CACHE} directive was specified, or the
@@ -295,7 +303,7 @@ public final class InboundCacheControl {
     }
 
     /**
-     * Determine whether the {@value Directives#PROXY_VALIDATE}
+     * Determine whether the {@value Directives#PROXY_REVALIDATE}
      * directive is present.
      * 
      * @return {@code true} if the directive is present; {@code false}
@@ -398,8 +406,9 @@ public final class InboundCacheControl {
      * @return the non-negative integral value of the directive; or
      * {@link #UNSPECIFIED} if not specified
      * 
-     * @see https://www.rfc-editor.org/rfc/rfc9111.html#name-max-age
-     * RFC9111 §5.2.1.1 <code>max-age</code>
+     * @see <a href=
+     * "https://www.rfc-editor.org/rfc/rfc9111.html#name-max-age">RFC9111
+     * §5.2.1.1 <code>max-age</code></a>
      */
     public int maxAge() {
         return maxAge;
@@ -412,8 +421,9 @@ public final class InboundCacheControl {
      * {@link #UNLIMITED} if the directive was specified without a
      * value; or {@link #UNSPECIFIED} if not specified
      * 
-     * @see https://www.rfc-editor.org/rfc/rfc9111.html#name-max-stale
-     * RFC9111 §5.2.1.2 <code>max-stale</code>
+     * @see <a href=
+     * "https://www.rfc-editor.org/rfc/rfc9111.html#name-max-stale">RFC9111
+     * §5.2.1.2 <code>max-stale</code></a>
      */
     public int maxStale() {
         return maxStale;
@@ -436,8 +446,9 @@ public final class InboundCacheControl {
      * @return {@code true} if the directive is present; {@code false}
      * otherwise
      * 
-     * @see https://www.rfc-editor.org/rfc/rfc9111.html#name-no-cache
-     * RFC9111 §5.2.1.4 <code>no-cache</code>
+     * @see <a href=
+     * "https://www.rfc-editor.org/rfc/rfc9111.html#name-no-cache">RFC9111
+     * §5.2.1.4 <code>no-cache</code></a>
      */
     public boolean noCache() {
         return noCache;

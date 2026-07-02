@@ -291,7 +291,10 @@ public final class FieldExtension extends FieldNamespace {
      * 
      * @return an object for defining the extension in stages
      * 
-     * @throws URISyntaxException if the argument is not a valid URI
+     * @throws IllegalArgumentException if the argument is not a valid
+     * URI
+     * 
+     * @throws NullPointerException if the argument is {@code null}
      */
     public static Builder of(String nsuri) {
         Objects.requireNonNull(nsuri, "ns");

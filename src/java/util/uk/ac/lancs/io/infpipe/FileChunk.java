@@ -143,6 +143,9 @@ public class FileChunk implements Chunk {
      * called internally by {@link #write(byte[], int, int)} when the
      * chunk is full, or the request to switch to reading mode has been
      * detected.
+     * 
+     * @throws IOException if an error occurs in resetting the stream
+     * back to the start for reading
      */
     @Override
     public void complete() throws IOException {

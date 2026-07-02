@@ -249,8 +249,7 @@ public final class FormSubmission {
      * <p>
      * Parameters obtained from different sources (the query string and
      * the message body) are merged. The CGI request body input stream
-     * <code>session.{@linkplain RequestableSession#in() in()}</code> is
-     * closed if consumed, and {@link #bodyConsumed()} can be used to
+     * is closed if consumed, and {@link #bodyConsumed()} can be used to
      * determine this.
      * 
      * @param params the CGI parameters, including

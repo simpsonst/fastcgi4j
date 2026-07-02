@@ -259,7 +259,7 @@ public final class ServerProtocol {
      * {@value #INCLUDED_TOKEN}. For other values, the representation is
      * the name, followed by a slash <samp>/</samp> U+002F, the major
      * version in denary, a dot <samp>.</samp> U+002E, and the minor
-     * version in denary, e.g. <smap>HTTP/1.0</samp>.
+     * version in denary, e.g. <samp>HTTP/1.0</samp>.
      * 
      * @return the string representation
      */

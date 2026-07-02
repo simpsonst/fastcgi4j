@@ -43,6 +43,7 @@ import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import uk.ac.lancs.io.UnclosedOutputStream;
 
 /**
  * Writes a chunked message to an output stream. Each write operation on

@@ -71,6 +71,18 @@ public class Binding {
         this.action = action;
     }
 
+    /**
+     * Test whether a navigator recognizes this binding's pattern. If
+     * the test succeeds, the resulting {@link Matcher} is passed to
+     * this binding's action.
+     * 
+     * @param navigator the navigator to test
+     * 
+     * @return {@code true} if the navigator recognizes the pattern;
+     * {@code false} otherwise
+     * 
+     * @throws Exception if an error occurs in performing the action
+     */
     boolean attempt(Navigator navigator) throws Exception {
         Matcher m = navigator.recognize(pattern);
         if (!m.matches()) return false;

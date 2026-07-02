@@ -37,7 +37,8 @@
  */
 
 /**
- *
+ * Supports processing MIME messages.
+ * 
  * @author simpsons
  */
 package uk.ac.lancs.mime;

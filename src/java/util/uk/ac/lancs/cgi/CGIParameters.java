@@ -93,7 +93,7 @@ public final class CGIParameters {
      * 
      * @see <a href=
      * "https://datatracker.ietf.org/doc/html/rfc3875#section-4.1.14">RFC3875
-     * &sec;4.1.14</a>
+     * &sect;4.1.14</a>
      */
     public static final String SERVER_NAME_PARAM = "SERVER_NAME";
 

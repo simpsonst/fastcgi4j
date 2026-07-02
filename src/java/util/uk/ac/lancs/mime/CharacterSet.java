@@ -84,6 +84,11 @@ public interface CharacterSet {
     default -> false;
     };
 
+    /**
+     * Identifies characters usable in an encoded word.
+     * 
+     * @see Tokenizer#encodedWord()
+     */
     static CharacterSet ENCODED_CHARS = c -> c >= '!' && c <= '~' && c != '?';
 
     /**

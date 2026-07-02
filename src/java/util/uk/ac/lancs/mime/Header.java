@@ -68,6 +68,10 @@ public final class Header {
      * the first byte after the header.
      * 
      * @param in the source stream
+     * 
+     * @return a header formed by parsing the stream
+     * 
+     * @constructor
      *
      * @throws CharacterCodingException if a non-US-ASCII character, an
      * illegal control character, or an isolated CR or LF is
@@ -235,6 +239,10 @@ public final class Header {
      * Create a header from an index of value sequences.
      * 
      * @param fields the header names and values
+     * 
+     * @return a header based on the indexed values
+     * 
+     * @constructor
      */
     public static Header
         of(Map<? extends String,
@@ -274,6 +282,8 @@ public final class Header {
      * Get an empty header.
      * 
      * @return an empty header
+     * 
+     * @constructor
      */
     public static Header empty() {
         return EMPTY;
@@ -357,8 +367,9 @@ public final class Header {
 
         /**
          * Remove all values of a field. No values from the original
-         * header or added earlier with {@link #add(String, String)} or
-         * {@link #put(String, String)} will be preserved.
+         * header or added earlier with
+         * {@link #add(String, Format, Object)} or
+         * {@link #set(String, Format, Object) } will be preserved.
          * 
          * @param key the field name
          * 

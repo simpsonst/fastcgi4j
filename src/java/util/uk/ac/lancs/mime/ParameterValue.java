@@ -251,9 +251,9 @@ public final class ParameterValue {
     /**
      * Collapse raw parameter values. RFC2231 permits long parameter
      * values in structured header fields. These take the form
-     * <samp><var>name</var>*<var>part</var>*<samp>,
-     * <samp><var>name</var>*<var>part</var><samp> or
-     * <samp><var>name</var>*<samp>.
+     * <samp><var>name</var>*<var>part</var>*</samp>,
+     * <samp><var>name</var>*<var>part</var></samp> or
+     * <samp><var>name</var>*</samp>.
      * 
      * <p>
      * <var>part</var> indicates a part number (non-negative; no leading
@@ -280,7 +280,6 @@ public final class ParameterValue {
      * language code, which (if not empty) is converted to a
      * {@link Locale}, and added to the value as the {@link #locale}
      * field of this class.
-     * 
      * 
      * <p>
      * Note that this method is quite tolerant of missing and
@@ -395,6 +394,11 @@ public final class ParameterValue {
         return new ParameterValue(null, text);
     }
 
+    /**
+     * Get a string representation of this parameter value.
+     * 
+     * @return the text of this object; the value of {@link #text}
+     */
     @Override
     public String toString() {
         return text;

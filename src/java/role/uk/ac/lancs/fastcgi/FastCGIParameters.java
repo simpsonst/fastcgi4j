@@ -38,6 +38,8 @@
 
 package uk.ac.lancs.fastcgi;
 
+import uk.ac.lancs.fastcgi.context.FilterSession;
+
 /**
  * Holds names of FastCGI-specific request parameters.
  * 
@@ -49,18 +51,14 @@ public final class FastCGIParameters {
     /**
      * Identifies the request parameter that a filter receives giving
      * the last-modification time of the data. The value is
-     * {@value}. Used by {@link #dataLastModified()}.
-     * 
-     * @see RoleTypes#FILTER
+     * {@value}. Used by {@link FilterSession#dataLastModified()}.
      */
     public static final String DATA_LAST_MOD_PARAM = "FCGI_DATA_LAST_MOD";
 
     /**
      * Identifies the request parameter that a filter receives giving
      * the length of the data in bytes. The value is {@value}. Used by
-     * {@link #dataLength()}.
-     * 
-     * @see RoleTypes#FILTER
+     * {@link FilterSession#dataLength()}.
      */
     public static final String DATA_LENGTH_PARAM = "FCGI_DATA_LENGTH";
 }

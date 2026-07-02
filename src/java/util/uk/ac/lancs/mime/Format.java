@@ -121,6 +121,11 @@ public final class Format<T> {
         return dataType.cast(data);
     }
 
+    /**
+     * Get the hash code of this object.
+     * 
+     * @return this object's hash code
+     */
     @Override
     public int hashCode() {
         int hash = 3;
@@ -130,6 +135,15 @@ public final class Format<T> {
         return hash;
     }
 
+    /**
+     * Test whether another object equals this one.
+     * 
+     * @param obj the other object
+     * 
+     * @return {@code true} if the other object is a format of the same
+     * type and with the same encoder and decoder; {@code false}
+     * otherwise
+     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;

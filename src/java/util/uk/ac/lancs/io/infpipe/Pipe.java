@@ -56,7 +56,7 @@ public interface Pipe {
 
     /**
      * Abort the stream. Subsequent calls on the other end of the stream
-     * will throw a {@link StreamAbortedException} with the provided
+     * will throw a {@link SourceAbortedException} with the provided
      * reason as the cause.
      * 
      * @param reason the reason for termination

@@ -40,6 +40,8 @@ package uk.ac.lancs.fastcgi.util;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Map;
+import java.util.function.Supplier;
 import uk.ac.lancs.cgi.FormSubmission;
 import uk.ac.lancs.fastcgi.context.RequestableSession;
 import uk.ac.lancs.mime.MessageParser;
@@ -71,7 +73,7 @@ public final class FormHandler {
 
     /**
      * Get the form submission from a session. This simply calls
-     * {@link FormSubmission#fromSession(RequestableSession, Charset, MessageParser)}
+     * {@link FormSubmission#fromCGI(Map, Supplier, Charset, MessageParser)}
      * using the parameters provided during construction.
      * 
      * @param session the request session providing the method, query
