@@ -56,6 +56,7 @@ import java.util.function.Function;
 import uk.ac.lancs.cgi.CGIParameters;
 import uk.ac.lancs.cgi.Http;
 import uk.ac.lancs.cgi.ServerProtocol;
+import uk.ac.lancs.fastcgi.context.RequestableSession;
 import uk.ac.lancs.fastcgi.context.ResponderSession;
 import uk.ac.lancs.http.ChunkedInputStream;
 import uk.ac.lancs.http.cache.InboundCacheControl;
@@ -91,6 +92,11 @@ public class HttpResponderSession {
      */
     protected final HttpResponderContext ctxt;
 
+    /**
+     * Identifies the protocol used by the client to talk to the server.
+     * This is taken from the CGI parameter
+     * {@value CGIParameters#SERVER_PROTOCOL_PARAM}.
+     */
     protected final ServerProtocol protocol;
 
     /**
@@ -577,6 +583,12 @@ public class HttpResponderSession {
      */
     private final ExtensionManager responseExtMgr = new ExtensionManager();
 
+    /**
+     * Get the manager for extensions used in the response header and
+     * trailer.
+     * 
+     * @return the requested extension manager
+     */
     public ExtensionManager responseExtensions() {
         return responseExtMgr;
     }
@@ -590,7 +602,7 @@ public class HttpResponderSession {
      * 
      * <p>
      * To extract a field from the trailer, the body must first have
-     * been read in with {@link Session#requestBody()}, and the stream
+     * been read in with {@link RequestableSession#in()}, and the stream
      * closed. Otherwise, an {@link IllegalStateException} may be
      * thrown.
      * 
@@ -605,6 +617,8 @@ public class HttpResponderSession {
      * 
      * @throws IllegalStateException if the request body stream has not
      * been closed
+     * 
+     * @throws IOException if an I/O error occurs in reading the trailer
      */
     public Cap requestTrailer() throws IOException {
         /* Provide the one already created, if it exists. */
@@ -762,10 +776,9 @@ public class HttpResponderSession {
     private OutputStream out = null;
 
     /**
-     * Activate and obtain the modifiable field trailer. Fields added to
-     * the trailer must pass {@link FieldId#forResponseTrailer()}.
-     * Modifications can be made until the response body stream
-     * {@link #out()} has been closed.
+     * Activate and obtain the modifiable field trailer. Modifications
+     * can be made until the response body stream {@link #out()} has
+     * been closed.
      * 
      * @return the field trailer
      * 

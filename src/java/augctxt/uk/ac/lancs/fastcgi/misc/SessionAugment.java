@@ -422,9 +422,8 @@ public final class SessionAugment {
     /**
      * Tell the client not to use the URI again, and use a different one
      * instead. The client is supposed to use the same request method,
-     * but some might change it. Use
-     * {@link #permanentRedirect(Session, URI)} instead to make using
-     * the same method explicit.
+     * but some might change it. Use {@link #permanentRedirect(URI)
+     * instead to make using the same method explicit.
      * 
      * @param location the location to redirect to
      * 
@@ -439,8 +438,8 @@ public final class SessionAugment {
      * should be seen as a temporary redirection, and the client should
      * not change its reference. It should also use the same request
      * method, but some might change it. Use
-     * {@link #temporaryRedirect(Session, URI)} instead to make using
-     * the same method explicit.
+     * {@link #temporaryRedirect(URI)} instead to make using the same
+     * method explicit.
      * 
      * @param session the session to respond to
      * 

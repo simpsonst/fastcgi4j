@@ -37,7 +37,9 @@
  */
 
 /**
- *
+ * Provides augmented context for HTTP interactions over FastCGI. This
+ * is a <strong>work in progress</strong>, so it's currently unusable.
+ * 
  * @author simpsons
  */
 package uk.ac.lancs.fastcgi.http;
