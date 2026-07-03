@@ -41,4 +41,4 @@
  * 
  * @author simpsons
  */
-package uk.ac.lancs.fastcgi.proto.env;
+package uk.ac.lancs.fastcgi.env;

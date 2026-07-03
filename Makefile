@@ -250,7 +250,7 @@ ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_SOFT))),)
 DOC_PKGS += uk.ac.lancs.fastcgi.engine.std.threading.soft
 endif
 DOC_PKGS += uk.ac.lancs.fastcgi.proto
-DOC_PKGS += uk.ac.lancs.fastcgi.proto.env
+DOC_PKGS += uk.ac.lancs.fastcgi.env
 DOC_PKGS += uk.ac.lancs.fastcgi.proto.serial
 DOC_PKGS += uk.ac.lancs.fastcgi.transport
 DOC_PKGS += uk.ac.lancs.fastcgi.transport.inet

@@ -36,7 +36,7 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-package uk.ac.lancs.fastcgi.proto.env;
+package uk.ac.lancs.fastcgi.env;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;

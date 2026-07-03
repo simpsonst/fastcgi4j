@@ -36,7 +36,7 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.proto.env;
+package uk.ac.lancs.fastcgi.env;
 
 import java.util.Objects;
 import java.util.regex.Matcher;
