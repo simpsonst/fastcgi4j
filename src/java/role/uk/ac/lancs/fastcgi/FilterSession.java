@@ -1,7 +1,7 @@
 // -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
 
 /*
- * Copyright (c) 2023, Lancaster University
+ * Copyright (c) 2022,2023, Lancaster University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,12 +33,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *
- *  Author: Steven Simpson <https://github.com/simpsonst>
+ *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
+package uk.ac.lancs.fastcgi;
+
+import java.io.InputStream;
+
 /**
- * Holds classes for writing role implementations.
- * 
+ * Presents the context of a FastCGI session to an application in the
+ * Filter role.
+ *
  * @author simpsons
+ * 
+ * @see <a href=
+ * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.4">FastCGI
+ * Specification &mdash; Filter</a>
  */
-package uk.ac.lancs.fastcgi.misc;
+public interface FilterSession extends RequestableSession {
+    /**
+     * Get the stream for reading the file data.
+     * 
+     * @return the input stream providing the file data
+     */
+    InputStream data();
+}

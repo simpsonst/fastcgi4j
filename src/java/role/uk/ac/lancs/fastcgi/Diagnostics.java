@@ -36,7 +36,7 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-package uk.ac.lancs.fastcgi.context;
+package uk.ac.lancs.fastcgi;
 
 /**
  * Provides diagnostic information for a FastCGI session.

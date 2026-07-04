@@ -46,8 +46,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import uk.ac.lancs.fastcgi.Filter;
-import uk.ac.lancs.fastcgi.context.FilterSession;
-import uk.ac.lancs.fastcgi.context.SessionAbortedException;
+import uk.ac.lancs.fastcgi.FilterSession;
+import uk.ac.lancs.fastcgi.SessionAbortedException;
 import uk.ac.lancs.io.infpipe.Pipe;
 import uk.ac.lancs.io.infpipe.SinkClosedException;
 

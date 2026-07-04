@@ -42,7 +42,7 @@ import java.nio.charset.StandardCharsets;
 import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.app.FastCGIApplication;
 import uk.ac.lancs.fastcgi.app.FastCGIConfiguration;
-import uk.ac.lancs.fastcgi.context.ResponderSession;
+import uk.ac.lancs.fastcgi.ResponderSession;
 import uk.ac.lancs.io.CountingInputStream;
 import uk.ac.lancs.io.CountingOutputStream;
 

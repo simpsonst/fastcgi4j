@@ -38,7 +38,7 @@
 
 /**
  * Provides the interfaces that an application implements to process a
- * FastCGI session.
+ * FastCGI session, and the various contexts for role types.
  * 
  * @author simpsons
  */

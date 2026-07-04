@@ -20,8 +20,6 @@
 package uk.ac.lancs.fastcgi;
 
 import java.io.IOException;
-import uk.ac.lancs.fastcgi.context.AuthorizerSession;
-import uk.ac.lancs.fastcgi.context.SessionException;
 
 /**
  * Responds as an authorizer to FastCGI requests.

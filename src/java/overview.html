@@ -8,8 +8,9 @@
   <p>
     If you're concerned merely with application logic of responding to
     requests, you only need to concern yourself with {@link
-    uk.ac.lancs.fastcgi} and {@link uk.ac.lancs.fastcgi.context}.
-    These define the role types and their contexts.
+    uk.ac.lancs.fastcgi}, which defines role types and basic session
+    contexts. {@link uk.ac.lancs.fastcgi.augment} then provides
+    augmented contexts for specific circumstances.
   </p>
 
   <p>
@@ -51,15 +52,7 @@
 
   @package service uk.ac.lancs.fastcgi
 
-  @package service uk.ac.lancs.fastcgi.context
-
-  @package service uk.ac.lancs.fastcgi.path
-
-  @package service uk.ac.lancs.fastcgi.misc
-
-  @package service uk.ac.lancs.fastcgi.util
-
-  @package service uk.ac.lancs.fastcgi.http
+  @package service uk.ac.lancs.fastcgi.augment
 
   @group transport Transports
 

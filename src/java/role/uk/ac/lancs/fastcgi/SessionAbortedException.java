@@ -1,7 +1,7 @@
 // -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
 
 /*
- * Copyright (c) 2025, Lancaster University
+ * Copyright (c) 2022,2023, Lancaster University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,27 +33,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *
- *  Author: Steven Simpson <https://github.com/simpsonst>
+ *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-package uk.ac.lancs.fastcgi.http;
-
-import java.util.Collections;
-import java.util.Map;
-import uk.ac.lancs.http.encoding.Encoding;
+package uk.ac.lancs.fastcgi;
 
 /**
- * Provides re-usable context to HTTP responder sessions.
- * 
+ * Indicates that the server has aborted a session.
+ *
  * @author simpsons
  */
-public interface HttpResponderContext {
+public class SessionAbortedException extends RuntimeException {
     /**
-     * Get the set of decoders indexed by case-insensitive name.
-     * 
-     * @return an immutable map from decoder name to implementation
+     * Create an exception.
      */
-    default Map<String, Encoding> decoders() {
-        return Collections.emptyMap();
+    public SessionAbortedException() {}
+
+    /**
+     * Create an exception with a detail message.
+     * 
+     * @param message the detail message
+     */
+    public SessionAbortedException(String message) {
+        super(message);
     }
 }

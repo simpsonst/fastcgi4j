@@ -230,8 +230,7 @@ DOC_CLASSPATH += $(jars:%=$(JARDEPS_OUTDIR)/%.jar)
 DOC_SRC=$(call jardeps_srcdirs4jars,$(SELECTED_JARS))
 DOC_CORE=fastcgi4j
 DOC_PKGS += uk.ac.lancs.fastcgi
-DOC_PKGS += uk.ac.lancs.fastcgi.context
-DOC_PKGS += uk.ac.lancs.fastcgi.util
+DOC_PKGS += uk.ac.lancs.fastcgi.augment
 DOC_PKGS += uk.ac.lancs.io
 DOC_PKGS += uk.ac.lancs.io.infpipe
 DOC_PKGS += uk.ac.lancs.mime
@@ -257,9 +256,6 @@ DOC_PKGS += uk.ac.lancs.fastcgi.transport.inet
 DOC_PKGS += uk.ac.lancs.fastcgi.transport.iis
 DOC_PKGS += uk.ac.lancs.fastcgi.transport.unix
 DOC_PKGS += uk.ac.lancs.fastcgi.transport.inherit
-DOC_PKGS += uk.ac.lancs.fastcgi.http
-DOC_PKGS += uk.ac.lancs.fastcgi.misc
-DOC_PKGS += uk.ac.lancs.fastcgi.util
 # ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_UNIX))),)
 # DOC_PKGS += uk.ac.lancs.fastcgi.transport.fork
 # endif

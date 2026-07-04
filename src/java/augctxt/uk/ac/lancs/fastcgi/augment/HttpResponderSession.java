@@ -36,7 +36,7 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.http;
+package uk.ac.lancs.fastcgi.augment;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -56,8 +56,8 @@ import java.util.function.Function;
 import uk.ac.lancs.cgi.CGIParameters;
 import uk.ac.lancs.cgi.Http;
 import uk.ac.lancs.cgi.ServerProtocol;
-import uk.ac.lancs.fastcgi.context.RequestableSession;
-import uk.ac.lancs.fastcgi.context.ResponderSession;
+import uk.ac.lancs.fastcgi.RequestableSession;
+import uk.ac.lancs.fastcgi.ResponderSession;
 import uk.ac.lancs.http.ChunkedInputStream;
 import uk.ac.lancs.http.cache.InboundCacheControl;
 import uk.ac.lancs.http.encoding.Encoding;

@@ -1,7 +1,7 @@
 // -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
 
 /*
- * Copyright (c) 2024, Lancaster University
+ * Copyright (c) 2025, Lancaster University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,10 +36,24 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
+package uk.ac.lancs.fastcgi.augment;
+
+import java.util.Collections;
+import java.util.Map;
+import uk.ac.lancs.http.encoding.Encoding;
+
 /**
- * Provides augmented context for HTTP interactions over FastCGI. This
- * is a <strong>work in progress</strong>, so it's currently unusable.
+ * Provides re-usable context to HTTP responder sessions.
  * 
  * @author simpsons
  */
-package uk.ac.lancs.fastcgi.http;
+public interface HttpResponderContext {
+    /**
+     * Get the set of decoders indexed by case-insensitive name.
+     * 
+     * @return an immutable map from decoder name to implementation
+     */
+    default Map<String, Encoding> decoders() {
+        return Collections.emptyMap();
+    }
+}

@@ -39,7 +39,7 @@
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import uk.ac.lancs.fastcgi.Authorizer;
-import uk.ac.lancs.fastcgi.context.AuthorizerSession;
+import uk.ac.lancs.fastcgi.AuthorizerSession;
 import uk.ac.lancs.http.ResponseCodes;
 
 /**

@@ -39,8 +39,6 @@
 package uk.ac.lancs.fastcgi;
 
 import java.io.IOException;
-import uk.ac.lancs.fastcgi.context.ResponderSession;
-import uk.ac.lancs.fastcgi.context.SessionException;
 
 /**
  * Responds to complete FastCGI requests.

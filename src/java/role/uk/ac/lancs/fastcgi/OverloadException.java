@@ -36,25 +36,20 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-package uk.ac.lancs.fastcgi.context;
+package uk.ac.lancs.fastcgi;
 
 /**
- * Indicates that the server has aborted a session.
- *
+ * Indicates that the application is temporarily overloaded. This will
+ * instruct the library to send a record of type
+ * <code>FCGI_END_REQUEST</code> with a protocol status of
+ * <code>FCGI_OVERLOADED</code>.
+ * 
  * @author simpsons
+ * 
+ * @see <a href=
+ * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.5">FastCGI
+ * Specification &mdash; <code>FCGI_END_REQUEST</code></a>
  */
-public class SessionAbortedException extends RuntimeException {
-    /**
-     * Create an exception.
-     */
-    public SessionAbortedException() {}
+public class OverloadException extends SessionException {
 
-    /**
-     * Create an exception with a detail message.
-     * 
-     * @param message the detail message
-     */
-    public SessionAbortedException(String message) {
-        super(message);
-    }
 }

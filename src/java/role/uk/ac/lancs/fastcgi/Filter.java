@@ -20,8 +20,6 @@
 package uk.ac.lancs.fastcgi;
 
 import java.io.IOException;
-import uk.ac.lancs.fastcgi.context.FilterSession;
-import uk.ac.lancs.fastcgi.context.SessionException;
 
 /**
  * Augments a session by post-processing a partial response.

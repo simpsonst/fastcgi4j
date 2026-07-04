@@ -36,14 +36,14 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.util;
+package uk.ac.lancs.fastcgi.augment;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.function.Supplier;
 import uk.ac.lancs.cgi.FormSubmission;
-import uk.ac.lancs.fastcgi.context.RequestableSession;
+import uk.ac.lancs.fastcgi.RequestableSession;
 import uk.ac.lancs.mime.MessageParser;
 
 /**

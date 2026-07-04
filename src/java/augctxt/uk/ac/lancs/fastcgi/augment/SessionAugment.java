@@ -36,7 +36,7 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.misc;
+package uk.ac.lancs.fastcgi.augment;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -61,7 +61,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Document;
 import uk.ac.lancs.cgi.Http;
-import uk.ac.lancs.fastcgi.context.Session;
+import uk.ac.lancs.fastcgi.Session;
 import uk.ac.lancs.http.ResponseCodes;
 import uk.ac.lancs.http.encoding.DeflateEncoding;
 import uk.ac.lancs.http.encoding.Encoding;
@@ -77,8 +77,8 @@ import uk.ac.lancs.mime.Tokenizer;
  *
  * @author simpsons
  * 
- * @deprecated Use {@link uk.ac.lancs.fastcgi.http.HttpResponderSession}
- * instead.
+ * @deprecated Use {@link HttpResponderSession} instead, even though
+ * it's not ready.
  */
 @Deprecated
 public final class SessionAugment {

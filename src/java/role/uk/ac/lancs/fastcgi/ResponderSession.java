@@ -1,7 +1,7 @@
 // -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
 
 /*
- * Copyright (c) 2026, Lancaster University
+ * Copyright (c) 2022,2023, Lancaster University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,32 +33,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *
- *  Author: Steven Simpson <https://github.com/simpsonst>
+ *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
 package uk.ac.lancs.fastcgi;
 
-import uk.ac.lancs.fastcgi.context.FilterSession;
-
 /**
- * Holds names of FastCGI-specific request parameters.
+ * Presents the context of a FastCGI session to an application in the
+ * Responder role.
  * 
  * @author simpsons
+ * 
+ * @see <a href=
+ * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.2">FastCGI
+ * Specification &mdash; Responder</a>
  */
-public final class FastCGIParameters {
-    private FastCGIParameters() {}
-
-    /**
-     * Identifies the request parameter that a filter receives giving
-     * the last-modification time of the data. The value is
-     * {@value}. Used by {@link FilterSession#dataLastModified()}.
-     */
-    public static final String DATA_LAST_MOD_PARAM = "FCGI_DATA_LAST_MOD";
-
-    /**
-     * Identifies the request parameter that a filter receives giving
-     * the length of the data in bytes. The value is {@value}. Used by
-     * {@link FilterSession#dataLength()}.
-     */
-    public static final String DATA_LENGTH_PARAM = "FCGI_DATA_LENGTH";
-}
+public interface ResponderSession extends RequestableSession {}
