@@ -76,7 +76,7 @@ class Base64DecodingInputStream extends FilterInputStream {
     /**
      * Provide an estimate of the number of bytes available.
      * 
-     * @default This implementation simply calls the base stream, and
+     * @implNote This implementation simply calls the base stream, and
      * multiplies its estimate by &frac34;, and adds in any already
      * decoded bytes not yet passed to the user.
      * 

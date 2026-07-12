@@ -95,7 +95,7 @@ public interface RecordHandler {
      * be closed early without disrupting any underlying stream it is
      * based on.
      * 
-     * @default A recommended implementation is to call
+     * @apiNote A recommended implementation is to call
      * {@link ParamReader#consume(InputStream)}.
      * 
      * @param id the request id
@@ -113,7 +113,7 @@ public interface RecordHandler {
      * Indicate that parameter data is complete. This is called on
      * reception of an empty {@link RecordTypes#PARAMS} record.
      * 
-     * @default A recommended implementation is to call
+     * @apiNote A recommended implementation is to call
      * {@link ParamReader#complete()}.
      * 
      * @param id the request id

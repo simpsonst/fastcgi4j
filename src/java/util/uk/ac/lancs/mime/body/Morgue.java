@@ -80,9 +80,9 @@ public interface Morgue {
      * @throws IOException if an I/O error occurs in storing the
      * sequence
      * 
-     * @default This implementation wraps a {@link ByteArrayInputStream}
-     * around the supplied array, and passes it to
-     * {@link #store(InputStream)}, returning the result.
+     * @implNote This implementation wraps a
+     * {@link ByteArrayInputStream} around the supplied array, and
+     * passes it to {@link #store(InputStream)}, returning the result.
      */
     default BinaryBody store(byte[] buf, int offset, int length)
         throws IOException {
@@ -101,7 +101,7 @@ public interface Morgue {
      * @throws IOException if an I/O error occurs in storing the
      * sequence
      * 
-     * @default This implementation calls
+     * @implNote This implementation calls
      * <code>{@linkplain #store(byte[], int, int)}(buf, 0, buf.length)</code>,
      * returning the result.
      */
@@ -137,7 +137,7 @@ public interface Morgue {
      * @throws IOException if an I/O error occurs in storing the
      * sequence
      * 
-     * @default This implementation wraps a {@link CharArrayReader}
+     * @implNote This implementation wraps a {@link CharArrayReader}
      * around the supplied array, and passes it to
      * {@link #store(Reader)}, returning the result.
      */
@@ -159,7 +159,7 @@ public interface Morgue {
      * @throws IOException if an I/O error occurs in storing the
      * sequence
      * 
-     * @default This implementation calls
+     * @implNote This implementation calls
      * <code>{@linkplain #store(char[], int, int)}(buf, 0, buf.length)</code>,
      * returning the result.
      */

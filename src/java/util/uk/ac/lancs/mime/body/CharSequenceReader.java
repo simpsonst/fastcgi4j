@@ -98,7 +98,7 @@ class CharSequenceReader extends Reader {
     /**
      * Transfer the remainder of this stream to another.
      * 
-     * @default This implementation creates a small buffer, then
+     * @implNote This implementation creates a small buffer, then
      * alternately calls {@link #read(char[])} on this object to fill
      * the buffer, then {@link Writer#write(char[], int, int)} on the
      * destination.
@@ -149,7 +149,7 @@ class CharSequenceReader extends Reader {
     /**
      * Determine whether this stream supports marking.
      * 
-     * @default It does.
+     * @implNote This implementation indeed supports marking.
      * 
      * @return {@code true}
      */

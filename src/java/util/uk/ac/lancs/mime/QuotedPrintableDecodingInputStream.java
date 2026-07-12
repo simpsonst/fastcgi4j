@@ -69,7 +69,7 @@ class QuotedPrintableDecodingInputStream extends FilterInputStream {
     /**
      * Provide an estimate of the number of bytes available.
      * 
-     * @default This implementation simply calls the base stream,
+     * @implNote This implementation simply calls the base stream,
      * multiplies by a large fraction, and then adds in any already
      * decoded bytes not yet passed to the user.
      * 

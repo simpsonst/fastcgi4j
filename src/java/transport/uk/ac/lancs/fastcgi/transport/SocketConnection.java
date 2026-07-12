@@ -78,7 +78,7 @@ public class SocketConnection implements Connection {
     /**
      * {@inheritDoc}
      * 
-     * @default {@link Socket#getInputStream()} is invoked on the
+     * @implNote {@link Socket#getInputStream()} is invoked on the
      * supplied socket, and the result is returned.
      */
     @Override
@@ -89,7 +89,7 @@ public class SocketConnection implements Connection {
     /**
      * {@inheritDoc}
      * 
-     * @default {@link Socket#getOutputStream()} is invoked on the
+     * @implNote {@link Socket#getOutputStream()} is invoked on the
      * supplied socket, and the result returned.
      */
     @Override
@@ -100,7 +100,7 @@ public class SocketConnection implements Connection {
     /**
      * {@inheritDoc}
      * 
-     * @default {@link Socket#close()} is invoked on the supplied
+     * @implNote {@link Socket#close()} is invoked on the supplied
      * socket.
      */
     @Override
@@ -111,7 +111,7 @@ public class SocketConnection implements Connection {
     /**
      * {@inheritDoc}
      * 
-     * @default The value returned is the second argument of the
+     * @implNote The value returned is the second argument of the
      * constructor.
      */
     @Override
@@ -122,7 +122,7 @@ public class SocketConnection implements Connection {
     /**
      * {@inheritDoc}
      * 
-     * @default The value returned is the third argument of the
+     * @implNote The value returned is the third argument of the
      * constructor.
      */
     @Override

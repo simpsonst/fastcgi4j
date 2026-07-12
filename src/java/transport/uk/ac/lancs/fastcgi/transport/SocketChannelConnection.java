@@ -189,7 +189,7 @@ public class SocketChannelConnection implements Connection {
     /**
      * {@inheritDoc}
      * 
-     * @default The value returned is the second argument of the
+     * @implNote The value returned is the second argument of the
      * constructor.
      */
     @Override
@@ -200,7 +200,7 @@ public class SocketChannelConnection implements Connection {
     /**
      * {@inheritDoc}
      * 
-     * @default The value returned is the third argument of the
+     * @implNote The value returned is the third argument of the
      * constructor.
      */
     @Override

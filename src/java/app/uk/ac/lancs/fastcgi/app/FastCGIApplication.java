@@ -82,7 +82,7 @@ public class FastCGIApplication {
      * @return {@code true} if the FastCGI application should run;
      * {@code false} if it should exit with a non-zero code
      * 
-     * @default This method does nothing by default, and returns
+     * @implNote This method does nothing by default, and returns
      * {@code false}.
      */
     public boolean init(FastCGIConfiguration config, String[] args) {
@@ -92,7 +92,7 @@ public class FastCGIApplication {
     /**
      * Prepare to terminate.
      * 
-     * @default This method does nothing by default.
+     * @implNote This method does nothing by default.
      */
     public void term() {}
 

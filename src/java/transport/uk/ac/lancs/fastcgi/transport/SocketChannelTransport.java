@@ -74,7 +74,7 @@ public abstract class SocketChannelTransport implements Transport {
     /**
      * {@inheritDoc}
      * 
-     * @default Repeatedly, {@link ServerSocketChannel#accept()} is
+     * @implNote Repeatedly, {@link ServerSocketChannel#accept()} is
      * invoked on the configured server socket channel. The new channel
      * is submitted to {@link #describe(SocketChannel)}. If this returns
      * {@code null}, the new channel is closed. Otherwise, the result is

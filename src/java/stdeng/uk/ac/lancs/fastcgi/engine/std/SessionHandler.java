@@ -40,6 +40,7 @@ package uk.ac.lancs.fastcgi.engine.std;
 
 import java.io.IOException;
 import java.io.InputStream;
+import uk.ac.lancs.fastcgi.proto.serial.ParamReader;
 import uk.ac.lancs.fastcgi.proto.serial.RecordHandler;
 
 /**
@@ -69,6 +70,9 @@ interface SessionHandler {
     /**
      * Receive a stream of parameter data.
      * 
+     * @apiNote A recommended implementation is to call
+     * {@link ParamReader#consume(InputStream)}.
+     * 
      * @param len the number of bytes
      * 
      * @param in a stream of the bytes
@@ -83,7 +87,7 @@ interface SessionHandler {
     /**
      * Indicate that parameter data is complete.
      * 
-     * @default A recommended implementation is to call
+     * @apiNote A recommended implementation is to call
      * {@link ParamReader#complete()}.
      * 
      * @throws IOException if an I/O error occurred in transmitting a

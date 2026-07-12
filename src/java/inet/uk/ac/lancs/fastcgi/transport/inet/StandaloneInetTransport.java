@@ -89,7 +89,7 @@ class StandaloneInetTransport extends SocketTransport {
     /**
      * {@inheritDoc}
      * 
-     * @default If the supplied socket's address (obtained by
+     * @implNote If the supplied socket's address (obtained by
      * {@link Socket#getInetAddress()}) is not in the configured set of
      * peer addresses, the event is logged, and {@code null} is
      * returned. Otherwise, a public socket description is formed by

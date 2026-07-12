@@ -93,7 +93,7 @@ public interface RequestableSession extends Session {
      * @throws InterruptedException if interrupted while waiting for the
      * trailer to be received
      * 
-     * @default By default, this method returns an empty map.
+     * @implNote By default, this method returns an empty map.
      */
     default Map<String, List<String>> requestTrailer()
         throws InterruptedException {

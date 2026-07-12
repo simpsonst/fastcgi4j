@@ -149,7 +149,7 @@ class ForkedIISTransport implements Transport {
     /**
      * {@inheritDoc}
      * 
-     * @default On the first call, the sole connection is returned. A
+     * @implNote On the first call, the sole connection is returned. A
      * subsequent call will block until {@link #terminate() } is called.
      */
     @Override

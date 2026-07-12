@@ -70,7 +70,7 @@ public abstract class SocketTransport implements Transport {
     /**
      * {@inheritDoc}
      * 
-     * @default Repeatedly, {@link ServerSocket#accept()} is invoked on
+     * @implNote Repeatedly, {@link ServerSocket#accept()} is invoked on
      * the configured socket. The new socket is submitted to
      * {@link #describe(Socket)}. If this returns {@code null}, the
      * socket is closed. Otherwise, the result is used as the public

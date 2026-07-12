@@ -72,8 +72,8 @@ public interface TextBody {
      * 
      * @throws IOException if there's an error retrieving the content
      * 
-     * @default This implementation calls {@link #size()} to see whether
-     * it can reasonably fit the string in memory. It then calls
+     * @implNote This implementation calls {@link #size()} to see
+     * whether it can reasonably fit the string in memory. It then calls
      * {@link #recover()} to build a new string.
      */
     default String get() throws IOException {

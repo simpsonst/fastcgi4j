@@ -98,7 +98,7 @@ public interface Connection {
      * 
      * @return the package identifying the implementation
      * 
-     * @default By default, this method calls {@link Object#getClass()}
+     * @implNote By default, this method calls {@link Object#getClass()}
      * on its receiver, and then {@link Class#getPackage()} on the
      * class, yielding the result.
      */

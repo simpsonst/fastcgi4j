@@ -102,7 +102,7 @@ public interface Navigator {
      * 
      * @return the resource identifier
      * 
-     * @default By default, {@link #resourceElements()} is called, and
+     * @implNote By default, {@link #resourceElements()} is called, and
      * then the elements are concatenated with intervening forward
      * slashes.
      */
@@ -124,7 +124,7 @@ public interface Navigator {
      * 
      * @return a matcher for the resource against the expression
      * 
-     * @default By default, {@link #resource()} is called, and the
+     * @implNote By default, {@link #resource()} is called, and the
      * result passed to the pattern to obtain the matcher.
      */
     default Matcher recognize(Pattern pattern) {
@@ -145,7 +145,7 @@ public interface Navigator {
      * @throws Exception if the pattern is recognized, but an error
      * occurs while performing the action
      * 
-     * @default By default, {@link #recognize(Pattern)} is called. If
+     * @implNote By default, {@link #recognize(Pattern)} is called. If
      * the resource matches, the {@link Matcher} is passed to the second
      * argument, and then {@code true} is returned. Otherwise
      * {@code false} is returned.
@@ -171,8 +171,8 @@ public interface Navigator {
      * @throws Exception if a match was found, but an error occurred in
      * processing it
      * 
-     * @default By default, this object submits itself to each action in
-     * sequence, until one returns {@code true}.
+     * @implNote By default, this object submits itself to each action
+     * in sequence, until one returns {@code true}.
      */
     default boolean recognize(Binding... bindings) throws Exception {
         for (var binding : bindings)
