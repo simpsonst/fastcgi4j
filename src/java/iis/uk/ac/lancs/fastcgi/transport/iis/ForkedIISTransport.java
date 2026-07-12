@@ -76,7 +76,7 @@ class ForkedIISTransport implements Transport {
 
             @Override
             public long skip(long n) throws IOException {
-                return file.skipBytes((int) Long.max(n, Integer.MAX_VALUE));
+                return file.skipBytes((int) Long.min(n, Integer.MAX_VALUE));
             }
 
             @Override
