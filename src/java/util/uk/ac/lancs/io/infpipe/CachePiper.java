@@ -459,8 +459,11 @@ public final class CachePiper implements Piper {
             }
         });
 
-        System.in.transferTo(pipe.getOutputStream());
-        System.err.printf("source complete%n");
+        try (var out = pipe.getOutputStream()) {
+            System.in.transferTo(out);
+        } finally {
+            System.err.printf("source complete%n");
+        }
         Thread.sleep(Duration.ofSeconds(1));
     }
 }
