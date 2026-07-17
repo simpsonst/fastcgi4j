@@ -46,6 +46,7 @@ import java.lang.ref.Cleaner;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
@@ -441,4 +442,25 @@ public final class CachePiper implements Piper {
 
     private static final Logger logger =
         Logger.getLogger(CachePiper.class.getName());
+
+    /**
+     * @undocumented
+     */
+    public static void main(String[] args) throws Exception {
+        Piper piper = CachePiper.start().create();
+        Pipe pipe = piper.newPipe();
+        Thread.ofVirtual().start(() -> {
+            try (var in = pipe.getInputStream()) {
+                in.transferTo(System.out);
+            } catch (IOException ex) {
+                logger.log(Level.SEVERE, ex, () -> "pipe dump");
+            } finally {
+                System.err.printf("sink complete%n");
+            }
+        });
+
+        System.in.transferTo(pipe.getOutputStream());
+        System.err.printf("source complete%n");
+        Thread.sleep(Duration.ofSeconds(1));
+    }
 }
