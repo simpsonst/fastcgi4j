@@ -62,6 +62,13 @@ final class MemoryChunk implements Chunk {
 
     private final Condition ready = lock.newCondition();
 
+    /**
+     * Holds bytes received but not yet delivered. The bytes between
+     * {@link #readPos} (inclusive) and {@link #writePos} (exclusive)
+     * hold the current bytes. When this chunk's content is discarded
+     * with {@link #close()}, this array is set to {@code null} to
+     * record that state.
+     */
     private byte[] array;
 
     /**
@@ -78,10 +85,33 @@ final class MemoryChunk implements Chunk {
         this.array = new byte[memChunkSize];
     }
 
+    /**
+     * Identifies the first byte of the array that should be read from.
+     * The number of bytes available is obtained by subtracting this
+     * value from {@link #writePos}.
+     * 
+     * @see #array
+     */
     private int readPos = 0;
 
+    /**
+     * Identifies the first byte of the array that should be written to.
+     * The maximum number of bytes that can be immediately written is
+     * the length of {@link #array} minus this value. Extra space can be
+     * made by moving the bytes between {@link #readPos} (inclusive) to
+     * {@link #writePos} (exclusive) to position 0, subtracting
+     * {@link #readPos} from {@link #writePos}, and then setting
+     * {@link #readPos} to zero.
+     * 
+     * @see #array
+     */
     private int writePos = 0;
 
+    /**
+     * Indicates whether the chunk's supply of data is complete. If
+     * {@code true}, no more data is expected via
+     * {@link #write(byte[], int, int)}.
+     */
     private boolean complete = false;
 
     private void check() {
@@ -93,13 +123,15 @@ final class MemoryChunk implements Chunk {
     /**
      * {@inheritDoc}
      * 
-     * If there is space at the start of the buffer because bytes there
-     * have already been read, the array contents may be shifted to the
-     * start, to make more space at the end. As a result, a sufficiently
-     * fast reader might prevent the array from filling up, and so
-     * obviate the creation of a new chunk. Therefore, the total number
-     * of bytes handled by the chunk may be more than the configured
-     * limit.
+     * @implNote If there is space at the start of the buffer because
+     * bytes there have already been read, the array contents may be
+     * shifted to the start, to make more space at the end. As a result,
+     * a sufficiently fast reader might prevent the array from filling
+     * up, and so obviate the creation of a new chunk. Therefore, the
+     * total number of bytes handled by the chunk may be more than the
+     * configured limit.
+     * 
+     * @throws IllegalArgumentException {@inheritDoc}
      */
     @Override
     public int write(byte[] buf, int off, int len) {
@@ -277,7 +309,6 @@ final class MemoryChunk implements Chunk {
      * or some bytes are available. If interrupted while waiting for
      * more bytes, this method continues waiting for the terminating
      * condition, but will re-interrupt the thread as soon as it is met.
-     *
      * 
      * @param b the array to store the bytes
      * 
