@@ -111,9 +111,6 @@ final class MemoryChunk implements Chunk {
              * when they've already said there's no more. */
             if (complete) throw new IllegalStateException("complete");
 
-            /* Short-circuit the no-op. */
-            if (len == 0) return 0;
-
             /* If the consumer has already indicated they're not longer
              * interested in the content, we can absorb it. */
             if (array == null) return len;
