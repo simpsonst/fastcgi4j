@@ -149,6 +149,43 @@ final class MemoryChunk implements Chunk {
 
             check();
             try {
+                /* Are we empty, and is there any space in the user's
+                 * buffer? If so, we can copy bytes directly into the
+                 * waiting user's buffer. */
+                if (writePos == readPos && userBuf != null) {
+                    /* We current have no data (so the reader has caught
+                     * up with the writer), and the reader is waiting
+                     * right now with a buffer. We should be able to
+                     * write bytes directly into that buffer. */
+
+                    /* How many bytes are free in the reader's direct
+                     * buffer? */
+                    final int rem = userLen - suppliedToUser;
+                    assert rem >= 0;
+
+                    /* Get the largest amount that is available and fits
+                     * into the reader's direct buffer. */
+                    final int amount = Math.min(len, rem);
+
+                    if (amount > 0) {
+                        /* Place as much data as we can directly into
+                         * the reader's buffer, and mark it as consumed.
+                         * Tell the reader that they have data
+                         * immediately available. */
+                        System.arraycopy(buf, off, userBuf,
+                                         userOff + suppliedToUser, amount);
+                        suppliedToUser += amount;
+                        ready.signal();
+
+                        /* Mark this portion of the incoming data as
+                         * accepted. If this is less than the amount
+                         * offered, the caller is expected to keep
+                         * calling with the remnant, until all of it has
+                         * been accepted. */
+                        return amount;
+                    }
+                }
+
                 /* How much space is at the end of the array? */
                 final int rem = array.length - writePos;
                 final int amount;
@@ -198,6 +235,44 @@ final class MemoryChunk implements Chunk {
     }
 
     /**
+     * Identifies the current reading thread. Only one thread is
+     * permitted at any time. Reading operations should use this idiom
+     * to hold the right to read:
+     * 
+     * <pre class="java">
+     * {@linkplain claimAsReader claimAsReader()};
+     * try {
+     *   // ...
+     * } finally {
+     *   {@linkplain releaseAsReader releaseAsReader()};
+     * }
+     * </pre>
+     */
+    private Thread readingThread;
+
+    /**
+     * Claim the right to read. {@link #readingThread} must be
+     * {@code null} on entry, and is set to the calling thread.
+     * 
+     * @throws IllegalStateException if another thread holds the right
+     */
+    private void claimAsReader() {
+        assert lock.isHeldByCurrentThread();
+        var ct = Thread.currentThread();
+        if (readingThread != null)
+            throw new IllegalStateException("pipe accessed by multiple threads");
+        readingThread = ct;
+    }
+
+    /**
+     * Release the right to read. {@link #readingThread} is set to null.
+     */
+    private void releaseAsReader() {
+        assert readingThread == Thread.currentThread();
+        readingThread = null;
+    }
+
+    /**
      * Close the input stream. {@link #array} is set to {@code null} to
      * mark this. Closing twice is not an error.
      */
@@ -214,6 +289,61 @@ final class MemoryChunk implements Chunk {
             lock.unlock();
         }
     }
+
+    /**
+     * Holds the reader's destination buffer. Being non-{@code null}
+     * indicates that a thread is calling
+     * {@link #read(byte[], int, int)}, and offers its first argument
+     * (this field) for a writing thread to place data directly into.
+     * The reader must ensure that this field is set back to
+     * {@code null} before releasing the lock.
+     * 
+     * <p>
+     * Fields {@link #userOff} and {@link #userLen} further describe
+     * which part of the buffer is available for direct writing.
+     * {@link #suppliedToUser} is incremented by the writer to show how
+     * much has been supplied. These fields are meaningless if this
+     * field is {@code null}.
+     */
+    private byte[] userBuf;
+
+    /**
+     * Identifies the first byte of the reader's buffer that can be
+     * directly written into. {@link #userBuf} provides the buffer, and
+     * renders this field meaningless if {@code null}. Inside the
+     * {@link #read(byte[], int, int)} call, the reading thread should
+     * set this field to its second argument, at the same time as it
+     * sets {@link #userBuf}. It should not be modified as data is
+     * directly written into {@link #userBuf}; {@link #suppliedToUser}
+     * indicates that, so <code class=
+     * "java">{@linkplain #userOff} + {@linkplain #suppliedToUser}</code>
+     * gives the offset for writing the next byte.
+     */
+    private int userOff;
+
+    /**
+     * Specifies the maximum number of bytes available in the reader's
+     * buffer. This should be set by {@link #read(byte[], int, int)} to
+     * its third argument, when its first argument is stored in
+     * {@link #userBuf}. This field has no meaning if {@link #userBuf}
+     * is {@code null}, so it does not need to be reset afterwards. This
+     * field should not be modified when data is actually written
+     * directly into {@link #userBuf}; {@link #suppliedToUser} records
+     * that, so <code class=
+     * "java">{@linkplain #userLen} - {@linkplain #suppliedToUser}</code>
+     * actually gives the remaining space.
+     */
+    private int userLen;
+
+    /**
+     * Records the number of bytes placed directly into the reader's
+     * buffer. The reader's buffer is a portion of {@link #userBuf} (if
+     * not {@code null}), of {@link #userLen} bytes starting at offset
+     * {@link #userOff}. This field indicates how many initial bytes of
+     * this region have already been written to, and should be set to
+     * zero when these other fields are set.
+     */
+    private int suppliedToUser;
 
     /**
      * Compute the available bytes.
@@ -250,6 +380,7 @@ final class MemoryChunk implements Chunk {
         try {
             lock.lock();
             check();
+            claimAsReader();
             try {
                 final int rem = awaitData();
                 if (rem == 0) return -1;
@@ -258,6 +389,7 @@ final class MemoryChunk implements Chunk {
                 memoryUsage.addAndGet(-1);
                 return array[readPos++] & 0xff;
             } finally {
+                releaseAsReader();
                 check();
             }
         } finally {
@@ -285,7 +417,8 @@ final class MemoryChunk implements Chunk {
         /* Wait until there's no reason to block. */
         boolean interrupted = false;
         int rem = -1;
-        while (array != null && (rem = writePos - readPos) == 0 && !complete) {
+        while (array != null && (rem = writePos - readPos) == 0 && !complete &&
+            (userBuf == null || suppliedToUser == 0)) {
             try {
                 ready.await();
             } catch (InterruptedException ex) {
@@ -330,20 +463,39 @@ final class MemoryChunk implements Chunk {
         try {
             lock.lock();
             check();
+            claimAsReader();
             try {
-                final int rem = awaitData();
-                if (rem == 0) return -1;
+                /* Indicate that we can receive bytes directly into our
+                 * own buffer (if circumstances permit). */
+                userOff = off;
+                userLen = len;
+                suppliedToUser = 0;
+                userBuf = b;
 
-                /* At least one byte is available, so work out how much
-                 * to provide, and transfer it. */
-                int amount = Integer.min(len, rem);
-                if (amount == 0) return 0;
-                assert amount > 0;
-                System.arraycopy(array, readPos, b, off, amount);
-                readPos += amount;
-                memoryUsage.addAndGet(-amount);
-                return amount;
+                try {
+                    final int rem = awaitData();
+
+                    /* Stop here if data was written directly into the
+                     * reader's buffer. */
+                    if (suppliedToUser > 0) return suppliedToUser;
+
+                    /* If we've unblocked with no bytes available, this
+                     * chunk has reached EOF. */
+                    if (rem == 0) return -1;
+
+                    /* At least one byte is available, so work out how
+                     * much to provide, and transfer it. */
+                    int amount = Integer.min(len, rem);
+                    assert amount > 0;
+                    System.arraycopy(array, readPos, b, off, amount);
+                    readPos += amount;
+                    memoryUsage.addAndGet(-amount);
+                    return amount;
+                } finally {
+                    userBuf = null;
+                }
             } finally {
+                releaseAsReader();
                 check();
             }
         } finally {
