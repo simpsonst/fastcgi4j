@@ -69,8 +69,9 @@ public interface Encoding {
      * 
      * @return the encoding name
      * 
-     * @see https://www.rfc-editor.org/rfc/rfc9110.html#name-content-coding-registry
-     * IANA Content Coding Registry
+     * @see <a href=
+     * "https://www.rfc-editor.org/rfc/rfc9110.html#name-content-coding-registry">IANA
+     * Content Coding Registry</a>
      */
     String name();
 
