@@ -45,8 +45,6 @@ import java.io.PrintWriter;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -61,14 +59,13 @@ import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Document;
 import uk.ac.lancs.cgi.Http;
 import uk.ac.lancs.fastcgi.Session;
+import uk.ac.lancs.http.Negotiation;
 import uk.ac.lancs.http.ResponseCodes;
 import uk.ac.lancs.http.encoding.EncodingContext;
-import uk.ac.lancs.http.encoding.IdentityProvider;
 import uk.ac.lancs.http.encoding.OutputEncoding;
 import uk.ac.lancs.http.encoding.ResponseEncoder;
 import uk.ac.lancs.mime.MediaGroup;
 import uk.ac.lancs.mime.MediaType;
-import uk.ac.lancs.mime.Tokenizer;
 
 /**
  * Provides an augmented session context.
@@ -99,57 +96,7 @@ public final class SessionAugment {
     }
 
     private Map<String, Float> getEncodingPreference(String varName) {
-        return getAtomPreference(session.parameters().get(varName));
-    }
-
-    /**
-     * Split a string into comma-separated tokens and optional
-     * parameters, selecting the quality parameter.
-     * 
-     * @param text the string to split, usually the value of a request
-     * header field; may be {@code null}
-     * 
-     * @return an immutable map from token token to quality parameter;
-     * an empty map if the argument is {@code null}
-     * 
-     * @throws IllegalArgumentException if the input string is not in
-     * the right format
-     * 
-     * @throws NumberFormatException if a <samp>q</samp> parameter value
-     * cannot be parsed as a {@code float}
-     */
-    public static Map<String, Float> getAtomPreference(CharSequence text) {
-        if (text == null) return Collections.emptyMap();
-        Map<String, Float> result = new HashMap<>();
-        result.put(IdentityProvider.NAME, 1.0f);
-        Tokenizer toks = new Tokenizer(text);
-        while (true) {
-            toks.whitespace(0);
-            var name = toks.atom();
-            if (name == null) {
-                if (toks.character('*'))
-                    name = "*";
-                else
-                    throw new IllegalArgumentException("bad atom preference: "
-                        + text);
-            }
-            toks.whitespace(0);
-            Map.Entry<String, String> param;
-            float q = 1.0f;
-            while (toks.character(';') && toks.whitespace(0) &&
-                (param = toks.parameter()) != null) {
-                if (param.getKey().equals("q"))
-                    q = Float.parseFloat(param.getValue());
-                toks.whitespace(0);
-            }
-            if (toks.character(',')) {
-                result.put(name.toString(), q);
-                continue;
-            }
-            if (toks.end()) break;
-            throw new IllegalArgumentException("bad atom preference: " + text);
-        }
-        return Map.copyOf(result);
+        return Negotiation.getAtomPreference(session.parameters().get(varName));
     }
 
     private static final String ACCEPT_VAR_NAME = Http.fieldNameAsCGI("Accept");
@@ -162,45 +109,8 @@ public final class SessionAugment {
      * @return an immutable of the client's media-type preferences
      */
     public Map<MediaGroup, Float> getMediaTypePreference() {
-        return getMediaTypePreference(session.parameters()
-            .get(ACCEPT_VAR_NAME));
-    }
-
-    /**
-     * Split a string into comma-separated MIME types and optional
-     * parameters, selecting the quality parameter.
-     * 
-     * @param text the string to split, usually the value of a request
-     * header field; may be {@code null}
-     * 
-     * @return an immutable map from token token to quality parameter;
-     * an empty map if the argument is {@code null}
-     */
-    public static Map<MediaGroup, Float>
-        getMediaTypePreference(CharSequence text) {
-        if (text == null) return Collections.emptyMap();
-        Map<MediaGroup, Float> result = new HashMap<>();
-        Tokenizer toks = new Tokenizer(text);
-        while (true) {
-            var group = MediaGroup.from(toks);
-            toks.whitespace(0);
-            Map.Entry<String, String> param;
-            float q = 1.0f;
-            while (toks.character(';') && toks.whitespace(0) &&
-                (param = toks.parameter()) != null) {
-                if (param.getKey().equals("q"))
-                    q = Float.parseFloat(param.getValue());
-                toks.whitespace(0);
-            }
-            if (toks.character(',')) {
-                result.put(group, q);
-                continue;
-            }
-            if (toks.end()) break;
-            throw new IllegalArgumentException("bad media-group preference: "
-                + text);
-        }
-        return Map.copyOf(result);
+        return Negotiation
+            .getMediaTypePreference(session.parameters().get(ACCEPT_VAR_NAME));
     }
 
     /**

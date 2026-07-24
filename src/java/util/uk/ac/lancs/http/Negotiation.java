@@ -36,10 +36,16 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.mime;
+package uk.ac.lancs.http;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import uk.ac.lancs.http.encoding.IdentityProvider;
+import uk.ac.lancs.mime.MediaGroup;
+import uk.ac.lancs.mime.MediaType;
+import uk.ac.lancs.mime.Tokenizer;
 
 /**
  * Provides procedures for negotiating content type, character encoding,
@@ -88,6 +94,93 @@ public final class Negotiation {
         final String variant = pref.getVariant();
         if (variant.isEmpty()) return subj.getVariant().isEmpty() ? 4 : 3;
         return variant.equalsIgnoreCase(subj.getVariant()) ? 4 : 0;
+    }
+
+    /**
+     * Split a string into comma-separated tokens and optional
+     * parameters, selecting the quality parameter.
+     *
+     * @param text the string to split, usually the value of a request
+     * header field; may be {@code null}
+     *
+     * @return an immutable map from token token to quality parameter;
+     * an empty map if the argument is {@code null}
+     *
+     * @throws IllegalArgumentException if the input string is not in
+     * the right format
+     *
+     * @throws NumberFormatException if a <samp>q</samp> parameter value
+     * cannot be parsed as a {@code float}
+     */
+    public static Map<String, Float> getAtomPreference(CharSequence text) {
+        if (text == null) return Collections.emptyMap();
+        Map<String, Float> result = new HashMap<>();
+        result.put(IdentityProvider.NAME, 1.0F);
+        Tokenizer toks = new Tokenizer(text);
+        while (true) {
+            toks.whitespace(0);
+            CharSequence name = toks.atom();
+            if (name == null) {
+                if (toks.character('*'))
+                    name = "*";
+                else
+                    throw new IllegalArgumentException("bad atom preference: "
+                        + text);
+            }
+            toks.whitespace(0);
+            Map.Entry<String, String> param;
+            float q = 1.0F;
+            while (toks.character(';') && toks.whitespace(0) &&
+                (param = toks.parameter()) != null) {
+                if (param.getKey().equals("q"))
+                    q = Float.parseFloat(param.getValue());
+                toks.whitespace(0);
+            }
+            if (toks.character(',')) {
+                result.put(name.toString(), q);
+                continue;
+            }
+            if (toks.end()) break;
+            throw new IllegalArgumentException("bad atom preference: " + text);
+        }
+        return Map.copyOf(result);
+    }
+
+    /**
+     * Split a string into comma-separated MIME types and optional
+     * parameters, selecting the quality parameter.
+     * 
+     * @param text the string to split, usually the value of a request
+     * header field; may be {@code null}
+     *
+     * @return an immutable map from token token to quality parameter;
+     * an empty map if the argument is {@code null}
+     */
+    public static Map<MediaGroup, Float>
+        getMediaTypePreference(CharSequence text) {
+        if (text == null) return Collections.emptyMap();
+        Map<MediaGroup, Float> result = new HashMap<>();
+        Tokenizer toks = new Tokenizer(text);
+        while (true) {
+            MediaGroup group = MediaGroup.from(toks);
+            toks.whitespace(0);
+            Map.Entry<String, String> param;
+            float q = 1.0F;
+            while (toks.character(';') && toks.whitespace(0) &&
+                (param = toks.parameter()) != null) {
+                if (param.getKey().equals("q"))
+                    q = Float.parseFloat(param.getValue());
+                toks.whitespace(0);
+            }
+            if (toks.character(',')) {
+                result.put(group, q);
+                continue;
+            }
+            if (toks.end()) break;
+            throw new IllegalArgumentException("bad media-group preference: "
+                + text);
+        }
+        return Map.copyOf(result);
     }
 
     /**

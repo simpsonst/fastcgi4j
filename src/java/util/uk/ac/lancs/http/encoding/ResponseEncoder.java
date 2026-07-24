@@ -44,7 +44,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import uk.ac.lancs.mime.Negotiation;
+import uk.ac.lancs.http.Negotiation;
 
 /**
  * Manages compression and other encodings on a response body.
