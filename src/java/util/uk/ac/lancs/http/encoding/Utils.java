@@ -38,8 +38,11 @@
 
 package uk.ac.lancs.http.encoding;
 
+import java.util.Objects;
 import java.util.Properties;
 import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 /**
  * Provides some internal utilities that encoding providers might need.
@@ -48,59 +51,55 @@ import java.util.function.Function;
  */
 class Utils {
     /**
-     * Search for decreasingly specific properties. Properties are
-     * sought in this order:
+     * Search for the first defined property within a sequence.
      * 
-     * <pre>
-     * <var>pfx</var><var>dir</var>.<var>ctxt</var>.<var>sfx</var>
-     * <var>pfx</var><var>ctxt</var>.<var>sfx</var>
-     * <var>pfx</var><var>sfx</var>
-     * </pre>
+     * @param props the properties to search
      * 
-     * <p>
-     * <var>ctxt</var> is the value of {@link EncodingContext#key}.
+     * @param sfx the suffix of the sought property's name
      * 
-     * @param props the properties to search in
+     * @param pfxs a sequence of prefixes to test in order with the
+     * suffix
      * 
-     * @param pfx a common prefix for all properties
-     * 
-     * @param dir a direction of encoding, usually <samp>in</samp> or
-     * <samp>out</samp>
-     * 
-     * @param ctxt the encoding context
-     * 
-     * @param sfx a common suffix for all properties
-     * 
-     * @return the most specific property's value; or {@code null} if
-     * none present
+     * @return the first defined property's value; or {@code null} if
+     * not found
      */
-    static String getText(Properties props, String pfx, String dir,
-                          EncodingContext ctxt, String sfx) {
-        String val;
-        val = props.getProperty(pfx + dir + '.' + ctxt.key + '.' + sfx);
-        if (val != null) return val;
-        val = props.getProperty(pfx + ctxt.key + '.' + sfx);
-        if (val != null) return val;
-        return props.getProperty(pfx + sfx);
+    static String getText(Properties props, String sfx,
+                          Stream<? extends CharSequence> pfxs) {
+        return pfxs.map(s -> pfxs.toString() + s).map(props::getProperty)
+            .filter(Predicate.not(Objects::isNull)).findFirst().orElse(null);
+    }
+
+    /**
+     * Expand each element of a stream of character sequences into
+     * sub-stream formed by appending each of a sequence of suffixes.
+     * For example, if the base stream is {@code a, b, c}, and the
+     * suffixes are {@code 1, 2}, the new stream is
+     * {@code a1, a2, b1, b2, c1, c2}.
+     * 
+     * @param base the base stream
+     * 
+     * @param sfxs additional suffixes to be applied to each element of
+     * the base
+     * 
+     * @return the modified stream
+     */
+    static Stream<String> multiply(Stream<? extends CharSequence> base,
+                                   CharSequence... sfxs) {
+        return base.flatMap(e -> Stream.of(sfxs).map(p -> e.toString() + p));
     }
 
     /**
      * Search for decreasingly specific properties, and convert the
      * value of the most specific. This takes the result of
-     * {@link #getText(Properties, String, String, EncodingContext, String)},
-     * and converts it with the supplied function. If no matching
-     * property is present, a default value is returned.
+     * {@link #getText(Properties, String, Stream)}, and converts it
+     * with the supplied function. If no matching property is present, a
+     * default value is returned.
      * 
      * @param <T> the result type
      * 
      * @param props the properties to search in
      * 
-     * @param pfx a common prefix for all properties
-     * 
-     * @param dir a direction of encoding, usually <samp>in</samp> or
-     * <samp>out</samp>
-     * 
-     * @param ctxt the encoding context
+     * @param pfxs a common prefix for all properties
      * 
      * @param sfx a common suffix for all properties
      * 
@@ -112,12 +111,49 @@ class Utils {
      * @return the converted value of the most specific property; or the
      * provided default value
      */
-    static <T> T getDefault(Properties props, String pfx, String dir,
-                            EncodingContext ctxt, String sfx, T dfl,
-                            Function<? super String, T> conv) {
-        String text = getText(props, pfx, dir, ctxt, sfx);
+    static <T> T getDefault(Properties props, String sfx, T dfl,
+                            Function<? super String, T> conv,
+                            Stream<? extends CharSequence> pfxs) {
+        String text = getText(props, sfx, pfxs);
         if (text == null) return dfl;
         return conv.apply(text);
+    }
+
+    /**
+     * Expand a sequence of prefixes with a common structure.
+     * 
+     * <p>
+     * Each prefix <samp>&lt;pfx&gt;</samp> in the stream is expanded
+     * into the following:
+     * 
+     * <ol>
+     * 
+     * <li><samp>&lt;pfx&gt;&lt;name&gt;.&lt;dir&gt;.&lt;ctxt&gt;.</samp>
+     * 
+     * <li><samp>&lt;pfx&gt;&lt;name&gt;.&lt;ctxt&gt;.</samp>
+     * 
+     * <li><samp>&lt;pfx&gt;&lt;name&gt;</samp>
+     * 
+     * </ol>
+     * 
+     * @param dir a direction, usually <samp>in</samp> or
+     * <samp>out</samp>
+     * 
+     * @param ctxt the encoding context, whose
+     * {@link EncodingContext#key key} is used as
+     * <samp>&lt;ctxt&gt;</samp>
+     * 
+     * @param name usually the name of the encoding
+     * 
+     * @param pfxs a sequence of prefixes to be expanded
+     * 
+     * @return the expanded sequence
+     */
+    static Stream<String> multiplyForEncoding(String name, String dir,
+                                              EncodingContext ctxt,
+                                              CharSequence... pfxs) {
+        return multiply(multiply(Stream.of(pfxs), name + '.'),
+                        dir + '.' + ctxt.key + '.', ctxt.key + '.', "");
     }
 
     private Utils() {}

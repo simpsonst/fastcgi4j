@@ -41,7 +41,7 @@ package uk.ac.lancs.http.encoding;
 import java.util.Properties;
 
 /**
- * Provides an encoding.
+ * Provides an encoding configured by properties.
  *
  * @author simpsons
  */
@@ -51,7 +51,8 @@ public interface EncodingProvider {
      * 
      * @param ctxt the context for the encoding
      * 
-     * @param pfx the prefix of property names to select configuration
+     * @param pfxs a sequence of prefixes property names to select
+     * configuration
      * 
      * @param props properties defining configuration, especially for
      * encoding operations
@@ -59,14 +60,15 @@ public interface EncodingProvider {
      * @return the encoding; or {@code null} if it cannot be provided
      */
     InputEncoding getForInput(EncodingContext ctxt, Properties props,
-                              String pfx);
+                              CharSequence... pfxs);
 
     /**
      * Get the output encoding provided by this object.
      * 
      * @param ctxt the context for the encoding
      * 
-     * @param pfx the prefix of property names to select configuration
+     * @param pfxs a sequence of prefixes property names to select
+     * configuration
      * 
      * @param props properties defining configuration, especially for
      * encoding operations
@@ -74,5 +76,5 @@ public interface EncodingProvider {
      * @return the encoding; or {@code null} if it cannot be provided
      */
     OutputEncoding getForOutput(EncodingContext ctxt, Properties props,
-                                String pfx);
+                                CharSequence... pfxs);
 }

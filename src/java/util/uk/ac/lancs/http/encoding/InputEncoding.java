@@ -71,8 +71,8 @@ public interface InputEncoding extends Encoding {
      * @param props a set of properties that providers can read for
      * configuration
      * 
-     * @param pfx a prefix of property names that the providers should
-     * look under
+     * @param pfxs a sequence of prefixes of property names that the
+     * providers should look under
      * 
      * @param ldr the loader for locating services of type
      * {@link EncodingProvider}
@@ -80,13 +80,13 @@ public interface InputEncoding extends Encoding {
      * @return the mutable mapping configured by available classes and
      * supplied properties
      */
-    static Map<String, InputEncoding> getMapping(EncodingContext ctxt,
-                                                 Properties props, String pfx,
-                                                 ClassLoader ldr) {
+    static Map<String, InputEncoding>
+        getMapping(EncodingContext ctxt, Properties props, ClassLoader ldr,
+                   CharSequence... pfxs) {
         Map<String, InputEncoding> result =
             new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         for (var provider : ServiceLoader.load(EncodingProvider.class, ldr)) {
-            var encoding = provider.getForInput(ctxt, props, pfx);
+            var encoding = provider.getForInput(ctxt, props, pfxs);
             if (encoding == null) continue;
             for (var name : encoding.names())
                 result.put(name.toString(), encoding);
@@ -104,15 +104,16 @@ public interface InputEncoding extends Encoding {
      * @param props a set of properties that providers can read for
      * configuration
      * 
-     * @param pfx a prefix of property names that the providers should
-     * look under
+     * @param pfxs a sequence of prefixes of property names that the
+     * providers should look under
      * 
      * @return the mutable mapping configured by available classes and
      * supplied properties
      */
     static Map<String, InputEncoding> getMapping(EncodingContext ctxt,
-                                                 Properties props, String pfx) {
-        return getMapping(ctxt, props, pfx,
-                          Thread.currentThread().getContextClassLoader());
+                                                 Properties props,
+                                                 CharSequence... pfxs) {
+        return getMapping(ctxt, props,
+                          Thread.currentThread().getContextClassLoader(), pfxs);
     }
 }

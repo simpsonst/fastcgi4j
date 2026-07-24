@@ -105,16 +105,16 @@ public class GZIPProvider implements EncodingProvider {
 
     @Override
     public InputEncoding getForInput(EncodingContext ctxt, Properties props,
-                                     String pfx) {
+                                     CharSequence... pfxs) {
         return INPUT_INSTANCE;
     }
 
     @Override
     public OutputEncoding getForOutput(EncodingContext ctxt, Properties props,
-                                       String pfx) {
-        String ourPfx = pfx + NAME + '.';
-        var qual = Utils.getDefault(props, ourPfx, OUTPFX, ctxt, QUALITY_PROP,
-                                    DEFAULT_QUALITY, Float::parseFloat);
+                                       CharSequence... pfxs) {
+        var qual = Utils
+            .getDefault(props, QUALITY_PROP, DEFAULT_QUALITY, Float::parseFloat,
+                        Utils.multiplyForEncoding(NAME, OUTPFX, ctxt, pfxs));
 
         return new OutputEncoding() {
             @Override

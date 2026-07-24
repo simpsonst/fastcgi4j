@@ -99,7 +99,7 @@ public class IdentityProvider implements EncodingProvider {
 
     @Override
     public InputEncoding getForInput(EncodingContext ctxt, Properties props,
-                                     String pfx) {
+                                     CharSequence... pfxs) {
         switch (ctxt) {
         case CONTENT:
             return INPUT_INSTANCE;
@@ -111,7 +111,7 @@ public class IdentityProvider implements EncodingProvider {
 
     @Override
     public OutputEncoding getForOutput(EncodingContext ctxt, Properties props,
-                                       String pfx) {
+                                       CharSequence... pfxs) {
         switch (ctxt) {
         case CONTENT:
             break;
@@ -120,9 +120,9 @@ public class IdentityProvider implements EncodingProvider {
             return null;
         }
 
-        String ourPfx = pfx + NAME + '.';
-        var qual = Utils.getDefault(props, ourPfx, OUTPFX, ctxt, QUALITY_PROP,
-                                    DEFAULT_QUALITY, Float::parseFloat);
+        var qual = Utils
+            .getDefault(props, QUALITY_PROP, DEFAULT_QUALITY, Float::parseFloat,
+                        Utils.multiplyForEncoding(NAME, OUTPFX, ctxt, pfxs));
         return new OutputEncoding() {
             @Override
             public String name() {
