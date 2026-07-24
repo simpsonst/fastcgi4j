@@ -1,7 +1,7 @@
 // -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
 
 /*
- * Copyright (c) 2022,2023,2026, Lancaster University
+ * Copyright (c) 2026, Lancaster University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,63 +38,32 @@
 
 package uk.ac.lancs.http.encoding;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Collection;
-import java.util.Set;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
-import uk.ac.lancs.scc.jardeps.Service;
-
 /**
- * Performs {@value #NAME} encoding and decoding.
+ * Identifies the context of an encoding.
  *
  * @author simpsons
  */
-@Service(Encoding.class)
-public final class GZIPEncoding implements Encoding {
-    private GZIPEncoding() {}
+public enum EncodingContext {
+    /**
+     * Identifies encoding for content. An encoding in this context can
+     * appear in <samp>Content-Encoding</samp> and
+     * <samp>Accept-Encoding</samp> header fields.
+     */
+    CONTENT("content"),
 
     /**
-     * The sole instance of this class
+     * Identifies encoding for transfer. An encoding in this context can
+     * appear in <samp>Transfer-Encoding</samp> and <samp>TE</samp>
+     * header fields.
      */
-    public static final GZIPEncoding INSTANCE = new GZIPEncoding();
-
-    private static final String NAME = "gzip";
-
-    private static final String OTHER_NAME = "x-" + NAME;
-
-    @Override
-    public String name() {
-        return NAME;
-    }
-
-    @Override
-    public OutputStream encode(OutputStream out) throws IOException {
-        return new GZIPOutputStream(out);
-    }
-
-    @Override
-    public InputStream decode(InputStream in) throws IOException {
-        return new GZIPInputStream(in);
-    }
-
-    private static final Set<String> nameSet = Set.of(NAME, OTHER_NAME);
+    TRANSFER("transfer");
 
     /**
-     * {@inheritDoc}
-     * 
-     * @return an immutable set containing {@value #NAME} and
-     * {@value #OTHER_NAME}
+     * A key for looking up configuration based on context
      */
-    @Override
-    public Collection<? extends CharSequence> names() {
-        return nameSet;
-    }
+    public final String key;
 
-    @Override
-    public boolean encodingAvailable() {
-        return true;
+    private EncodingContext(String key) {
+        this.key = key;
     }
 }

@@ -45,7 +45,6 @@ import java.io.PrintWriter;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -63,13 +62,12 @@ import org.w3c.dom.Document;
 import uk.ac.lancs.cgi.Http;
 import uk.ac.lancs.fastcgi.Session;
 import uk.ac.lancs.http.ResponseCodes;
-import uk.ac.lancs.http.encoding.DeflateEncoding;
-import uk.ac.lancs.http.encoding.Encoding;
-import uk.ac.lancs.http.encoding.GZIPEncoding;
-import uk.ac.lancs.http.encoding.IdentityEncoding;
+import uk.ac.lancs.http.encoding.EncodingContext;
+import uk.ac.lancs.http.encoding.IdentityProvider;
+import uk.ac.lancs.http.encoding.OutputEncoding;
+import uk.ac.lancs.http.encoding.ResponseEncoder;
 import uk.ac.lancs.mime.MediaGroup;
 import uk.ac.lancs.mime.MediaType;
-import uk.ac.lancs.mime.Negotiation;
 import uk.ac.lancs.mime.Tokenizer;
 
 /**
@@ -84,27 +82,10 @@ import uk.ac.lancs.mime.Tokenizer;
 public final class SessionAugment {
     private final Session session;
 
-    private static void populate(Map<String, Map.Entry<Encoding, Float>> temp,
-                                 Encoding enc, float quality) {
-        temp.put(enc.name(), Map.entry(enc, quality));
-    }
-
-    private static final Map<String, Map.Entry<Encoding, Float>> ENCODINGS;
-
-    static {
-        Map<String, Map.Entry<Encoding, Float>> temp = new HashMap<>();
-        populate(temp, GZIPEncoding.INSTANCE, 1.0f);
-        populate(temp, DeflateEncoding.INSTANCE, 0.7f);
-        populate(temp, IdentityEncoding.INSTANCE, 0.01f);
-        ENCODINGS = Map.copyOf(temp);
-    }
-
-    private static final Map<String, Float> COMPRESSION_OFFER =
-        ENCODINGS.entrySet().stream().collect(Collectors
-            .toMap(Map.Entry::getKey, e -> e.getValue().getValue()));
-
     private static final String ACCEPT_ENCODING_VAR_NAME =
         Http.fieldNameAsCGI("Accept-Encoding");
+
+    private static final String TE_VAR_NAME = Http.fieldNameAsCGI("TE");
 
     /**
      * Get the client's encoding preference. This is simply an
@@ -113,27 +94,35 @@ public final class SessionAugment {
      * 
      * @return an immutable map of encodings to quality parameters
      */
-    public Map<String, Float> getEncodingPreference() {
-        return getAtomPreference(session.parameters()
-            .get(ACCEPT_ENCODING_VAR_NAME));
+    public Map<String, Float> getContentEncodingPreference() {
+        return getEncodingPreference(ACCEPT_ENCODING_VAR_NAME);
+    }
+
+    private Map<String, Float> getEncodingPreference(String varName) {
+        return getAtomPreference(session.parameters().get(varName));
     }
 
     /**
      * Split a string into comma-separated tokens and optional
      * parameters, selecting the quality parameter.
      * 
-     * @param fieldValue the string to split, usually the value of a
-     * request header field; may be {@code null}
+     * @param text the string to split, usually the value of a request
+     * header field; may be {@code null}
      * 
      * @return an immutable map from token token to quality parameter;
      * an empty map if the argument is {@code null}
+     * 
+     * @throws IllegalArgumentException if the input string is not in
+     * the right format
+     * 
+     * @throws NumberFormatException if a <samp>q</samp> parameter value
+     * cannot be parsed as a {@code float}
      */
-    public static Map<String, Float>
-        getAtomPreference(CharSequence fieldValue) {
-        if (fieldValue == null) return Collections.emptyMap();
+    public static Map<String, Float> getAtomPreference(CharSequence text) {
+        if (text == null) return Collections.emptyMap();
         Map<String, Float> result = new HashMap<>();
-        result.put(IdentityEncoding.INSTANCE.name(), 1.0f);
-        Tokenizer toks = new Tokenizer(fieldValue);
+        result.put(IdentityProvider.NAME, 1.0f);
+        Tokenizer toks = new Tokenizer(text);
         while (true) {
             toks.whitespace(0);
             var name = toks.atom();
@@ -142,7 +131,7 @@ public final class SessionAugment {
                     name = "*";
                 else
                     throw new IllegalArgumentException("bad atom preference: "
-                        + fieldValue);
+                        + text);
             }
             toks.whitespace(0);
             Map.Entry<String, String> param;
@@ -158,8 +147,7 @@ public final class SessionAugment {
                 continue;
             }
             if (toks.end()) break;
-            throw new IllegalArgumentException("bad atom preference: "
-                + fieldValue);
+            throw new IllegalArgumentException("bad atom preference: " + text);
         }
         return Map.copyOf(result);
     }
@@ -182,17 +170,17 @@ public final class SessionAugment {
      * Split a string into comma-separated MIME types and optional
      * parameters, selecting the quality parameter.
      * 
-     * @param fieldValue the string to split, usually the value of a
-     * request header field; may be {@code null}
+     * @param text the string to split, usually the value of a request
+     * header field; may be {@code null}
      * 
      * @return an immutable map from token token to quality parameter;
      * an empty map if the argument is {@code null}
      */
     public static Map<MediaGroup, Float>
-        getMediaTypePreference(CharSequence fieldValue) {
-        if (fieldValue == null) return Collections.emptyMap();
+        getMediaTypePreference(CharSequence text) {
+        if (text == null) return Collections.emptyMap();
         Map<MediaGroup, Float> result = new HashMap<>();
-        Tokenizer toks = new Tokenizer(fieldValue);
+        Tokenizer toks = new Tokenizer(text);
         while (true) {
             var group = MediaGroup.from(toks);
             toks.whitespace(0);
@@ -210,9 +198,22 @@ public final class SessionAugment {
             }
             if (toks.end()) break;
             throw new IllegalArgumentException("bad media-group preference: "
-                + fieldValue);
+                + text);
         }
         return Map.copyOf(result);
+    }
+
+    /**
+     * Set a response header field to a comma-separated list of tokens.
+     * 
+     * @param field the HTTP response field name
+     * 
+     * @param tokens the tokens to be listed
+     */
+    private void setEncoding(String field,
+                             List<? extends CharSequence> tokens) {
+        session.setField(field,
+                         tokens.stream().collect(Collectors.joining(", ")));
     }
 
     /**
@@ -222,13 +223,64 @@ public final class SessionAugment {
      */
     public SessionAugment(Session session) {
         this.session = session;
+        this.responseEncoder =
+            new ResponseEncoder(contentEncodingOffer, transferEncodingOffer,
+                                responseEncoderContext);
     }
 
-    private final List<Encoding> encodings = new ArrayList<>();
+    private static Map<String, Map.Entry<OutputEncoding, Number>>
+        getEncodingOffer(EncodingContext ec, String pfx) {
+        return OutputEncoding.getMapping(ec, System.getProperties(),
+                                         "uk.ac.lancs.fastcgi." + pfx);
+    }
 
-    private Encoding compression = null;
+    private static final Map<String,
+                             Map.Entry<OutputEncoding,
+                                       Number>> contentEncodingOffer =
+                                           getEncodingOffer(EncodingContext.CONTENT,
+                                                            "content.");
 
-    private OutputStream out = null;
+    private static final Map<String,
+                             Map.Entry<OutputEncoding,
+                                       Number>> transferEncodingOffer =
+                                           getEncodingOffer(EncodingContext.TRANSFER,
+                                                            "transfer.");
+
+    private final ResponseEncoder.Context responseEncoderContext =
+        new ResponseEncoder.Context() {
+            @Override
+            public OutputStream raw() {
+                return session.out();
+            }
+
+            @Override
+            public Map<? extends String, ? extends Number> contentPreference() {
+                return getContentEncodingPreference();
+            }
+
+            @Override
+            public Map<? extends String, ? extends Number>
+                transferPreference() {
+                return getEncodingPreference(TE_VAR_NAME);
+            }
+
+            @Override
+            public void setContentEncoding(List<? extends CharSequence> names) {
+                setEncoding("Content-Encoding", names);
+            }
+
+            @Override
+            public void
+                setTransferEncoding(List<? extends CharSequence> names) {
+                setEncoding("Transfer-Encoding", names);
+            }
+        };
+
+    private final ResponseEncoder responseEncoder;
+
+    public ResponseEncoder responseEncoder() {
+        return responseEncoder;
+    }
 
     /**
      * Get the output stream with encodings applied. On the first call,
@@ -267,33 +319,7 @@ public final class SessionAugment {
      * encoding
      */
     public OutputStream out() throws IOException {
-        if (out != null) return out;
-
-        /* Compression must be the last in the list, so that it is
-         * applied first. */
-        if (compression != null) encodings.add(compression);
-
-        /* The encodings' names must specified in the response header.
-         * The last in our internal list must be the first in the
-         * comma-separated field value. */
-        StringBuilder field = new StringBuilder();
-        String sep = "";
-        for (Encoding enc : encodings) {
-            if (enc == IdentityEncoding.INSTANCE) continue;
-            field.insert(0, sep);
-            sep = ", ";
-            field.insert(0, enc.name());
-        }
-        if (!field.isEmpty())
-            session.setField("Content-Encoding", field.toString());
-
-        /* When we obtain the basic session's output stream, we can't
-         * set any more header fields. Apply the listed encodings. */
-        OutputStream out = session.out();
-        for (Encoding enc : encodings)
-            out = enc.encode(out);
-        this.out = out;
-        return out;
+        return responseEncoder.out();
     }
 
     /**
@@ -328,58 +354,6 @@ public final class SessionAugment {
      */
     public PrintWriter textOut(String minor) throws IOException {
         return textOut(minor, StandardCharsets.UTF_8);
-    }
-
-    /**
-     * Add an encoding to the head of the encoding chain.
-     * 
-     * @param enc the additional encoding
-     * 
-     * @throws IllegalStateException if {@link #out()} has been called
-     */
-    void prefixEncoding(Encoding enc) {
-        if (out != null)
-            throw new IllegalStateException("too late to add encoding "
-                + enc.name());
-        encodings.add(enc);
-    }
-
-    /**
-     * Add an encoding to the end of the encoding chain.
-     * 
-     * @param enc the additional encoding
-     * 
-     * @throws IllegalStateException if {@link #out()} has been called
-     */
-    void suffixEncoding(Encoding enc) {
-        if (out != null)
-            throw new IllegalStateException("too late to add encoding "
-                + enc.name());
-        encodings.add(0, enc);
-    }
-
-    private boolean compressed = false;
-
-    /**
-     * Turn on compression if the client accepts it. If applied, the
-     * output stream will be wrapped in a compression filter, and the
-     * encoding name is added to <samp>Content-Encoding</samp>.
-     * 
-     * <p>
-     * In the current implementation, only <samp>gzip</samp> and
-     * <samp>deflate</samp> are offered.
-     * 
-     * @throws IllegalStateException if {@link #out()} has been called
-     */
-    public void offerCompression() {
-        if (out != null)
-            throw new IllegalStateException("too late to add compression");
-        if (compressed) return;
-        compressed = true;
-        Map<String, Float> pref = getEncodingPreference();
-        String comp =
-            Negotiation.resolveAtomPreference(pref, COMPRESSION_OFFER);
-        if (comp != null) compression = ENCODINGS.get(comp).getKey();
     }
 
     /**

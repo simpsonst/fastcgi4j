@@ -54,7 +54,7 @@ import java.util.function.Function;
  * @author simpsons
  */
 public final class Decoder {
-    private final Function<? super String, ? extends Encoding> mapping;
+    private final Function<? super String, ? extends InputEncoding> mapping;
 
     /**
      * Create a decoder. The supplied mapping must yield {@code null} if
@@ -62,7 +62,7 @@ public final class Decoder {
      * 
      * @param mapping the mapping from token to encoding
      */
-    public Decoder(Function<? super String, ? extends Encoding> mapping) {
+    public Decoder(Function<? super String, ? extends InputEncoding> mapping) {
         this.mapping = mapping;
     }
 

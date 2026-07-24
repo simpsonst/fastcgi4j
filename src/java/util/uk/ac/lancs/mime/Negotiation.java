@@ -40,8 +40,6 @@ package uk.ac.lancs.mime;
 
 import java.util.Locale;
 import java.util.Map;
-import uk.ac.lancs.mime.MediaGroup;
-import uk.ac.lancs.mime.MediaType;
 
 /**
  * Provides procedures for negotiating content type, character encoding,

@@ -52,18 +52,22 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Properties;
 import java.util.TreeMap;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.InflaterInputStream;
 import uk.ac.lancs.cgi.FormSubmission;
+import uk.ac.lancs.cgi.Http;
 import uk.ac.lancs.cgi.path.Navigator;
 import uk.ac.lancs.cgi.path.PathConfiguration;
 import uk.ac.lancs.cgi.path.PathContext;
 import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.ResponderSession;
-import uk.ac.lancs.fastcgi.augment.SessionAugment;
 import uk.ac.lancs.fastcgi.augment.FormHandler;
+import uk.ac.lancs.fastcgi.augment.SessionAugment;
 import uk.ac.lancs.mime.BinaryMessage;
 import uk.ac.lancs.mime.Message;
 import uk.ac.lancs.mime.MessageParser;
 import uk.ac.lancs.mime.TextMessage;
+import uk.ac.lancs.mime.Tokenizer;
 import uk.ac.lancs.mime.body.BinaryBody;
 import uk.ac.lancs.mime.body.Morgue;
 import uk.ac.lancs.mime.body.SmartMorgue;
@@ -110,6 +114,20 @@ public class MD5SumResponder implements Responder {
 
         final byte[] dig;
         {
+            List<String> xferEncs = Tokenizer.atomSequenceOf(session
+                .parameters().get(Http.fieldNameAsCGI("Transfer-Encoding")));
+            InputStream in = session.in();
+            for (String enc : xferEncs.reversed()) {
+                if (enc.equals("chunked"))
+                    /* This is a lie. */
+                    continue;
+                else if (enc.equals("gzip"))
+                    in = new GZIPInputStream(in);
+                else if (enc.equals("deflate"))
+                    in = new InflaterInputStream(in);
+                else
+                    break;
+            }
             var md = MessageDigest.getInstance("md5");
             try (var mdis = new DigestInputStream(session.in(), md)) {
                 mdis.transferTo(OutputStream.nullOutputStream());
@@ -143,7 +161,6 @@ public class MD5SumResponder implements Responder {
             submission = null;
         }
 
-        augment.offerCompression();
         try (PrintWriter out = augment.textOut("plain")) {
             for (var entry : new TreeMap<>(session.parameters()).entrySet()) {
                 out.printf("[%s] = [%s]\n", entry.getKey(), entry.getValue());

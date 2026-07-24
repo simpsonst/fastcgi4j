@@ -39,7 +39,10 @@
 package uk.ac.lancs.mime;
 
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
@@ -806,5 +809,29 @@ public final class Tokenizer {
             if (!CharacterSet.TOKEN_CHARS.contains(c)) return false;
         }
         return true;
+    }
+
+    /**
+     * Parse a character sequence as comma-separated atoms. Each
+     * extracted atom is converted to a string.
+     * 
+     * @param text the source characters
+     * 
+     * @return a list of atoms; an empty list if the input is
+     * {@code null}
+     */
+    public static List<String> atomSequenceOf(CharSequence text) {
+        if (text == null) return Collections.emptyList();
+        List<String> result = new ArrayList<>();
+        Tokenizer tokens = new Tokenizer(text);
+        CharSequence atom;
+        while ((atom = tokens.whitespaceAtom(0)) != null) {
+            result.add(atom.toString());
+            tokens.whitespace(0);
+            if (tokens.end()) break;
+            if (tokens.character(',')) continue;
+            throw new IllegalArgumentException("not token list: " + text);
+        }
+        return List.copyOf(result);
     }
 }

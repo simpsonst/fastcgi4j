@@ -1,7 +1,7 @@
 // -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
 
 /*
- * Copyright (c) 2022,2023,2026, Lancaster University
+ * Copyright (c) 2026, Lancaster University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,55 +38,41 @@
 
 package uk.ac.lancs.http.encoding;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Collection;
-import java.util.Set;
-import java.util.zip.DeflaterOutputStream;
-import java.util.zip.InflaterInputStream;
-import uk.ac.lancs.scc.jardeps.Service;
+import java.util.Properties;
 
 /**
- * Performs {@value #NAME} encoding and decoding.
+ * Provides an encoding.
  *
  * @author simpsons
  */
-@Service(Encoding.class)
-public class DeflateEncoding implements Encoding {
-    private DeflateEncoding() {}
+public interface EncodingProvider {
+    /**
+     * Get the input encoding provided by this object.
+     * 
+     * @param ctxt the context for the encoding
+     * 
+     * @param pfx the prefix of property names to select configuration
+     * 
+     * @param props properties defining configuration, especially for
+     * encoding operations
+     * 
+     * @return the encoding; or {@code null} if it cannot be provided
+     */
+    InputEncoding getForInput(EncodingContext ctxt, Properties props,
+                              String pfx);
 
     /**
-     * The sole instance of this class
+     * Get the output encoding provided by this object.
+     * 
+     * @param ctxt the context for the encoding
+     * 
+     * @param pfx the prefix of property names to select configuration
+     * 
+     * @param props properties defining configuration, especially for
+     * encoding operations
+     * 
+     * @return the encoding; or {@code null} if it cannot be provided
      */
-    public static final DeflateEncoding INSTANCE = new DeflateEncoding();
-
-    private static final String NAME = "deflate";
-
-    @Override
-    public String name() {
-        return NAME;
-    }
-
-    @Override
-    public OutputStream encode(OutputStream out) throws IOException {
-        return new DeflaterOutputStream(out);
-    }
-
-    @Override
-    public InputStream decode(InputStream in) throws IOException {
-        return new InflaterInputStream(in);
-    }
-
-    private static final Set<String> nameSet = Set.of(NAME);
-
-    @Override
-    public Collection<? extends CharSequence> names() {
-        return nameSet;
-    }
-
-    @Override
-    public boolean encodingAvailable() {
-        return true;
-    }
+    OutputEncoding getForOutput(EncodingContext ctxt, Properties props,
+                                String pfx);
 }

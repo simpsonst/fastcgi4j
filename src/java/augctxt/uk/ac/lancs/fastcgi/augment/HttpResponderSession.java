@@ -60,7 +60,7 @@ import uk.ac.lancs.fastcgi.RequestableSession;
 import uk.ac.lancs.fastcgi.ResponderSession;
 import uk.ac.lancs.http.ChunkedInputStream;
 import uk.ac.lancs.http.cache.InboundCacheControl;
-import uk.ac.lancs.http.encoding.Encoding;
+import uk.ac.lancs.http.encoding.Decoder;
 import uk.ac.lancs.http.field.Cap;
 import uk.ac.lancs.http.field.ExtensionManager;
 import uk.ac.lancs.http.field.FieldExtension;
@@ -216,7 +216,7 @@ public class HttpResponderSession {
         /* For earlier versions, look for a "trailers" token in the "TE"
          * header field. */
         getAcceptedTransferEncodings();
-        return acceptedTransferEncodings.containsKey("trailers");
+        return acceptedTransferEncodings.containsKey(TRAILERS_TOKEN);
     }
 
     /**
@@ -257,6 +257,8 @@ public class HttpResponderSession {
 
     private List<String> rawRequestEncodings = null;
 
+    private static final String CHUNKED_TOKEN = "chunked";
+
     private static final String TRANSFER_ENCODING_FIELD = "Transfer-Encoding";
 
     private static final String TRANSFER_ENCODING_PARAM =
@@ -272,44 +274,34 @@ public class HttpResponderSession {
 
             /* Only the last element can be 'chunked'. Handle it
              * first. */
-            var last = transferEncodings.remove(--sz);
-            if (last.equalsIgnoreCase("chunked")) {
-                var head = new PrecedingInputStream(in);
-                trailerIn = head.tail();
-                in = new ChunkedInputStream(head);
+            var last = transferEncodings.get(sz);
+            if (last.equalsIgnoreCase(CHUNKED_TOKEN)) {
+                transferEncodings.remove(--sz);
+
+                if (false) {
+                    /* Bizarrely, nginx and Apache decode the chunking
+                     * themselves, but leave the 'chunked' token on the
+                     * end of the Transfer-Encoding field. The trailer
+                     * itself isn't even presented, so this is all
+                     * pointless. */
+                    var head = new PrecedingInputStream(in);
+                    trailerIn = head.tail();
+                    in = new ChunkedInputStream(head);
+                }
             }
 
-            /* Handle all non-chunked encodings. */
-            while (!transferEncodings.isEmpty()) {
-                String name = transferEncodings.remove(--sz);
-                Encoding enc = ctxt.decoders().get(name);
-                if (enc == null)
-                    /* TODO: Throw some specific exception that triggers
-                     * a Bad Request response automatically. */
-                    throw new IOException("unknown encoding " + name);
-                in = enc.decode(in);
-            }
+            Decoder xferDecoder = new Decoder(ctxt.decoders()::get);
+            in = xferDecoder.decode(in, transferEncodings);
+            if (!transferEncodings.isEmpty())
+                throw new IOException("unknown transfer encoding "
+                    + transferEncodings);
         }
 
         /* Apply unhandled content decoding. */
         if (rawRequestEncodings == null)
             rawRequestEncodings = tokens(CONTENT_ENCODING_PARAM);
-        unhandledRequestEncodings =
-            getApplicationHandledEncodings(rawRequestEncodings);
-        int sz = rawRequestEncodings.size();
-        while (!rawRequestEncodings.isEmpty()) {
-            String name = rawRequestEncodings.remove(--sz);
-            Encoding enc = ctxt.decoders().get(name);
-            if (enc == null) {
-                /* Move the unhandled encodings to those the application
-                 * is expected to deal with. */
-                unhandledRequestEncodings.addAll(rawRequestEncodings);
-                rawRequestEncodings.clear();
-                unhandledRequestEncodings.add(name);
-                break;
-            }
-            in = enc.decode(in);
-        }
+        Decoder contentDecoder = new Decoder(ctxt.decoders()::get);
+        in = contentDecoder.decode(in, rawRequestEncodings);
 
         return in;
     }

@@ -38,13 +38,7 @@
 
 package uk.ac.lancs.http.encoding;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Collection;
-import java.util.Map;
-import java.util.ServiceLoader;
-import java.util.TreeMap;
 
 /**
  * A named means of encoding an output stream or decoding an input
@@ -61,81 +55,4 @@ public interface Encoding {
      * {@link #name()}
      */
     Collection<? extends CharSequence> names();
-
-    /**
-     * Get the canonical name of this encoding as used in the
-     * <samp>Content-Encoding</samp> and <samp>Accept-Encoding</samp>
-     * header fields.
-     * 
-     * @return the encoding name
-     * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#name-content-coding-registry">IANA
-     * Content Coding Registry</a>
-     */
-    String name();
-
-    /**
-     * Wrap an encoder around a stream.
-     * 
-     * @param out the stream that encoded data will be written to
-     * 
-     * @return a stream that unencoded data can be written to, causing
-     * it to be encoded and written to the provided stream
-     * 
-     * @throws IOException if an I/O error occurs in creating the new
-     * stream
-     * 
-     * @throws UnsupportedOperationException if encoding is not
-     * implemented
-     */
-    OutputStream encode(OutputStream out) throws IOException;
-
-    /**
-     * Determine whether encoding is available.
-     * {@link #encode(OutputStream)} will throw an exception if not.
-     * 
-     * @return {@code true} if encoding is available; {@code false} if
-     * not
-     */
-    boolean encodingAvailable();
-
-    /**
-     * Wrap a decoder around a stream.
-     * 
-     * @param in the encoded stream
-     * 
-     * @return the decoded stream
-     * 
-     * @throws IOException if an I/O error occurs in creating the new
-     * stream
-     */
-    InputStream decode(InputStream in) throws IOException;
-
-    /**
-     * Create a mapping from names to known encoding.
-     * 
-     * @param loader the loader for locating services of type
-     * {@link Encoding}
-     * 
-     * @return a fresh, modifiable mapping, indexed case-insensitively
-     */
-    static Map<String, Encoding> getMapping(ClassLoader loader) {
-        Map<String, Encoding> result =
-            new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-        for (var enc : ServiceLoader.load(Encoding.class, loader))
-            for (var name : enc.names())
-                result.put(name.toString(), enc);
-        return result;
-    }
-
-    /**
-     * Create a mapping from names to known encoding, using the calling
-     * thread's context class loader.
-     * 
-     * @return a fresh, modifiable mapping, indexed case-insensitively
-     */
-    static Map<String, Encoding> getMapping() {
-        return getMapping(Thread.currentThread().getContextClassLoader());
-    }
 }

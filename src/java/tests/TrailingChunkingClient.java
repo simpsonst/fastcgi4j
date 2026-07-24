@@ -53,6 +53,7 @@ import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.util.HexFormat;
 import java.util.function.LongConsumer;
+import java.util.zip.GZIPOutputStream;
 import uk.ac.lancs.http.ChunkedOutputStream;
 import uk.ac.lancs.http.Timing;
 import uk.ac.lancs.io.CountingInputStream;
@@ -102,6 +103,20 @@ public class TrailingChunkingClient {
         return r.toString();
     }
 
+    private static ChunkedOutputStream chunked(OutputStream out) {
+        return new ChunkedOutputStream(out);
+    }
+
+    private static GZIPOutputStream gzipped(OutputStream out)
+        throws IOException {
+        return new GZIPOutputStream(out);
+    }
+
+    private static DigestOutputStream digested(OutputStream out,
+                                               MessageDigest digest) {
+        return new DigestOutputStream(out, digest);
+    }
+
     /**
      * Attempt to PUT a file to a URI, attaching a SHA-512 digest in the
      * trailer. The first argument is a path to a local file to be sent.
@@ -131,7 +146,7 @@ public class TrailingChunkingClient {
                     out.printf("Host: %s\r\n", getVirtualHost(dest));
                     out.printf("Date: %s\r\n", Timing
                         .generateTimestamp(System.currentTimeMillis()));
-                    out.print("Transfer-Encoding: chunked\r\n");
+                    out.print("Transfer-Encoding: gzip, chunked\r\n");
                     out.print("TE: trailers\r\n");
                     out.print("Trailer: X-Digest-SHA-512\r\n");
                     out.print("Expect: 100-continue\r\n");
@@ -149,20 +164,20 @@ public class TrailingChunkingClient {
                     System.err.println("Writing request body...");
                     MessageDigest digest = MessageDigest.getInstance("SHA-512");
                     try (var out =
-                        new DigestOutputStream(new ChunkedOutputStream(sockOut),
-                                               digest)) {
+                        digested(gzipped(chunked(sockOut)), digest)) {
                         in.transferTo(out);
                     }
+                    var textDigest = HexFormat.of().formatHex(digest.digest());
 
                     /* Write out the request trailer. */
                     System.err.println("Writing request trailer...");
                     try (var out =
                         new PrintWriter(new UnclosedOutputStream(sockOut),
                                         false, StandardCharsets.US_ASCII)) {
-                        out.printf("X-Digest-SHA-512: %s\r\n",
-                                   HexFormat.of().formatHex(digest.digest()));
+                        out.printf("X-Digest-SHA-512: %s\r\n", textDigest);
                         out.print("\r\n");
                     }
+                    System.err.printf("Digest was %s%n", textDigest);
 
                     /* Receive the real response header. */
                     System.err.println("Receiving response header...");

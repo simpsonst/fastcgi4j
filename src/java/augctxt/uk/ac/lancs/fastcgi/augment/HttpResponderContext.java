@@ -40,7 +40,7 @@ package uk.ac.lancs.fastcgi.augment;
 
 import java.util.Collections;
 import java.util.Map;
-import uk.ac.lancs.http.encoding.Encoding;
+import uk.ac.lancs.http.encoding.InputEncoding;
 
 /**
  * Provides re-usable context to HTTP responder sessions.
@@ -53,7 +53,7 @@ public interface HttpResponderContext {
      * 
      * @return an immutable map from decoder name to implementation
      */
-    default Map<String, Encoding> decoders() {
+    default Map<String, InputEncoding> decoders() {
         return Collections.emptyMap();
     }
 }
