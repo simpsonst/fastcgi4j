@@ -39,20 +39,12 @@
 import java.io.BufferedInputStream;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Map;
-import uk.ac.lancs.cgi.Http;
 import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.ResponderSession;
 import uk.ac.lancs.fastcgi.app.FastCGIApplication;
 import uk.ac.lancs.fastcgi.app.FastCGIConfiguration;
-import uk.ac.lancs.http.encoding.Decoder;
-import uk.ac.lancs.http.encoding.EncodingContext;
-import uk.ac.lancs.http.encoding.IdentityProvider;
-import uk.ac.lancs.http.encoding.InputEncoding;
 import uk.ac.lancs.io.CountingInputStream;
 import uk.ac.lancs.io.CountingOutputStream;
-import uk.ac.lancs.mime.Tokenizer;
 
 /**
  * Responds by displaying the request parameters and body.
@@ -60,22 +52,6 @@ import uk.ac.lancs.mime.Tokenizer;
  * @author simpsons
  */
 public class RequestEchoer extends FastCGIApplication implements Responder {
-    private static final Map<String, InputEncoding> encodings;
-
-    static {
-        encodings = InputEncoding.getMapping(EncodingContext.CONTENT,
-                                             System.getProperties(),
-                                             "uk.ac.lancs.fastcgi.content");
-    }
-
-    private static InputEncoding getChunkSafeEncoding(String token) {
-        if (token.equals("chunked")) return IdentityProvider.INPUT_INSTANCE;
-        return encodings.get(token);
-    }
-
-    private static Decoder xferDecoder =
-        new Decoder(RequestEchoer::getChunkSafeEncoding);
-
     @Override
     public boolean init(FastCGIConfiguration config, String[] args) {
         return true;
@@ -83,22 +59,18 @@ public class RequestEchoer extends FastCGIApplication implements Responder {
 
     @Override
     public void respond(ResponderSession session) throws Exception {
-        List<String> xferEncs = Tokenizer.atomSequenceOf(session.parameters()
-            .get(Http.fieldNameAsCGI("Transfer-Encoding")));
-        var xferDecIn = xferDecoder.decode(session.in(), xferEncs);
         session.setField("Content-Type", "text/plain; charset=UTF-8");
         var outCounter = new Counter();
         var inCounter = new Counter();
         try (var out =
             new PrintWriter(new CountingOutputStream(session.out(), outCounter),
                             false, StandardCharsets.UTF_8)) {
-            out.printf("Unrecognized encodings: %s%n%n", xferEncs);
             for (var item : session.parameters().entrySet()) {
                 out.printf("%s: %s\n", item.getKey(), item.getValue());
             }
             out.println();
             try (var in =
-                new CountingInputStream(new BufferedInputStream(xferDecIn),
+                new CountingInputStream(new BufferedInputStream(session.in()),
                                         inCounter)) {
                 int c;
                 while ((c = in.read()) >= 0) {
