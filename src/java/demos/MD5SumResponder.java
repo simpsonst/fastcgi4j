@@ -50,10 +50,9 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.InflaterInputStream;
 import uk.ac.lancs.cgi.FormSubmission;
 import uk.ac.lancs.cgi.Http;
 import uk.ac.lancs.cgi.path.Navigator;
@@ -63,6 +62,10 @@ import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.ResponderSession;
 import uk.ac.lancs.fastcgi.augment.FormHandler;
 import uk.ac.lancs.fastcgi.augment.SessionAugment;
+import uk.ac.lancs.http.encoding.Decoder;
+import uk.ac.lancs.http.encoding.EncodingContext;
+import uk.ac.lancs.http.encoding.IdentityProvider;
+import uk.ac.lancs.http.encoding.InputEncoding;
 import uk.ac.lancs.mime.BinaryMessage;
 import uk.ac.lancs.mime.Message;
 import uk.ac.lancs.mime.MessageParser;
@@ -79,6 +82,24 @@ import uk.ac.lancs.mime.body.SmartMorgue;
  * @author simpsons
  */
 public class MD5SumResponder implements Responder {
+    private static final Map<String, InputEncoding> transferEncodings =
+        InputEncoding.getMapping(EncodingContext.TRANSFER,
+                                 System.getProperties(),
+                                 "uk.ac.lancs.fastrcgi.");
+
+    private static InputEncoding getChunkSafeEncoding(String name) {
+        switch (name) {
+        case "chunk":
+            return IdentityProvider.INPUT_INSTANCE;
+
+        default:
+            return transferEncodings.get(name);
+        }
+    }
+
+    private static final Decoder transferDecoder =
+        new Decoder(MD5SumResponder::getChunkSafeEncoding);
+
     private static final String[] subpaths = { "", "/", "baz/qux", "/baz/qux",
         "baz/qux/quux", "baz/qux/", "baz/yan/tan/", "baz/yan/tan", "/baz/",
         "/baz", "/foo:bar/baz", "/foó/bär/båz" };
@@ -116,20 +137,13 @@ public class MD5SumResponder implements Responder {
         {
             List<String> xferEncs = Tokenizer.atomSequenceOf(session
                 .parameters().get(Http.fieldNameAsCGI("Transfer-Encoding")));
-            InputStream in = session.in();
-            for (String enc : xferEncs.reversed()) {
-                if (enc.equals("chunked"))
-                    /* This is a lie. */
-                    continue;
-                else if (enc.equals("gzip"))
-                    in = new GZIPInputStream(in);
-                else if (enc.equals("deflate"))
-                    in = new InflaterInputStream(in);
-                else
-                    break;
-            }
+            InputStream in = transferDecoder.decode(session.in(), xferEncs);
+            if (!xferEncs.isEmpty())
+                throw new IOException("unknown transfer encoding: "
+                    + xferEncs.get(xferEncs.size() - 1));
+
             var md = MessageDigest.getInstance("md5");
-            try (var mdis = new DigestInputStream(session.in(), md)) {
+            try (var mdis = new DigestInputStream(in, md)) {
                 mdis.transferTo(OutputStream.nullOutputStream());
             }
             dig = md.digest();
