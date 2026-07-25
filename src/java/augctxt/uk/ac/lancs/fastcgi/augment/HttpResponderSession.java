@@ -60,7 +60,7 @@ import uk.ac.lancs.fastcgi.RequestableSession;
 import uk.ac.lancs.fastcgi.ResponderSession;
 import uk.ac.lancs.http.ChunkedInputStream;
 import uk.ac.lancs.http.cache.InboundCacheControl;
-import uk.ac.lancs.http.encoding.Decoder;
+import uk.ac.lancs.http.encoding.BodyDecoder;
 import uk.ac.lancs.http.field.Cap;
 import uk.ac.lancs.http.field.ExtensionManager;
 import uk.ac.lancs.http.field.FieldExtension;
@@ -290,7 +290,7 @@ public class HttpResponderSession {
                 }
             }
 
-            Decoder xferDecoder = new Decoder(ctxt.decoders()::get);
+            BodyDecoder xferDecoder = new BodyDecoder(ctxt.decoders()::get);
             in = xferDecoder.decode(in, transferEncodings);
             if (!transferEncodings.isEmpty())
                 throw new IOException("unknown transfer encoding "
@@ -300,7 +300,7 @@ public class HttpResponderSession {
         /* Apply unhandled content decoding. */
         if (rawRequestEncodings == null)
             rawRequestEncodings = tokens(CONTENT_ENCODING_PARAM);
-        Decoder contentDecoder = new Decoder(ctxt.decoders()::get);
+        BodyDecoder contentDecoder = new BodyDecoder(ctxt.decoders()::get);
         in = contentDecoder.decode(in, rawRequestEncodings);
 
         return in;

@@ -53,7 +53,7 @@ import java.util.function.Function;
  *
  * @author simpsons
  */
-public final class Decoder {
+public final class BodyDecoder {
     private final Function<? super String, ? extends InputEncoding> mapping;
 
     /**
@@ -62,7 +62,8 @@ public final class Decoder {
      * 
      * @param mapping the mapping from token to encoding
      */
-    public Decoder(Function<? super String, ? extends InputEncoding> mapping) {
+    public BodyDecoder(Function<? super String,
+                                ? extends InputEncoding> mapping) {
         this.mapping = mapping;
     }
 

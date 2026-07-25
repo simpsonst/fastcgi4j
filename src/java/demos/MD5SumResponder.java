@@ -62,7 +62,7 @@ import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.ResponderSession;
 import uk.ac.lancs.fastcgi.augment.FormHandler;
 import uk.ac.lancs.fastcgi.augment.SessionAugment;
-import uk.ac.lancs.http.encoding.Decoder;
+import uk.ac.lancs.http.encoding.BodyDecoder;
 import uk.ac.lancs.http.encoding.EncodingContext;
 import uk.ac.lancs.http.encoding.IdentityProvider;
 import uk.ac.lancs.http.encoding.InputEncoding;
@@ -97,8 +97,8 @@ public class MD5SumResponder implements Responder {
         }
     }
 
-    private static final Decoder transferDecoder =
-        new Decoder(MD5SumResponder::getChunkSafeEncoding);
+    private static final BodyDecoder transferDecoder =
+        new BodyDecoder(MD5SumResponder::getChunkSafeEncoding);
 
     private static final String[] subpaths = { "", "/", "baz/qux", "/baz/qux",
         "baz/qux/quux", "baz/qux/", "baz/yan/tan/", "baz/yan/tan", "/baz/",
