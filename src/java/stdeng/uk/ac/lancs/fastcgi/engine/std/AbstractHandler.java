@@ -457,8 +457,8 @@ abstract class AbstractHandler implements SessionHandler, Session {
                 });
                 try {
                     setStatus(501);
+                    outHeaders.clear();
                     setField("Content-Type", "text/plain; charset=UTF-8");
-                    /* TODO: Clear other headers. */
                     try (PrintWriter out =
                         new PrintWriter(new OutputStreamWriter(out(),
                                                                StandardCharsets.UTF_8))) {
