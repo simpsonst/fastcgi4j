@@ -43,6 +43,10 @@ import java.io.IOException;
 /**
  * Indicates that a stream has been aborted by the source.
  * 
+ * <p>
+ * Do not pass this exception to {@link Pipe#abort(Throwable)}; it will
+ * wrap the exception itself.
+ * 
  * @author simpsons
  */
 public class SourceAbortedException extends IOException {
