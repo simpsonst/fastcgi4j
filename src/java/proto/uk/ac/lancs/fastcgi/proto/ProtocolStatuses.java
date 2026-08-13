@@ -78,8 +78,11 @@ public final class ProtocolStatuses {
      */
     public static final byte UNKNOWN_ROLE = 3;
 
+    private static final String UNKNOWN_PREFIX = "PROTOCOL_STATUS_";
+
     /**
-     * Get a string representation of a protocol status.
+     * Get a string representation of a protocol status. An unknown
+     * numeric value is prefixed with {@value #UNKNOWN_PREFIX}.
      * 
      * @param status the status
      * 
@@ -92,7 +95,7 @@ public final class ProtocolStatuses {
         case CANT_MPX_CONN -> "CANT_MPX_CONN";
         case OVERLOADED -> "OVERLOADED";
         case UNKNOWN_ROLE -> "UNKNOWN_ROLE";
-        default -> "PROTOCOL_STATUS_" + status;
+        default -> UNKNOWN_PREFIX + status;
         };
     }
 }
