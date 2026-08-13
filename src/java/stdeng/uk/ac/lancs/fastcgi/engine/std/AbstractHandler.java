@@ -60,9 +60,11 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
+import uk.ac.lancs.fastcgi.ConfigurationException;
 import uk.ac.lancs.fastcgi.Diagnostics;
 import uk.ac.lancs.fastcgi.OverloadException;
 import uk.ac.lancs.fastcgi.Session;
+import uk.ac.lancs.fastcgi.SessionException;
 import uk.ac.lancs.fastcgi.proto.ProtocolStatuses;
 import uk.ac.lancs.fastcgi.proto.serial.ParamReader;
 import uk.ac.lancs.fastcgi.proto.serial.RecordIOException;
@@ -167,7 +169,7 @@ abstract class AbstractHandler implements SessionHandler, Session {
      * is not transmitted until the standard output is written to,
      * flushed or closed.
      */
-    int statusCode = 200;
+    int statusCode = ResponseCodes.OK;
 
     /**
      * Holds the CGI/HTTP response headers. Names are case-insensitive.
@@ -389,19 +391,24 @@ abstract class AbstractHandler implements SessionHandler, Session {
      * interrupted. This can happen if another session detects failure
      * in the transport connection, for example. The request is
      * terminated with exit status {@code -2} and
-     * {@link ProtocolStatuses#OVERLOADED}.
+     * {@link ProtocolStatuses#REQUEST_COMPLETE}.
      * 
      * @throws OverloadException if the application deems itself too
      * busy to handle new (or even current) requests. The request is
-     * terminated with exit status {@code -1} and
-     * {@link ProtocolStatuses#REQUEST_COMPLETE}.
+     * terminated with exit status {@code 1} and
+     * {@link ProtocolStatuses#OVERLOADED}.
+     * 
+     * @throws ConfigurationException if the application encounters an
+     * internal error it cannot handle. The request is terminated with
+     * {@code 3} and {@link ProtocolStatuses#REQUEST_COMPLETE}.
      * 
      * @throws Throwable if any other abnormal event occurs. An attempt
      * is made to send an HTTP 501 Server Error response with diagnostic
      * information. The request is then terminated with exit status
-     * {@code -2} and {@link ProtocolStatuses#REQUEST_COMPLETE}.
+     * {@code 2} and {@link ProtocolStatuses#REQUEST_COMPLETE}.
      */
-    abstract void innerRun() throws Exception;
+    abstract void
+        innerRun() throws IOException, SessionException, InterruptedException;
 
     /**
      * Run the application-specific behaviour of this handler. This
@@ -424,16 +431,6 @@ abstract class AbstractHandler implements SessionHandler, Session {
                 } finally {
                     /* Discard any remaining interruptions. */
                     Thread.interrupted();
-
-                    try {
-                        out().close();
-                    } finally {
-                        try {
-                            err().close();
-                        } finally {
-                            logger.finer(() -> msg("app-exit"));
-                        }
-                    }
                 }
             } catch (RecordIOException ex) {
                 ex.unpack();
@@ -445,6 +442,11 @@ abstract class AbstractHandler implements SessionHandler, Session {
                 logger.warning(() -> msg("overload"));
                 appStatus = 2;
                 pStat = ProtocolStatuses.OVERLOADED;
+                completed = true;
+            } catch (ConfigurationException ex) {
+                logger.warning(() -> msg("misconfiguration"));
+                appStatus = 3;
+                pStat = ProtocolStatuses.REQUEST_COMPLETE;
                 completed = true;
             } catch (Exception | Error ex) {
                 logger.severe(() -> {
@@ -507,6 +509,15 @@ abstract class AbstractHandler implements SessionHandler, Session {
         } finally {
             logger.fine(() -> msg("app-thread-exit"));
             Thread.currentThread().setName("fastcgi-sess-unused");
+
+            try {
+                out().close();
+            } catch (IOException ex) {
+                logger.info(() -> msg("close(out): %s", ex.getMessage()));
+            } finally {
+                err().close();
+                logger.finer(() -> msg("app-exit"));
+            }
         }
     }
 

@@ -48,6 +48,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -58,8 +59,10 @@ import uk.ac.lancs.cgi.Http;
 import uk.ac.lancs.cgi.path.Navigator;
 import uk.ac.lancs.cgi.path.PathConfiguration;
 import uk.ac.lancs.cgi.path.PathContext;
+import uk.ac.lancs.fastcgi.ConfigurationException;
 import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.ResponderSession;
+import uk.ac.lancs.fastcgi.SessionException;
 import uk.ac.lancs.fastcgi.augment.FormHandler;
 import uk.ac.lancs.fastcgi.augment.SessionAugment;
 import uk.ac.lancs.http.encoding.BodyDecoder;
@@ -127,7 +130,10 @@ public class MD5SumResponder implements Responder {
         new FormHandler(new MessageParser(morgue), StandardCharsets.UTF_8);
 
     @Override
-    public void respond(ResponderSession session) throws Exception {
+    public void respond(ResponderSession session)
+        throws IOException,
+            SessionException,
+            InterruptedException {
         SessionAugment augment = new SessionAugment(session);
         PathContext<String> pathCtxt =
             pathConfig.recognize(session.parameters());
@@ -142,11 +148,15 @@ public class MD5SumResponder implements Responder {
                 throw new IOException("unknown transfer encoding: "
                     + xferEncs.get(xferEncs.size() - 1));
 
-            var md = MessageDigest.getInstance("md5");
-            try (var mdis = new DigestInputStream(in, md)) {
-                mdis.transferTo(OutputStream.nullOutputStream());
+            try {
+                var md = MessageDigest.getInstance("md5");
+                try (var mdis = new DigestInputStream(in, md)) {
+                    mdis.transferTo(OutputStream.nullOutputStream());
+                }
+                dig = md.digest();
+            } catch (NoSuchAlgorithmException ex) {
+                throw new ConfigurationException("obtaining digest", ex);
             }
-            dig = md.digest();
         }
 
         if (navigator.resource().isEmpty()) {

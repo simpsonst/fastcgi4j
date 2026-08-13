@@ -37,6 +37,7 @@
  */
 
 import java.io.BufferedInputStream;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import uk.ac.lancs.fastcgi.Responder;
@@ -58,7 +59,7 @@ public class RequestEchoer extends FastCGIApplication implements Responder {
     }
 
     @Override
-    public void respond(ResponderSession session) throws Exception {
+    public void respond(ResponderSession session) throws IOException {
         session.setField("Content-Type", "text/plain; charset=UTF-8");
         var outCounter = new Counter();
         var inCounter = new Counter();

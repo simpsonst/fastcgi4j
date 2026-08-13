@@ -44,9 +44,9 @@ public interface Authorizer {
      * 
      * @throws IOException if an I/O error occurs in processing any of
      * the streams of the session context
-     * 
-     * @throws Exception if something else goes wrong, to be logged by
-     * the library
      */
-    void authorize(AuthorizerSession session) throws Exception;
+    void authorize(AuthorizerSession session)
+        throws IOException,
+            SessionException,
+            InterruptedException;
 }

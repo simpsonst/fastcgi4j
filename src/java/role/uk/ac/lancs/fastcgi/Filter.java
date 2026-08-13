@@ -44,9 +44,9 @@ public interface Filter {
      * 
      * @throws IOException if an I/O error occurs in processing any of
      * the streams of the session context
-     * 
-     * @throws Exception if something else goes wrong, to be logged by
-     * the library
      */
-    void filter(FilterSession session) throws Exception;
+    void filter(FilterSession session)
+        throws SessionException,
+            IOException,
+            InterruptedException;
 }

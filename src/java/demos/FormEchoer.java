@@ -43,11 +43,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import uk.ac.lancs.cgi.FormSubmission;
 import uk.ac.lancs.fastcgi.Responder;
+import uk.ac.lancs.fastcgi.ResponderSession;
 import uk.ac.lancs.fastcgi.app.FastCGIApplication;
 import uk.ac.lancs.fastcgi.app.FastCGIConfiguration;
-import uk.ac.lancs.fastcgi.ResponderSession;
-import uk.ac.lancs.fastcgi.augment.SessionAugment;
 import uk.ac.lancs.fastcgi.augment.FormHandler;
+import uk.ac.lancs.fastcgi.augment.SessionAugment;
 import uk.ac.lancs.mime.BinaryMessage;
 import uk.ac.lancs.mime.Message;
 import uk.ac.lancs.mime.MessageParser;
@@ -73,7 +73,7 @@ public class FormEchoer extends FastCGIApplication implements Responder {
     }
 
     @Override
-    public void respond(ResponderSession session) throws Exception {
+    public void respond(ResponderSession session) throws IOException {
         SessionAugment augment = new SessionAugment(session);
         final FormSubmission submission = formHandler.get(session);
         try (PrintWriter out = augment.textOut("plain")) {

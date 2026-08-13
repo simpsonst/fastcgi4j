@@ -37,13 +37,14 @@
  */
 
 import java.io.BufferedOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import uk.ac.lancs.cgi.FormSubmission;
 import uk.ac.lancs.fastcgi.Responder;
+import uk.ac.lancs.fastcgi.ResponderSession;
 import uk.ac.lancs.fastcgi.app.FastCGIApplication;
 import uk.ac.lancs.fastcgi.app.FastCGIConfiguration;
-import uk.ac.lancs.fastcgi.ResponderSession;
 import uk.ac.lancs.fastcgi.augment.FormHandler;
 import uk.ac.lancs.io.DiagnosticInputStream;
 import uk.ac.lancs.io.LimitedInputStream;
@@ -71,7 +72,7 @@ public class Generator extends FastCGIApplication implements Responder {
         new FormHandler(new MessageParser(morgue), StandardCharsets.UTF_8);
 
     @Override
-    public void respond(ResponderSession session) throws Exception {
+    public void respond(ResponderSession session) throws IOException {
         final FormSubmission submission = formHandler.get(session);
         int lineLength = 64;
         {

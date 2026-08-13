@@ -66,7 +66,7 @@ import uk.ac.lancs.http.ResponseCodes;
  */
 public class DiagnosticAuthorizer implements Authorizer {
     @Override
-    public void authorize(AuthorizerSession session) throws Exception {
+    public void authorize(AuthorizerSession session) {
         String apacheRole = session.parameters().get("FCGI_APACHE_ROLE");
         for (var e : session.parameters().entrySet()) {
             System.err.printf("%s: %s\n", e.getKey(), e.getValue());

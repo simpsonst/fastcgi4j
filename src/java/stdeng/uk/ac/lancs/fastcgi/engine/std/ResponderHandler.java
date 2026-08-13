@@ -48,6 +48,7 @@ import java.util.logging.Logger;
 import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.ResponderSession;
 import uk.ac.lancs.fastcgi.SessionAbortedException;
+import uk.ac.lancs.fastcgi.SessionException;
 import uk.ac.lancs.io.infpipe.Pipe;
 import uk.ac.lancs.io.infpipe.SinkClosedException;
 
@@ -84,7 +85,7 @@ class ResponderHandler extends AbstractHandler implements ResponderSession {
     }
 
     @Override
-    void innerRun() throws Exception {
+    void innerRun() throws IOException, SessionException, InterruptedException {
         app.respond(this);
     }
 

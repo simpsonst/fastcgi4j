@@ -38,9 +38,11 @@
 
 package uk.ac.lancs.fastcgi.engine.std;
 
+import java.io.IOException;
 import java.util.Objects;
 import uk.ac.lancs.fastcgi.Authorizer;
 import uk.ac.lancs.fastcgi.AuthorizerSession;
+import uk.ac.lancs.fastcgi.SessionException;
 
 /**
  * Handles Authorizer sessions.
@@ -63,7 +65,7 @@ class AuthorizerHandler extends AbstractHandler implements AuthorizerSession {
     }
 
     @Override
-    void innerRun() throws Exception {
+    void innerRun() throws IOException, SessionException, InterruptedException {
         app.authorize(this);
     }
 

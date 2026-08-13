@@ -63,9 +63,9 @@ public interface Responder {
      * 
      * @throws IOException if an I/O error occurs in processing any of
      * the streams of the session context
-     * 
-     * @throws Exception if something else goes wrong, to be logged by
-     * the library
      */
-    void respond(ResponderSession session) throws Exception;
+    void respond(ResponderSession session)
+        throws SessionException,
+            IOException,
+            InterruptedException;
 }

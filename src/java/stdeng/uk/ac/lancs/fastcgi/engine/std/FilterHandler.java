@@ -48,6 +48,7 @@ import java.util.logging.Logger;
 import uk.ac.lancs.fastcgi.Filter;
 import uk.ac.lancs.fastcgi.FilterSession;
 import uk.ac.lancs.fastcgi.SessionAbortedException;
+import uk.ac.lancs.fastcgi.SessionException;
 import uk.ac.lancs.io.infpipe.Pipe;
 import uk.ac.lancs.io.infpipe.SinkClosedException;
 
@@ -83,7 +84,7 @@ class FilterHandler extends AbstractHandler implements FilterSession {
     }
 
     @Override
-    void innerRun() throws Exception {
+    void innerRun() throws IOException, SessionException, InterruptedException {
         app.filter(this);
     }
 
