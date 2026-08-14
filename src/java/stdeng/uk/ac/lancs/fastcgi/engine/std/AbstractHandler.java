@@ -457,6 +457,12 @@ abstract class AbstractHandler implements SessionHandler, Session {
                     }
                     return msg("ex:%s %s %s", st, ex, ex.getMessage());
                 });
+                /* TODO: Instead of (or in addition to) detecting the
+                 * illegal state exception, we should know whether it's
+                 * safe to write a message of our own, because
+                 * statusCode will be non-negative.
+                 * ensureResponseHeader() sets it to -1 after sending
+                 * the header. */
                 try {
                     setStatus(501);
                     outHeaders.clear();
