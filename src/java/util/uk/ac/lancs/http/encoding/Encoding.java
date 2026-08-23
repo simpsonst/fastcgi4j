@@ -52,7 +52,7 @@ public interface Encoding {
      * set may be immutable.
      * 
      * @return the set of recognized names, including that returned by
-     * {@link #name()}
+     * {@link OutputEncoding#name()}
      */
     Collection<? extends CharSequence> names();
 }

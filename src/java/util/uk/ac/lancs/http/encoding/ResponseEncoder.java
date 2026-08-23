@@ -328,7 +328,7 @@ public final class ResponseEncoder {
      * 
      * <ul>
      * 
-     * <li>{@link #offerCompression()}
+     * <li>{@link #suggestContentCompression()}
      * 
      * </ul>
      * 

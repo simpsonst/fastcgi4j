@@ -85,6 +85,10 @@ public class IdentityProvider implements EncodingProvider {
 
     private static final Collection<String> NAMES = Set.of(NAME);
 
+    /**
+     * A sole instance of the identity encoding that can be used for all
+     * input
+     */
     public static final InputEncoding INPUT_INSTANCE = new InputEncoding() {
         @Override
         public InputStream decode(InputStream in) {

@@ -79,38 +79,44 @@ import uk.ac.lancs.mime.MediaType;
 public final class SessionAugment {
     private final Session session;
 
-    private static final String ACCEPT_ENCODING_VAR_NAME =
-        Http.fieldNameAsCGI("Accept-Encoding");
+    private static final String ACCEPT_ENCODING_FIELD = "Accept-Encoding";
 
-    private static final String TE_VAR_NAME = Http.fieldNameAsCGI("TE");
+    private static final String ACCEPT_ENCODING_VAR =
+        Http.fieldNameAsCGI(ACCEPT_ENCODING_FIELD);
+
+    private static final String TE_VAR = Http.fieldNameAsCGI("TE");
 
     /**
-     * Get the client's encoding preference. This is simply an
-     * application of {@link #getAtomPreference(CharSequence)} to the
-     * <samp>Accept-Encoding</samp> request header field.
+     * Get the client's encoding preference. This is extracted from the
+     * {@value #ACCEPT_ENCODING_FIELD} request header field if present.
+     * {@link Negotiation#getAtomPreference(CharSequence)} is used to
+     * parse the field value.
      * 
      * @return an immutable map of encodings to quality parameters
      */
     public Map<String, Float> getContentEncodingPreference() {
-        return getEncodingPreference(ACCEPT_ENCODING_VAR_NAME);
+        return getEncodingPreference(ACCEPT_ENCODING_VAR);
     }
 
     private Map<String, Float> getEncodingPreference(String varName) {
         return Negotiation.getAtomPreference(session.parameters().get(varName));
     }
 
-    private static final String ACCEPT_VAR_NAME = Http.fieldNameAsCGI("Accept");
+    private static final String ACCEPT_FIELD = "Accept";
+
+    private static final String ACCEPT_VAR = Http.fieldNameAsCGI(ACCEPT_FIELD);
 
     /**
-     * Get the client's media-type preferences. This simply passes the
-     * <samp>Accept</samp> request header field to
-     * {@link #getMediaTypePreference(CharSequence)}.
+     * Get the client's media-type preferences. This is extracted from
+     * the {@value #ACCEPT_FIELD} request header field if present.
+     * {@link Negotiation#getMediaTypePreference(CharSequence)} is used
+     * to parse the field value.
      * 
      * @return an immutable of the client's media-type preferences
      */
     public Map<MediaGroup, Float> getMediaTypePreference() {
         return Negotiation
-            .getMediaTypePreference(session.parameters().get(ACCEPT_VAR_NAME));
+            .getMediaTypePreference(session.parameters().get(ACCEPT_VAR));
     }
 
     /**
@@ -156,6 +162,10 @@ public final class SessionAugment {
                                            getEncodingOffer(EncodingContext.TRANSFER,
                                                             "transfer.");
 
+    private static final String CONTENT_ENCODING_VAR = "Content-Encoding";
+
+    private static final String TRANSFER_ENCODING_VAR = "Transfer-Encoding";
+
     private final ResponseEncoder.Context responseEncoderContext =
         new ResponseEncoder.Context() {
             @Override
@@ -171,23 +181,28 @@ public final class SessionAugment {
             @Override
             public Map<? extends String, ? extends Number>
                 transferPreference() {
-                return getEncodingPreference(TE_VAR_NAME);
+                return getEncodingPreference(TE_VAR);
             }
 
             @Override
             public void setContentEncoding(List<? extends CharSequence> names) {
-                setEncoding("Content-Encoding", names);
+                setEncoding(CONTENT_ENCODING_VAR, names);
             }
 
             @Override
             public void
                 setTransferEncoding(List<? extends CharSequence> names) {
-                setEncoding("Transfer-Encoding", names);
+                setEncoding(TRANSFER_ENCODING_VAR, names);
             }
         };
 
     private final ResponseEncoder responseEncoder;
 
+    /**
+     * Get the encoder for the response body.
+     * 
+     * @return the response body encoder
+     */
     public ResponseEncoder responseEncoder() {
         return responseEncoder;
     }
@@ -195,20 +210,10 @@ public final class SessionAugment {
     /**
      * Get the output stream with encodings applied. On the first call,
      * encodings specified by other calls are applied to the basic
-     * session's stream, and the <samp>Content-Encoding</samp> header
-     * field is set. Subsequent calls will yield the same stream.
-     * Calling this method prevents the calling of other methods that
-     * modify encoding.
-     * 
-     * <p>
-     * Methods that modify encodings, and therefore cannot be called
-     * after this one, include:
-     * 
-     * <ul>
-     * 
-     * <li>{@link #offerCompression()}
-     * 
-     * </ul>
+     * session's stream, and the {@value #CONTENT_ENCODING_VAR} and
+     * {@value #TRANSFER_ENCODING_VAR} header fields are set. Subsequent
+     * calls will yield the same stream. Calling this method prevents
+     * the calling of other methods that modify encoding.
      * 
      * <p>
      * Methods that implicitly call this method include:

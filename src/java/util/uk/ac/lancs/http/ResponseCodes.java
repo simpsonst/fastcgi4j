@@ -222,8 +222,11 @@ public final class ResponseCodes {
     public static final int NOT_MODIFIED = 304;
 
     /**
-     * @see <a
-     * href=" https://www.rfc-editor.org/info/rfc2616/#section-10.3.6">RFC2616
+     * Indicates that the client must re-issue the request through a
+     * given proxy.
+     * 
+     * @see <a href=
+     * "https://www.rfc-editor.org/info/rfc2616/#section-10.3.6">RFC2616
      * &mdash; 305 Use Proxy</a>
      * 
      * @deprecated This is <a href=
@@ -459,8 +462,8 @@ public final class ResponseCodes {
      * Indicates that the source or destination resource for a given
      * method is locked.
      * 
-     * @see <a
-     * href="https://www.rfc-editor.org/info/rfc4918/#section-11.3>RFC4918
+     * @see <a href=
+     * "https://www.rfc-editor.org/info/rfc4918/#section-11.3">RFC4918
      * &mdash; 423 Locked</a>
      */
     public static final int LOCKED = 423;
@@ -593,8 +596,8 @@ public final class ResponseCodes {
      * Indicates that the server is temporarily unable to store the
      * representation.
      * 
-     * @see <a
-     * href="https://datatracker.ietf.org/doc/html/rfc4918#section-11.5>RFC4918
+     * @see <a href=
+     * "https://datatracker.ietf.org/doc/html/rfc4918#section-11.5">RFC4918
      * &mdash; Insufficient Storage</a>
      */
     public static final int INSUFFICIENT_STORAGE = 507;
