@@ -76,15 +76,21 @@ import java.util.Locale;
 public final class Timing {
     static {
         Collection<DateTimeFormatter> formats = new ArrayList<>();
+
+        /* The following format examples use 784111777 seconds past
+         * 1970-01-01T00:00:00+00:00. */
+
         /* RFC1123 "Sun, 06 Nov 1994 08:49:37 GMT" */
         formats.add(DateTimeFormatter.RFC_1123_DATE_TIME);
+
         /* RFC1036 "Sunday, 06-Nov-94 08:49:37 GMT" */
-        formats.add(DateTimeFormatter.ofPattern("EEEE, dd-LLL-uu kk:mm:ss z",
-                                                Locale.UK));
-        /* asctime() "Sun Nov 6 08:49:37 1994" */
         formats.add(DateTimeFormatter
-            .ofPattern("EEE LLL d kk:mm:ss yyyy", Locale.US)
+            .ofPattern("EEEE, dd-LLL-uu kk:mm:ss z", Locale.UK)
             .withZone(ZoneOffset.UTC));
+
+        /* asctime() "Sun Nov 6 08:49:37 1994" */
+        formats.add(DateTimeFormatter.ofPattern("EEE LLL d kk:mm:ss yyyy",
+                                                Locale.US));
         FORMATS = List.copyOf(formats);
     }
 
