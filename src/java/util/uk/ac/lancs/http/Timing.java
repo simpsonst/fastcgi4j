@@ -88,9 +88,10 @@ public final class Timing {
             .ofPattern("EEEE, dd-LLL-uu kk:mm:ss z", Locale.UK)
             .withZone(ZoneOffset.UTC));
 
-        /* asctime() "Sun Nov 6 08:49:37 1994" */
-        formats.add(DateTimeFormatter.ofPattern("EEE LLL d kk:mm:ss yyyy",
-                                                Locale.US));
+        /* asctime() "Sun Nov 6 08:49:37 1994", assumed to be UTC */
+        formats.add(DateTimeFormatter
+            .ofPattern("EEE LLL d kk:mm:ss yyyy", Locale.US)
+            .withZone(ZoneOffset.UTC));
         FORMATS = List.copyOf(formats);
     }
 
