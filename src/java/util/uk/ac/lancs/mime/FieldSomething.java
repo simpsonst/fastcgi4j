@@ -46,6 +46,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
+ * This is going to be something to do with MIME encoding in text field
+ * values. Not sure where to go with it.
  *
  * @author simpsons
  */
