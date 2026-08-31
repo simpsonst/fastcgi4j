@@ -1,7 +1,7 @@
 // -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
 
 /*
- * Copyright (c) 2022,2023,2026, Lancaster University
+ * Copyright (c) 2026, Lancaster University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,53 +38,20 @@
 
 package uk.ac.lancs.http.field;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 /**
- * Represents the namespaces with no prefix.
+ * Indicates that an incoming HTTP field has a malformed value.
  *
  * @author simpsons
  */
-abstract class NativeNamespace extends StaticNamespace {
-    private static final String BAD_FIELD_PATTERN_TEXT = "^([0-9]{2,}|[Xx])-";
-
-    private static final Pattern BAD_FIELD_PATTERN =
-        Pattern.compile(BAD_FIELD_PATTERN_TEXT);
-
+public class FieldSyntaxException extends RuntimeException {
     /**
-     * {@inheritDoc}
+     * Create an exception with a detail message and a cause.
      * 
-     * @return {@code true} always
+     * @param message the detail message
+     * 
+     * @param cause the cause
      */
-    @Override
-    public boolean isNative() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @return {@code false} always
-     */
-    @Override
-    public boolean isExperimental() {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc} This fails if the core name matches
-     * {@value #BAD_FIELD_PATTERN_TEXT}
-     * 
-     * @param core the core name for the field
-     * 
-     * @return {@inheritDoc}
-     */
-    @Override
-    public FieldId of(CharSequence core) {
-        Matcher m = BAD_FIELD_PATTERN.matcher(core);
-        if (m.matches()) throw new IllegalArgumentException("bad native"
-            + " field core: " + core);
-        return super.of(core);
+    public FieldSyntaxException(String message, Throwable cause) {
+        super(message, cause);
     }
 }

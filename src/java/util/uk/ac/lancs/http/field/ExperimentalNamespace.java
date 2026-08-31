@@ -48,20 +48,10 @@ abstract class ExperimentalNamespace extends StaticNamespace {
     /**
      * {@inheritDoc}
      * 
-     * @return {@code false} always
+     * @return always {@link Kind#EXPERIMENTAL}
      */
     @Override
-    public boolean isNative() {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @return {@code true} always
-     */
-    @Override
-    public boolean isExperimental() {
-        return true;
+    public Kind kind() {
+        return Kind.EXPERIMENTAL;
     }
 }

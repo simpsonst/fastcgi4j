@@ -52,10 +52,10 @@ import java.util.stream.Collectors;
  * 
  * @author simpsons
  */
-public final class InputStreamCap implements Cap {
+public final class InputStreamCap implements InputCap {
     private final Map<FieldId, List<String>> fields;
 
-    private final Cap backup;
+    private final InputCap backup;
 
     /**
      * Create an immutable request cap from a stream. The stream is
@@ -73,7 +73,7 @@ public final class InputStreamCap implements Cap {
      * @throws IOException if an I/O error occurs in reading the stream
      */
     public InputStreamCap(ExtensionManager extMgr, InputStream in,
-                          Map<String, FieldId> expected, Cap backup)
+                          Map<String, FieldId> expected, InputCap backup)
         throws IOException {
         this.backup = backup;
         Map<FieldId, List<String>> fields = new HashMap<>();
@@ -82,6 +82,7 @@ public final class InputStreamCap implements Cap {
 
         this.fields = fields.entrySet().stream().collect(Collectors
             .toMap(Map.Entry::getKey, e -> List.copyOf(e.getValue())));
+        throw new UnsupportedOperationException("unimplemented"); // TODO
     }
 
     @Override
@@ -92,5 +93,10 @@ public final class InputStreamCap implements Cap {
             return backup.get(id);
         }
         return val;
+    }
+
+    @Override
+    public Map<String, String> attributes(FieldNamespace ns) {
+        throw new UnsupportedOperationException("unimplemented"); // TODO
     }
 }

@@ -39,8 +39,6 @@
 package uk.ac.lancs.http.field;
 
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -64,25 +62,17 @@ public final class FieldExtension extends FieldNamespace {
      */
     public final FieldStrength strength;
 
-    /**
-     * Specifies attributes of the extension. The contents are
-     * immutable.
-     */
-    public final Map<String, String> attrs;
-
-    private FieldExtension(URI nsuri, FieldScope scope, FieldStrength strength,
-                           Map<String, String> exts) {
+    private FieldExtension(URI nsuri, FieldScope scope,
+                           FieldStrength strength) {
         this.nsuri = nsuri;
         this.scope = scope;
         this.strength = strength;
-        this.attrs = exts;
     }
 
     /**
      * Builds an extension in stages. The default scope is
      * {@link FieldScope#END_TO_END}. The default strength is
-     * {@link FieldStrength#OPTIONAL}. The default set of extensions is
-     * empty.
+     * {@link FieldStrength#OPTIONAL}.
      */
     public static class Builder {
         final URI nsuri;
@@ -91,48 +81,8 @@ public final class FieldExtension extends FieldNamespace {
 
         FieldStrength strength = FieldStrength.OPTIONAL;
 
-        Map<String, String> attrs = new HashMap<>();
-
         Builder(URI nsuri) {
             this.nsuri = nsuri;
-        }
-
-        /**
-         * Add or change an attribute.
-         * 
-         * @param name the attribute name
-         * 
-         * @param value the attribute value
-         * 
-         * @return this object
-         * 
-         * @throws IllegalArgumentException if either the name or value
-         * are illegal
-         * 
-         * @throws NullPointerException if either argument is
-         * {@code null}
-         */
-        public Builder attribute(CharSequence name, CharSequence value) {
-            Objects.requireNonNull(name, "attr.name");
-            Objects.requireNonNull(value, "attr.value");
-            if ("ns".equals(name))
-                throw new IllegalArgumentException("reserved attribute ns");
-            attrs.put(name.toString(), value.toString());
-            return this;
-        }
-
-        /**
-         * Add several attributes.
-         * 
-         * @param attrs the set of attributes to add
-         * 
-         * @return this object
-         */
-        public Builder attributes(Map<? extends CharSequence,
-                                      ? extends CharSequence> attrs) {
-            for (var ent : attrs.entrySet())
-                attribute(ent.getKey(), ent.getValue());
-            return this;
         }
 
         /**
@@ -265,8 +215,7 @@ public final class FieldExtension extends FieldNamespace {
          * @constructor
          */
         public FieldExtension complete() {
-            return new FieldExtension(nsuri, scope, strength,
-                                      Map.copyOf(attrs));
+            return new FieldExtension(nsuri, scope, strength);
         }
     }
 
@@ -301,6 +250,11 @@ public final class FieldExtension extends FieldNamespace {
         return new Builder(URI.create(nsuri.trim()));
     }
 
+    @Override
+    public String toString() {
+        return nsuri.toString() + '/' + scope + '/' + strength;
+    }
+
     /**
      * Get the hash code for this object.
      * 
@@ -312,7 +266,6 @@ public final class FieldExtension extends FieldNamespace {
         hash = 29 * hash + Objects.hashCode(this.nsuri);
         hash = 29 * hash + Objects.hashCode(this.scope);
         hash = 29 * hash + Objects.hashCode(this.strength);
-        hash = 29 * hash + Objects.hashCode(this.attrs);
         return hash;
     }
 
@@ -333,28 +286,17 @@ public final class FieldExtension extends FieldNamespace {
         final FieldExtension other = (FieldExtension) obj;
         if (!Objects.equals(this.nsuri, other.nsuri)) return false;
         if (this.scope != other.scope) return false;
-        if (this.strength != other.strength) return false;
-        return Objects.equals(this.attrs, other.attrs);
+        return this.strength == other.strength;
     }
 
     /**
      * {@inheritDoc}
      * 
-     * @return always {@code false}
+     * @return always {@link Kind#EXTENSION}
      */
     @Override
-    public boolean isNative() {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @return always {@code false}
-     */
-    @Override
-    public boolean isExperimental() {
-        return false;
+    public Kind kind() {
+        return Kind.EXTENSION;
     }
 
     /**

@@ -41,9 +41,9 @@ package uk.ac.lancs.http.field;
 /**
  * Allows fields with the same core name to be distinguished. Regular
  * fields can be defined using
- * <code>{@linkplain #NATIVE_END_TO_END}.{@linkplain #of(CharSequence) of}(core)</code>
+ * <code>{@link #STANDARD_END_TO_END}.{@linkplain #of(CharSequence) of}(core)</code>
  * or
- * <code>{@linkplain #NATIVE_HOP_BY_HOP}.{@linkplain #of(CharSequence) of}(core)</code>.
+ * <code>{@link #STANDARD_HOP_BY_HOP}.{@linkplain #of(CharSequence) of}(core)</code>.
  * A {@link FieldExtension} is a user-defined namespace.
  * 
  * @author simpsons
@@ -52,20 +52,36 @@ public abstract class FieldNamespace {
     FieldNamespace() {}
 
     /**
-     * Test whether this is the native namespace.
-     * 
-     * @return {@code true} if this is the native namespace;
-     * {@code false} otherwise
+     * Describes the kind of a namespace.
      */
-    public abstract boolean isNative();
+    public static enum Kind {
+        /**
+         * Identifies the standard namespace. Fields in this namespace
+         * have no prefix, and no namespace URI.
+         */
+        STANDARD,
+
+        /**
+         * Identifies the experimental namespace. Fields in this
+         * namespace have the prefix <samp>X-</samp>, but no namespace
+         * URI.
+         */
+        EXPERIMENTAL,
+
+        /**
+         * Identifies an extension namespace. Fields in this namespace
+         * have a numeric prefix of at least two digits and a dash, and
+         * are distinguished by a namespace URI.
+         */
+        EXTENSION;
+    }
 
     /**
-     * Test whether this is the experimental namespace.
+     * Get the kind of this namespace.
      * 
-     * @return {@code true} if this is the experimental namespace;
-     * {@code false} otherwise
+     * @return the namespace's kind
      */
-    public abstract boolean isExperimental();
+    public abstract Kind kind();
 
     /**
      * Get the scope of this namespace.
@@ -100,12 +116,12 @@ public abstract class FieldNamespace {
     }
 
     /**
-     * Identifies the native end-to-end namespace. This rejects core
+     * Identifies the standard end-to-end namespace. This rejects core
      * names beginning with two or more digits and a dash, or with
      * <samp>X-</samp> (case-insensitive).
      */
-    public static final FieldNamespace NATIVE_END_TO_END =
-        new NativeNamespace() {
+    public static final FieldNamespace STANDARD_END_TO_END =
+        new StandardNamespace() {
             @Override
             public FieldScope scope() {
                 return FieldScope.END_TO_END;
@@ -113,12 +129,12 @@ public abstract class FieldNamespace {
         };
 
     /**
-     * Identifies the native hop-by-hop namespace. This rejects core
+     * Identifies the standard hop-by-hop namespace. This rejects core
      * names beginning with two or more digits and a dash, or with
      * <samp>X-</samp> (case-insensitive).
      */
-    public static final FieldNamespace NATIVE_HOP_BY_HOP =
-        new NativeNamespace() {
+    public static final FieldNamespace STANDARD_HOP_BY_HOP =
+        new StandardNamespace() {
             @Override
             public FieldScope scope() {
                 return FieldScope.HOP_BY_HOP;

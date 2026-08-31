@@ -38,22 +38,43 @@
 
 package uk.ac.lancs.http.field;
 
-import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
- * Holds the fields of a request/response header/trailer.
- * 
+ * Represents the namespaces with no prefix.
+ *
  * @author simpsons
  */
-public interface Cap {
+abstract class StandardNamespace extends StaticNamespace {
+    private static final String BAD_FIELD_PATTERN_TEXT = "^([0-9]{2,}|[Xx])-";
+
+    private static final Pattern BAD_FIELD_PATTERN =
+        Pattern.compile(BAD_FIELD_PATTERN_TEXT);
+
     /**
-     * Get the raw values of a field. Some entries may contain multiple
-     * comma-separated values.
+     * {@inheritDoc}
      * 
-     * @param id the field to extract
-     * 
-     * @return the field's raw values in transmission order; possibly
-     * immutable for an inward message
+     * @return always {@link Kind#STANDARD}
      */
-    List<String> get(FieldId id);
+    @Override
+    public Kind kind() {
+        return Kind.STANDARD;
+    }
+
+    /**
+     * {@inheritDoc} This fails if the core name matches
+     * {@value #BAD_FIELD_PATTERN_TEXT}
+     * 
+     * @param core the core name for the field
+     * 
+     * @return {@inheritDoc}
+     */
+    @Override
+    public FieldId of(CharSequence core) {
+        Matcher m = BAD_FIELD_PATTERN.matcher(core);
+        if (m.matches()) throw new IllegalArgumentException("bad native"
+            + " field core: " + core);
+        return super.of(core);
+    }
 }

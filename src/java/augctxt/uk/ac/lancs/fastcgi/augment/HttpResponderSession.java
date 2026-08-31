@@ -61,7 +61,6 @@ import uk.ac.lancs.fastcgi.ResponderSession;
 import uk.ac.lancs.http.ChunkedInputStream;
 import uk.ac.lancs.http.cache.InboundCacheControl;
 import uk.ac.lancs.http.encoding.BodyDecoder;
-import uk.ac.lancs.http.field.Cap;
 import uk.ac.lancs.http.field.ExtensionManager;
 import uk.ac.lancs.http.field.FieldExtension;
 import uk.ac.lancs.http.field.FieldId;
@@ -69,6 +68,7 @@ import uk.ac.lancs.http.field.InputStreamCap;
 import uk.ac.lancs.io.PrecedingInputStream;
 import uk.ac.lancs.mime.MediaType;
 import uk.ac.lancs.mime.Tokenizer;
+import uk.ac.lancs.http.field.InputCap;
 
 /**
  * Provides an HTTP-specific view of a responder session. This includes
@@ -543,7 +543,7 @@ public class HttpResponderSession {
      * 
      * @return access to the request header fields
      */
-    public Cap requestHeader() {
+    public InputCap requestHeader() {
         if (requestHeader == null) makeRequestHeader();
         return requestHeader;
     }
@@ -566,7 +566,7 @@ public class HttpResponderSession {
         return requestExtMgr;
     }
 
-    private Cap requestHeader = null;
+    private InputCap requestHeader = null;
 
     /**
      * Get the extension manager for the response.
@@ -585,7 +585,7 @@ public class HttpResponderSession {
         return responseExtMgr;
     }
 
-    private Cap requestTrailer = null;
+    private InputCap requestTrailer = null;
 
     /**
      * Access the request trailer fields. This is not available until
@@ -612,7 +612,7 @@ public class HttpResponderSession {
      * 
      * @throws IOException if an I/O error occurs in reading the trailer
      */
-    public Cap requestTrailer() throws IOException {
+    public InputCap requestTrailer() throws IOException {
         /* Provide the one already created, if it exists. */
         if (requestTrailer != null) return requestTrailer;
 
@@ -649,7 +649,7 @@ public class HttpResponderSession {
      * 
      * @return the field header
      */
-    public Cap responseHeader() {
+    public InputCap responseHeader() {
         /* TODO */
         throw new UnsupportedOperationException("unimplemented");
     }
@@ -778,7 +778,7 @@ public class HttpResponderSession {
      * response header is sent; or if the response body stream has been
      * closed
      */
-    public Cap responseTrailer() {
+    public InputCap responseTrailer() {
         /* TODO */
         throw new UnsupportedOperationException("unimplemented");
     }

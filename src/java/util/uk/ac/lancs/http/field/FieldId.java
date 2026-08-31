@@ -109,7 +109,7 @@ public final class FieldId {
      * @return the converted name
      */
     public String gatewayName() {
-        return core.replace('-', '_').toUpperCase();
+        return core.replace('-', '_').toUpperCase(Locale.ROOT);
     }
 
     /**
@@ -119,9 +119,7 @@ public final class FieldId {
      */
     @Override
     public String toString() {
-        StringBuilder result = new StringBuilder(core);
-        if (namespace != null) result.append('/').append(namespace);
-        return result.toString();
+        return core + '/' + namespace;
     }
 
     /**

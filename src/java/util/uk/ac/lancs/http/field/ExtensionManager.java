@@ -40,6 +40,8 @@ package uk.ac.lancs.http.field;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Tracks the relation between extensions and their local prefixes.
@@ -127,5 +129,16 @@ public final class ExtensionManager {
             extensions.put(pfx, ext);
             return pfx;
         } while (true);
+    }
+
+    /**
+     * Identify mandatory field extensions registered with this manager.
+     * 
+     * @return an immutable set of mandatory field extensions
+     */
+    public Set<FieldExtension> mandatories() {
+        return prefixes.keySet().stream()
+            .filter(e -> e.strength == FieldStrength.MANDATORY)
+            .collect(Collectors.toSet());
     }
 }
