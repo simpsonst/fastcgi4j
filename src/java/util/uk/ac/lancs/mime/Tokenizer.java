@@ -45,6 +45,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 /**
  * Parses MIME header atoms, quoted strings and related structures. The
@@ -189,11 +190,11 @@ public final class Tokenizer {
      * 
      * @param msg a message to include in the exception
      * 
-     * @throws IllegalArgumentException always, containing the supplied
-     * message, and an indication of what had and had not been parsed
+     * @throws TokenException always, containing the supplied message,
+     * and an indication of what had and had not been parsed
      */
     public void abort(CharSequence msg) {
-        throw new IllegalArgumentException(msg.toString() + ": ["
+        throw new TokenException(msg.toString() + ": ["
             + new String(text, 0, pos) + "][" + remnant() + "]");
     }
 
@@ -717,6 +718,25 @@ public final class Tokenizer {
     }
 
     /**
+     * Parse a quoted string, and as many parameters as possible.
+     * 
+     * @param params where to store parameters
+     * 
+     * @return the string; or {@code null} if not parsed
+     */
+    public String
+        quotedStringParameters(Map<? super String, ? super String> params) {
+        final int p = pos;
+        do {
+            String t = quotedString();
+            if (t == null) return null;
+            if (parameters(params)) return t;
+        } while (false);
+        pos = p;
+        return null;
+    }
+
+    /**
      * Parse whitespace, an atom and as many parameters as possible.
      * 
      * @param min minimum number of whitespace characters to parse
@@ -737,6 +757,115 @@ public final class Tokenizer {
         } while (false);
         pos = p;
         return null;
+    }
+
+    /**
+     * Parse whitespace, a quoted string and as many parameters as
+     * possible.
+     * 
+     * @param min minimum number of whitespace characters to parse
+     * 
+     * @param params where to store parameters
+     * 
+     * @return the string; or {@code null} if not parsed
+     */
+    public String whitespaceQuotedStringParameters(int min,
+                                                   Map<? super String,
+                                                       ? super String> params) {
+        final int p = pos;
+        do {
+            if (!whitespace(min)) break;
+            String t = quotedStringParameters(params);
+            if (t == null) break;
+            return t;
+        } while (false);
+        pos = p;
+        return null;
+    }
+
+    /**
+     * Extract a single element.
+     * 
+     * @param <T> the represented type of the element
+     * 
+     * @param extractor the parser for a single element
+     * 
+     * @return a representation of the element; or {@code null} if not
+     * parsed, with the cursor reset to its initial position
+     */
+    public <T> T extract(Function<? super Tokenizer, T> extractor) {
+        try (Mark m = mark()) {
+            T val = extractor.apply(this);
+            if (val != null) m.pass();
+            return val;
+        }
+    }
+
+    /**
+     * Extract a comma-separated sequence.
+     * 
+     * @param <T> the represented type of the elements
+     * 
+     * @param extractor the parser for a single element
+     * 
+     * @return a list of the represented elements; or {@code null} if
+     * the remainder of the input is not a comma-separated sequence of
+     * elements recognized by the extractor
+     */
+    public <T> List<T>
+        extractCommaSequence(Function<? super Tokenizer, T> extractor) {
+        List<T> r = new ArrayList<>();
+        try (Mark m = mark()) {
+            while (true) {
+                T v = extract(extractor);
+                if (v == null) return null;
+                r.add(v);
+
+                whitespace(0);
+                if (character(',')) continue;
+                if (end()) {
+                    m.pass();
+                    return r;
+                }
+                return null;
+            }
+        }
+    }
+
+    /**
+     * Extract a comma-separated sequence, aborting with an exception on
+     * failure.
+     * 
+     * @param <T> the represented type of the elements
+     * 
+     * @param extractor the parser for a single element
+     * 
+     * @param label a label to use in abort messages
+     * 
+     * @return a list of the represented elements
+     * 
+     * @throws TokenException if the remainder of the input is not a
+     * comma-separated sequence of elements recognized by the extractor
+     */
+    public <T> List<T>
+        extractCommaSequence(String label,
+                             Function<? super Tokenizer, T> extractor) {
+        List<T> r = new ArrayList<>();
+        try (Mark m = mark()) {
+            while (true) {
+                T v = extract(extractor);
+                if (v == null) abort(label + " (element)");
+                r.add(v);
+
+                whitespace(0);
+                if (character(',')) continue;
+                if (end()) {
+                    m.pass();
+                    return r;
+                }
+                abort(label + " (end)");
+            }
+        }
     }
 
     /**
@@ -830,7 +959,7 @@ public final class Tokenizer {
             tokens.whitespace(0);
             if (tokens.end()) break;
             if (tokens.character(',')) continue;
-            throw new IllegalArgumentException("not token list: " + text);
+            throw new TokenException("not token list: " + text);
         }
         return List.copyOf(result);
     }
