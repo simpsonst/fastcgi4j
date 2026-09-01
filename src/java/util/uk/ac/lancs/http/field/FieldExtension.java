@@ -250,6 +250,13 @@ public final class FieldExtension extends FieldNamespace {
         return new Builder(URI.create(nsuri.trim()));
     }
 
+    /**
+     * Get a string representation of this namespace. This takes the
+     * form
+     * <samp><var>URI</var>/<var>scope</var>/<var>strength</var></samp>.
+     * 
+     * @return a string representation of this namespace
+     */
     @Override
     public String toString() {
         return nsuri.toString() + '/' + scope + '/' + strength;
@@ -292,7 +299,7 @@ public final class FieldExtension extends FieldNamespace {
     /**
      * {@inheritDoc}
      * 
-     * @return always {@link Kind#EXTENSION}
+     * @return always {@link FieldNamespace.Kind#EXTENSION}
      */
     @Override
     public Kind kind() {

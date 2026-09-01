@@ -931,7 +931,7 @@ public final class Tokenizer {
      * @return the media type; or {@code null} if no media type followed
      * by zero or more parameters are found
      * 
-     * @deprecated Use {@link MediaType#from(Tokenizer)} instead.
+     * @deprecated Use {@link MediaType#from(Tokenizer, int)} instead.
      * 
      * @see #PARAMS_END
      */

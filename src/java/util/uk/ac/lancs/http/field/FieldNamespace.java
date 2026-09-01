@@ -41,9 +41,9 @@ package uk.ac.lancs.http.field;
 /**
  * Allows fields with the same core name to be distinguished. Regular
  * fields can be defined using
- * <code>{@link #STANDARD_END_TO_END}.{@linkplain #of(CharSequence) of}(core)</code>
+ * <code>{@linkplain #STANDARD_END_TO_END}.{@linkplain #of(CharSequence) of}(core)</code>
  * or
- * <code>{@link #STANDARD_HOP_BY_HOP}.{@linkplain #of(CharSequence) of}(core)</code>.
+ * <code>{@linkplain #STANDARD_HOP_BY_HOP}.{@linkplain #of(CharSequence) of}(core)</code>.
  * A {@link FieldExtension} is a user-defined namespace.
  * 
  * @author simpsons

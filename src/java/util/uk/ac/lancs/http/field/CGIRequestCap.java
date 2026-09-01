@@ -53,7 +53,8 @@ import uk.ac.lancs.mime.Tokenizer;
  * Presents a CGI environment as a namespace-aware request header. It
  * recognizes the following parameters as containing field values:
  * 
- * <table>
+ * <table summary="This table lists regular expressions of CGI parameter
+ * names and their corresponding HTTP field names.">
  * 
  * <thead>
  * 
@@ -91,7 +92,7 @@ import uk.ac.lancs.mime.Tokenizer;
  * <tr>
  * <td><samp>HTTP_(.+)</samp></td>
  * <td><samp>&amp;1</samp> after upper-casing and converting
- * <samp>-<samp> to <samp>_</samp>, e.g., field
+ * <samp>-</samp> to <samp>_</samp>, e.g., field
  * <samp>Accept-Encoding</samp> becomes
  * <samp>HTTP_ACCEPT_ENCODING</samp></td>
  * </tr>
