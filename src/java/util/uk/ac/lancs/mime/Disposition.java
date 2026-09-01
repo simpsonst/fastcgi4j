@@ -100,7 +100,8 @@ public final class Disposition {
         if (text == null) return null;
         Tokenizer tok = new Tokenizer(text);
         Map<String, String> params = new HashMap<>();
-        CharSequence type = tok.whitespaceAtomParameters(0, params);
+        CharSequence type =
+            tok.whitespaceAtomParameters(0, params, Tokenizer.PARAMS_END);
         if (type == null)
             throw new IllegalArgumentException("not disposition: " + text);
         return new Disposition(type.toString(), params.get("name"),

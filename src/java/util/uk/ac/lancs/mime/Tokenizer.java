@@ -672,25 +672,49 @@ public final class Tokenizer {
     }
 
     /**
-     * Parse as many parameters as possible, plus the end of input.
-     * Parameters are added to a map, which is cleared first. No
-     * parameters are written to the map, nor is it cleared, unless
-     * parsing is successful.
+     * Directs that the destination map shall be cleared before adding
+     * the parsed parameters. If not set, the new parameters are merged
+     * with any existing ones.
+     * 
+     * @see #parameters(Map, int)
+     */
+    public static final int PARAMS_CLEAR = 1;
+
+    /**
+     * Requires that the parameter list (and optional white space) are
+     * at the end of the source character sequence.
+     * 
+     * @see #parameters(Map, int)
+     */
+    public static final int PARAMS_END = 2;
+
+    /**
+     * Parse as many parameters as possible, trailing white space, and
+     * optionally the end of input. Parameters are added to a map, which
+     * is optionally cleared first. No parameters are written to the
+     * map, nor is it cleared, unless parsing is successful.
      * 
      * @param params where to store parameters
      * 
+     * @param flags flags governing optional behaviour
+     * 
      * @return {@code true} if if the end of input was parsed
+     * 
+     * @see #PARAMS_CLEAR
+     * 
+     * @see #PARAMS_END
      */
-    public boolean parameters(Map<? super String, ? super String> params) {
+    public boolean parameters(Map<? super String, ? super String> params,
+                              int flags) {
         final int p = pos;
         do {
             Map<String, String> tmp = new HashMap<>();
             while (parameter(tmp))
                 ;
             whitespace(0);
-            if (!end()) break;
+            if ((flags & PARAMS_END) != 0 && !end()) break;
 
-            params.clear();
+            if ((flags & PARAMS_CLEAR) != 0) params.clear();
             params.putAll(tmp);
             return true;
         } while (false);
@@ -699,59 +723,82 @@ public final class Tokenizer {
     }
 
     /**
-     * Parse an atom, and as many parameters as possible.
+     * Parse an atom, and as many parameters as possible, trailing white
+     * space, and optionally the end of input.
      * 
      * @param params where to store parameters
      * 
+     * @param flags flags governing optional behaviour
+     * 
      * @return the atom; or {@code null} if not parsed
+     * 
+     * @see #PARAMS_CLEAR
+     * 
+     * @see #PARAMS_END
      */
     public CharSequence
-        atomParameters(Map<? super String, ? super String> params) {
+        atomParameters(Map<? super String, ? super String> params, int flags) {
         final int p = pos;
         do {
             CharSequence t = atom();
             if (t == null) return null;
-            if (parameters(params)) return t;
+            if (parameters(params, flags)) return t;
         } while (false);
         pos = p;
         return null;
     }
 
     /**
-     * Parse a quoted string, and as many parameters as possible.
+     * Parse a quoted string, and as many parameters as possible,
+     * trailing white space, and optionally the end of input.
      * 
      * @param params where to store parameters
      * 
+     * @param flags flags governing optional behaviour
+     * 
      * @return the string; or {@code null} if not parsed
+     * 
+     * @see #PARAMS_CLEAR
+     * 
+     * @see #PARAMS_END
      */
     public String
-        quotedStringParameters(Map<? super String, ? super String> params) {
+        quotedStringParameters(Map<? super String, ? super String> params,
+                               int flags) {
         final int p = pos;
         do {
             String t = quotedString();
             if (t == null) return null;
-            if (parameters(params)) return t;
+            if (parameters(params, flags)) return t;
         } while (false);
         pos = p;
         return null;
     }
 
     /**
-     * Parse whitespace, an atom and as many parameters as possible.
+     * Parse white space, an atom and as many parameters as possible,
+     * trailing white space, and optionally the end of input.
      * 
-     * @param min minimum number of whitespace characters to parse
+     * @param min minimum number of white space characters to parse
      * 
      * @param params where to store parameters
      * 
+     * @param flags flags governing optional behaviour
+     * 
      * @return the atom; or {@code null} if not parsed
+     * 
+     * @see #PARAMS_CLEAR
+     * 
+     * @see #PARAMS_END
      */
     public CharSequence
         whitespaceAtomParameters(int min,
-                                 Map<? super String, ? super String> params) {
+                                 Map<? super String, ? super String> params,
+                                 int flags) {
         final int p = pos;
         do {
             if (!whitespace(min)) break;
-            CharSequence t = atomParameters(params);
+            CharSequence t = atomParameters(params, flags);
             if (t == null) break;
             return t;
         } while (false);
@@ -760,22 +807,29 @@ public final class Tokenizer {
     }
 
     /**
-     * Parse whitespace, a quoted string and as many parameters as
-     * possible.
+     * Parse white space, a quoted string and as many parameters as
+     * possible, trailing white space, and optionally the end of input.
      * 
-     * @param min minimum number of whitespace characters to parse
+     * @param min minimum number of white space characters to parse
      * 
      * @param params where to store parameters
      * 
+     * @param flags flags governing optional behaviour
+     * 
      * @return the string; or {@code null} if not parsed
+     * 
+     * @see #PARAMS_CLEAR
+     * 
+     * @see #PARAMS_END
      */
     public String whitespaceQuotedStringParameters(int min,
                                                    Map<? super String,
-                                                       ? super String> params) {
+                                                       ? super String> params,
+                                                   int flags) {
         final int p = pos;
         do {
             if (!whitespace(min)) break;
-            String t = quotedStringParameters(params);
+            String t = quotedStringParameters(params, flags);
             if (t == null) break;
             return t;
         } while (false);
@@ -871,18 +925,24 @@ public final class Tokenizer {
     /**
      * Parse a media type, including decoded parameters.
      * 
+     * @param paramFlags flags governing optional behaviour of parsing
+     * parameters
+     * 
      * @return the media type; or {@code null} if no media type followed
      * by zero or more parameters are found
      * 
      * @deprecated Use {@link MediaType#from(Tokenizer)} instead.
+     * 
+     * @see #PARAMS_END
      */
     @Deprecated
-    public MediaType mediaType() {
+    public MediaType mediaType(int paramFlags) {
         final int p = pos;
         CharSequence major, minor;
         Map<String, String> rawParams = new HashMap<>();
         if ((major = whitespaceAtom(0)) != null && character('/') &&
-            (minor = atom()) != null && parameters(rawParams)) {
+            (minor = atom()) != null &&
+            parameters(rawParams, paramFlags & ~PARAMS_CLEAR)) {
             Map<String, ParameterValue> decoded =
                 ParameterValue.decodeParameters(rawParams);
             return new MediaType(major.toString(), minor.toString(), decoded);

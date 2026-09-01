@@ -241,7 +241,7 @@ public class ChunkedInputStream extends FilterInputStream {
             remaining += dig;
         }
         final Map<String, String> exts = new HashMap<>();
-        if (!tokens.parameters(exts)) {
+        if (!tokens.parameters(exts, Tokenizer.PARAMS_END)) {
             abort("bad chunk header: %s", text);
             throw new AssertionError("unreachable");
         }

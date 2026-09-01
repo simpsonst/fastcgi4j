@@ -190,7 +190,7 @@ public final class MediaType {
     public static MediaType fromString(CharSequence text) {
         if (text == null) return null;
         Tokenizer tok = new Tokenizer(text);
-        MediaType res = from(tok);
+        MediaType res = from(tok, Tokenizer.PARAMS_END);
         if (res == null)
             throw new IllegalArgumentException("not MIME type: " + text);
         return res;
@@ -206,12 +206,17 @@ public final class MediaType {
      * 
      * @param tok the source to parse from
      * 
+     * @param paramFlags flags governing optional behaviour of parsing
+     * parameters
+     * 
      * @return the media type; or {@code null} if no media type followed
      * by zero or more parameters are found
      * 
      * @contructor
+     * 
+     * @see Tokenizer#PARAMS_END
      */
-    public static MediaType from(Tokenizer tok) {
+    public static MediaType from(Tokenizer tok, int paramFlags) {
         try (var mark = tok.mark()) {
             CharSequence major = tok.whitespaceAtom(0);
             if (major == null) return null;
@@ -219,7 +224,9 @@ public final class MediaType {
             CharSequence minor = tok.atom();
             if (minor == null) return null;
             Map<String, String> rawParams = new HashMap<>();
-            if (!tok.parameters(rawParams)) return null;
+            if (!tok.parameters(rawParams,
+                                paramFlags & ~Tokenizer.PARAMS_CLEAR))
+                return null;
             Map<String, ParameterValue> decoded =
                 ParameterValue.decodeParameters(rawParams);
             var r = new MediaType(major.toString(), minor.toString(), decoded);

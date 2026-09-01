@@ -61,6 +61,7 @@ import uk.ac.lancs.fastcgi.ResponderSession;
 import uk.ac.lancs.http.ChunkedInputStream;
 import uk.ac.lancs.http.cache.InboundCacheControl;
 import uk.ac.lancs.http.encoding.BodyDecoder;
+import uk.ac.lancs.http.field.Cap;
 import uk.ac.lancs.http.field.ExtensionManager;
 import uk.ac.lancs.http.field.FieldExtension;
 import uk.ac.lancs.http.field.FieldId;
@@ -68,7 +69,6 @@ import uk.ac.lancs.http.field.InputStreamCap;
 import uk.ac.lancs.io.PrecedingInputStream;
 import uk.ac.lancs.mime.MediaType;
 import uk.ac.lancs.mime.Tokenizer;
-import uk.ac.lancs.http.field.Cap;
 
 /**
  * Provides an HTTP-specific view of a responder session. This includes
@@ -185,9 +185,9 @@ public class HttpResponderSession {
             CharSequence name;
             Map<String, String> params = new HashMap<>();
             while (toks.whitespace(0) &&
-                (name = toks.atomParameters(params)) != null) {
+                (name = toks.atomParameters(params, Tokenizer.PARAMS_CLEAR))
+                    != null) {
                 result.put(name.toString(), Map.copyOf(params));
-                params.clear();
                 if (!toks.whitespaceCharacter(0, ',')) break;
             }
         }

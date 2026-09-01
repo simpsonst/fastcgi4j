@@ -189,7 +189,8 @@ public class CGIRequestCap implements Cap {
             do {
                 /* Attempt to parse a parameterized quoted string. */
                 Map<String, String> params = new HashMap<>();
-                var nsuri = tokens.whitespaceQuotedStringParameters(0, params);
+                var nsuri =
+                    tokens.whitespaceQuotedStringParameters(0, params, 0);
                 String pfxTxt = params.remove("ns");
                 var pfx = ExtensionPrefix.of(pfxTxt);
                 var ext = FieldExtension.of(nsuri).hopByHop(conn)
