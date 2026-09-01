@@ -115,7 +115,7 @@ public final class Field<T> {
      * @throws UnsupportedOperationException if the cap is not for
      * output
      */
-    public void set(InputCap cap, List<? extends T> elems) {
+    public void set(Cap cap, List<? extends T> elems) {
         checkOut();
         var vals = cap.get(id);
         vals.clear();
@@ -139,7 +139,7 @@ public final class Field<T> {
      * @throws UnsupportedOperationException if the cap is not for
      * output
      */
-    public void set(InputCap cap, T elem) {
+    public void set(Cap cap, T elem) {
         checkOut();
         var vals = cap.get(id);
         vals.clear();
@@ -158,7 +158,7 @@ public final class Field<T> {
      * @throws UnsupportedOperationException if the cap is not for
      * output
      */
-    public void add(InputCap cap, T elem) {
+    public void add(Cap cap, T elem) {
         if (flat) {
             set(cap, elem);
         } else {
@@ -176,7 +176,7 @@ public final class Field<T> {
      * @throws UnsupportedOperationException if the cap is not for
      * output
      */
-    public void clear(InputCap cap) {
+    public void clear(Cap cap) {
         checkOut();
         cap.get(id).clear();
     }
@@ -193,7 +193,7 @@ public final class Field<T> {
      * 
      * @throws UnsupportedOperationException if the cap is not for input
      */
-    public List<T> get(InputCap cap) {
+    public List<T> get(Cap cap) {
         checkIn();
         if (flat) {
             List<String> raw = cap.get(id);

@@ -54,7 +54,7 @@ import uk.ac.lancs.mime.Tokenizer;
  *
  * @author simpsons
  */
-public class CGIRequestCap implements InputCap {
+public class CGIRequestCap implements Cap {
     private static final String META_PREFIX = "HTTP_";
 
     private static final String EXPERIMENTAL_PREFIX = "X_";

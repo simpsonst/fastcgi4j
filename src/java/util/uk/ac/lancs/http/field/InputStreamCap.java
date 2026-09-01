@@ -52,10 +52,10 @@ import java.util.stream.Collectors;
  * 
  * @author simpsons
  */
-public final class InputStreamCap implements InputCap {
+public final class InputStreamCap implements Cap {
     private final Map<FieldId, List<String>> fields;
 
-    private final InputCap backup;
+    private final Cap backup;
 
     /**
      * Create an immutable request cap from a stream. The stream is
@@ -73,7 +73,7 @@ public final class InputStreamCap implements InputCap {
      * @throws IOException if an I/O error occurs in reading the stream
      */
     public InputStreamCap(ExtensionManager extMgr, InputStream in,
-                          Map<String, FieldId> expected, InputCap backup)
+                          Map<String, FieldId> expected, Cap backup)
         throws IOException {
         this.backup = backup;
         Map<FieldId, List<String>> fields = new HashMap<>();

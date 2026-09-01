@@ -50,7 +50,7 @@ import uk.ac.lancs.mime.Tokenizer;
  * 
  * @author simpsons
  */
-public interface InputCap {
+public interface Cap {
     /**
      * Get the raw values of a field. Some entries may contain multiple
      * comma-separated values.
