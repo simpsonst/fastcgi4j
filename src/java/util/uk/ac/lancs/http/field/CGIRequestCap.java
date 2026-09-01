@@ -50,34 +50,72 @@ import uk.ac.lancs.cgi.Http;
 import uk.ac.lancs.mime.Tokenizer;
 
 /**
- * Presents a CGI environment as a namespace-aware request header.
+ * Presents a CGI environment as a namespace-aware request header. It
+ * recognizes the following parameters as containing field values:
+ * 
+ * <table>
+ * 
+ * <thead>
+ * 
+ * <tr>
+ * <th>CGI parameter</th>
+ * <th>HTTP field</th>
+ * </tr>
+ * 
+ * </thead>
+ * 
+ * <tbody>
+ * 
+ * <tr>
+ * <td><samp>CONTENT_TYPE</samp></td>
+ * <td><samp>Content-Type</samp></td>
+ * </tr>
+ * 
+ * <tr>
+ * <td><samp>CONTENT_LENGTH</samp></td>
+ * <td><samp>Content-Length</samp> (or a fabrication of it)</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td><samp>HTTP_CONNECTION</samp></td>
+ * <td><samp>Connection</samp>, used to identify hop-by-hop fields, and
+ * regarded as hop-by-hop itself</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td><samp>HTTP_(C_)?(MAN|OPT)</samp></td>
+ * <td><samp>(C-)?(Man|Opt)</samp> containing namespace
+ * declarations</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td><samp>HTTP_(.+)</samp></td>
+ * <td><samp>&amp;1</samp> after upper-casing and converting
+ * <samp>-<samp> to <samp>_</samp>, e.g., field
+ * <samp>Accept-Encoding</samp> becomes
+ * <samp>HTTP_ACCEPT_ENCODING</samp></td>
+ * </tr>
+ * 
+ * </tbody>
+ * 
+ * </table>
  *
  * @author simpsons
  */
 public class CGIRequestCap implements Cap {
     private static final String META_PREFIX = "HTTP_";
 
-    private static final String EXPERIMENTAL_PREFIX = "X_";
+    private static final String EXPERIMENTAL_PREFIX = "X-";
 
     private final ExtensionManager extMgr;
 
-    private final Map<String, String> env = new HashMap<>();
+    private final Map<? extends String, ? extends CharSequence> env;
 
     private final Map<FieldNamespace, Map<String, String>> nsAttrs =
         new HashMap<>();
 
-    private static final Pattern FIELD_PATTERN =
-        Pattern.compile("^(?<n>CONTENT_(?:TYPE|LENGTH))|"
-
-            + Pattern.quote(META_PREFIX) + "(?:"
-
-            + "(?<c>C_)?(?<ns>OPT|MAN)"
-
-            + "|"
-
-            + "?(?<core>.+)"
-
-            + ")$");
+    private static final Pattern FIELD_PATTERN = Pattern
+        .compile("^" + Pattern.quote(META_PREFIX) + "(?<c>C_)?(?<ns>OPT|MAN)$");
 
     private static final String CONNECTION_FIELD_VAR =
         Http.fieldNameAsCGI("CONNECTION");
@@ -96,50 +134,21 @@ public class CGIRequestCap implements Cap {
     private final Set<String> hopByHopKeys;
 
     /**
-     * Create a request header from a CGI environment. The supplied
-     * environment is scanned for entries beginning with
-     * {@value #META_PREFIX}, as these pass the values of HTTP header
-     * fields. The following entries are also detected:
-     * 
-     * <ul>
-     * 
-     * <li><samp>CONTENT_TYPE</samp> as the value of the standard
-     * end-to-end field <samp>Content-Type</samp>, and
-     * 
-     * <li><samp>CONTENT_LENGTH</samp> as the value of the standard
-     * end-to-end field <samp>Content-Length</samp> (or a version of it
-     * fabricated by CGI).
-     * 
-     * </ul>
-     * 
-     * <p>
-     * Namespace declarations are also recognized as entries
-     * <samp>HTTP_OPT</samp>, <samp>HTTP_MAN</samp>,
-     * <samp>HTTP_C_OPT</samp>, and <samp>HTTP_C_MAN</samp>,
-     * corresponding to the HTTP header fields <samp>Opt</samp>,
-     * <samp>Man</samp>, <samp>C-Opt</samp>, and <samp>C-Man</samp>,
-     * which are not accessible through {@link #get(FieldId)}. These
-     * allow fields belonging to a URI-identified namespace to be
-     * accessed, without knowing the numeric prefix defined for the
-     * scope of the message. Use {@link FieldExtension} to define a
-     * namespace and access fields within it.
-     * 
-     * <p>
-     * The supplied environment itself is not retained in full within
-     * this object.
+     * Create a request header from a CGI environment.
      * 
      * @param extMgr a record of extension definitions in the supplied
      * environment
      * 
-     * @param env the CGI environment
+     * @param env the CGI environment, which must remain valid for the
+     * lifetime of the new object
      * 
      * @throws IllegalArgumentException if a namespace declaration is
      * badly formed
      */
     public CGIRequestCap(ExtensionManager extMgr,
-                         Map<? extends CharSequence,
-                             ? extends CharSequence> env) {
+                         Map<? extends String, ? extends CharSequence> env) {
         this.extMgr = extMgr;
+        this.env = env;
 
         /* Identify hop-by-hop fields. We get the Connection field,
          * split as comma-separated tokens, filter out special tokens
@@ -152,7 +161,7 @@ public class CGIRequestCap implements Cap {
             .collect(Collectors.toSet());
 
         /* Go through each of the environmental fields matching those
-         * which describe HTTP header fields. */
+         * which describe HTTP field extensions. */
         for (var ent : env.entrySet()) {
             var key = ent.getKey();
             var val = ent.getValue();
@@ -161,63 +170,43 @@ public class CGIRequestCap implements Cap {
             var m = FIELD_PATTERN.matcher(key);
             if (!m.matches()) continue;
 
-            /* Detect special fields that are recognized by CGI. Store
-             * them as they are. */
-            var n = m.group("n");
-            if (n != null) {
-                this.env.put(n, val.toString());
-                continue;
-            }
-
             /* Detect namespace declarations. */
             var ns = m.group("ns");
-            if (ns != null) {
-                /* Determine whether this is an end-to-end or hop-by-hop
-                 * namespace. */
-                boolean conn = m.group("c") != null; // true if
-                                                     // hop-by-hop
+            assert ns != null;
 
-                /* Determine whether this is an optional or mandatory
-                 * namespace. */
-                boolean mand = ns.charAt(0) == 'M'; // false if OPT
+            /* Determine whether this is an end-to-end or hop-by-hop
+             * namespace. */
+            boolean conn = m.group("c") != null; // true if
+                                                 // hop-by-hop
 
-                /* We only have one variable to hold a comma-separated
-                 * concatenation of fields. Keep parsing a quoted string
-                 * containing the namespace URI, then
-                 * semicolon-separated parameters. */
-                var tokens = new Tokenizer(val);
-                do {
-                    /* Attempt to parse a parameterized quoted
-                     * string. */
-                    Map<String, String> params = new HashMap<>();
-                    var nsuri =
-                        tokens.whitespaceQuotedStringParameters(0, params);
-                    if (nsuri == null)
-                        throw new IllegalArgumentException("bad extension definition: "
-                            + key + " -> " + val);
-                    String pfxTxt = params.remove("ns");
-                    var pfx = ExtensionPrefix.of(pfxTxt);
-                    var ext = FieldExtension.of(nsuri).hopByHop(conn)
-                        .mandatory(mand).complete();
-                    nsAttrs.put(ext, params);
-                    extMgr.define(ext, pfx);
+            /* Determine whether this is an optional or mandatory
+             * namespace. */
+            boolean mand = ns.charAt(0) == 'M'; // false if OPT
 
-                    /* Detect another extension declaration, the end of
-                     * declarations, or something unexpected. */
-                    tokens.whitespace(0);
-                    if (tokens.character(',')) continue;
-                    if (tokens.end()) break;
-                    throw new IllegalArgumentException("bad extension definition: "
-                        + key + " -> " + val);
-                } while (true);
-                continue;
-            }
+            /* We only have one variable to hold a comma-separated
+             * concatenation of fields. Keep parsing a quoted string
+             * containing the namespace URI, then semicolon-separated
+             * parameters. */
+            var tokens = new Tokenizer(val);
+            do {
+                /* Attempt to parse a parameterized quoted string. */
+                Map<String, String> params = new HashMap<>();
+                var nsuri = tokens.whitespaceQuotedStringParameters(0, params);
+                String pfxTxt = params.remove("ns");
+                var pfx = ExtensionPrefix.of(pfxTxt);
+                var ext = FieldExtension.of(nsuri).hopByHop(conn)
+                    .mandatory(mand).complete();
+                nsAttrs.put(ext, params);
+                extMgr.define(ext, pfx);
 
-            /* Whatever's left has no special value for us, so store it
-             * as is. */
-            var core = m.group("core");
-            assert core != null;
-            this.env.put(core, val.toString());
+                /* Detect another extension declaration, the end of
+                 * declarations, or something unexpected. */
+                tokens.whitespace(0);
+                if (tokens.character(',')) continue;
+                if (tokens.end()) break;
+                throw new IllegalArgumentException("bad extension definition: "
+                    + key + " -> " + val);
+            } while (true);
         }
 
         /* Freeze the additional attributes of each defined
@@ -226,25 +215,32 @@ public class CGIRequestCap implements Cap {
             ent.setValue(Map.copyOf(ent.getValue()));
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * @implNote Because CGI is required to fold multiple fields with
+     * the same name into one, this method only ever returns a singleton
+     * list for a present field, or an empty list for an absent field.
+     * 
+     * @param id {@inheritDoc}
+     * 
+     * @return the field's raw values in transmission order, as a
+     * singleton list; an empty list if the field is not present
+     */
     @Override
     public List<String> get(FieldId id) {
-        /* Map the field id to a variable name. The end of that name is
-         * an upper-case version of the field name with hyphens
-         * converted to underscores. */
-        String sfx = id.gatewayName();
-
         /* Prefix the name according to the namespace of the field. */
         var ns = id.namespace();
         final String key;
         switch (ns.kind()) {
         case STANDARD:
             /* Standard fields require no prefix. */
-            key = sfx;
+            key = Http.fieldNameAsCGI(id.name());
             break;
 
         /* Experimental fields require a prefix of X_. */
         case EXPERIMENTAL:
-            key = EXPERIMENTAL_PREFIX + sfx;
+            key = Http.fieldNameAsCGI(EXPERIMENTAL_PREFIX + id.name());
             break;
 
         /* Extension fields require a prefix of HTTP_, a number of at
@@ -254,7 +250,7 @@ public class CGIRequestCap implements Cap {
             assert ext != null;
             var pfx = extMgr.seek(ext);
             if (pfx == null) return null;
-            key = pfx.toString() + '_' + sfx;
+            key = Http.fieldNameAsCGI(pfx.toString() + '-' + id.name());
             break;
 
         default:
@@ -272,7 +268,7 @@ public class CGIRequestCap implements Cap {
          * an empty list. */
         var raw = env.get(key);
         if (raw == null) return Collections.emptyList();
-        return Collections.singletonList(raw);
+        return Collections.singletonList(raw.toString());
     }
 
     @Override

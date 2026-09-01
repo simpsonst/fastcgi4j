@@ -46,19 +46,34 @@ package uk.ac.lancs.cgi;
 public final class Http {
     private Http() {}
 
+    private static String fieldNameAsCGIWithoutPrefix(CharSequence fieldName) {
+        return fieldName.toString().toUpperCase().replace("-", "_");
+    }
+
     /**
      * Convert an HTTP header field name to a CGI environment variable
      * name. This involves converting lower-case characters to
      * upper-case, replacing U+002D HYPHEN-MINUS with U+005F LOW LINE,
      * and prefixing with <samp>HTTP_</samp>. For example, the HTTP
      * field <samp>Accept-Encoding</samp> is accessible in a CGI context
-     * as <samp>HTTP_ACCEPT_ENCODING</samp>.
+     * as <samp>HTTP_ACCEPT_ENCODING</samp>. Exceptionally, the fields
+     * <samp>Content-Type</samp> and <samp>Content-Length</samp> map to
+     * <samp>CONTENT_TYPE</samp> and <samp>CONTENT_LENGTH</samp>
+     * respectively.
      *
      * @param fieldName the field name
      *
      * @return the name of the equivalent CGI variable
      */
     public static String fieldNameAsCGI(CharSequence fieldName) {
-        return "HTTP_" + fieldName.toString().toUpperCase().replace("-", "_");
+        var r = fieldNameAsCGIWithoutPrefix(fieldName);
+        switch (r) {
+        case "CONTENT_TYPE":
+        case "CONTENT_LENGTH":
+            return r;
+
+        default:
+            return "HTTP_" + r;
+        }
     }
 }
