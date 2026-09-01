@@ -103,8 +103,6 @@ import uk.ac.lancs.mime.Tokenizer;
  * @author simpsons
  */
 public class CGIRequestCap implements Cap {
-    private static final String META_PREFIX = "HTTP_";
-
     private static final String EXPERIMENTAL_PREFIX = "X-";
 
     private final ExtensionManager extMgr;
@@ -114,8 +112,8 @@ public class CGIRequestCap implements Cap {
     private final Map<FieldNamespace, Map<String, String>> nsAttrs =
         new HashMap<>();
 
-    private static final Pattern FIELD_PATTERN = Pattern
-        .compile("^" + Pattern.quote(META_PREFIX) + "(?<c>C_)?(?<ns>OPT|MAN)$");
+    private static final Pattern FIELD_PATTERN = Pattern.compile("^"
+        + Pattern.quote(Http.META_PREFIX) + "(?<c>C_)?(?<ns>OPT|MAN)$");
 
     private static final String CONNECTION_FIELD_VAR =
         Http.fieldNameAsCGI("CONNECTION");

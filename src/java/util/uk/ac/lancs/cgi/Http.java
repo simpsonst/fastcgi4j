@@ -44,8 +44,22 @@ package uk.ac.lancs.cgi;
  * @author simpsons
  */
 public final class Http {
+    /**
+     * Holds the prefix used to identify HTTP fields expressed within
+     * CGI parameters. The value is {@value}.
+     */
+    public static final String META_PREFIX = "HTTP_";
+
     private Http() {}
 
+    /**
+     * Convert an HTTP field name into a CGI parameter name, without the
+     * meta-variable prefix.
+     * 
+     * @param fieldName the field name
+     * 
+     * @return the parameter name
+     */
     private static String fieldNameAsCGIWithoutPrefix(CharSequence fieldName) {
         return fieldName.toString().toUpperCase().replace("-", "_");
     }
@@ -73,7 +87,7 @@ public final class Http {
             return r;
 
         default:
-            return "HTTP_" + r;
+            return META_PREFIX + r;
         }
     }
 }
