@@ -156,4 +156,22 @@ public final class FieldId {
             return false;
         return Objects.equals(this.namespace, other.namespace);
     }
+
+    private static final String CONTENT_TYPE_CORE = "Content-Type";
+
+    /**
+     * Identifies the standard end-to-end header field
+     * {@value #CONTENT_TYPE_CORE}.
+     */
+    public static final FieldId CONTENT_TYPE =
+        FieldNamespace.STANDARD_END_TO_END.of(CONTENT_TYPE_CORE);
+
+    private static final String CONTENT_LENGTH_CORE = "Content-Length";
+
+    /**
+     * Identifies the standard end-to-end header field
+     * {@value #CONTENT_LENGTH_CORE}.
+     */
+    public static final FieldId CONTENT_LENGTH =
+        FieldNamespace.STANDARD_END_TO_END.of(CONTENT_LENGTH_CORE);
 }

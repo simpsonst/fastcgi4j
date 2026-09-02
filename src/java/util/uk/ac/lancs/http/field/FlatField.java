@@ -1,7 +1,7 @@
 // -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
 
 /*
- * Copyright (c) 2022,2023,2026, Lancaster University
+ * Copyright (c) 2026, Lancaster University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,33 +39,49 @@
 package uk.ac.lancs.http.field;
 
 import java.util.List;
-import java.util.Map;
+import java.util.function.Function;
+import uk.ac.lancs.mime.Tokenizer;
 
 /**
- * Holds the fields of an incoming request/response header/trailer.
- * 
+ * Defines a flat field that holds at most a single value.
+ *
  * @author simpsons
  */
-public interface Cap {
-    /**
-     * Get the raw values of a field. Some entries may contain multiple
-     * comma-separated values.
-     * 
-     * @param id the field to extract
-     * 
-     * @return the field's raw values in transmission order; possibly
-     * immutable for an inward message
-     */
-    List<String> get(FieldId id);
+public final class FlatField<T> extends Field<T> {
+    FlatField(FieldId id, Function<Tokenizer, T> parser,
+              Function<? super T, ?> generator) {
+        super(id, parser, generator);
+    }
 
     /**
-     * Get the attributes of a namespace.
+     * Get the value of the last occurrence of the field in a cap.
      * 
-     * @param ns the namespace whose attributes are requested
+     * @param cap the raw source fields
      * 
-     * @return an immutable set of name-value attributes of the given
-     * namespace; an empty map if the namespace was not defined with any
-     * attributes
+     * @return the parsed value of the last instance of a field; or
+     * {@code null} if not set
+     * 
+     * @throws UnsupportedOperationException if the field or the cap is
+     * not for input
+     * 
+     * @throws FieldSyntaxException if the field is set, but does not
+     * conform to the format
      */
-    Map<String, String> attributes(FieldNamespace ns);
+    public T get(Cap cap) {
+        checkIn();
+        List<String> raw = cap.get(id);
+        if (raw.isEmpty()) return null;
+        var last = raw.get(raw.size() - 1);
+        Tokenizer t = new Tokenizer(last);
+        try {
+            var r = parse(t);
+            if (r == null) t.abort(id.toString());
+            t.whitespace(0);
+            if (!t.end()) t.abort(id.toString());
+            return r;
+        } catch (IllegalArgumentException ex) {
+            throw new FieldSyntaxException(id.toString() + ": "
+                + ex.getMessage(), ex);
+        }
+    }
 }

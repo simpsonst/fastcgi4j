@@ -38,26 +38,26 @@
 
 package uk.ac.lancs.http.field;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
-import java.util.stream.Collectors;
+import uk.ac.lancs.mime.MediaType;
 import uk.ac.lancs.mime.Tokenizer;
 
 /**
- * Associates a field identifier with its format and internal type.
+ * Defines a field in terms of its identification and format.
  * 
  * <p>
  * The format is defined by a parser (a function from tokenizer to the
  * internal type) and/or a generator (a function from the internal type
  * to a string). If the parser is absent, the field is
- * &lsquo;out-only&rsquo;, and the {@link #get(Cap)} method will be
- * inoperative. If the generator is absent, the field is
- * &lsquo;in-only&rsquo;, and the methods {@link #set(Cap, List)},
- * {@link #set(Cap, Object)}, {@link #add(Cap, Object)} and
- * {@link #clear(Cap)} are inoperative.
+ * &lsquo;out-only&rsquo;, and the methods {@link FlarField#get(Cap)}
+ * and {@link SequentialField#get(Cap)} will be inoperative. If the
+ * generator is absent, the field is &lsquo;in-only&rsquo;, and the
+ * methods {@link #set(Cap, Object)}, {@link #clear(Cap)},
+ * {@link SequentialField#set(Cap, List)} and
+ * {@link SequentialField#add(Cap, Object)} are inoperative.
  * 
  * <p>
  * A field may be sequential or flat. A sequential field can be present
@@ -65,68 +65,81 @@ import uk.ac.lancs.mime.Tokenizer;
  * to a single field whose values are separated by commas. When a flat
  * field exists multiple times in a header or trailer, its last instance
  * defines the effective value, and other fields are ignored.
+ * 
+ * <p>
+ * Fields are defined in stages starting with {@link #of(FieldId)}.
  *
  * @author simpsons
  * 
  * @param <T> the internal type
  */
-public final class Field<T> {
-    private final FieldId id;
+public abstract class Field<T> {
+    final FieldId id;
 
     private final Function<Tokenizer, T> parser;
 
     private final Function<? super T, ?> generator;
 
-    private final boolean flat;
-
-    private Field(FieldId id, Function<Tokenizer, T> parser,
-                  Function<? super T, ?> generator, boolean flat) {
+    Field(FieldId id, Function<Tokenizer, T> parser,
+          Function<? super T, ?> generator) {
         this.id = id;
         this.parser = parser;
         this.generator = generator;
-        this.flat = flat;
     }
 
-    private void checkIn() {
+    void checkIn() {
         if (parser == null)
             throw new UnsupportedOperationException("out-only field");
     }
 
-    private void checkOut() {
+    void checkOut() {
         if (generator == null)
             throw new UnsupportedOperationException("in-only field");
     }
 
-    private String generate(T arg) {
-        return generator.apply(arg).toString();
-    }
-
-    private T parse(Tokenizer t) {
-        return parser.apply(t);
+    /**
+     * Determine whether this field can be written.
+     * 
+     * @return {@code true} if write operations are possible;
+     * {@code false{ otherwise
+     */
+    public final boolean isOutward() {
+        return generator != null;
     }
 
     /**
-     * Replace the sequence of instances of fields with another.
+     * Determine whether this field can be read.
      * 
-     * @param cap the raw destination fields
-     * 
-     * @param elems the new sequence
-     * 
-     * @throws UnsupportedOperationException if the cap is not for
-     * output
+     * @return {@code true} if read operations are possible;
+     * {@code false{ otherwise
      */
-    public void set(Cap cap, List<? extends T> elems) {
-        checkOut();
-        var vals = cap.get(id);
-        vals.clear();
-        if (flat) {
-            if (elems.isEmpty()) return;
-            var last = elems.get(elems.size() - 1);
-            vals.add(generate(last));
-        } else {
-            for (var e : elems)
-                vals.add(generate(e));
-        }
+    public final boolean isInward() {
+        return parser != null;
+    }
+
+    /**
+     * Apply the configured generator to an object of the internal type
+     * to convert it into a string.
+     * 
+     * @param arg the object to be converted
+     * 
+     * @return the field representation of the object
+     */
+    final String generate(T arg) {
+        return generator.apply(arg).toString();
+    }
+
+    /**
+     * Apply the configured parser to a tokenizer to extract an internal
+     * representation.
+     * 
+     * @param t the tokenizer to extract from
+     * 
+     * @return the internal representation of the consumed tokens; or
+     * {@code null} if not parsed
+     */
+    final T parse(Tokenizer t) {
+        return parser.apply(t);
     }
 
     /**
@@ -136,10 +149,10 @@ public final class Field<T> {
      * 
      * @param elem the new value
      * 
-     * @throws UnsupportedOperationException if the cap is not for
-     * output
+     * @throws UnsupportedOperationException if the field or the cap is
+     * not for output
      */
-    public void set(Cap cap, T elem) {
+    public final void set(Cap cap, T elem) {
         checkOut();
         var vals = cap.get(id);
         vals.clear();
@@ -147,232 +160,169 @@ public final class Field<T> {
     }
 
     /**
-     * Append an instance of the field. For a flat field, all prior
-     * instances are first removed, making this call equivalent to
-     * {@link #set(Cap, Object)}.
-     * 
-     * @param cap the raw destination fields
-     * 
-     * @param elem the new value
-     * 
-     * @throws UnsupportedOperationException if the cap is not for
-     * output
-     */
-    public void add(Cap cap, T elem) {
-        if (flat) {
-            set(cap, elem);
-        } else {
-            checkOut();
-            var vals = cap.get(id);
-            vals.add(generate(elem));
-        }
-    }
-
-    /**
      * Remove all instances of the field.
      * 
      * @param cap the raw destination fields
      * 
-     * @throws UnsupportedOperationException if the cap is not for
-     * output
+     * @throws UnsupportedOperationException if the field or the cap is
+     * not for output
      */
-    public void clear(Cap cap) {
+    public final void clear(Cap cap) {
         checkOut();
         cap.get(id).clear();
     }
 
     /**
-     * Get the values of each distinct occurrence of the field in a cap.
-     * The results are in transmission order for a sequential field. For
-     * a flat field, only the last instance is significant, and is
-     * returned as a singleton.
+     * Start defining a field.
      * 
-     * @param cap the raw source fields
+     * @param <T> the internal field type
      * 
-     * @return a list of effective values
+     * @param id the field id
      * 
-     * @throws UnsupportedOperationException if the cap is not for input
+     * @return an object to complete the field definition
+     * 
+     * @constructor
+     * 
+     * @throws NullPointerException if the id is {@code null}
      */
-    public List<T> get(Cap cap) {
-        checkIn();
-        if (flat) {
-            List<String> raw = cap.get(id);
-            if (raw.isEmpty()) Collections.emptyList();
-            var last = raw.get(raw.size() - 1);
-            Tokenizer t = new Tokenizer(last);
-            return Collections.singletonList(parse(t));
-        } else {
-            List<String> raw = cap.get(id);
-            return raw.stream().map(s -> {
-                var t = new Tokenizer(s);
-                List<T> r = new ArrayList<>();
-                for (;;) {
-                    T v = parse(t);
-                    if (v == null) {
-                        if (r.isEmpty()) {
-                            t.whitespace(0);
-                            if (t.end()) break;
-                            t.abort("unterminated sequence");
-                            throw new AssertionError("unreachable");
-                        }
-                        t.abort("wrong type");
-                        throw new AssertionError("unreachable");
-                    }
-                    t.whitespace(0);
-                    if (t.end()) break;
-                    if (t.character(',')) continue;
-                    t.abort("comma in sequence");
-                    throw new AssertionError("unreachable");
-                }
-                return r;
-            }).flatMap(List::stream).collect(Collectors.toList());
+    public static <T> Builder<T> of(FieldId id) {
+        Objects.requireNonNull(id, "id");
+        return new Builder<>(id);
+    }
+
+    /**
+     * Defines an HTTP field in stages.
+     * 
+     * @param <T> the internal field type
+     */
+    public static class Builder<T> {
+        private final FieldId id;
+
+        Function<Tokenizer, T> parser;
+
+        Function<? super T, ?> generator;
+
+        Builder(FieldId id) {
+            this.id = id;
+        }
+
+        /**
+         * Set the parser for an inward field. The supplied function may
+         * return {@code null} if the input cannot be tokenized, or
+         * throw {@link IllegalArgumentException} if tokenization is
+         * successful, but conversion is not.
+         * 
+         * @param parser a means to convert tokens into the internal
+         * type
+         * 
+         * @return this object
+         * 
+         * @throws NullPointerException if the argument is {@code null}
+         */
+        public Builder<T> inward(Function<Tokenizer, T> parser) {
+            Objects.requireNonNull(parser, "parser");
+            this.parser = parser;
+            return this;
+        }
+
+        /**
+         * Set the generator for an outward field.
+         * 
+         * @param generator a means to convert from the internal type to
+         * a string
+         * 
+         * @return this object
+         * 
+         * @throws NullPointerException if the argument is {@code null}
+         */
+        public Builder<T> outward(Function<? super T, ?> generator) {
+            Objects.requireNonNull(generator, "generator");
+            this.generator = generator;
+            return this;
+        }
+
+        private void checkFunction() {
+            if (parser != null) return;
+            if (generator != null) return;
+            throw new IllegalStateException("parser or generator must be set");
+        }
+
+        /**
+         * Create a sequential field with the current configuration.
+         * 
+         * @return the new field
+         * 
+         * @constructor
+         * 
+         * @throws IllegalStateException if neither
+         * {@link #inward(Function)} nor {@link #outward(Function)} have
+         * been called.
+         */
+        public SequentialField<T> sequential() {
+            checkFunction();
+            return new SequentialField<>(id, parser, generator);
+        }
+
+        /**
+         * Create a flat field with the current configuration.
+         * 
+         * @return the new field
+         * 
+         * @constructor
+         * 
+         * @throws IllegalStateException if neither
+         * {@link #inward(Function)} nor {@link #outward(Function)} have
+         * been called.
+         */
+        public FlatField<T> flat() {
+            checkFunction();
+            return new FlatField<>(id, parser, generator);
         }
     }
 
-    /**
-     * Define a bi-directional sequential field.
-     * 
-     * @constructor
-     * 
-     * @param <T> the internal field type
-     * 
-     * @param id the field identifier
-     * 
-     * @param generator a means to convert from the internal type to a
-     * string
-     * 
-     * @param parser a means to convert tokens into the internal type
-     * 
-     * @return the requested field
-     * 
-     * @throws NullPointerException if any argument is {@code null}
-     */
-    public static <T> Field<T>
-        sequential(FieldId id,
-                   Function<? super T, ? extends CharSequence> generator,
-                   Function<Tokenizer, T> parser) {
-        Objects.requireNonNull(id, "id");
-        Objects.requireNonNull(generator, "generator");
-        Objects.requireNonNull(parser, "parser");
-        return new Field<>(id, parser, generator, false);
+    private static Long decimalLong(Tokenizer t) {
+        try (Tokenizer.Mark m = t.mark()) {
+            var a = t.whitespaceAtom(0);
+            t.whitespace(0);
+            if (t.end()) {
+                m.pass();
+                return Long.valueOf(a.toString(), 10);
+            }
+        }
+        return null;
+    }
+
+    private static BigInteger decimalBigInteger(Tokenizer t) {
+        try (Tokenizer.Mark m = t.mark()) {
+            var a = t.whitespaceAtom(0);
+            t.whitespace(0);
+            if (t.end()) {
+                m.pass();
+                return new BigInteger(a.toString(), 10);
+            }
+        }
+        return null;
     }
 
     /**
-     * Define a bi-directional flat field.
-     * 
-     * @constructor
-     * 
-     * @param <T> the internal field type
-     * 
-     * @param id the field identifier
-     * 
-     * @param generator a means to convert from the internal type to a
-     * string
-     * 
-     * @param parser a means to convert tokens into the internal type
-     * 
-     * @return the requested field
-     * 
-     * @throws NullPointerException if any argument is {@code null}
+     * Defines the {@value FieldId#CONTENT_TYPE_CORE} field.
      */
-    public static <T> Field<T>
-        flat(FieldId id, Function<? super T, ? extends CharSequence> generator,
-             Function<Tokenizer, T> parser) {
-        Objects.requireNonNull(id, "id");
-        Objects.requireNonNull(generator, "generator");
-        Objects.requireNonNull(parser, "parser");
-        return new Field<>(id, parser, generator, true);
-    }
+    public static final FlatField<MediaType> CONTENT_TYPE =
+        Field.<MediaType>of(FieldId.CONTENT_TYPE).flat();
 
     /**
-     * Define an outward sequential field.
-     * 
-     * @constructor
-     * 
-     * @param <T> the internal field type
-     * 
-     * @param id the field identifier
-     * 
-     * @param generator a means to convert from the internal type to a
-     * string
-     * 
-     * @return the requested field
-     * 
-     * @throws NullPointerException if either argument is {@code null}
+     * Defines the {@value FieldId#CONTENT_LENGTH_CORE} field using
+     * {@code Long}.
      */
-    public static <T> Field<T>
-        outwardSequential(FieldId id,
-                          Function<? super T,
-                                   ? extends CharSequence> generator) {
-        Objects.requireNonNull(id, "id");
-        Objects.requireNonNull(generator, "generator");
-        return new Field<>(id, null, generator, false);
-    }
+    public static final FlatField<Long> LONG_CONTENT_LENGTH = Field
+        .<Long>of(FieldId.CONTENT_LENGTH).outward(v -> Long.toString(v, 10))
+        .inward(Field::decimalLong).flat();
 
     /**
-     * Define an outward flat field.
-     * 
-     * @constructor
-     * 
-     * @param <T> the internal field type
-     * 
-     * @param id the field identifier
-     * 
-     * @param generator a means to convert from the internal type to a
-     * string
-     * 
-     * @return the requested field
-     * 
-     * @throws NullPointerException if either argument is {@code null}
+     * Defines the {@value FieldId#CONTENT_LENGTH_CORE} field using
+     * {@link BigInteger}.
      */
-    public static <T> Field<T> outwardFlat(FieldId id,
-                                           Function<? super T, ?> generator) {
-        Objects.requireNonNull(id, "id");
-        Objects.requireNonNull(generator, "generator");
-        return new Field<>(id, null, generator, true);
-    }
-
-    /**
-     * Define an inward sequential field.
-     * 
-     * @constructor
-     * 
-     * @param <T> the internal field type
-     * 
-     * @param id the field identifier
-     * 
-     * @param parser a means to convert tokens into the internal type
-     * 
-     * @return the requested field
-     * 
-     * @throws NullPointerException if either argument is {@code null}
-     */
-    public static <T> Field<T> inwardSequential(FieldId id,
-                                                Function<Tokenizer, T> parser) {
-        Objects.requireNonNull(id, "id");
-        Objects.requireNonNull(parser, "parser");
-        return new Field<>(id, parser, null, false);
-    }
-
-    /**
-     * Define an inward flat field.
-     * 
-     * @constructor
-     * 
-     * @param <T> the internal field type
-     * 
-     * @param id the field identifier
-     * 
-     * @param parser a means to convert tokens into the internal type
-     * 
-     * @return the requested field
-     * 
-     * @throws NullPointerException if either argument is {@code null}
-     */
-    public static <T> Field<T> inwardFlat(FieldId id,
-                                          Function<Tokenizer, T> parser) {
-        Objects.requireNonNull(id, "id");
-        Objects.requireNonNull(parser, "parser");
-        return new Field<>(id, parser, null, false);
-    }
+    public static final FlatField<BigInteger> BIG_CONTENT_LENGTH =
+        Field.<BigInteger>of(FieldId.CONTENT_LENGTH).outward(v -> v.toString())
+            .inward(Field::decimalBigInteger).flat();
 }

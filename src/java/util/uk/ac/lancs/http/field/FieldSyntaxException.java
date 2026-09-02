@@ -45,6 +45,15 @@ package uk.ac.lancs.http.field;
  */
 public class FieldSyntaxException extends RuntimeException {
     /**
+     * Create an exception with a detail message.
+     * 
+     * @param message the detail message
+     */
+    public FieldSyntaxException(String message) {
+        super(message);
+    }
+
+    /**
      * Create an exception with a detail message and a cause.
      * 
      * @param message the detail message

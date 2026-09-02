@@ -43,7 +43,7 @@ package uk.ac.lancs.mime;
  * 
  * @author simpsons
  */
-public class TokenException extends RuntimeException {
+public class TokenException extends IllegalArgumentException {
     /**
      * Create an exception with a detail message.
      * 
