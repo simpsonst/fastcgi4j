@@ -52,7 +52,7 @@ import uk.ac.lancs.mime.Tokenizer;
  * The format is defined by a parser (a function from tokenizer to the
  * internal type) and/or a generator (a function from the internal type
  * to a string). If the parser is absent, the field is
- * &lsquo;out-only&rsquo;, and the methods {@link FlarField#get(Cap)}
+ * &lsquo;out-only&rsquo;, and the methods {@link FlatField#get(Cap)}
  * and {@link SequentialField#get(Cap)} will be inoperative. If the
  * generator is absent, the field is &lsquo;in-only&rsquo;, and the
  * methods {@link #set(Cap, Object)}, {@link #clear(Cap)},
