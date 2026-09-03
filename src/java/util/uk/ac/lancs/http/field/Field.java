@@ -101,7 +101,7 @@ public abstract class Field<T> {
      * Determine whether this field can be written.
      * 
      * @return {@code true} if write operations are possible;
-     * {@code false{ otherwise
+     * {@code false} otherwise
      */
     public final boolean isOutward() {
         return generator != null;
@@ -111,7 +111,7 @@ public abstract class Field<T> {
      * Determine whether this field can be read.
      * 
      * @return {@code true} if read operations are possible;
-     * {@code false{ otherwise
+     * {@code false} otherwise
      */
     public final boolean isInward() {
         return parser != null;
