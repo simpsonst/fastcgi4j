@@ -95,8 +95,8 @@ public class ConfigurationException extends SessionException {
      * writable; {@code false} if not
      */
     public ConfigurationException(String message, Throwable cause,
-                                     boolean enableSuppression,
-                                     boolean writableStackTrace) {
+                                  boolean enableSuppression,
+                                  boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 }
