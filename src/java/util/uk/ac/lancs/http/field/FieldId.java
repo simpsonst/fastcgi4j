@@ -179,27 +179,27 @@ public final class FieldId {
         FieldNamespace.STANDARD_END_TO_END.of(CONTENT_LENGTH_CORE);
 
     private static final Set<String> STANDARD_END_TO_END_GENERAL_FIELD_NAMES =
-        Set.of("Cache-Control", "Date", "Pragma", "Upgrade", "Via");
+        Set.of("Cache-Control", "Date", "Pragma", "Upgrade", "Via", "Man",
+               "Opt");
 
     private static final Set<String> STANDARD_HOP_BY_HOP_GENERAL_FIELD_NAMES =
-        Set.of("Connection", "Transfer-Encoding");
+        Set.of("Connection", "Transfer-Encoding", "C-Man", "C-Opt");
 
     private static final Set<String> STANDARD_END_TO_END_REQUEST_FIELD_NAMES =
         Set.of("Accept", "Accept-Charset", "Accept-Encoding", "Accept-Language",
                "Authorization", "From", "Host", "If-Modified-Since", "If-Match",
-               "If-None-Match", "If-Range", "If-Unmodified-Since",
-               "Max-Forwards", "Proxy-Authorization", "Range", "Referer",
-               "User-Agent");
+               "If-None-Match", "If-Range", "If-Unmodified-Since", "Range",
+               "Referer", "User-Agent");
 
     private static final Set<String> STANDARD_HOP_BY_HOP_REQUEST_FIELD_NAMES =
-        Set.of();
+        Set.of("Max-Forwards", "Proxy-Authorization");
 
     private static final Set<String> STANDARD_END_TO_END_RESPONSE_FIELD_NAMES =
-        Set.of("Age", "Location", "Proxy-Authenticate", "Public", "Retry-After",
-               "Server", "Vary", "Warning", "WWW-Authenticate");
+        Set.of("Age", "Location", "Retry-After", "Server", "Vary", "Warning",
+               "WWW-Authenticate");
 
     private static final Set<String> STANDARD_HOP_BY_HOP_RESPONSE_FIELD_NAMES =
-        Set.of();
+        Set.of("Proxy-Authenticate", "Public");
 
     /**
      * Identifies the core names of standard entity field names. All of
