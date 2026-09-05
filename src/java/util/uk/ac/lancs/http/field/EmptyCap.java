@@ -40,7 +40,6 @@ package uk.ac.lancs.http.field;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Immutably holds no fields.
@@ -65,17 +64,5 @@ public final class EmptyCap implements Cap {
     @Override
     public List<String> get(FieldId id) {
         return Collections.emptyList();
-    }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @param ns {@inheritDoc}
-     * 
-     * @return an empty, immutable map
-     */
-    @Override
-    public Map<String, String> attributes(FieldNamespace ns) {
-        return Collections.emptyMap();
     }
 }

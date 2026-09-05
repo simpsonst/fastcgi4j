@@ -110,9 +110,6 @@ public class CGIRequestCap implements Cap {
 
     private final Map<? extends String, ? extends CharSequence> env;
 
-    private final Map<FieldNamespace, Map<String, String>> nsAttrs =
-        new HashMap<>();
-
     private static final Pattern FIELD_PATTERN = Pattern.compile("^"
         + Pattern.quote(Http.META_PREFIX) + "(?<c>C_)?(?<ns>OPT|MAN)$");
 
@@ -196,7 +193,7 @@ public class CGIRequestCap implements Cap {
                 var pfx = ExtensionPrefix.of(pfxTxt);
                 var ext = FieldExtension.of(nsuri).hopByHop(conn)
                     .mandatory(mand).complete();
-                nsAttrs.put(ext, params);
+                extMgr.attributes(ext).putAll(params);
                 extMgr.define(ext, pfx);
 
                 /* Detect another extension declaration, the end of
@@ -209,10 +206,8 @@ public class CGIRequestCap implements Cap {
             } while (true);
         }
 
-        /* Freeze the additional attributes of each defined
-         * namespace. */
-        for (var ent : nsAttrs.entrySet())
-            ent.setValue(Map.copyOf(ent.getValue()));
+        /* Forbid further changes to the extensions. */
+        extMgr.freeze();
     }
 
     /**
@@ -269,10 +264,5 @@ public class CGIRequestCap implements Cap {
         var raw = env.get(key);
         if (raw == null) return Collections.emptyList();
         return Collections.singletonList(raw.toString());
-    }
-
-    @Override
-    public Map<String, String> attributes(FieldNamespace ns) {
-        return nsAttrs.getOrDefault(ns, Collections.emptyMap());
     }
 }

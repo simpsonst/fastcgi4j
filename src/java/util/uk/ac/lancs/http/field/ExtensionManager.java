@@ -38,6 +38,7 @@
 
 package uk.ac.lancs.http.field;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -61,6 +62,19 @@ public final class ExtensionManager {
     private final Map<ExtensionPrefix, FieldExtension> extensions =
         new HashMap<>();
 
+    private final Map<FieldExtension, Map<String, String>> attributes =
+        new HashMap<>();
+
+    private boolean frozen = false;
+
+    /**
+     * Prevent further changes. This causes attempted modifications to
+     * throw {@link IllegalStateException}.
+     */
+    public void freeze() {
+        frozen = true;
+    }
+
     /**
      * Relate an extension to a suggested prefix.
      * 
@@ -75,6 +89,7 @@ public final class ExtensionManager {
      * prefix, but the suggested prefix is already in use
      */
     public ExtensionPrefix define(FieldExtension ext, ExtensionPrefix pfx) {
+        if (frozen) throw new IllegalStateException("frozen");
         var existing = prefixes.get(ext);
         if (existing != null) return existing;
         if (extensions.containsKey(pfx))
@@ -82,6 +97,23 @@ public final class ExtensionManager {
         prefixes.put(ext, pfx);
         extensions.put(pfx, ext);
         return pfx;
+    }
+
+    /**
+     * Get the additional attributes of a namespace.
+     * 
+     * @param ns the extension namespace
+     * 
+     * @return additional attributes of the namespace, mutable if this
+     * object has not been frozen
+     */
+    public Map<String, String> attributes(FieldExtension ns) {
+        if (frozen) {
+            var r = attributes.get(ns);
+            if (r == null) return Collections.emptyMap();
+            return Collections.unmodifiableMap(r);
+        }
+        return attributes.computeIfAbsent(ns, k -> new HashMap<>());
     }
 
     /**
@@ -115,6 +147,7 @@ public final class ExtensionManager {
      * @return the prefix related to the extension
      */
     public ExtensionPrefix define(FieldExtension ext) {
+        if (frozen) throw new IllegalStateException("frozen");
         var existing = prefixes.get(ext);
         if (existing != null) return existing;
         do {

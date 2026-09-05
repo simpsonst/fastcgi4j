@@ -39,7 +39,6 @@
 package uk.ac.lancs.http.field;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Holds the fields of a request/response header/trailer.
@@ -57,15 +56,4 @@ public interface Cap {
      * immutable for an inward message
      */
     List<String> get(FieldId id);
-
-    /**
-     * Get the attributes of a namespace.
-     * 
-     * @param ns the namespace whose attributes are requested
-     * 
-     * @return a possibly immutable set of name-value attributes of the
-     * given namespace; an empty map if the namespace was not defined
-     * with any attributes
-     */
-    Map<String, String> attributes(FieldNamespace ns);
 }

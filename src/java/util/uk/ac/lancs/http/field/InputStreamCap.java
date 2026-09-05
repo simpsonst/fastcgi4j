@@ -99,9 +99,4 @@ final class InputStreamCap implements Cap {
         }
         return val;
     }
-
-    @Override
-    public Map<String, String> attributes(FieldNamespace ns) {
-        throw new UnsupportedOperationException("unimplemented"); // TODO
-    }
 }
