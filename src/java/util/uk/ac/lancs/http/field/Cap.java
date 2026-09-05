@@ -42,7 +42,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Holds the fields of an incoming request/response header/trailer.
+ * Holds the fields of a request/response header/trailer.
  * 
  * @author simpsons
  */
@@ -63,9 +63,9 @@ public interface Cap {
      * 
      * @param ns the namespace whose attributes are requested
      * 
-     * @return an immutable set of name-value attributes of the given
-     * namespace; an empty map if the namespace was not defined with any
-     * attributes
+     * @return a possibly immutable set of name-value attributes of the
+     * given namespace; an empty map if the namespace was not defined
+     * with any attributes
      */
     Map<String, String> attributes(FieldNamespace ns);
 }
