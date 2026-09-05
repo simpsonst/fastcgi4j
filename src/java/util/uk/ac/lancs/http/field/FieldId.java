@@ -40,8 +40,11 @@ package uk.ac.lancs.http.field;
 
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Holds a valid header or trailer field name, possibly with a
@@ -174,4 +177,81 @@ public final class FieldId {
      */
     public static final FieldId CONTENT_LENGTH =
         FieldNamespace.STANDARD_END_TO_END.of(CONTENT_LENGTH_CORE);
+
+    private static final Set<String> STANDARD_END_TO_END_GENERAL_FIELD_NAMES =
+        Set.of("Cache-Control", "Date", "Pragma", "Upgrade", "Via");
+
+    private static final Set<String> STANDARD_HOP_BY_HOP_GENERAL_FIELD_NAMES =
+        Set.of("Connection", "Transfer-Encoding");
+
+    private static final Set<String> STANDARD_END_TO_END_REQUEST_FIELD_NAMES =
+        Set.of("Accept", "Accept-Charset", "Accept-Encoding", "Accept-Language",
+               "Authorization", "From", "Host", "If-Modified-Since", "If-Match",
+               "If-None-Match", "If-Range", "If-Unmodified-Since",
+               "Max-Forwards", "Proxy-Authorization", "Range", "Referer",
+               "User-Agent");
+
+    private static final Set<String> STANDARD_HOP_BY_HOP_REQUEST_FIELD_NAMES =
+        Set.of();
+
+    private static final Set<String> STANDARD_END_TO_END_RESPONSE_FIELD_NAMES =
+        Set.of("Age", "Location", "Proxy-Authenticate", "Public", "Retry-After",
+               "Server", "Vary", "Warning", "WWW-Authenticate");
+
+    private static final Set<String> STANDARD_HOP_BY_HOP_RESPONSE_FIELD_NAMES =
+        Set.of();
+
+    /**
+     * Identifies the core names of standard entity field names. All of
+     * these are end-to-end, so they contribute to identifying illegal
+     * hop-by-hop fields.
+     */
+    private static final Set<String> STANDARD_END_TO_END_ENTITY_FIELD_NAMES =
+        Set.of("Allow", "Content-Base", "Content-Encoding", "Content-Language",
+               "Content-Length", "Content-Location", "Content-MD5",
+               "Content-Range", "Content-Type", "Etag", "Expires",
+               "Last-Modified");
+
+    private static final Set<String> STANDARD_HOP_BY_HOP_ENTITY_FIELD_NAMES =
+        Set.of();
+
+    private static final Set<FieldId> ILLEGALLY_SCOPED_FIELDS =
+        Stream
+            .concat(Stream
+                .concat(Stream.concat(Stream
+                    .concat(STANDARD_END_TO_END_GENERAL_FIELD_NAMES.stream(),
+                            STANDARD_END_TO_END_REQUEST_FIELD_NAMES.stream()),
+                                      STANDARD_END_TO_END_ENTITY_FIELD_NAMES
+                                          .stream()),
+                        STANDARD_END_TO_END_RESPONSE_FIELD_NAMES.stream())
+                .map(s -> FieldNamespace.STANDARD_HOP_BY_HOP.of(s)),
+                    Stream
+                        .concat(Stream
+                            .concat(Stream
+                                .concat(STANDARD_HOP_BY_HOP_GENERAL_FIELD_NAMES
+                                    .stream(),
+                                        STANDARD_HOP_BY_HOP_REQUEST_FIELD_NAMES
+                                            .stream()),
+                                    STANDARD_HOP_BY_HOP_ENTITY_FIELD_NAMES
+                                        .stream()),
+                                STANDARD_HOP_BY_HOP_RESPONSE_FIELD_NAMES
+                                    .stream())
+                        .map(s -> FieldNamespace.STANDARD_END_TO_END.of(s)))
+            .collect(Collectors.toSet());
+
+    /**
+     * Determine whether a field identifier has an illegal scope. To
+     * have an illegal scope, it must have a standard core name, but
+     * belong to the wrong scope. For example, <samp>Connection</samp>
+     * is a hop-by-hop header, so it is an error to use such an
+     * identifier defined in {@link FieldNamespace#STANDARD_END_TO_END}.
+     * 
+     * @param id the identifier to test
+     * 
+     * @return {@code true} if the field identifier has an illegal
+     * scope; {@code false} otherwise
+     */
+    public static boolean hasIllegalScope(FieldId id) {
+        return ILLEGALLY_SCOPED_FIELDS.contains(id);
+    }
 }
