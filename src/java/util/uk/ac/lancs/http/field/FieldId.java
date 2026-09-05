@@ -201,11 +201,6 @@ public final class FieldId {
     private static final Set<String> STANDARD_HOP_BY_HOP_RESPONSE_FIELD_NAMES =
         Set.of("Proxy-Authenticate", "Public");
 
-    /**
-     * Identifies the core names of standard entity field names. All of
-     * these are end-to-end, so they contribute to identifying illegal
-     * hop-by-hop fields.
-     */
     private static final Set<String> STANDARD_END_TO_END_ENTITY_FIELD_NAMES =
         Set.of("Allow", "Content-Base", "Content-Encoding", "Content-Language",
                "Content-Length", "Content-Location", "Content-MD5",
