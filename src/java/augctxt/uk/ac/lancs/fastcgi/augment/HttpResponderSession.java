@@ -50,7 +50,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.Function;
 import uk.ac.lancs.cgi.CGIParameters;
@@ -62,10 +61,10 @@ import uk.ac.lancs.http.ChunkedInputStream;
 import uk.ac.lancs.http.cache.InboundCacheControl;
 import uk.ac.lancs.http.encoding.BodyDecoder;
 import uk.ac.lancs.http.field.Cap;
+import uk.ac.lancs.http.field.EmptyCap;
 import uk.ac.lancs.http.field.ExtensionManager;
 import uk.ac.lancs.http.field.FieldExtension;
 import uk.ac.lancs.http.field.FieldId;
-import uk.ac.lancs.http.field.InputStreamCap;
 import uk.ac.lancs.io.PrecedingInputStream;
 import uk.ac.lancs.mime.MediaType;
 import uk.ac.lancs.mime.Tokenizer;
@@ -598,50 +597,29 @@ public class HttpResponderSession {
      * closed. Otherwise, an {@link IllegalStateException} may be
      * thrown.
      * 
-     * <p>
-     * Sought fields not present in the trailer are then sought in the
-     * header automatically. For example, if the client has sent a
-     * <code>Repr-Digest</code> field, it might only be added in the
-     * trailer; requesting it via this method will find it, whether it
-     * was provided before or after the body.
-     * 
      * @return access to the request trailer fields
      * 
      * @throws IllegalStateException if the request body stream has not
      * been closed
      * 
      * @throws IOException if an I/O error occurs in reading the trailer
+     * 
+     * @todo This can't work without extensions to FastCGI, or
+     * modifications to popular servers that would change existing
+     * behaviour. Until then, an empty trailer is returned.
      */
     public Cap requestTrailer() throws IOException {
         /* Provide the one already created, if it exists. */
         if (requestTrailer != null) return requestTrailer;
 
-        if (trailerIn == null) {
-            /* There's no stream to read from. If we haven't determined
-             * the body stream, the application is accessing the trailer
-             * too soon. */
-            if (in == null) throw new IllegalStateException("request trailer"
-                + " requested before body");
-            /* We have the body stream, but no trailer stream. Just
-             * default to the request header. */
-            requestTrailer = requestHeader();
-            return requestTrailer;
-        }
+        /* TODO: This would require a second PARAMS sequence to appear
+         * after the STDIN sequence, and a flag (perhaps in
+         * BEGIN_REQUEST) to indicate that such a sequence is to be
+         * expected, and a capability in GET_VALUES(_RESULT) to indicate
+         * that the application could handle it. */
 
-        /* We must process the header first, to find out what's in the
-         * trailer, and get any namespace definitions. That is, the
-         * expectations are populated. */
-        var hdr = requestHeader();
-        requestTrailer = new InputStreamCap(requestExtMgr, in,
-                                            requestTrailerExpectations, hdr);
-        return requestTrailer;
+        return EmptyCap.INSTANCE;
     }
-
-    /**
-     * Holds a mapping from case-insensitive field name to field id.
-     */
-    private final Map<String, FieldId> requestTrailerExpectations =
-        new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
     /**
      * Obtain the modifiable field header. Modifications can be made

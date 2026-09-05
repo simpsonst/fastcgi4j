@@ -1,7 +1,7 @@
 // -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
 
 /*
- * Copyright (c) 2022,2023,2026, Lancaster University
+ * Copyright (c) 2026, Lancaster University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,70 +38,44 @@
 
 package uk.ac.lancs.http.field;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
- * Holds request header or trailer fields by parsing them from an HTTP
- * request header or trailer.
+ * Immutably holds no fields.
  * 
  * @author simpsons
- * 
- * @todo This class is probably unusable in a FastCGI context, which
- * cannot provide a request trailer as a stream. If FastCGI were to be
- * extended to provide request trailers, it would probably be a separate
- * record type.
  */
-final class InputStreamCap implements Cap {
-    private final Map<FieldId, List<String>> fields;
-
-    private final Cap backup;
+public final class EmptyCap implements Cap {
+    private EmptyCap() {}
 
     /**
-     * Create an immutable request cap from a stream. The stream is
-     * closed after use. Only fields from the expected set are retained.
-     * The keys of the expected set are case-insensitive raw names to be
-     * expected, and they map to the field ids that the values should be
-     * stored under.
-     * 
-     * @param in the source stream
-     * 
-     * @param expected the set of field names and their ids to expect
-     * 
-     * @param backup back-up fields to read from
-     * 
-     * @throws IOException if an I/O error occurs in reading the stream
+     * The sole instance of this class
      */
-    public InputStreamCap(ExtensionManager extMgr, InputStream in,
-                          Map<String, FieldId> expected, Cap backup)
-        throws IOException {
-        this.backup = backup;
-        Map<FieldId, List<String>> fields = new HashMap<>();
+    public static final EmptyCap INSTANCE = new EmptyCap();
 
-        /* TODO */
-
-        this.fields = fields.entrySet().stream().collect(Collectors
-            .toMap(Map.Entry::getKey, e -> List.copyOf(e.getValue())));
-        throw new UnsupportedOperationException("unimplemented"); // TODO
-    }
-
+    /**
+     * {@inheritDoc}
+     * 
+     * @param id {@inheritDoc}
+     * 
+     * @return an empty, immutable list
+     */
     @Override
     public List<String> get(FieldId id) {
-        List<String> val = fields.get(id);
-        if (val == null) {
-            if (backup == null) return Collections.emptyList();
-            return backup.get(id);
-        }
-        return val;
+        return Collections.emptyList();
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * @param ns {@inheritDoc}
+     * 
+     * @return an empty, immutable map
+     */
     @Override
     public Map<String, String> attributes(FieldNamespace ns) {
-        throw new UnsupportedOperationException("unimplemented"); // TODO
+        return Collections.emptyMap();
     }
 }
