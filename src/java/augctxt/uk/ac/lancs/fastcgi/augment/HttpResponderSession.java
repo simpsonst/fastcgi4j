@@ -44,14 +44,19 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import uk.ac.lancs.cgi.CGIParameters;
 import uk.ac.lancs.cgi.Http;
 import uk.ac.lancs.cgi.ServerProtocol;
@@ -65,6 +70,7 @@ import uk.ac.lancs.http.field.EmptyCap;
 import uk.ac.lancs.http.field.ExtensionManager;
 import uk.ac.lancs.http.field.FieldExtension;
 import uk.ac.lancs.http.field.FieldId;
+import uk.ac.lancs.http.field.FieldNamespace;
 import uk.ac.lancs.io.PrecedingInputStream;
 import uk.ac.lancs.mime.MediaType;
 import uk.ac.lancs.mime.Tokenizer;
@@ -621,6 +627,53 @@ public class HttpResponderSession {
         return EmptyCap.INSTANCE;
     }
 
+    private final Map<FieldId, List<String>> responseHeaderFields =
+        new HashMap<>();
+
+    private final Collection<FieldId> responseTrailerExpectation =
+        new HashSet<>();
+
+    private final Map<FieldId, List<String>> responseTrailerFields =
+        new HashMap<>();
+
+    private static final Set<FieldId> FORBIDDEN_RESPONSE_FIELDS =
+        Set.of("Status", "Connection", "Transfer-Encoding", "Trailers").stream()
+            .flatMap(s -> Stream.of(FieldNamespace.STANDARD_END_TO_END.of(s)))
+            .collect(Collectors.toSet());
+
+    private final Cap responseHeader = new Cap() {
+        @Override
+        public List<String> get(FieldId id) {
+            /* Check for fields that we manage, and throw
+             * IllegalArgumentException. */
+            if (FORBIDDEN_RESPONSE_FIELDS.contains(id))
+                throw new IllegalArgumentException("managed field: " + id);
+
+            /* TODO: When it's too late to change any header fields,
+             * return an immutable list. */
+
+            return responseHeaderFields.computeIfAbsent(id,
+                                                        k -> new ArrayList<>());
+        }
+    };
+
+    private final Cap responseTrailer = new Cap() {
+        @Override
+        public List<String> get(FieldId id) {
+            /* Check for fields that have not been declared before the
+             * header has been written throw IllegalStateException. */
+            if (!responseTrailerExpectation.contains(id))
+                throw new IllegalStateException("unexpected trailer field: "
+                    + id);
+
+            /* TODO: When it's too late to change any trailer fields,
+             * return an immutable list. */
+
+            return responseTrailerFields
+                .computeIfAbsent(id, k -> new ArrayList<>());
+        }
+    };
+
     /**
      * Obtain the modifiable field header. Modifications can be made
      * until output is sent to the response body stream {@link #out()}.
@@ -628,8 +681,7 @@ public class HttpResponderSession {
      * @return the field header
      */
     public Cap responseHeader() {
-        /* TODO */
-        throw new UnsupportedOperationException("unimplemented");
+        return responseHeader;
     }
 
     /**
@@ -662,6 +714,23 @@ public class HttpResponderSession {
     }
 
     /**
+     * Identifies standard fields which cannot be set in the trailer.
+     * Note that each field name is included twice, once as end-to-end
+     * and once as hop-by-hop.
+     */
+    private static final Set<FieldId> FORBIDDEN_TRAILER_FIELDS = Set
+        .of("Content-Encoding", "Content-Type", "Content-Range", "Trailer",
+            "Authorization", "WWW-Authenticate", "Proxy-Authorization",
+            "Proxy-Authenticate", "Set-Cookie", "Transfer-Encoding",
+            "Content-Length", "Host", "Cache-Control", "Max-Forwards", "TE",
+            "Man", "C-Man", "Opt", "C-Opt", "If-Modified-Since", "If-Match",
+            "If-None-Match", "If-Range", "If-Unmodified-Since", "Range")
+        .stream()
+        .flatMap(s -> Stream.of(FieldNamespace.STANDARD_END_TO_END.of(s),
+                                FieldNamespace.STANDARD_HOP_BY_HOP.of(s)))
+        .collect(Collectors.toSet());
+
+    /**
      * Indicate that some fields are expected in the trailer. This
      * method may be called multiple times, but only until output is
      * sent to the response body stream {@link #out()}.
@@ -670,10 +739,24 @@ public class HttpResponderSession {
      * 
      * @throws IllegalStateException if used after output has been sent
      * to the response body stream
+     * 
+     * @throws IllegalArgumentException if a field is not permitted in
+     * the trailer
      */
     public void expectTrailer(FieldId... ids) {
-        /* TODO */
-        throw new UnsupportedOperationException("unimplemented");
+        /* TODO: If the header has been sent, throw
+         * IllegalStateException. */
+
+        /* Fail if any id is not permitted in the trailer. */
+        for (FieldId id : ids) {
+            if (FieldId.hasIllegalScope(id))
+                throw new IllegalArgumentException("field with bad scope: "
+                    + id);
+            if (FORBIDDEN_TRAILER_FIELDS.contains(id))
+                throw new IllegalArgumentException("bad trailer field: " + id);
+        }
+
+        responseTrailerExpectation.addAll(Arrays.asList(ids));
     };
 
     private OutputStream makeOut() {
@@ -757,8 +840,7 @@ public class HttpResponderSession {
      * closed
      */
     public Cap responseTrailer() {
-        /* TODO */
-        throw new UnsupportedOperationException("unimplemented");
+        return responseTrailer;
     }
 
     /**
