@@ -41,7 +41,7 @@ package uk.ac.lancs.mime;
 import uk.ac.lancs.mime.body.BinaryBody;
 
 /**
- * Returns a MIME message with a binary body.
+ * Retains a MIME message with a binary body.
  * 
  * @author simpsons
  */
