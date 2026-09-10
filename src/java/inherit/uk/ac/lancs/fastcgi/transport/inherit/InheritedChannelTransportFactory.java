@@ -62,18 +62,19 @@ import uk.ac.lancs.scc.jardeps.Service;
  * Builds a transport from the channel inherited from the entity that
  * started the JVM. The channel must be based on a server socket, or the
  * factory will ignore it. Each connection's description is
- * {@value #UNIX_DESCRIPTION} if a Unix-domain socket is obtained, or
- * {@value #INET_DESCRIPTION_PREFIX} plus the peer address for an
- * Internet-domain socket.
+ * <code>{@value #UNIX_DESCRIPTION}</code> if a Unix-domain socket is
+ * obtained, or <code>{@value #INET_DESCRIPTION_PREFIX}</code> plus the
+ * peer address for an Internet-domain socket.
  * 
  * <p>
- * In the Internet domain, {@value InvocationVariables#WEB_SERVER_ADDRS}
- * is consulted via {@link InvocationVariables#getAuthorizedInetPeers()}
- * to get a list of IP addresses that a client may connect from.
+ * In the Internet domain, <samp>{@value "%s"
+ * InvocationVariables#WEB_SERVER_ADDRS}</samp> is consulted via
+ * {@link InvocationVariables#getAuthorizedInetPeers()} to get a list of
+ * IP addresses that a client may connect from.
  * 
  * <p>
- * In the Unix domain, {@value InvocationVariables#LEGIT_PEERS} is
- * consulted via
+ * In the Unix domain, <samp>{@value "%s"
+ * InvocationVariables#LEGIT_PEERS}</samp> is consulted via
  * {@link InvocationVariables#getAuthorizedStandalonePrincipals()} to
  * get a list of Unix-domain principals that may connect as clients.
  * This non-standard variable is consulted, as there shouldn't be a peer

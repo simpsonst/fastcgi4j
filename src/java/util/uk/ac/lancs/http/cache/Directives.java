@@ -51,7 +51,8 @@ package uk.ac.lancs.http.cache;
 final class Directives {
     /**
      * Limits caching to caches that understand and conform to the
-     * response's status code's requirements. The value is {@value}.
+     * response's status code's requirements. The value is
+     * <code>{@value}</code>.
      * 
      * @see <a href=
      * "https://www.rfc-editor.org/rfc/rfc9111.html#name-must-understand">RFC&nbsp;9111
@@ -62,14 +63,14 @@ final class Directives {
     /**
      * 
      * <p>
-     * The value is {@value}.
+     * The value is <code>{@value}</code>.
      * 
      */
     static final String IMMUTABLE = "immutable";
 
     /**
      * Limits caching of a response or fields to an unshared
-     * (single-user) cache. The value is {@value}.
+     * (single-user) cache. The value is <code>{@value}</code>.
      * 
      * @see <a href=
      * "https://www.rfc-editor.org/rfc/rfc9111.html#name-private">RFC&nbsp;9111
@@ -80,7 +81,7 @@ final class Directives {
     /**
      * Indicates the client's deprecation of a cached response, or
      * limits caching of a response, without origin revalidation. The
-     * value is {@value}.
+     * value is <code>{@value}</code>.
      * 
      * @see <a href=
      * "https://www.rfc-editor.org/rfc/rfc9111.html#name-no-cache">RFC&nbsp;9111
@@ -96,7 +97,7 @@ final class Directives {
      * Indicates the client's deprecation of a cached response, or
      * limits caching of a response, regardless of origin revalidation.
      * <p>
-     * The value is {@value}.
+     * The value is <code>{@value}</code>.
      * 
      * @see <a href=
      * "https://www.rfc-editor.org/rfc/rfc9111.html#name-no-store">RFC&nbsp;9111
@@ -112,7 +113,7 @@ final class Directives {
      * Indicates the client's deprecation of a response transformed by
      * intermediaries, or limits transformation.
      * <p>
-     * The value is {@value}.
+     * The value is <code>{@value}</code>.
      * 
      * @see <a href=
      * "https://www.rfc-editor.org/rfc/rfc9111.html#name-no-transform">RFC&nbsp;9111
@@ -130,7 +131,7 @@ final class Directives {
 
     /**
      * Specifies an overriding maximum age of a response. The value is
-     * {@value}.
+     * <code>{@value}</code>.
      * 
      * @see <a href=
      * "https://www.rfc-editor.org/rfc/rfc9111.html#name-s-maxage">RFC&nbsp;9111
@@ -142,7 +143,7 @@ final class Directives {
 
     /**
      * Authorizes storing an otherwise prohibited response. The value is
-     * {@value}.
+     * <code>{@value}</code>.
      * 
      * @see <a href=
      * "https://www.rfc-editor.org/rfc/rfc9111.html#name-public">RFC&nbsp;9111
@@ -152,7 +153,7 @@ final class Directives {
 
     /**
      * Specifies a client's deprecation of a response with insufficient
-     * freshness lifetime. The value is {@value}.
+     * freshness lifetime. The value is <code>{@value}</code>.
      * 
      * @see <a href=
      * "https://www.rfc-editor.org/rfc/rfc9111.html#name-min-fresh">RFC&nbsp;9111
@@ -163,7 +164,7 @@ final class Directives {
     /**
      * Specifies a client's deprecation of a response beyond a certain
      * age, or how long before a response should be regarded as stale.
-     * The value is {@value}.
+     * The value is <code>{@value}</code>.
      * 
      * @see <a href=
      * "https://www.rfc-editor.org/rfc/rfc9111.html#name-max-age">RFC&nbsp;9111
@@ -177,7 +178,7 @@ final class Directives {
 
     /**
      * Indicates that a cache must not re-use that response without
-     * origin revalidation. The value is {@value}.
+     * origin revalidation. The value is <code>{@value}</code>.
      * 
      * @see <a href=
      * "https://www.rfc-editor.org/rfc/rfc9111.html#name-must-revalidate">RFC&nbsp;9111
@@ -187,7 +188,7 @@ final class Directives {
 
     /**
      * Specifies a client's acceptance of a not-too-stale response. The
-     * value is {@value}.
+     * value is <code>{@value}</code>.
      * 
      * @see <a href=
      * "https://www.rfc-editor.org/rfc/rfc9111.html#name-max-stale">RFC&nbsp;9111
@@ -199,7 +200,7 @@ final class Directives {
 
     /**
      * Indicates that a shared cache must not re-use that response
-     * without origin revalidation. The value is {@value}.
+     * without origin revalidation. The value is <code>{@value}</code>.
      * 
      * @see <a href=
      * "https://www.rfc-editor.org/rfc/rfc9111.html#name-proxy-revalidate">RFC&nbsp;9111
@@ -209,7 +210,7 @@ final class Directives {
 
     /**
      * Indicates a client's requirement for a cached response, or a 504.
-     * The value is {@value}.
+     * The value is <code>{@value}</code>.
      * 
      * @see <a href=
      * "https://www.rfc-editor.org/rfc/rfc9111.html#name-only-if-cached">RFC&nbsp;9111

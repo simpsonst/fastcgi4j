@@ -47,8 +47,8 @@ public interface AuthorizerSession extends Session {
      * {@inheritDoc} The status is set to 401 if currently 200.
      * 
      * @throws IllegalArgumentException if the name case-insensitively
-     * begins with {@value #VARIABLE_PREFIX} or matches
-     * {@value Session#STATUS_FIELD}
+     * begins with <code>{@value #VARIABLE_PREFIX}</code> or matches
+     * <code>{@value Session#STATUS_FIELD}</code>
      * 
      * @throws IllegalStateException if the response output has been
      * started (with {@link #out()})
@@ -60,8 +60,8 @@ public interface AuthorizerSession extends Session {
      * {@inheritDoc} The response status is not changed.
      * 
      * @throws IllegalArgumentException if the name case-insensitively
-     * begins with {@value #VARIABLE_PREFIX} or matches
-     * {@value Session#STATUS_FIELD}
+     * begins with <code>{@value #VARIABLE_PREFIX}</code> or matches
+     * <code>{@value Session#STATUS_FIELD}</code>
      * 
      * @throws IllegalStateException if the response output has been
      * started (with {@link #out()})
@@ -73,8 +73,8 @@ public interface AuthorizerSession extends Session {
      * {@inheritDoc} The status is set to 401 if currently 200.
      * 
      * @throws IllegalArgumentException if the name case-insensitively
-     * begins with {@value #VARIABLE_PREFIX} or matches
-     * {@value Session#STATUS_FIELD}
+     * begins with <code>{@value #VARIABLE_PREFIX}</code> or matches
+     * <code>{@value Session#STATUS_FIELD}</code>
      * 
      * @throws IllegalStateException if the response output has been
      * started (with {@link #out()})
@@ -89,7 +89,7 @@ public interface AuthorizerSession extends Session {
      * {@link #addField(String, String)} and
      * {@link #clearField(String)}. Use
      * {@link #setVariable(String, String)} instead, without the prefix.
-     * The prefix is {@value}.
+     * The prefix is <code>{@value}</code>.
      */
     String VARIABLE_PREFIX = "Variable-";
 }

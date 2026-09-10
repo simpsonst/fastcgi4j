@@ -54,7 +54,8 @@ public final class RequestFlags {
     /**
      * Specifies whether the application should expect more records
      * after this request is complete. The value is
-     * {@value}, corresponding to <code>FCGI_KEEP_CONN</code>.
+     * <code>{@value}</code>, corresponding to
+     * <code>FCGI_KEEP_CONN</code>.
      */
     public static final int KEEP_CONN = 1;
 
@@ -94,8 +95,8 @@ public final class RequestFlags {
      * <p>
      * This flag will not be set unless the application has provided
      * {@link ApplicationVariables#FIELD_HANDLING} with a value that
-     * includes the token
-     * {@value ApplicationVariables#FIELD_HANDLING_REQUEST_TRAILER}.
+     * includes the token <samp>{@value "%s"
+     * ApplicationVariables#FIELD_HANDLING_REQUEST_TRAILER}</samp>.
      * 
      * <p>
      * This is an experimental extension to FastCGI/1.0.

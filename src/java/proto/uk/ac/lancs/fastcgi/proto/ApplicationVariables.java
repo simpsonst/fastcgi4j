@@ -53,28 +53,29 @@ public final class ApplicationVariables {
 
     /**
      * Identifies the variable that specifies the maximum number of
-     * connections that the application will accept. The value is
-     * {@value}.
+     * connections that the application will accept. The variable is
+     * called <samp>{@value "%s"}</samp>.
      */
     public static final String MAX_CONNS = "FCGI_MAX_CONNS";
 
     /**
      * Identifies the variable that specifies the maximum number of
-     * concurrent requests that the application will accept. The value
-     * is {@value}.
+     * concurrent requests that the application will accept. The
+     * variable is called <samp>{@value "%s"}</samp>.
      */
     public static final String MAX_REQS = "FCGI_MAX_REQS";
 
     /**
      * Identifies the variable that specifies whether the application
-     * multiplexes requests on a single connection. The value is
-     * {@value}.
+     * multiplexes requests on a single connection. The variable is
+     * called <samp>{@value "%s"}</samp>.
      */
     public static final String MPXS_CONNS = "FCGI_MPXS_CONNS";
 
     /**
      * Identifies the variable that specifies how the application
-     * expects to receive and send protocol fields.
+     * expects to receive and send protocol fields. The variable is
+     * called <samp>{@value "%s"}</samp>.
      * 
      * <p>
      * The value must be a comma-separated list of tokens. The following
@@ -82,7 +83,8 @@ public final class ApplicationVariables {
      * 
      * <dl>
      * 
-     * <dt>{@value #FIELD_HANDLING_REQUEST_TRAILER}</dt>
+     * <dt><samp>{@value "%s"
+     * #FIELD_HANDLING_REQUEST_TRAILER}</samp></dt>
      * 
      * <dd>
      * <p>

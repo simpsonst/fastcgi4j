@@ -64,7 +64,7 @@ abstract class StandardNamespace extends StaticNamespace {
 
     /**
      * {@inheritDoc} This fails if the core name matches
-     * {@value #BAD_FIELD_PATTERN_TEXT}
+     * <samp>{@value "%s" #BAD_FIELD_PATTERN_TEXT}</samp>.
      * 
      * @param core the core name for the field
      * 

@@ -55,11 +55,12 @@ import java.util.regex.Pattern;
  * <samp>!#$%&amp;'*+-.`^_{|}~</samp>.
  * 
  * <p>
- * Alternatively, the plain string {@value #INCLUDED_TOKEN} is accepted
- * to identify processing as part of a composite document; this is
- * referred to here as the <dfn>inclusion protocol</dfn>. The name is
- * set to {@value #INCLUDED_NAME}, the major version set to
- * {@value #INCLUDED_MAJOR}, and the minor to {@value #INCLUDED_MINOR}.
+ * Alternatively, the plain string <code>{@value #INCLUDED_TOKEN}</code>
+ * is accepted to identify processing as part of a composite document;
+ * this is referred to here as the <dfn>inclusion protocol</dfn>. The
+ * name is set to <code>{@value #INCLUDED_NAME}</code>, the major
+ * version set to {@value "%d" #INCLUDED_MAJOR}, and the minor to
+ * {@value "%d" #INCLUDED_MINOR}.
  *
  * @author simpsons
  * 
@@ -107,7 +108,7 @@ public final class ServerProtocol {
 
     /**
      * Get the protocol name. For the inclusion protocol, this is
-     * {@value #INCLUDED_NAME}.
+     * <code>{@value #INCLUDED_NAME}</code>.
      * 
      * @return the protocol name
      */
@@ -138,7 +139,7 @@ public final class ServerProtocol {
 
     /**
      * Get the major version number. For the inclusion protocol, this is
-     * {@value #INCLUDED_MAJOR}.
+     * {@value "%d" #INCLUDED_MAJOR}.
      * 
      * @return the major version number
      */
@@ -148,7 +149,7 @@ public final class ServerProtocol {
 
     /**
      * Get the minor version number. For the inclusion protocol, this is
-     * {@value #INCLUDED_MINOR}.
+     * {@value "%d" #INCLUDED_MINOR}.
      * 
      * @return the minor version number
      */
@@ -186,12 +187,14 @@ public final class ServerProtocol {
 
     /**
      * Extract the server protocol from CGI parameters if present. The
-     * value of the parameter {@value #PROTO_VAR} is parsed if present.
+     * value of the parameter <samp>{@value "%s" #PROTO_VAR}</samp> is
+     * parsed if present.
      * 
      * @param params the CGI parameters
      * 
      * @return the parsed protocol; or {@code null} if
-     * {@value #PROTO_VAR} is not defined in the parameters
+     * <samp>{@value "%s" #PROTO_VAR}</samp> is not defined in the
+     * parameters
      */
     public static ServerProtocol
         ofOptional(Map<? super String, ? extends CharSequence> params) {
@@ -202,14 +205,14 @@ public final class ServerProtocol {
 
     /**
      * Extract the server protocol from CGI parameters. The value of the
-     * parameter {@value #PROTO_VAR} is parsed.
+     * parameter <samp>{@value "%s" #PROTO_VAR}</samp> is parsed.
      * 
      * @param params the CGI parameters
      * 
      * @return the parsed protocol
      * 
-     * @throws NullPointerException if {@value #PROTO_VAR} is not
-     * defined in the parameters
+     * @throws NullPointerException if <samp>{@value "%s"
+     * #PROTO_VAR}</samp> is not defined in the parameters
      */
     public static ServerProtocol
         of(Map<? super String, ? extends CharSequence> params) {
@@ -256,10 +259,10 @@ public final class ServerProtocol {
     /**
      * Get a string representation of the server protocol. For the
      * inclusion protocol, the representation is simply
-     * {@value #INCLUDED_TOKEN}. For other values, the representation is
-     * the name, followed by a slash <samp>/</samp> U+002F, the major
-     * version in denary, a dot <samp>.</samp> U+002E, and the minor
-     * version in denary, e.g. <samp>HTTP/1.0</samp>.
+     * <code>{@value #INCLUDED_TOKEN}</code>. For other values, the
+     * representation is the name, followed by a slash <samp>/</samp>
+     * U+002F, the major version in denary, a dot <samp>.</samp> U+002E,
+     * and the minor version in denary, e.g. <samp>HTTP/1.0</samp>.
      * 
      * @return the string representation
      */

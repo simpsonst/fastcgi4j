@@ -51,15 +51,16 @@ import uk.ac.lancs.scc.jardeps.Service;
 
 /**
  * Recognizes stand-alone Internet-domain transports. The environment
- * variable {@value InvocationVariables#INET_BIND_ADDR} must be set,
- * specifying the address to bind to. The environment variable
- * {@value InvocationVariables#WEB_SERVER_ADDRS} also must be set,
+ * variable <samp>{@value "%s"
+ * InvocationVariables#INET_BIND_ADDR}</samp> must be set, specifying
+ * the address to bind to. The environment variable <samp>{@value "%s"
+ * InvocationVariables#WEB_SERVER_ADDRS}</samp> also must be set,
  * listing valid peer addresses.
  * 
  * <p>
- * Each connection's description begins
- * {@value #STANDALONE_DESCRIPTION}. This prefix is combined with the
- * peer address in the form
+ * Each connection's description begins with
+ * <code>{@value #STANDALONE_DESCRIPTION}</code>. This prefix is
+ * combined with the peer address in the form
  * <samp><var>prefix</var>#<var>address</var></samp> to complete the
  * connection description.
  * 

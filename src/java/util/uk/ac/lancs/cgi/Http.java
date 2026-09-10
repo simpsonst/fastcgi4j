@@ -46,7 +46,7 @@ package uk.ac.lancs.cgi;
 public final class Http {
     /**
      * Holds the prefix used to identify HTTP fields expressed within
-     * CGI parameters. The value is {@value}.
+     * CGI parameters. The value is <code>{@value}</code>.
      */
     public static final String META_PREFIX = "HTTP_";
 

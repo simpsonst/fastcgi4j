@@ -76,7 +76,7 @@ public interface Session {
      * @param value the new value
      * 
      * @throws IllegalArgumentException if the field name is
-     * {@value #STATUS_FIELD}
+     * <code>{@value #STATUS_FIELD}</code>
      * 
      * @throws IllegalStateException if the response output has been
      * started (with {@link #out()})
@@ -85,7 +85,7 @@ public interface Session {
 
     /**
      * Specifies the header field name used to set the HTTP status code.
-     * The value is {@value}.
+     * The value is <code>{@value}</code>.
      */
     String STATUS_FIELD = "Status";
 
@@ -98,7 +98,7 @@ public interface Session {
      * @param value the additional value
      * 
      * @throws IllegalArgumentException if the field name is
-     * {@value #STATUS_FIELD}
+     * <code>{@value #STATUS_FIELD}</code>
      * 
      * @throws IllegalStateException if the response output has been
      * started (with {@link #out()})
@@ -111,7 +111,7 @@ public interface Session {
      * @param name the header field name
      * 
      * @throws IllegalArgumentException if the field name is
-     * {@value #STATUS_FIELD}
+     * <code>{@value #STATUS_FIELD}</code>
      * 
      * @throws IllegalStateException if the response output has been
      * started (with {@link #out()})

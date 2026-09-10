@@ -65,23 +65,23 @@ import java.util.logging.Logger;
  * <dd>This is the size of each memory chunk (a byte array). Data exists
  * between a read index and a write index, and is moved back to the
  * start of the array to reclaim space. This parameter is controlled
- * with {@link Builder#memChunkSize}, and defaults to
- * {@value #MEM_CHUNK_SIZE}.
+ * with {@link Builder#memChunkSize}, and defaults to {@value "%d"
+ * #MEM_CHUNK_SIZE}.
  * 
  * <dt>RAM threshold
  * 
  * <dd>The amount of memory in use by all chunks created by this piper
  * is tracked. When it exceeds this threshold, the next chunk created
  * will likely be a file chunk. This parameter is controlled with
- * {@link Builder#ramThreshold}, and defaults to
- * {@value #RAM_THRESHOLD}.
+ * {@link Builder#ramThreshold}, and defaults to {@value "%d"
+ * #RAM_THRESHOLD}.
  * 
  * <dt>max file size
  * 
  * <dd>When the file backing a chunk reaches this size, no more bytes
  * are written to it, and a new chunk is required. This parameter is
  * controlled with {@link Builder#maxFileSize}, and defaults to
- * {@value #MAX_FILE_SIZE}.
+ * {@value "%d" #MAX_FILE_SIZE}.
  * 
  * </dl>
  * 
@@ -113,38 +113,41 @@ public final class CachePiper implements Piper {
 
     /**
      * The default threshold in bytes to switch to caching stream data
-     * in file chunks, namely {@value}, overridden by
+     * in file chunks, namely {@value "%d"}, overridden by
      * {@link Builder#ramThreshold(int)}
      */
     public static final int RAM_THRESHOLD = 1 * 1024 * 1024;
 
     /**
-     * The default prefix for chunk files, namely {@value}, overridden
-     * by the first argument to {@link Builder#format(String, String)}
+     * The default prefix for chunk files, namely
+     * <code>{@value}</code>, overridden by the first argument to
+     * {@link Builder#format(String, String)}
      */
     public static final String PREFIX = "fastcgi-";
 
     /**
-     * The default suffix for chunk files, namely {@value}, overridden
-     * by the second argument to {@link Builder#format(String, String)}
+     * The default suffix for chunk files, namely
+     * <code>{@value}</code>, overridden by the second argument to
+     * {@link Builder#format(String, String)}
      */
     public static final String SUFFIX = ".chunk";
 
     /**
-     * The default size in bytes for chunk files, namely
-     * {@value}, overridden by {@link Builder#maxFileSize(long)}
+     * The default size in bytes for chunk files, namely {@value "%d"},
+     * overridden by {@link Builder#maxFileSize(long)}
      */
     public static final long MAX_FILE_SIZE = 1 * 1024 * 1024;
 
     /**
      * The default size in bytes of each memory chunk, namely
-     * {@value}, overridden by {@link Builder#memChunkSize(int)}
+     * {@value "%d"}, overridden by {@link Builder#memChunkSize(int)}
      */
     public static final int MEM_CHUNK_SIZE = 1024;
 
     /**
      * The {@linkplain System#getProperties() system property} whose
-     * value is the default directory for chunk files
+     * value is the default directory for chunk files, namely
+     * <samp>{@value "%s"}</samp>
      */
     public static final String TMPDIR_SYSPROP = "java.io.tmpdir";
 
@@ -194,7 +197,8 @@ public final class CachePiper implements Piper {
 
         /**
          * Set the prefix and suffix of chunk files. The defaults are
-         * {@value #PREFIX} and {@value #SUFFIX}.
+         * <code>{@value #PREFIX}</code> and
+         * <code>{@value #SUFFIX}</code>.
          * 
          * @param prefix the prefix of all chunk files
          * 

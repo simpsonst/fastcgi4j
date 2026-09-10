@@ -105,8 +105,8 @@ public final class LongInputStream extends InputStream {
 
     /**
      * Estimate the number of bytes that can be read without blocking.
-     * As the stream is infinite, {@value Integer#MAX_VALUE} is
-     * returned.
+     * As the stream is infinite,
+     * <code>{@value "%#x" Integer#MAX_VALUE}</code> is returned.
      * 
      * @return the estimated number of bytes available
      * 

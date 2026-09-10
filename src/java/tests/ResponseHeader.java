@@ -82,7 +82,7 @@ public class ResponseHeader extends Header {
 
     /**
      * Parse the response line, and store the components. The pattern
-     * must match {@value #FIRST_LINE_PATTERN_STRING}.
+     * must match <code>{@value #FIRST_LINE_PATTERN_STRING}</code>.
      * 
      * @param txt the unparsed response line
      */

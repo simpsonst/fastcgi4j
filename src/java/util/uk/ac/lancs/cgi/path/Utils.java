@@ -345,13 +345,14 @@ class Utils {
 
     /**
      * Get the internal server address from CGI parameters. The
-     * parameters {@value CGIParameters#SCHEME_PARAM},
-     * {@value CGIParameters#SERVER_NAME_PARAM} and
-     * {@value CGIParameters#SERVER_PORT_PARAM} are used. However, if
-     * the protocol in {@value CGIParameters#SERVER_PROTOCOL_PARAM} is
-     * recognized, and supports virtual hosting, the virtual host is
-     * used instead of {@value CGIParameters#SERVER_NAME_PARAM} and
-     * {@value CGIParameters#SERVER_PORT_PARAM}.
+     * parameters <samp>{@value "%s" CGIParameters#SCHEME_PARAM}</samp>,
+     * <samp>{@value "%s" CGIParameters#SERVER_NAME_PARAM}</samp> and
+     * <samp>{@value "%s" CGIParameters#SERVER_PORT_PARAM}</samp> are
+     * used. However, if the protocol in <samp>{@value "%s"
+     * CGIParameters#SERVER_PROTOCOL_PARAM}</samp> is recognized, and
+     * supports virtual hosting, the virtual host is used instead of
+     * <samp>{@value "%s" CGIParameters#SERVER_NAME_PARAM}</samp> and
+     * <samp>{@value "%s" CGIParameters#SERVER_PORT_PARAM}</samp>.
      *
      * <p>
      * Only HTTP is recognized, and the value of <samp>HTTP_HOST</samp>

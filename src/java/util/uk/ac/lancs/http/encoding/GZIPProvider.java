@@ -50,8 +50,9 @@ import uk.ac.lancs.scc.jardeps.Service;
 
 /**
  * Provides GZIP encoding. This goes by the canonical name
- * {@value #NAME} and also {@value #OTHER_NAME}, and is used for both
- * content and transfer encoding.
+ * <samp>{@value "%s" #NAME}</samp> and also <samp>{@value "%s"
+ * #OTHER_NAME}</samp>, and is used for both content and transfer
+ * encoding.
  * 
  * <p>
  * Properties are recognized with the following forms:
@@ -68,9 +69,9 @@ import uk.ac.lancs.scc.jardeps.Service;
  * <var>dir</var> is <samp>in</samp> or <samp>out</samp>.
  * 
  * <p>
- * {@value #QUALITY_PROP} is a real number in the range [0.0, 1.0], and
- * defaults to {@value #DEFAULT_QUALITY}. It currently does not apply to
- * input.
+ * <samp>{@value "%s" #QUALITY_PROP}</samp> is a real number in the
+ * range [0.0, 1.0], and defaults to {@value "%g" #DEFAULT_QUALITY}. It
+ * currently does not apply to input.
  * 
  * @see <a href="https://datatracker.ietf.org/doc/html/rfc1952"
  * title="GZIP file format specification version 4.3">RFC1952</a>

@@ -103,11 +103,12 @@ public final class PrincipalRequirement {
 
     /**
      * Create a requirement from a textual specification. The text must
-     * match the regular expression {@value #PRINCIPAL_TEXT}, and must
-     * not be an empty string. Everything up to the <samp>&#64;</samp>
-     * is taken as the user; if empty, any user matches. The group is
-     * specified after the <samp>&#64;</samp>. If no <samp>&#64;</samp>
-     * is given, the string is taken as a user, and any group matches.
+     * match the regular expression <samp>{@value "%s"
+     * #PRINCIPAL_TEXT}</samp>, and must not be an empty string.
+     * Everything up to the <samp>&#64;</samp> is taken as the user; if
+     * empty, any user matches. The group is specified after the
+     * <samp>&#64;</samp>. If no <samp>&#64;</samp> is given, the string
+     * is taken as a user, and any group matches.
      * 
      * @param text the specification
      * 

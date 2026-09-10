@@ -149,8 +149,9 @@ public class DiagnosticInputStream extends InputStream {
 
     /**
      * Estimate the number of bytes that can be read without blocking.
-     * This will typically return {@value Integer#MAX_VALUE} until very
-     * close to the end.
+     * This will typically return
+     * <code>{@value "%#x" Integer#MAX_VALUE}</code> until very close to
+     * the end.
      * 
      * @return the estimated number of bytes
      * 

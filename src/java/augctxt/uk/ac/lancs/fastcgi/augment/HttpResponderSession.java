@@ -99,8 +99,8 @@ public class HttpResponderSession {
 
     /**
      * Identifies the protocol used by the client to talk to the server.
-     * This is taken from the CGI parameter
-     * {@value CGIParameters#SERVER_PROTOCOL_PARAM}.
+     * This is taken from the CGI parameter <samp>{@value "%s"
+     * CGIParameters#SERVER_PROTOCOL_PARAM}</samp>.
      */
     protected final ServerProtocol protocol;
 
@@ -145,8 +145,9 @@ public class HttpResponderSession {
     }
 
     /**
-     * Get the request method. The parameter
-     * {@value CGIParameters#METHOD_PARAM} is returned.
+     * Get the request method. The value of the CGI parameter
+     * <samp>{@value "%s" CGIParameters#METHOD_PARAM}</samp> is
+     * returned.
      * 
      * @return the request method
      * 
@@ -171,15 +172,16 @@ public class HttpResponderSession {
     private static final String TE_PARAM = Http.fieldNameAsCGI(TE_FIELD);
 
     /**
-     * Parse the {@value #TE_FIELD} request header field as a
-     * comma-separated sequence of tokens with optional parameters. The
-     * field is obtained through the CGI parameter. The result is stored
-     * in {@link #acceptedTransferEncodings} if it is currently
-     * {@code null}, so only the first call actually does anything.
+     * Parse the <samp>{@value "%s" #TE_FIELD}</samp> request header
+     * field as a comma-separated sequence of tokens with optional
+     * parameters. The field is obtained through the CGI parameter. The
+     * result is stored in {@link #acceptedTransferEncodings} if it is
+     * currently {@code null}, so only the first call actually does
+     * anything.
      * 
      * <p>
      * For HTTP/2 and later, the field is ignored if it doesn't contain
-     * the token {@value #TRAILERS_TOKEN}.
+     * the token <samp>{@value "%s" #TRAILERS_TOKEN}</samp>.
      */
     private void getAcceptedTransferEncodings() {
         if (acceptedTransferEncodings != null) return;
@@ -346,9 +348,10 @@ public class HttpResponderSession {
 
     /**
      * Get the content type of the request body. The parameter
-     * {@value CGIParameters#REQUEST_TYPE_PARAM} is consulted. If a
-     * request body is expected, but no request content type has been
-     * specified, <samp>application/octet-stream</samp> is returned.
+     * <samp>{@value "%s" CGIParameters#REQUEST_TYPE_PARAM}</samp> is
+     * consulted. If a request body is expected, but no request content
+     * type has been specified, <samp>application/octet-stream</samp> is
+     * returned.
      * 
      * @return the request body's content type; or {@code null} if there
      * is no body
@@ -407,8 +410,9 @@ public class HttpResponderSession {
     /**
      * Get the sequence of encodings required to decode the request.
      * This is obtained by parsing the HTTP request field
-     * {@value #CONTENT_ENCODING_FIELD} as comma-separated tokens. The
-     * first entry was applied first to request body.
+     * <samp>{@value "%s" #CONTENT_ENCODING_FIELD}</samp> as
+     * comma-separated tokens. The first entry was applied first to
+     * request body.
      * 
      * <p>
      * This method takes into account the application's calls to
@@ -507,8 +511,8 @@ public class HttpResponderSession {
     private long requestLength = -2;
 
     /**
-     * Get the request body's length. The parameter
-     * {@value CGIParameters#REQUEST_LENGTH_PARAM} is read as a decimal
+     * Get the request body's length. The parameter <samp>{@value "%s"
+     * CGIParameters#REQUEST_LENGTH_PARAM}</samp> is read as a decimal
      * integer. If not present, or an empty string, the length is deemed
      * unknown.
      * 

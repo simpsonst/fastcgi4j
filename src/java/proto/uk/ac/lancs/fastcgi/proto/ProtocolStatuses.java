@@ -53,27 +53,29 @@ public final class ProtocolStatuses {
 
     /**
      * Indicates that the request is complete. The value is
-     * {@value}, corresponding to <code>FCGI_REQUEST_COMPLETE</code>.
+     * <code>{@value}</code>, corresponding to
+     * <code>FCGI_REQUEST_COMPLETE</code>.
      */
     public static final byte REQUEST_COMPLETE = 0;
 
     /**
      * Indicates that another request is open on this connection, and
      * the application does not multiplex requests. The value is
-     * {@value}, corresponding to <code>FCGI_CANT_MPX_CONN</code>.
+     * <code>{@value}</code>, corresponding to
+     * <code>FCGI_CANT_MPX_CONN</code>.
      */
     public static final byte CANT_MPX_CONN = 1;
 
     /**
      * Indicates that the application currently can't handle another
-     * request. The value is {@value}, corresponding to
+     * request. The value is <code>{@value}</code>, corresponding to
      * <code>FCGI_OVERLOADED</code>.
      */
     public static final byte OVERLOADED = 2;
 
     /**
      * Indicates that the request's role cannot be fulfilled by the
-     * application. The value is {@value}, corresponding to
+     * application. The value is <code>{@value}</code>, corresponding to
      * <code>FCGI_UNKNOWN_ROLE</code>.
      */
     public static final byte UNKNOWN_ROLE = 3;
@@ -82,7 +84,8 @@ public final class ProtocolStatuses {
 
     /**
      * Get a string representation of a protocol status. An unknown
-     * numeric value is prefixed with {@value #UNKNOWN_PREFIX}.
+     * numeric value is prefixed with
+     * <code>{@value #UNKNOWN_PREFIX}</code>.
      * 
      * @param status the status
      * 

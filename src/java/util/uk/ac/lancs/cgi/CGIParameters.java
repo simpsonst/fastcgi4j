@@ -48,7 +48,7 @@ public final class CGIParameters {
 
     /**
      * Names the CGI parameter stating the scheme of the URI. The value
-     * is {@value}.
+     * is <code>{@value}</code>.
      * 
      * <p>
      * This parameter doesn't seem to have any formal definition, but
@@ -69,7 +69,7 @@ public final class CGIParameters {
 
     /**
      * Names the CGI parameter providing the query string. The value is
-     * {@value}.
+     * <code>{@value}</code>.
      * 
      * @see <a href=
      * "https://datatracker.ietf.org/doc/html/rfc3875#section-4.1.7">RFC3875
@@ -79,7 +79,7 @@ public final class CGIParameters {
 
     /**
      * Names the CGI parameter stating the protocol used between server
-     * and client. The value is {@value}.
+     * and client. The value is <samp>{@value}</samp>.
      * 
      * @see <a href=
      * "https://datatracker.ietf.org/doc/html/rfc3875#section-4.1.16">RFC3875
@@ -89,7 +89,8 @@ public final class CGIParameters {
 
     /**
      * Names the CGI parameter stating the name of the server's host
-     * through which the client is accessing it. The value is {@value}.
+     * through which the client is accessing it. The value is
+     * <samp>{@value}</samp>.
      * 
      * @see <a href=
      * "https://datatracker.ietf.org/doc/html/rfc3875#section-4.1.14">RFC3875
@@ -99,7 +100,8 @@ public final class CGIParameters {
 
     /**
      * Names the CGI parameter stating the port of the server's host
-     * through which the client is accessing it. The value is {@value}.
+     * through which the client is accessing it. The value is
+     * <samp>{@value}</samp>.
      * 
      * @see <a href=
      * "https://datatracker.ietf.org/doc/html/rfc3875#section-4.1.15">RFC3875
@@ -109,7 +111,7 @@ public final class CGIParameters {
 
     /**
      * Names the CGI parameter indicating the request method. The value
-     * is {@value}.
+     * is <samp>{@value}</samp>.
      * 
      * @see <a href=
      * "https://datatracker.ietf.org/doc/html/rfc3875/#section-4.1.12">RFC3875
@@ -119,7 +121,7 @@ public final class CGIParameters {
 
     /**
      * Names the CGI parameter giving the request body's content type.
-     * The value is {@value}.
+     * The value is <samp>{@value}</samp>.
      * 
      * @see <a href=
      * "https://datatracker.ietf.org/doc/html/rfc3875/#section-4.1.3">RFC3875
@@ -129,7 +131,7 @@ public final class CGIParameters {
 
     /**
      * Names the CGI parameter giving the length of the request body.
-     * The value is {@value}.
+     * The value is <samp>{@value}</samp>.
      * 
      * @see <a href=
      * "https://datatracker.ietf.org/doc/html/rfc3875/#section-4.1.2">RFC3875
@@ -139,7 +141,8 @@ public final class CGIParameters {
 
     /**
      * Names the CGI parameter containing any sub-path beyond that which
-     * identifies the script to be invoked. The value is {@value}.
+     * identifies the script to be invoked. The value is
+     * <samp>{@value}</samp>.
      * 
      * @see <a href=
      * "https://datatracker.ietf.org/doc/html/rfc3875/#section-4.1.5">RFC3875
@@ -149,7 +152,7 @@ public final class CGIParameters {
 
     /**
      * Names the CGI parameter identifying the script. The value is
-     * {@value}.
+     * <samp>{@value}</samp>.
      * 
      * @see <a href=
      * "https://datatracker.ietf.org/doc/html/rfc3875/#section-4.1.13">RFC3875

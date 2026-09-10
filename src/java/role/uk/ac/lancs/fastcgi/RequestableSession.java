@@ -79,9 +79,10 @@ public interface RequestableSession extends Session {
      * <p>
      * This is an experimental extension to FastCGI/1.0. It will only be
      * enabled if the server requests an application value
-     * {@value uk.ac.lancs.fastcgi.proto.ApplicationVariables#FIELD_HANDLING},
-     * and recognizes the token
-     * {@value uk.ac.lancs.fastcgi.proto.ApplicationVariables#FIELD_HANDLING_REQUEST_TRAILER}
+     * <samp>{@value "%s"
+     * uk.ac.lancs.fastcgi.proto.ApplicationVariables#FIELD_HANDLING}</samp>,
+     * and recognizes the token <samp>{@value "%s"
+     * uk.ac.lancs.fastcgi.proto.ApplicationVariables#FIELD_HANDLING_REQUEST_TRAILER}</samp>
      * in response.
      * 
      * @return an immutable set of trailer fields

@@ -50,8 +50,9 @@ import java.util.zip.DeflaterOutputStream;
 import uk.ac.lancs.scc.jardeps.Service;
 
 /**
- * Provides DEFLATE encoding. This goes by the sole name {@value #NAME},
- * and is used for both content and transfer encoding.
+ * Provides DEFLATE encoding. This goes by the sole name
+ * <samp>{@value "%s" #NAME}</samp>, and is used for both content and
+ * transfer encoding.
  * 
  * <p>
  * Properties are recognized with the following forms:
@@ -68,13 +69,14 @@ import uk.ac.lancs.scc.jardeps.Service;
  * <var>pfx</var> are given to the provider on invocation.
  * 
  * <p>
- * {@value #LEVEL_PROP} is an integer in the range 0 to 9, and defaults
- * to {@value #DEFAULT_LEVEL}. It does not apply to input.
+ * <samp>{@value "%s" #LEVEL_PROP}</samp> is an integer in the range 0
+ * to 9, and defaults to {@value "%d" #DEFAULT_LEVEL}. It does not apply
+ * to input.
  * 
  * <p>
- * {@value #QUALITY_PROP} is a real number in the range [0.0, 1.0], and
- * defaults to {@value #DEFAULT_QUALITY}. It currently does not apply to
- * input.
+ * <samp>{@value "%s" #QUALITY_PROP}</samp> is a real number in the
+ * range [0.0, 1.0], and defaults to {@value "%g" #DEFAULT_QUALITY}. It
+ * currently does not apply to input.
  *
  * @see <a href="https://datatracker.ietf.org/doc/html/rfc1951"
  * title="DEFLATE Compressed Data Format Specification version 1.3">RFC1951</a>

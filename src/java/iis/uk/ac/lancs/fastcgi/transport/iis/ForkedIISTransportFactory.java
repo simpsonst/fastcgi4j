@@ -47,7 +47,7 @@ import uk.ac.lancs.scc.jardeps.Service;
 
 /**
  * Recognizes invocation by IIS as a FastCGI process, if the environment
- * variable {@value #ENV_NAME} is set.
+ * variable <samp>{@value "%s" #ENV_NAME}</samp> is set.
  * 
  * @author simpsons
  */

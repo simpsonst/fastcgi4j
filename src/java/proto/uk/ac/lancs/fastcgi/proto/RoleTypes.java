@@ -53,7 +53,8 @@ public final class RoleTypes {
 
     /**
      * Indicates that the application is expected to respond to the
-     * request as a responder. The value is {@value}, corresponding to
+     * request as a responder. The value is
+     * <code>{@value}</code>, corresponding to
      * <code>FCGI_RESPONDER</code>.
      * 
      * @see <a href=
@@ -65,7 +66,8 @@ public final class RoleTypes {
 
     /**
      * Indicates that the application is expected to respond to the
-     * request as an authorizer. The value is {@value}, corresponding to
+     * request as an authorizer. The value is
+     * <code>{@value}</code>, corresponding to
      * <code>FCGI_AUTHORIZER</code>.
      * 
      * @see <a href=
@@ -77,8 +79,8 @@ public final class RoleTypes {
 
     /**
      * Indicates that the application is expected to respond to the
-     * request as a filter. The value is {@value}, corresponding to
-     * <code>FCGI_FILTER</code>.
+     * request as a filter. The value is
+     * <code>{@value}</code>, corresponding to <code>FCGI_FILTER</code>.
      * 
      * @see <a href=
      * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.4">FastCGI

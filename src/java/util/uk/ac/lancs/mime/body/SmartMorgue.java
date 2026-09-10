@@ -99,11 +99,11 @@ public final class SmartMorgue implements Morgue {
      * Prepare to build a smart morgue.
      * 
      * @return a builder set to use the system property
-     * {@value #DEFAULT_DIR_PROPERTY} to locate the directory for
-     * transient files, {@value #DEFAULT_SINGLE_THRESHOLD} as the
-     * single-body memory threshold, and
-     * {@value #DEFAULT_MEMORY_THRESHOLD} as the multi-body memory
-     * threshold
+     * <samp>{@value "%s" #DEFAULT_DIR_PROPERTY}</samp> to locate the
+     * directory for transient files, {@value "%d"
+     * #DEFAULT_SINGLE_THRESHOLD} as the single-body memory threshold,
+     * and {@value "%d" #DEFAULT_MEMORY_THRESHOLD} as the multi-body
+     * memory threshold
      */
     public static Builder start() {
         return new Builder();

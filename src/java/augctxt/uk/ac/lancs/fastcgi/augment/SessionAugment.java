@@ -88,7 +88,8 @@ public final class SessionAugment {
 
     /**
      * Get the client's encoding preference. This is extracted from the
-     * {@value #ACCEPT_ENCODING_FIELD} request header field if present.
+     * <samp>{@value "%s" #ACCEPT_ENCODING_FIELD}</samp> request header
+     * field if present.
      * {@link Negotiation#getAtomPreference(CharSequence)} is used to
      * parse the field value.
      * 
@@ -108,7 +109,8 @@ public final class SessionAugment {
 
     /**
      * Get the client's media-type preferences. This is extracted from
-     * the {@value #ACCEPT_FIELD} request header field if present.
+     * the <samp>{@value "%s" #ACCEPT_FIELD}</samp> request header field
+     * if present.
      * {@link Negotiation#getMediaTypePreference(CharSequence)} is used
      * to parse the field value.
      * 
@@ -210,8 +212,9 @@ public final class SessionAugment {
     /**
      * Get the output stream with encodings applied. On the first call,
      * encodings specified by other calls are applied to the basic
-     * session's stream, and the {@value #CONTENT_ENCODING_VAR} and
-     * {@value #TRANSFER_ENCODING_VAR} header fields are set. Subsequent
+     * session's stream, and the <samp>{@value "%s"
+     * #CONTENT_ENCODING_VAR}</samp> and <samp>{@value "%s"
+     * #TRANSFER_ENCODING_VAR}</samp> header fields are set. Subsequent
      * calls will yield the same stream. Calling this method prevents
      * the calling of other methods that modify encoding.
      * 

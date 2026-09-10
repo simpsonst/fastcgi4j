@@ -74,18 +74,19 @@ import uk.ac.lancs.scc.jardeps.Service;
  * 
  * <ul>
  * 
- * <li>{@value ApplicationVariables#MAX_CONNS} is set to
- * {@link Attribute#MAX_CONN} if positive.
+ * <li><samp>{@value "%s" ApplicationVariables#MAX_CONNS}</samp> is set
+ * to {@link Attribute#MAX_CONN} if positive.
  * 
- * <li>{@value ApplicationVariables#MAX_REQS} is set to
- * {@link Attribute#MAX_SESS} if positive.
+ * <li><samp>{@value "%s" ApplicationVariables#MAX_REQS}</samp> is set
+ * to {@link Attribute#MAX_SESS} if positive.
  * 
- * <li>{@value ApplicationVariables#MPXS_CONNS} is set to <samp>1</samp>
- * if {@link Attribute#MAX_SESS_PER_CONN} is 1, or to <samp>0</samp>
- * otherwise.
+ * <li><samp>{@value "%s" ApplicationVariables#MPXS_CONNS}</samp> is set
+ * to <samp>1</samp> if {@link Attribute#MAX_SESS_PER_CONN} is 1, or to
+ * <samp>0</samp> otherwise.
  * 
- * <li>{@value ApplicationVariables#FIELD_HANDLING} is set to
- * {@value ApplicationVariables#FIELD_HANDLING_REQUEST_TRAILER}. This is
+ * <li><samp>{@value "%s" ApplicationVariables#FIELD_HANDLING}</samp> is
+ * set to <samp>{@value "%s"
+ * ApplicationVariables#FIELD_HANDLING_REQUEST_TRAILER}</samp>. This is
  * an experimental extension to FastCGI/1.0.
  * 
  * </ul>

@@ -98,7 +98,8 @@ public final class InboundCacheControl {
 
     /**
      * Specifies that a resource never goes stale. This means that
-     * {@value Directives#MAX_STALE} was specified without a value.
+     * <samp>{@value "%s" Directives#MAX_STALE}</samp> was specified
+     * without a value.
      */
     public static final int UNLIMITED = -2;
 
@@ -282,18 +283,17 @@ public final class InboundCacheControl {
      * 
      * @param fieldId the field to test
      * 
-     * @return {@code true} if an unqualified
-     * {@value Directives#NO_CACHE} directive was specified, or the
-     * given field was specified in the directive; {@code false}
-     * otherwise
+     * @return {@code true} if an unqualified <samp>{@value "%s"
+     * Directives#NO_CACHE}</samp> directive was specified, or the given
+     * field was specified in the directive; {@code false} otherwise
      */
     public boolean noCache(FieldId fieldId) {
         return noCache || noCacheFields.contains(fieldId);
     }
 
     /**
-     * Determine whether the {@value Directives#MUST_REVALIDATE}
-     * directive is present.
+     * Determine whether the <samp>{@value "%s"
+     * Directives#MUST_REVALIDATE}</samp> directive is present.
      * 
      * @return {@code true} if the directive is present; {@code false}
      * otherwise
@@ -303,8 +303,8 @@ public final class InboundCacheControl {
     }
 
     /**
-     * Determine whether the {@value Directives#PROXY_REVALIDATE}
-     * directive is present.
+     * Determine whether the <samp>{@value "%s"
+     * Directives#PROXY_REVALIDATE}</samp> directive is present.
      * 
      * @return {@code true} if the directive is present; {@code false}
      * otherwise
@@ -314,8 +314,8 @@ public final class InboundCacheControl {
     }
 
     /**
-     * Determine whether the {@value Directives#MUST_UNDERSTAND}
-     * directive is present.
+     * Determine whether the <samp>{@value "%s"
+     * Directives#MUST_UNDERSTAND}</samp> directive is present.
      * 
      * @return {@code true} if the directive is present; {@code false}
      * otherwise
@@ -325,8 +325,8 @@ public final class InboundCacheControl {
     }
 
     /**
-     * Determine whether the {@value Directives#PRIVATE} directive is
-     * present.
+     * Determine whether the <samp>{@value "%s"
+     * Directives#PRIVATE}</samp> directive is present.
      * 
      * @return {@code true} if the directive is present; {@code false}
      * otherwise
@@ -336,8 +336,8 @@ public final class InboundCacheControl {
     }
 
     /**
-     * Determine whether the {@value Directives#PUBLIC} directive is
-     * present.
+     * Determine whether the <samp>{@value "%s"
+     * Directives#PUBLIC}</samp> directive is present.
      * 
      * @return {@code true} if the directive is present; {@code false}
      * otherwise
@@ -347,8 +347,8 @@ public final class InboundCacheControl {
     }
 
     /**
-     * Determine whether the {@value Directives#IMMUTABLE} directive is
-     * present.
+     * Determine whether the <samp>{@value "%s"
+     * Directives#IMMUTABLE}</samp> directive is present.
      * 
      * @return {@code true} if the directive is present; {@code false}
      * otherwise
@@ -358,8 +358,8 @@ public final class InboundCacheControl {
     }
 
     /**
-     * Determine whether the {@value Directives#STALE_WHILE_REVALIDATE}
-     * directive is present.
+     * Determine whether the <samp>{@value "%s"
+     * Directives#STALE_WHILE_REVALIDATE}</samp> directive is present.
      * 
      * @return {@code true} if the directive is present; {@code false}
      * otherwise
@@ -369,8 +369,8 @@ public final class InboundCacheControl {
     }
 
     /**
-     * Determine whether the {@value Directives#STALE_IF_ERROR}
-     * directive is present.
+     * Determine whether the <samp>{@value "%s"
+     * Directives#STALE_IF_ERROR}</samp> directive is present.
      * 
      * @return {@code true} if the directive is present; {@code false}
      * otherwise
@@ -380,8 +380,8 @@ public final class InboundCacheControl {
     }
 
     /**
-     * Determine whether the {@value Directives#NO_STORE} directive is
-     * present.
+     * Determine whether the <samp>{@value "%s"
+     * Directives#NO_STORE}</samp> directive is present.
      * 
      * @return {@code true} if the directive is present; {@code false}
      * otherwise
@@ -391,7 +391,8 @@ public final class InboundCacheControl {
     }
 
     /**
-     * Get the argument of the {@value Directives#S_MAXAGE} directive.
+     * Get the argument of the <samp>{@value "%s"
+     * Directives#S_MAXAGE}</samp> directive.
      * 
      * @return the non-negative integral value of the directive; or
      * {@link #UNSPECIFIED} if not specified
@@ -401,7 +402,8 @@ public final class InboundCacheControl {
     }
 
     /**
-     * Get the argument of the {@value Directives#MAX_AGE} directive.
+     * Get the argument of the <samp>{@value "%s"
+     * Directives#MAX_AGE}</samp> directive.
      * 
      * @return the non-negative integral value of the directive; or
      * {@link #UNSPECIFIED} if not specified
@@ -415,7 +417,8 @@ public final class InboundCacheControl {
     }
 
     /**
-     * Get the argument of the {@value Directives#MAX_STALE} directive.
+     * Get the argument of the <samp>{@value "%s"
+     * Directives#MAX_STALE}</samp> directive.
      * 
      * @return the non-negative integral value of the directive; or
      * {@link #UNLIMITED} if the directive was specified without a
@@ -430,7 +433,8 @@ public final class InboundCacheControl {
     }
 
     /**
-     * Get the argument of the {@value Directives#MIN_FRESH} directive.
+     * Get the argument of the <samp>{@value "%s"
+     * Directives#MIN_FRESH}</samp> directive.
      * 
      * @return the non-negative integral value of the directive; or
      * {@code -1} if not specified
@@ -440,8 +444,8 @@ public final class InboundCacheControl {
     }
 
     /**
-     * Determine whether the {@value Directives#NO_CACHE} directive is
-     * present.
+     * Determine whether the <samp>{@value "%s"
+     * Directives#NO_CACHE}</samp> directive is present.
      * 
      * @return {@code true} if the directive is present; {@code false}
      * otherwise
@@ -455,8 +459,8 @@ public final class InboundCacheControl {
     }
 
     /**
-     * Determine whether the {@value Directives#NO_TRANSFORM} directive
-     * is present.
+     * Determine whether the <samp>{@value "%s"
+     * Directives#NO_TRANSFORM}</samp> directive is present.
      * 
      * @return {@code true} if the directive is present; {@code false}
      * otherwise
@@ -466,8 +470,8 @@ public final class InboundCacheControl {
     }
 
     /**
-     * Determine whether the {@value Directives#ONLY_IF_CACHED}
-     * directive is present.
+     * Determine whether the <samp>{@value "%s"
+     * Directives#ONLY_IF_CACHED}</samp> directive is present.
      * 
      * @return {@code true} if the directive is present; {@code false}
      * otherwise

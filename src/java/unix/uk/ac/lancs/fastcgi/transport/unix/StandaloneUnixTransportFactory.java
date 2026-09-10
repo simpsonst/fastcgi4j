@@ -64,16 +64,18 @@ import uk.ac.lancs.scc.jardeps.Service;
 
 /**
  * Recognizes stand-alone Unix-domain transports. The environment
- * variable {@value InvocationVariables#UNIX_BIND_ADDR} must be set,
- * specifying the file of the rendezvous point. If the environment
- * variable {@value InvocationVariables#LEGIT_PEERS} is set, it must be
- * a comma-separated list of legitimate principals, each of the form
- * <samp><var>user</var></samp>, <samp>&#64;<var>group</var></samp> or
- * <samp><var>user</var>&#64;<var>group</var></samp>, and only peers
+ * variable <samp>{@value "%s"
+ * InvocationVariables#UNIX_BIND_ADDR}</samp> must be set, specifying
+ * the file of the rendezvous point. If the environment variable
+ * <samp>{@value "%s" InvocationVariables#LEGIT_PEERS}</samp> is set, it
+ * must be a comma-separated list of legitimate principals, each of the
+ * form <samp><var>user</var></samp>, <samp>&#64;<var>group</var></samp>
+ * or <samp><var>user</var>&#64;<var>group</var></samp>, and only peers
  * calling with at least one of those identities will be accepted.
  * 
  * <p>
- * Each connection's description is {@value #STANDALONE_DESCRIPTION}.
+ * Each connection's description is
+ * <code>{@value #STANDALONE_DESCRIPTION}</code>.
  * 
  * @author simpsons
  */

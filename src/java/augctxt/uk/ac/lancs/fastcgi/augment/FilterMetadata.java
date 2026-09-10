@@ -49,15 +49,16 @@ import uk.ac.lancs.fastcgi.FilterSession;
 public final class FilterMetadata {
     /**
      * Identifies the request parameter that a filter receives giving
-     * the last-modification time of the data. The value is
-     * {@value}, and is used by {@link #dataLastModified()}.
+     * the last-modification time of the data. The parameter is
+     * <samp>{@value "%s"}</samp>, and is used by
+     * {@link #dataLastModified()}.
      */
     public static final String DATA_LAST_MOD_PARAM = "FCGI_DATA_LAST_MOD";
 
     /**
      * Identifies the request parameter that a filter receives giving
-     * the length of the data in bytes. The value is {@value}, and is
-     * used by {@link #dataLength()}.
+     * the length of the data in bytes. The parameter is
+     * <samp>{@value "%s"}</samp>, and is used by {@link #dataLength()}.
      */
     public static final String DATA_LENGTH_PARAM = "FCGI_DATA_LENGTH";
 
@@ -80,8 +81,8 @@ public final class FilterMetadata {
 
     /**
      * Get the last-modified time of the data if specified. This is
-     * obtained through the request parameter
-     * {@value #DATA_LAST_MOD_PARAM}, which is parsed as a non-negative
+     * obtained through the request parameter <samp>{@value "%s"
+     * #DATA_LAST_MOD_PARAM}</samp>, which is parsed as a non-negative
      * integer.
      * 
      * @return the number of seconds after 1970-01-01T00:00:00Z when the
@@ -104,8 +105,8 @@ public final class FilterMetadata {
 
     /**
      * Get the data length if specified. This is obtained through the
-     * request parameter {@value #DATA_LENGTH_PARAM}, which is parsed as
-     * a non-negative decimal integer.
+     * request parameter <samp>{@value "%s" #DATA_LENGTH_PARAM}</samp>,
+     * which is parsed as a non-negative decimal integer.
      * 
      * @return the data length in bytes
      * 

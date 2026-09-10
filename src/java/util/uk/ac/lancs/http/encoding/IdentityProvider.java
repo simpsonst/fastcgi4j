@@ -48,8 +48,8 @@ import uk.ac.lancs.scc.jardeps.Service;
 
 /**
  * Provides identity encoding. This goes by the sole name
- * {@value #NAME}, and is used for both content encoding. It is not
- * listed in <samp>Content-Encoding</samp>.
+ * <samp>{@value "%s" #NAME}</samp>, and is used for both content
+ * encoding. It is not listed in <samp>Content-Encoding</samp>.
  * 
  * <p>
  * Properties are recognized with the following forms:
@@ -64,9 +64,9 @@ import uk.ac.lancs.scc.jardeps.Service;
  * <var>pfx</var> are given to the provider on invocation.
  * 
  * <p>
- * {@value #QUALITY_PROP} is a real number in the range [0.0, 1.0], and
- * defaults to {@value #DEFAULT_QUALITY}. It currently does not apply to
- * input.
+ * <samp>{@value "%s" #QUALITY_PROP}</samp> is a real number in the
+ * range [0.0, 1.0], and defaults to {@value "%g" #DEFAULT_QUALITY}. It
+ * currently does not apply to input.
  * 
  * @author simpsons
  */

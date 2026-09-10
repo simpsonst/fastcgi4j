@@ -60,7 +60,7 @@ class ForkedIISTransport implements Transport {
 
     /**
      * Create a transport over a named pipe. Only one connection will be
-     * provided. Its description will be {@value #DESCR}.
+     * provided. Its description will be <code>{@value #DESCR}</code>.
      * 
      * @param file the named pipe
      * 

@@ -72,7 +72,8 @@ public final class FieldId {
      * @param core the core name
      * 
      * @throws IllegalArgumentException if the core name fails to match
-     * the regular expression {@value #FIELD_PATTERN_TEXT}
+     * the regular expression <samp>{@value "%s"
+     * #FIELD_PATTERN_TEXT}</samp>
      * 
      * @throws NullPointerException if either argument is {@code null}
      */
@@ -164,7 +165,7 @@ public final class FieldId {
 
     /**
      * Identifies the standard end-to-end header field
-     * {@value #CONTENT_TYPE_CORE}.
+     * <samp>{@value "%s" #CONTENT_TYPE_CORE}</samp>.
      */
     public static final FieldId CONTENT_TYPE =
         FieldNamespace.STANDARD_END_TO_END.of(CONTENT_TYPE_CORE);
@@ -173,7 +174,7 @@ public final class FieldId {
 
     /**
      * Identifies the standard end-to-end header field
-     * {@value #CONTENT_LENGTH_CORE}.
+     * <samp>{@value "%s" #CONTENT_LENGTH_CORE}</samp>.
      */
     public static final FieldId CONTENT_LENGTH =
         FieldNamespace.STANDARD_END_TO_END.of(CONTENT_LENGTH_CORE);

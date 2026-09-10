@@ -65,7 +65,8 @@ public final class InvocationVariables {
 
     /**
      * Specifies the name of the environment variable identifying IP
-     * addresses of legitimate peers. The variable is called {@value}.
+     * addresses of legitimate peers. The variable is called
+     * <samp>{@value "%s"}</samp>.
      */
     public static final String WEB_SERVER_ADDRS = "FCGI_WEB_SERVER_ADDRS";
 
@@ -168,8 +169,9 @@ public final class InvocationVariables {
 
     /**
      * Get the set of legitimate principals. This reads from the
-     * environment variable {@value #LEGIT_PEERS}. The result is cached,
-     * so only the first call will actually do anything.
+     * environment variable <samp>{@value "%s" #LEGIT_PEERS}</samp>. The
+     * result is cached, so only the first call will actually do
+     * anything.
      *
      * @return an unmodifiable set of legitimate principals; or
      * {@code null} if the variable is not set
@@ -185,10 +187,10 @@ public final class InvocationVariables {
     /**
      * Get the set of IP addresses of legitimate peers as a set of
      * structured data. This reads from the environment variable
-     * {@value #WEB_SERVER_ADDRS}. The result is cached, so only the
-     * first call will actually do anything. An exception in the first
-     * call is preserved for other calls, so its stack trace will not be
-     * correct.
+     * <samp>{@value "%s" #WEB_SERVER_ADDRS}</samp>. The result is
+     * cached, so only the first call will actually do anything. An
+     * exception in the first call is preserved for other calls, so its
+     * stack trace will not be correct.
      * 
      * @return an unmodifiable set of IP addresses; or {@code null} if
      * the variable is not set
@@ -206,8 +208,8 @@ public final class InvocationVariables {
     /**
      * Get the set of IP addresses of legitimate peers as a set of
      * structured data. This reads from the environment variable
-     * {@value #LEGIT_PEERS}, which is only to be used for the Internet
-     * domain when operating in stand-alone mode. (Use
+     * <samp>{@value "%s" #LEGIT_PEERS}</samp>, which is only to be used
+     * for the Internet domain when operating in stand-alone mode. (Use
      * {@link #getAuthorizedInetPeers()} in forked mode.) The result is
      * cached, so only the first call will actually do anything. An
      * exception in the first call is preserved for other calls, so its
@@ -337,11 +339,11 @@ public final class InvocationVariables {
      * Specifies the name of the environment variable identifying IP
      * addresses of legitimate peers (Internet-domain, when running in
      * stand-alone mode) or names of legitimate users/groups
-     * (Unix-domain). The variable is called {@value}.
+     * (Unix-domain). The variable is called <samp>{@value "%s"}</samp>.
      * 
      * <p>
      * The value of the variable is a comma-separated list. For the
-     * Internet domain, each item is either an IP address or a hostname
+     * Internet domain, each item is either an IP address or a host name
      * to be resolved as such. For the Unix domain, each item is of the
      * form accepted by {@link PrincipalRequirement#of(String)}, i.e.,
      * <samp><var>user</var></samp>, <samp>@<var>group</var></samp> or
@@ -352,14 +354,14 @@ public final class InvocationVariables {
     /**
      * Specifies the name of the environment variable instructing the
      * application process to bind to an Internet-domain socket address.
-     * The variable is called {@value}.
+     * The variable is called <samp>{@value "%s"}</samp>.
      */
     public static final String INET_BIND_ADDR = "FASTCGI4J_INET_BIND";
 
     /**
      * Specifies the name of the environment variable instructing the
      * application process to bind to a Unix-domain socket address. The
-     * variable is called {@value}.
+     * variable is called <samp>{@value "%s"}</samp>.
      */
     public static final String UNIX_BIND_ADDR = "FASTCGI4J_UNIX_BIND";
 

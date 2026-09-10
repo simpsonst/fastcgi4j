@@ -638,7 +638,8 @@ public final class ResponseCodes {
      * @param code the code to convert
      *
      * @return the equivalent message; or
-     * {@value #UNKNOWN_RESPONSE_PREFIX} followed by the decimal code.
+     * <code>{@value #UNKNOWN_RESPONSE_PREFIX}</code> followed by the
+     * decimal code.
      */
     public static String getStatusMessage(int code) {
         return switch (code) {
