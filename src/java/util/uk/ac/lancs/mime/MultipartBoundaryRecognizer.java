@@ -305,7 +305,7 @@ public final class MultipartBoundaryRecognizer implements BoundaryRecognizer {
     }
 
     /**
-     * @undocumented
+     * @hidden
      */
     public static void main(String[] args) throws Exception {
         MultipartBoundaryRecognizer recognizer =

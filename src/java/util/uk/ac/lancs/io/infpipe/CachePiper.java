@@ -448,7 +448,7 @@ public final class CachePiper implements Piper {
         Logger.getLogger(CachePiper.class.getName());
 
     /**
-     * @undocumented
+     * @hidden
      */
     public static void main(String[] args) throws Exception {
         Piper piper = CachePiper.start().create();

@@ -379,7 +379,7 @@ public final class PathConfiguration<I> {
         Logger.getLogger(PathConfiguration.class.getPackageName());
 
     /**
-     * @undocumented
+     * @hidden
      */
     public static void main(String[] args) throws Exception {
         /* Initialization stage */

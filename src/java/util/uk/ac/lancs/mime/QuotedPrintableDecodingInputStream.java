@@ -270,7 +270,7 @@ class QuotedPrintableDecodingInputStream extends FilterInputStream {
     }
 
     /**
-     * @undocumented
+     * @hidden
      */
     public static void main(String[] args) throws Exception {
         try (InputStream in =

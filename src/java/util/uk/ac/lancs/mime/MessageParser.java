@@ -235,7 +235,7 @@ public final class MessageParser {
         Logger.getLogger(MessageParser.class.getPackageName());
 
     /**
-     * @undocumented
+     * @hidden
      */
     public static void main(String[] args) throws Exception {
         Morgue morgue = SmartMorgue.start().singleThreshold(100)

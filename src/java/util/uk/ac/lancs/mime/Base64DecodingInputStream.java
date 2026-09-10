@@ -208,7 +208,7 @@ class Base64DecodingInputStream extends FilterInputStream {
     }
 
     /**
-     * @undocumented
+     * @hidden
      */
     public static void main(String[] args) throws Exception {
         try (InputStream in = new Base64DecodingInputStream(System.in, false)) {

@@ -236,7 +236,7 @@ public final class MediaType {
     }
 
     /**
-     * @undocumented
+     * @hidden
      */
     public static void main(String[] args) throws Exception {
         MediaType t = MediaType.fromString(args[0]);

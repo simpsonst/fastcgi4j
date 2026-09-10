@@ -437,7 +437,7 @@ public final class Header {
     }
 
     /**
-     * @undocumented
+     * @hidden
      */
     public static void main(String[] args) throws Exception {
         Header hdr = Header.of(System.in);
