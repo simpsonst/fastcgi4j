@@ -42,9 +42,8 @@ package uk.ac.lancs.fastcgi.proto;
  * Holds codes for indicating why an application is terminating a
  * session.
  * 
- * @see <a href=
- * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.5">FastCGI
- * Specification &mdash; <code>FCGI_END_REQUEST</code></a>
+ * @spec https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.5
+ * FastCGI Specification &mdash; <code>FCGI_END_REQUEST</code>
  * 
  * @author simpsons
  */

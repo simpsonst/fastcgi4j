@@ -44,9 +44,8 @@ package uk.ac.lancs.http.cache;
  *
  * @author simpsons
  * 
- * @see <a href=
- * "https://www.rfc-editor.org/info/rfc9111">RFC&nbsp;9111/STD&nbsp;98,
- * HTTP Caching</a>
+ * @spec https://www.rfc-editor.org/info/rfc9111
+ * RFC&nbsp;9111/STD&nbsp;98, HTTP Caching
  */
 final class Directives {
     /**
@@ -54,9 +53,8 @@ final class Directives {
      * response's status code's requirements. The value is
      * <code>{@value}</code>.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9111.html#name-must-understand">RFC&nbsp;9111
-     * Response Directives: must-understand</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9111.html#name-must-understand
+     * RFC&nbsp;9111 Response Directives: must-understand
      */
     static final String MUST_UNDERSTAND = "must-understand";
 
@@ -72,9 +70,8 @@ final class Directives {
      * Limits caching of a response or fields to an unshared
      * (single-user) cache. The value is <code>{@value}</code>.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9111.html#name-private">RFC&nbsp;9111
-     * Response Directives: private</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9111.html#name-private
+     * RFC&nbsp;9111 Response Directives: private
      */
     static final String PRIVATE = "private";
 
@@ -83,13 +80,11 @@ final class Directives {
      * limits caching of a response, without origin revalidation. The
      * value is <code>{@value}</code>.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9111.html#name-no-cache">RFC&nbsp;9111
-     * Request Directives: no-cache</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9111.html#name-no-cache
+     * RFC&nbsp;9111 Request Directives: no-cache
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9111.html#name-no-cache-2">RFC&nbsp;9111
-     * Response Directives: no-cache</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9111.html#name-no-cache-2
+     * RFC&nbsp;9111 Response Directives: no-cache
      */
     static final String NO_CACHE = "no-cache";
 
@@ -99,13 +94,11 @@ final class Directives {
      * <p>
      * The value is <code>{@value}</code>.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9111.html#name-no-store">RFC&nbsp;9111
-     * Request Directives: no-store</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9111.html#name-no-store
+     * RFC&nbsp;9111 Request Directives: no-store
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9111.html#name-no-store-2">RFC&nbsp;9111
-     * Response Directives: no-store</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9111.html#name-no-store-2
+     * RFC&nbsp;9111 Response Directives: no-store
      */
     static final String NO_STORE = "no-store";
 
@@ -115,17 +108,14 @@ final class Directives {
      * <p>
      * The value is <code>{@value}</code>.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9111.html#name-no-transform">RFC&nbsp;9111
-     * Request Directives: no-transform</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9111.html#name-no-transform
+     * RFC&nbsp;9111 Request Directives: no-transform
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9111.html#name-no-transform-2">RFC&nbsp;9111
-     * Response Directives: no-transform</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9111.html#name-no-transform-2
+     * RFC&nbsp;9111 Response Directives: no-transform
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110#section-7.7">Message
-     * Transformations</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110#section-7.7
+     * RFC&nbsp;9110 Message Transformations
      */
     static final String NO_TRANSFORM = "no-transform";
 
@@ -133,9 +123,8 @@ final class Directives {
      * Specifies an overriding maximum age of a response. The value is
      * <code>{@value}</code>.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9111.html#name-s-maxage">RFC&nbsp;9111
-     * Response Directives: s-maxage</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9111.html#name-s-maxage
+     * RFC&nbsp;9111 Response Directives: s-maxage
      */
     static final String S_MAXAGE = "s-maxage";
 
@@ -145,9 +134,8 @@ final class Directives {
      * Authorizes storing an otherwise prohibited response. The value is
      * <code>{@value}</code>.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9111.html#name-public">RFC&nbsp;9111
-     * Response Directives: public</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9111.html#name-public
+     * RFC&nbsp;9111 Response Directives: public
      */
     static final String PUBLIC = "public";
 
@@ -155,9 +143,8 @@ final class Directives {
      * Specifies a client's deprecation of a response with insufficient
      * freshness lifetime. The value is <code>{@value}</code>.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9111.html#name-min-fresh">RFC&nbsp;9111
-     * Request Directives: min-fresh</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9111.html#name-min-fresh
+     * RFC&nbsp;9111 Request Directives: min-fresh
      */
     static final String MIN_FRESH = "min-fresh";
 
@@ -166,13 +153,11 @@ final class Directives {
      * age, or how long before a response should be regarded as stale.
      * The value is <code>{@value}</code>.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9111.html#name-max-age">RFC&nbsp;9111
-     * Request Directives: max-age</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9111.html#name-max-age
+     * RFC&nbsp;9111 Request Directives: max-age
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9111.html#name-max-age-2">RFC&nbsp;9111
-     * Response Directives: max-age</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9111.html#name-max-age-2
+     * RFC&nbsp;9111 Response Directives: max-age
      */
     static final String MAX_AGE = "max-age";
 
@@ -180,9 +165,8 @@ final class Directives {
      * Indicates that a cache must not re-use that response without
      * origin revalidation. The value is <code>{@value}</code>.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9111.html#name-must-revalidate">RFC&nbsp;9111
-     * Response Directives: must-revalidate</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9111.html#name-must-revalidate
+     * RFC&nbsp;9111 Response Directives: must-revalidate
      */
     static final String MUST_REVALIDATE = "must-revalidate";
 
@@ -190,9 +174,8 @@ final class Directives {
      * Specifies a client's acceptance of a not-too-stale response. The
      * value is <code>{@value}</code>.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9111.html#name-max-stale">RFC&nbsp;9111
-     * Request Directives: max-stale</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9111.html#name-max-stale
+     * RFC&nbsp;9111 Request Directives: max-stale
      */
     static final String MAX_STALE = "max-stale";
 
@@ -202,9 +185,8 @@ final class Directives {
      * Indicates that a shared cache must not re-use that response
      * without origin revalidation. The value is <code>{@value}</code>.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9111.html#name-proxy-revalidate">RFC&nbsp;9111
-     * Response Directives: proxy-revalidate</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9111.html#name-proxy-revalidate
+     * RFC&nbsp;9111 Response Directives: proxy-revalidate
      */
     static final String PROXY_REVALIDATE = "proxy-revalidate";
 
@@ -212,9 +194,8 @@ final class Directives {
      * Indicates a client's requirement for a cached response, or a 504.
      * The value is <code>{@value}</code>.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9111.html#name-only-if-cached">RFC&nbsp;9111
-     * Request Directives: only-if-cached</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9111.html#name-only-if-cached
+     * RFC&nbsp;9111 Request Directives: only-if-cached
      */
     static final String ONLY_IF_CACHED = "only-if-cached";
 

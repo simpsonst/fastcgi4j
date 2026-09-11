@@ -48,27 +48,24 @@ public final class ResponseCodes {
     /**
      * Indicates that the request body may be transmitted.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.100">RFC9110
-     * &mdash; 100 Continue</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.100
+     * RFC9110 &mdash; 100 Continue
      */
     public static final int CONTINUE = 100;
 
     /**
      * Indicates that protocol is changing after this response.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.101">RFC9110
-     * &mdash; 101 Switching Protocols</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.101
+     * RFC9110 &mdash; 101 Switching Protocols
      */
     public static final int SWITCHING_PROTOCOLS = 101;
 
     /**
      * Indicates that processing of the request is not complete.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/info/rfc2518/#section-10.1">RFC2518
-     * &mdash; 102 Processing</a>
+     * @spec https://www.rfc-editor.org/info/rfc2518/#section-10.1
+     * RFC2518 &mdash; 102 Processing
      * 
      * @deprecated This was removed in
      * <a href="https://www.rfc-editor.org/info/rfc4918/">RFC4918</a>.
@@ -79,36 +76,32 @@ public final class ResponseCodes {
     /**
      * Indicates that a request has been served successfully.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.200">RFC9110
-     * &mdash; 200 OK</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.200
+     * RFC9110 &mdash; 200 OK
      */
     public static final int OK = 200;
 
     /**
      * Indicates that a resource was created.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.201">RFC9110
-     * &mdash; 201 Created</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.201
+     * RFC9110 &mdash; 201 Created
      */
     public static final int CREATED = 201;
 
     /**
      * Indicates that a request has been accepted for processing.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.202">RFC9110
-     * &mdash; 202 Accepted</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.202
+     * RFC9110 &mdash; 202 Accepted
      */
     public static final int ACCEPTED = 202;
 
     /**
      * Indicates that the response content has been modified by a proxy.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.203">RFC9110
-     * &mdash; 203 Non-Authoritative Information</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.203
+     * RFC9110 &mdash; 203 Non-Authoritative Information
      */
     public static final int NON_AUTHORITATIVE_INFORMATION = 203;
 
@@ -116,18 +109,16 @@ public final class ResponseCodes {
      * Indicates that a request is successful, and that the client need
      * not traverse away from its current document view.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.204">RFC9110
-     * &mdash; 204 No Content</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.204
+     * RFC9110 &mdash; 204 No Content
      */
     public static final int NO_CONTENT = 204;
 
     /**
      * Tells the client to reset its document view.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.205">RFC9110
-     * &mdash; 205 Reset Content</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.205
+     * RFC9110 &mdash; 205 Reset Content
      */
     public static final int RESET_CONTENT = 205;
 
@@ -135,18 +126,16 @@ public final class ResponseCodes {
      * Indicates that not all requested parts are present in the
      * response.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.206">RFC9110
-     * &mdash; 206 Partial Content</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.206
+     * RFC9110 &mdash; 206 Partial Content
      */
     public static final int PARTIAL_CONTENT = 206;
 
     /**
      * Provides statuses got multiple independent operations.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/info/rfc4918/#section-11.1">RFC4918
-     * &mdash; Multi-Status</a>
+     * @spec https://www.rfc-editor.org/info/rfc4918/#section-11.1
+     * RFC4918 &mdash; Multi-Status
      */
     public static final int MULTI_STATUS = 207;
 
@@ -154,9 +143,8 @@ public final class ResponseCodes {
      * Indicates that DAV information was provided in a previous
      * response.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/info/rfc5842/#section-7.1">RFC5842
-     * &mdash; 208 Already Reported</a>
+     * @spec https://www.rfc-editor.org/info/rfc5842/#section-7.1
+     * RFC5842 &mdash; 208 Already Reported
      */
     public static final int ALREADY_REPORTED = 208;
 
@@ -164,9 +152,8 @@ public final class ResponseCodes {
      * Indicates that the response is the result of
      * instance-manipulation.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/info/rfc3229/#section-10.4.1">RFC3229
-     * &mdash; 226 IM Used</a>
+     * @spec https://www.rfc-editor.org/info/rfc3229/#section-10.4.1
+     * RFC3229 &mdash; 226 IM Used
      */
     public static final int IM_USED = 226;
 
@@ -174,9 +161,8 @@ public final class ResponseCodes {
      * Tells the client that it must make another request to get the
      * resource, by selecting from information in the response.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.300">RFC9110
-     * &mdash; 300 Multiple Choices</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.300
+     * RFC9110 &mdash; 300 Multiple Choices
      */
     public static final int MULTIPLE_CHOICES = 300;
 
@@ -184,9 +170,8 @@ public final class ResponseCodes {
      * Tells the client that the URI it used should be replaced by
      * another.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.301">RFC9110
-     * &mdash; 301 Moved Permanently</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.301
+     * RFC9110 &mdash; 301 Moved Permanently
      */
     public static final int MOVED_PERMANENTLY = 301;
 
@@ -194,9 +179,8 @@ public final class ResponseCodes {
      * Tells the client that it should use a different URI to fulfil the
      * request.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.302">RFC9110
-     * &mdash; 302 Found</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.302
+     * RFC9110 &mdash; 302 Found
      */
     public static final int FOUND = 302;
 
@@ -205,9 +189,8 @@ public final class ResponseCodes {
      * result of its request by performing a GET on a URI, even if the
      * original request used a different method.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.303">RFC9110
-     * &mdash; 303 See Other</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.303
+     * RFC9110 &mdash; 303 See Other
      */
     public static final int SEE_OTHER = 303;
 
@@ -215,9 +198,8 @@ public final class ResponseCodes {
      * Indicates that the client can obtain the resource from its own
      * cache.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.304">RFC9110
-     * &mdash; 304 Not Modified</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.304
+     * RFC9110 &mdash; 304 Not Modified
      */
     public static final int NOT_MODIFIED = 304;
 
@@ -225,9 +207,8 @@ public final class ResponseCodes {
      * Indicates that the client must re-issue the request through a
      * given proxy.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/info/rfc2616/#section-10.3.6">RFC2616
-     * &mdash; 305 Use Proxy</a>
+     * @spec https://www.rfc-editor.org/info/rfc2616/#section-10.3.6
+     * RFC2616 &mdash; 305 Use Proxy
      * 
      * @deprecated This is <a href=
      * "https://www.rfc-editor.org/info/rfc7231/#section-6.4.5">deprecated
@@ -240,9 +221,8 @@ public final class ResponseCodes {
      * Indicates that the client should access the resource under a
      * different URI, but that the current URI remains valid.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.307">RFC9110
-     * &mdash; 307 Temporary Redirect</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.307
+     * RFC9110 &mdash; 307 Temporary Redirect
      */
     public static final int TEMPORARY_REDIRECT = 307;
 
@@ -250,18 +230,16 @@ public final class ResponseCodes {
      * Indicates that the client should access the resource under a
      * different URI, and that the current URI should no longer be used.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.308">RFC9110
-     * &mdash; 308 Permanent Redirect</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.308
+     * RFC9110 &mdash; 308 Permanent Redirect
      */
     public static final int PERMANENT_REDIRECT = 308;
 
     /**
      * Indicates that the client seems to have made a bad request.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.400">RFC9110
-     * &mdash; 400 Bad Request</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.400
+     * RFC9110 &mdash; 400 Bad Request
      */
     public static final int BAD_REQUEST = 400;
 
@@ -269,9 +247,8 @@ public final class ResponseCodes {
      * Tells the client that access is not granted, and that it may try
      * again with new credentials.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.401">RFC9110
-     * &mdash; 401 Unauthorized</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.401
+     * RFC9110 &mdash; 401 Unauthorized
      */
     public static final int UNAUTHORIZED = 401;
 
@@ -281,9 +258,8 @@ public final class ResponseCodes {
      * <p>
      * This is mentioned at least as far back as RFC2616.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.402">RFC9110
-     * &mdash; 402 Payment Required</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.402
+     * RFC9110 &mdash; 402 Payment Required
      */
     public static final int PAYMENT_REQUIRED = 402;
 
@@ -291,27 +267,24 @@ public final class ResponseCodes {
      * Tells the client that access is not granted, and that it should
      * not automatically re-attempt the request with new credentials.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.403">RFC9110
-     * &mdash; 403 Forbidden</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.403
+     * RFC9110 &mdash; 403 Forbidden
      */
     public static final int FORBIDDEN = 403;
 
     /**
      * Indicates that the URI does not refer to a known resource.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.404">RFC9110
-     * &mdash; 404 Not Found</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.404
+     * RFC9110 &mdash; 404 Not Found
      */
     public static final int NOT_FOUND = 404;
 
     /**
      * Indicates that the request method is forbidden on the resource.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.405">RFC9110
-     * &mdash; 405 Method Not Allowed</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.405
+     * RFC9110 &mdash; 405 Method Not Allowed
      */
     public static final int METHOD_NOT_ALLOWED = 405;
 
@@ -319,18 +292,16 @@ public final class ResponseCodes {
      * Indicates that no available representation would be acceptable to
      * the client.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.406">RFC9110
-     * &mdash; 406 Not Acceptable</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.406
+     * RFC9110 &mdash; 406 Not Acceptable
      */
     public static final int NOT_ACCEPTABLE = 406;
 
     /**
      * Indicates that the client must authenticate with a proxy.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.406">RFC9110
-     * &mdash; 407 Proxy Authentication Required</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.406
+     * RFC9110 &mdash; 407 Proxy Authentication Required
      */
     public static final int PROXY_AUTHENTICATION_REQUIRED = 407;
 
@@ -338,9 +309,8 @@ public final class ResponseCodes {
      * Indicates that the server gave up waiting for a complete request
      * message.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.408">RFC9110
-     * &mdash; 408 Request Timeout</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.408
+     * RFC9110 &mdash; 408 Request Timeout
      */
     public static final int REQUEST_TIMEOUT = 408;
 
@@ -348,90 +318,80 @@ public final class ResponseCodes {
      * Indicates that the request is in conflict with that target
      * resource's current state.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.409">RFC9110
-     * &mdash; 409 Conflict</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.409
+     * RFC9110 &mdash; 409 Conflict
      */
     public static final int CONFLICT = 409;
 
     /**
      * Indicates that the target resource is no longer available.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.410">RFC9110
-     * &mdash; 410 Gone</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.410
+     * RFC9110 &mdash; 410 Gone
      */
     public static final int GONE = 410;
 
     /**
      * Indicates that the request must include a content length.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.411">RFC9110
-     * &mdash; 411 Length Required</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.411
+     * RFC9110 &mdash; 411 Length Required
      */
     public static final int LENGTH_REQUIRED = 411;
 
     /**
      * Indicates that the client's preconditions were not met.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.412">RFC9110
-     * &mdash; 412 Precondition Failed</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.412
+     * RFC9110 &mdash; 412 Precondition Failed
      */
     public static final int PRECONDITION_FAILED = 412;
 
     /**
      * Indicates that the request content is too large.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.413">RFC9110
-     * &mdash; 413 Content Too Large</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.413
+     * RFC9110 &mdash; 413 Content Too Large
      */
     public static final int CONTENT_TOO_LARGE = 413;
 
     /**
      * Indicates that the request URI is too large.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.414">RFC9110
-     * &mdash; 414 URI Too Long</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.414
+     * RFC9110 &mdash; 414 URI Too Long
      */
     public static final int URI_TOO_LONG = 414;
 
     /**
      * Indicates that the request content's format is unsupported.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.415">RFC9110
-     * &mdash; 415 Unsupported Media Type</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.415
+     * RFC9110 &mdash; 415 Unsupported Media Type
      */
     public static final int UNSUPPORTED_MEDIA_TYPE = 415;
 
     /**
      * Indicates that none of the requested ranges is satisfiable.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.416">RFC9110
-     * &mdash; 416 Range Not Satisfiable</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.416
+     * RFC9110 &mdash; 416 Range Not Satisfiable
      */
     public static final int RANGE_NOT_SATISFIABLE = 416;
 
     /**
      * Indicates that the request's expectations could not be met.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.417">RFC9110
-     * &mdash; 417 Expectation Failed</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.417
+     * RFC9110 &mdash; 417 Expectation Failed
      */
     public static final int EXPECTATION_FAILED = 417;
 
     /**
      * This is an April Fool's joke.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/info/rfc2324/#section-2.3.2">RFC2324
-     * &mdash; I'm a teapot</a>
+     * @spec https://www.rfc-editor.org/info/rfc2324/#section-2.3.2
+     * RFC2324 &mdash; I'm a teapot
      * 
      * @deprecated This was a joke.
      */
@@ -442,9 +402,8 @@ public final class ResponseCodes {
      * Indicates that the server cannot produce an authoritative
      * response for the target.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.421">RFC9110
-     * &mdash; 421 Misdirected Request</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.421
+     * RFC9110 &mdash; 421 Misdirected Request
      */
     public static final int MISDIRECTED_REQUEST = 421;
 
@@ -452,9 +411,8 @@ public final class ResponseCodes {
      * Indicates that the server will not process semantically incorrect
      * content.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.422">RFC9110
-     * &mdash; 422 Unprocessable Content</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.422
+     * RFC9110 &mdash; 422 Unprocessable Content
      */
     public static final int UNPROCESSABLE_CONTENT = 422;
 
@@ -462,9 +420,8 @@ public final class ResponseCodes {
      * Indicates that the source or destination resource for a given
      * method is locked.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/info/rfc4918/#section-11.3">RFC4918
-     * &mdash; 423 Locked</a>
+     * @spec https://www.rfc-editor.org/info/rfc4918/#section-11.3
+     * RFC4918 &mdash; 423 Locked
      */
     public static final int LOCKED = 423;
 
@@ -472,9 +429,8 @@ public final class ResponseCodes {
      * Indicates that the request depends on another action which
      * failed.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/info/rfc4918/#section-11.4">RFC4918
-     * &mdash; 424 Failed Dependency</a>
+     * @spec https://www.rfc-editor.org/info/rfc4918/#section-11.4
+     * RFC4918 &mdash; 424 Failed Dependency
      */
     public static final int FAILED_DEPENDENCY = 424;
 
@@ -482,63 +438,56 @@ public final class ResponseCodes {
      * Indicates that the server will not process the request without
      * switching to another protocol.
      *
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.426">RFC9110
-     * &mdash; 426 Upgrade Required</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.426
+     * RFC9110 &mdash; 426 Upgrade Required
      */
     public static final int UPGRADE_REQUIRED = 426;
 
     /**
      * Indicates that the request must be conditional.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/info/rfc6585/#section-3">RFC6585
-     * &mdash; 428 Precondition Required</a>
+     * @spec https://www.rfc-editor.org/info/rfc6585/#section-3 RFC6585
+     * &mdash; 428 Precondition Required
      */
     public static final int PRECONDITION_REQUIRED = 428;
 
     /**
      * Indicates that the client is issuing too many requests.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/info/rfc6585/#section-4">RFC6585
-     * &mdash; 429 Too Many Requests</a>
+     * @spec https://www.rfc-editor.org/info/rfc6585/#section-4 RFC6585
+     * &mdash; 429 Too Many Requests
      */
     public static final int TOO_MANY_REQUESTS = 429;
 
     /**
      * Indicates that some of the request header fields are too large.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/info/rfc6585/#section-5">RFC6585
-     * &mdash; 431 Request Header Fields Too Large</a>
+     * @spec https://www.rfc-editor.org/info/rfc6585/#section-5 RFC6585
+     * &mdash; 431 Request Header Fields Too Large
      */
     public static final int REQUEST_HEADER_FIELDS_TOO_LARGE = 431;
 
     /**
      * Indicates that access is denied for legal reasons.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/info/rfc7725/#section-3">RFC7725
-     * &mdash; 451 Unavailable For Legal Reasons</a>
+     * @spec https://www.rfc-editor.org/info/rfc7725/#section-3 RFC7725
+     * &mdash; 451 Unavailable For Legal Reasons
      */
     public static final int UNAVAILABLE_FOR_LEGAL_REASONS = 451;
 
     /**
      * Indicates an unexpected condition in the server.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.500">RFC9110
-     * &mdash; 500 Internal Server Error</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.500
+     * RFC9110 &mdash; 500 Internal Server Error
      */
     public static final int INTERNAL_SERVER_ERROR = 500;
 
     /**
      * Indicates a lack of functionality in the server.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.501">RFC9110
-     * &mdash; 501 Not Implemented</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.501
+     * RFC9110 &mdash; 501 Not Implemented
      */
     public static final int NOT_IMPLEMENTED = 501;
 
@@ -546,9 +495,8 @@ public final class ResponseCodes {
      * Indicates that the server received an invalid response from an
      * upstream server.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.502">RFC9110
-     * &mdash; 502 Bad Gateway</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.502
+     * RFC9110 &mdash; 502 Bad Gateway
      */
     public static final int BAD_GATEWAY = 502;
 
@@ -556,9 +504,8 @@ public final class ResponseCodes {
      * Indicates that the server is temporarily unable to handle the
      * request.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.503">RFC9110
-     * &mdash; 503 Service Unavailable</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.503
+     * RFC9110 &mdash; 503 Service Unavailable
      */
     public static final int SERVICE_UNAVILABLE = 503;
 
@@ -566,9 +513,8 @@ public final class ResponseCodes {
      * Indicates that the server did not receive a timely response from
      * an upstream server.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.504">RFC9110
-     * &mdash; 504 Gateway Timeout</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.504
+     * RFC9110 &mdash; 504 Gateway Timeout
      */
     public static final int GATEWAY_TIMEOUT = 504;
 
@@ -576,9 +522,8 @@ public final class ResponseCodes {
      * Indicates that the server does not support the major version of
      * the protocol.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/rfc/rfc9110.html#status.505">RFC9110
-     * &mdash; 505 HTTP Version Not Supported</a>
+     * @spec https://www.rfc-editor.org/rfc/rfc9110.html#status.505
+     * RFC9110 &mdash; 505 HTTP Version Not Supported
      */
     public static final int HTTP_VERSION_NOT_SUPPORTED = 505;
 
@@ -586,9 +531,8 @@ public final class ResponseCodes {
      * Indicates that the chosen variant is itself configured to engage
      * in content negotiation.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/info/rfc2295/#section-8.1">RFC2295
-     * &mdash; 506 Variant Also Negotiates</a>
+     * @spec https://www.rfc-editor.org/info/rfc2295/#section-8.1
+     * RFC2295 &mdash; 506 Variant Also Negotiates
      */
     public static final int VARIANT_ALSO_NEGOTIATES = 506;
 
@@ -596,9 +540,8 @@ public final class ResponseCodes {
      * Indicates that the server is temporarily unable to store the
      * representation.
      * 
-     * @see <a href=
-     * "https://datatracker.ietf.org/doc/html/rfc4918#section-11.5">RFC4918
-     * &mdash; Insufficient Storage</a>
+     * @spec https://datatracker.ietf.org/doc/html/rfc4918#section-11.5
+     * RFC4918 &mdash; Insufficient Storage
      */
     public static final int INSUFFICIENT_STORAGE = 507;
 
@@ -606,27 +549,24 @@ public final class ResponseCodes {
      * Indicates that the server terminated the operation because it
      * detected an infinite loop.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/info/rfc5842/#section-7.2">RFC5842
-     * &mdash; 508 Loop Detected</a>
+     * @spec https://www.rfc-editor.org/info/rfc5842/#section-7.2
+     * RFC5842 &mdash; 508 Loop Detected
      */
     public static final int LOOP_DETECTED = 508;
 
     /**
      * Indicates that at least one mandatory extension is not supported.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/info/rfc2774/#section-7">RFC2774
-     * &mdash; 510 Not Extended</a>
+     * @spec https://www.rfc-editor.org/info/rfc2774/#section-7 RFC2774
+     * &mdash; 510 Not Extended
      */
     public static final int NOT_EXTENDED = 510;
 
     /**
      * Indicates that a proxy requires the client to authenticate.
      * 
-     * @see <a href=
-     * "https://www.rfc-editor.org/info/rfc6585/#section-6">RFC6585
-     * &mdash; 511 Network Authentication Required</a>
+     * @spec https://www.rfc-editor.org/info/rfc6585/#section-6 RFC6585
+     * &mdash; 511 Network Authentication Required
      */
     public static final int NETWORK_AUTHENTICATION_REQUIRED = 511;
 

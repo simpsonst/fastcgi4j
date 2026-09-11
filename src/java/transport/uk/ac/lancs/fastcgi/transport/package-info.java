@@ -55,8 +55,7 @@
  * 
  * @author simpsons
  * 
- * @see <a href=
- * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S2">FastCGI
- * Specification &mdash; Initial Process State</a>
+ * @spec https://fastcgi-archives.github.io/FastCGI_Specification.html#S2
+ * FastCGI Specification &mdash; Initial Process State
  */
 package uk.ac.lancs.fastcgi.transport;

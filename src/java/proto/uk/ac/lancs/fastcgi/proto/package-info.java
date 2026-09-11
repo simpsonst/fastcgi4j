@@ -39,8 +39,7 @@
 /**
  * Defines constants used by the FastCGI protocol.
  * 
- * @see <a href=
- * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S8">FastCGI
- * Specification &mdash; Types and Constants</a>
+ * @spec https://fastcgi-archives.github.io/FastCGI_Specification.html#S8
+ * FastCGI Specification &mdash; Types and Constants
  */
 package uk.ac.lancs.fastcgi.proto;

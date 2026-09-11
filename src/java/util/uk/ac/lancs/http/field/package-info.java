@@ -43,6 +43,6 @@
  *
  * @author simpsons
  * 
- * @see <a href="https://www.rfc-editor.org/rfc/rfc2774">RFC2774</a>
+ * @spec https://www.rfc-editor.org/rfc/rfc2774 RFC2774
  */
 package uk.ac.lancs.http.field;

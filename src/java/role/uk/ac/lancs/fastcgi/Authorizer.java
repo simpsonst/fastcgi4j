@@ -26,9 +26,8 @@ import java.io.IOException;
  * 
  * @author simpsons
  * 
- * @see <a href=
- * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.3">FastCGI
- * Specification &mdash; Authorizer</a>
+ * @spec https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.3
+ * FastCGI Specification &mdash; Authorizer
  */
 public interface Authorizer {
     /**

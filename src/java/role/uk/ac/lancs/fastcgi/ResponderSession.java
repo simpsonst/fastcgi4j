@@ -44,8 +44,7 @@ package uk.ac.lancs.fastcgi;
  * 
  * @author simpsons
  * 
- * @see <a href=
- * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.2">FastCGI
- * Specification &mdash; Responder</a>
+ * @spec https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.2
+ * FastCGI Specification &mdash; Responder
  */
 public interface ResponderSession extends RequestableSession {}

@@ -42,9 +42,8 @@ package uk.ac.lancs.fastcgi.proto;
  * Defines masks and values for constructing and interpreting the flags
  * of a new request.
  * 
- * @see <a href=
- * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.1">FastCGI
- * Specification &mdash; <code>FCGI_BEGIN_REQUEST</code></a>
+ * @spec https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.1
+ * FastCGI Specification &mdash; <code>FCGI_BEGIN_REQUEST</code>
  *
  * @author simpsons
  */

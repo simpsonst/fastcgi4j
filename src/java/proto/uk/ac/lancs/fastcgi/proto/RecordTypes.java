@@ -41,10 +41,8 @@ package uk.ac.lancs.fastcgi.proto;
 /**
  * Holds constants for distinct record types.
  * 
- * @see <a href=
- * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S8">FastCGI
- * Specification &mdash; Types and Constants</a> of the FastCGI
- * specification
+ * @spec https://fastcgi-archives.github.io/FastCGI_Specification.html#S8
+ * FastCGI Specification &mdash; Types and Constants
  * 
  * @author simpsons
  */
@@ -56,9 +54,8 @@ public final class RecordTypes {
      * is <code>{@value}</code>, corresponding to
      * <code>FCGI_BEGIN_REQUEST</code>.
      * 
-     * @see <a href=
-     * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.1">FastCGI
-     * Specification &mdash; <code>FCGI_BEGIN_REQUEST</code></a>
+     * @spec https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.1
+     * FastCGI Specification &mdash; <code>FCGI_BEGIN_REQUEST</code>
      */
     public static final byte BEGIN_REQUEST = 1;
 
@@ -67,9 +64,8 @@ public final class RecordTypes {
      * value is <code>{@value}</code>, corresponding to
      * <code>FCGI_ABORT_REQUEST</code>.
      * 
-     * @see <a href=
-     * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.4">FastCGI
-     * Specification &mdash; <code>FCGI_ABORT_REQUEST</code></a>
+     * @spec https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.4
+     * FastCGI Specification &mdash; <code>FCGI_ABORT_REQUEST</code>
      */
     public static final byte ABORT_REQUEST = 2;
 
@@ -79,9 +75,8 @@ public final class RecordTypes {
      * <code>FCGI_END_REQUEST</code>. Values in {@link ProtocolStatuses}
      * indicate the reason.
      * 
-     * @see <a href=
-     * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.5">FastCGI
-     * Specification &mdash; <code>FCGI_END_REQUEST</code></a>
+     * @spec https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.5
+     * FastCGI Specification &mdash; <code>FCGI_END_REQUEST</code>
      */
     public static final byte END_REQUEST = 3;
 
@@ -90,9 +85,8 @@ public final class RecordTypes {
      * parameters stream. The value is
      * <code>{@value}</code>, corresponding to <code>FCGI_PARAMS</code>.
      * 
-     * @see <a href=
-     * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.2">FastCGI
-     * Specification &mdash; <code>FCGI_PARAMS</code></a>
+     * @spec https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.2
+     * FastCGI Specification &mdash; <code>FCGI_PARAMS</code>
      */
     public static final byte PARAMS = 4;
 
@@ -101,9 +95,8 @@ public final class RecordTypes {
      * standard input. The value is <code>{@value}</code>, corresponding
      * to <code>FCGI_STDIN</code>.
      * 
-     * @see <a href=
-     * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.3">FastCGI
-     * Specification &mdash; <code>FCGI_STDIN</code></a>
+     * @spec https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.3
+     * FastCGI Specification &mdash; <code>FCGI_STDIN</code>
      */
     public static final byte STDIN = 5;
 
@@ -112,9 +105,8 @@ public final class RecordTypes {
      * standard output. The value is
      * <code>{@value}</code>, corresponding to <code>FCGI_STDOUT</code>.
      * 
-     * @see <a href=
-     * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.3">FastCGI
-     * Specification &mdash; <code>FCGI_STDOUT</code></a>
+     * @spec https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.3
+     * FastCGI Specification &mdash; <code>FCGI_STDOUT</code>
      */
     public static final byte STDOUT = 6;
 
@@ -123,9 +115,8 @@ public final class RecordTypes {
      * standard error output. The value is
      * <code>{@value}</code>, corresponding to <code>FCGI_STDERR</code>.
      * 
-     * @see <a href=
-     * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.3">FastCGI
-     * Specification &mdash; <code>FCGI_STDERR</code></a>
+     * @spec https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.3
+     * FastCGI Specification &mdash; <code>FCGI_STDERR</code>
      */
     public static final byte STDERR = 7;
 
@@ -134,9 +125,8 @@ public final class RecordTypes {
      * extra data. The value is <code>{@value}</code>, corresponding to
      * <code>FCGI_DATA</code>.
      * 
-     * @see <a href=
-     * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.3">FastCGI
-     * Specification &mdash; <code>FCGI_DATA</code></a>
+     * @spec https://fastcgi-archives.github.io/FastCGI_Specification.html#S5.3
+     * FastCGI Specification &mdash; <code>FCGI_DATA</code>
      */
     public static final byte DATA = 8;
 
@@ -147,9 +137,8 @@ public final class RecordTypes {
      * <code>FCGI_GET_VALUES</code>. See {@link ApplicationVariables}
      * for standard variable names.
      * 
-     * @see <a href=
-     * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S4.1">FastCGI
-     * Specification &mdash; <code>FCGI_GET_VALUES</code></a>
+     * @spec https://fastcgi-archives.github.io/FastCGI_Specification.html#S4.1
+     * FastCGI Specification &mdash; <code>FCGI_GET_VALUES</code>
      */
     public static final byte GET_VALUES = 9;
 
@@ -159,9 +148,8 @@ public final class RecordTypes {
      * <code>FCGI_GET_VALUES_RESULT</code>. See
      * {@link ApplicationVariables} for standard variable names.
      * 
-     * @see <a href=
-     * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S4.1">FastCGI
-     * Specification &mdash; <code>FCGI_GET_VALUES_RESULT</code></a>
+     * @spec https://fastcgi-archives.github.io/FastCGI_Specification.html#S4.1
+     * FastCGI Specification &mdash; <code>FCGI_GET_VALUES_RESULT</code>
      */
     public static final byte GET_VALUES_RESULT = 10;
 
@@ -171,9 +159,8 @@ public final class RecordTypes {
      * <code>{@value}</code>, corresponding to
      * <code>FCGI_UNKNOWN_TYPE</code>.
      * 
-     * @see <a href=
-     * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S4.2">FastCGI
-     * Specification &mdash; <code>FCGI_UNKNOWN_TYPE</code></a>
+     * @spec https://fastcgi-archives.github.io/FastCGI_Specification.html#S4.2
+     * FastCGI Specification &mdash; <code>FCGI_UNKNOWN_TYPE</code>
      */
     public static final byte UNKNOWN_TYPE = 11;
 

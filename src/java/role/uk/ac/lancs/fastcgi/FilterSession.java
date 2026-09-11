@@ -46,9 +46,8 @@ import java.io.InputStream;
  *
  * @author simpsons
  * 
- * @see <a href=
- * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.4">FastCGI
- * Specification &mdash; Filter</a>
+ * @spec https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.4
+ * FastCGI Specification &mdash; Filter
  */
 public interface FilterSession extends RequestableSession {
     /**

@@ -42,9 +42,8 @@ package uk.ac.lancs.fastcgi.proto;
  * Indicates the role that the application is expected to play in
  * responding to a request.
  * 
- * @see <a href=
- * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S6">Roles</a>
- * from the FastCGI specification
+ * @spec https://fastcgi-archives.github.io/FastCGI_Specification.html#S6
+ * FastCGI specification &mdash; Roles
  * 
  * @author simpsons
  */
@@ -57,10 +56,8 @@ public final class RoleTypes {
      * <code>{@value}</code>, corresponding to
      * <code>FCGI_RESPONDER</code>.
      * 
-     * @see <a href=
-     * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.2">FastCGI
-     * Specification &mdash; Responder</a> from the FastCGI
-     * specification
+     * @spec https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.2
+     * FastCGI Specification &mdash; Responder
      */
     public static final int RESPONDER = 1;
 
@@ -70,10 +67,8 @@ public final class RoleTypes {
      * <code>{@value}</code>, corresponding to
      * <code>FCGI_AUTHORIZER</code>.
      * 
-     * @see <a href=
-     * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.3">FastCGI
-     * Specification &mdash; Authorizer</a> from the FastCGI
-     * specification
+     * @spec https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.3
+     * FastCGI Specification &mdash; Authorizer
      */
     public static final int AUTHORIZER = 2;
 
@@ -82,9 +77,8 @@ public final class RoleTypes {
      * request as a filter. The value is
      * <code>{@value}</code>, corresponding to <code>FCGI_FILTER</code>.
      * 
-     * @see <a href=
-     * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.4">FastCGI
-     * Specification &mdash; Filter</a> from the FastCGI specification
+     * @spec https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.4
+     * FastCGI Specification &mdash; Filter
      */
     public static final int FILTER = 3;
 

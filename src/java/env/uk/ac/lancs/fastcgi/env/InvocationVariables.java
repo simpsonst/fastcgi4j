@@ -56,9 +56,8 @@ import java.util.regex.Pattern;
  * 
  * @author simpsons
  * 
- * @see <a href=
- * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S2.3">FastCGI
- * Specification &mdash; Environment variables</a>
+ * @spec https://fastcgi-archives.github.io/FastCGI_Specification.html#S2.3
+ * FastCGI Specification &mdash; Environment variables
  */
 public final class InvocationVariables {
     private InvocationVariables() {}

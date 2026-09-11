@@ -49,9 +49,8 @@ package uk.ac.lancs.fastcgi.transport;
  * {@link java.util.ServiceLoader}, so they can be enabled simply by
  * adding to the class path.
  * 
- * @see <a href=
- * "https://fastcgi-archives.github.io/FastCGI_Specification.html#S2">FastCGI
- * Specification &mdash; Initial Process State</a>
+ * @spec https://fastcgi-archives.github.io/FastCGI_Specification.html#S2
+ * FastCGI Specification &mdash; Initial Process State
  * 
  * @author simpsons
  */
