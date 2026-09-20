@@ -40,6 +40,7 @@ package uk.ac.lancs.http.encoding;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
@@ -81,6 +82,13 @@ public final class BodyDecoder {
      * encoding that was not recognized, and may contain recognizable
      * encodings that were not reached.
      * 
+     * <p>
+     * This method should be equivalent to:
+     * 
+     * <pre>
+     * {@linkplain InputEncoding#decode(InputStream, List) InputEncoding.decode}(in, this.{@link #recognize(List) recognize}(encodings));
+     * </pre>
+     * 
      * @param in the source stream
      * 
      * @param encodings a mutable list of the encodings applied to the
@@ -103,5 +111,34 @@ public final class BodyDecoder {
         }
 
         return in;
+    }
+
+    /**
+     * Eliminate recognized encodings from the tail of sequence of
+     * encoding tokens, and provide a list of applicable encodings.
+     * 
+     * <p>
+     * Note that the result order is that which should be applied, which
+     * is the reverse order of the tail removed from the input. For
+     * example, if the provided sequence is <samp>foo, bar, baz,
+     * qux</samp>, and at least the last two are recognized but the
+     * second is not, the input will be modified to <samp>foo,
+     * bar</samp>, and the returned decoders will be for
+     * <samp>qux</samp> and then <samp>baz</samp>.
+     * 
+     * @param encodings the encoding sequence to be modified
+     * 
+     * @return a list of decoders to be applied
+     */
+    public List<InputEncoding> recognize(List<String> encodings) {
+        List<InputEncoding> result = new ArrayList<>(encodings.size());
+        int sz = encodings.size();
+        while (sz > 0) {
+            var last = encodings.remove(--sz);
+            var enc = mapping.apply(last);
+            if (enc == null) return result;
+            result.add(enc);
+        }
+        return result;
     }
 }

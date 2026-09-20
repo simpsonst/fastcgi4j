@@ -40,6 +40,7 @@ package uk.ac.lancs.http.encoding;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.ServiceLoader;
@@ -72,6 +73,26 @@ public interface InputEncoding extends Encoding {
      * stream
      */
     InputStream decode(InputStream in) throws IOException;
+
+    /**
+     * De-apply a sequence of encodings to a stream.
+     * 
+     * @param in the stream to be decoded
+     * 
+     * @param encodings the sequence of encodings to de-apply
+     * 
+     * @return the decoded stream
+     * 
+     * @throws IOException if an I/O error occurs in de-applying an
+     * encoding
+     */
+    static InputStream decode(InputStream in,
+                              List<? extends InputEncoding> encodings)
+        throws IOException {
+        for (var enc : encodings)
+            in = enc.decode(in);
+        return in;
+    }
 
     /**
      * Create a mapping from names to encodings for the purpose of
