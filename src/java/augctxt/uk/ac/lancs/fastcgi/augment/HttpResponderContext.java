@@ -71,19 +71,8 @@ public interface HttpResponderContext {
      * 
      * @implNote By default, all available transfer encodings are
      * returned. These can be configured by setting system properties
-     * beginning with the following prefixes:
-     * 
-     * <ul>
-     * 
-     * <li><samp>{@value "%s"
-     * HttpResponderSession#INPUT_TRANSFER_PREFIX}</samp>
-     * 
-     * <li><samp>{@value "%s"
-     * HttpResponderSession#TRANSFER_PREFIX}</samp>
-     * 
-     * <li><samp>{@value "%s"
-     * HttpResponderSession#ENCODINGS_PREFIX}</samp>
-     * </ul>
+     * beginning with the prefix <samp>{@value "%s"
+     * HttpResponderSession#ENCODINGS_PREFIX}</samp>.
      */
     default Map<String, InputEncoding> transferDecoders() {
         return HttpResponderSession.ALL_AVAILABLE_TRANSFER_DECODERS;

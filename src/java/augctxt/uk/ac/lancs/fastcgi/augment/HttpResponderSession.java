@@ -272,15 +272,10 @@ public class HttpResponderSession {
 
     static final String ENCODINGS_PREFIX = "uk.ac.lancs.fastcgi.encodings.";
 
-    static final String TRANSFER_PREFIX = ENCODINGS_PREFIX + "transfer.";
-
-    static final String INPUT_TRANSFER_PREFIX = TRANSFER_PREFIX + "input.";
-
     static final Map<String, InputEncoding> ALL_AVAILABLE_TRANSFER_DECODERS =
         Map.copyOf(InputEncoding.getMapping(EncodingContext.TRANSFER,
                                             System.getProperties(),
-                                            INPUT_TRANSFER_PREFIX,
-                                            TRANSFER_PREFIX, ENCODINGS_PREFIX));
+                                            ENCODINGS_PREFIX));
 
     private static final String CHUNKED_TOKEN = "chunked";
 
