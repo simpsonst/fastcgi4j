@@ -57,6 +57,11 @@ import java.util.ServiceLoader;
  * <li>{@link OutputEncoding#getMapping(EncodingContext, Properties, CharSequence...)}.
  * 
  * </ul>
+ * 
+ * <p>
+ * The {@link EncodingContext}, {@link Properties} and
+ * {@link CharSequence}s are passed through to this interface's methods
+ * unchanged.
  *
  * @author simpsons
  */
@@ -66,11 +71,10 @@ public interface EncodingProvider {
      * 
      * @param ctxt the context for the encoding
      * 
-     * @param pfxs a sequence of prefixes property names to select
+     * @param pfxs a sequence of prefixes of property names to select
      * configuration
      * 
-     * @param props properties defining configuration, especially for
-     * encoding operations
+     * @param props properties defining configuration
      * 
      * @return the encoding; or {@code null} if it cannot be provided
      * 
@@ -84,11 +88,10 @@ public interface EncodingProvider {
      * 
      * @param ctxt the context for the encoding
      * 
-     * @param pfxs a sequence of prefixes property names to select
+     * @param pfxs a sequence of prefixes of property names to select
      * configuration
      * 
-     * @param props properties defining configuration, especially for
-     * encoding operations
+     * @param props properties defining configuration
      * 
      * @return the encoding; or {@code null} if it cannot be provided
      * 
