@@ -41,18 +41,24 @@ package uk.ac.lancs.http.encoding;
 import java.util.Collection;
 
 /**
- * A named means of encoding an output stream or decoding an input
- * stream
+ * Defines the names of an encoding that can be applied to an HTTP
+ * message. This includes both transfer and content encodings, which are
+ * distinguished where necessary by the enumeration
+ * {@link EncodingContext}.
  *
  * @author simpsons
+ * 
+ * @see InputEncoding
+ * 
+ * @see OutputEncoding
  */
 public interface Encoding {
     /**
      * Get the set of names recognized by this encoding. The returned
      * set may be immutable.
      * 
-     * @return the set of recognized names, including that returned by
-     * {@link OutputEncoding#name()}
+     * @return the set of recognized names (including that returned by
+     * {@link OutputEncoding#name()}, if this object implements it)
      */
     Collection<? extends CharSequence> names();
 }

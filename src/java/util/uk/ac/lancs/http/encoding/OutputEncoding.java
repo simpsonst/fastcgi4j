@@ -46,6 +46,17 @@ import java.util.ServiceLoader;
 import java.util.TreeMap;
 
 /**
+ * Provides a named means of encoding an output stream. Output encodings
+ * are best loaded via {@link EncodingProvider} implementations using
+ * one of the following methods:
+ * 
+ * <ul>
+ * 
+ * <li>{@link OutputEncoding#getMapping(EncodingContext, Properties, ClassLoader, CharSequence...)}
+ * 
+ * <li>{@link OutputEncoding#getMapping(EncodingContext, Properties, CharSequence...)}
+ * 
+ * </ul>
  *
  * @author simpsons
  */

@@ -46,7 +46,18 @@ import java.util.ServiceLoader;
 import java.util.TreeMap;
 
 /**
- *
+ * Provides a named means of decoding an input stream. Input encodings
+ * are best loaded via {@link EncodingProvider} implementations using
+ * one of the following static methods:
+ * 
+ * <ul>
+ * 
+ * <li>{@link InputEncoding#getMapping(EncodingContext, Properties, ClassLoader, CharSequence...)}
+ * 
+ * <li>{@link InputEncoding#getMapping(EncodingContext, Properties, CharSequence...)}
+ * 
+ * </ul>
+ * 
  * @author simpsons
  */
 public interface InputEncoding extends Encoding {

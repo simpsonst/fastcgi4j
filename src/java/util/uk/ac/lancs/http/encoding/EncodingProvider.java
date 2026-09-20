@@ -39,9 +39,24 @@
 package uk.ac.lancs.http.encoding;
 
 import java.util.Properties;
+import java.util.ServiceLoader;
 
 /**
- * Provides an encoding configured by properties.
+ * Provides an encoding configured by properties. Implementations are
+ * typically loaded using {@link ServiceLoader}, as used by:
+ * 
+ * <ul>
+ * 
+ * <li>{@link InputEncoding#getMapping(EncodingContext, Properties, ClassLoader, CharSequence...)},
+ * 
+ * <li>{@link InputEncoding#getMapping(EncodingContext, Properties, CharSequence...)},
+ * 
+ * <li>{@link OutputEncoding#getMapping(EncodingContext, Properties, ClassLoader, CharSequence...)}
+ * and
+ * 
+ * <li>{@link OutputEncoding#getMapping(EncodingContext, Properties, CharSequence...)}.
+ * 
+ * </ul>
  *
  * @author simpsons
  */
@@ -58,6 +73,8 @@ public interface EncodingProvider {
      * encoding operations
      * 
      * @return the encoding; or {@code null} if it cannot be provided
+     * 
+     * @constructor
      */
     InputEncoding getForInput(EncodingContext ctxt, Properties props,
                               CharSequence... pfxs);
@@ -74,6 +91,8 @@ public interface EncodingProvider {
      * encoding operations
      * 
      * @return the encoding; or {@code null} if it cannot be provided
+     * 
+     * @constructor
      */
     OutputEncoding getForOutput(EncodingContext ctxt, Properties props,
                                 CharSequence... pfxs);
