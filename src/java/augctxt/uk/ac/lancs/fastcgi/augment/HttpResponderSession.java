@@ -211,12 +211,15 @@ public class HttpResponderSession {
     private static final String TRAILERS_TOKEN = "trailers";
 
     /**
-     * Determine whether a response trailer can be sent.
+     * Determine whether a response trailer can be sent. A trailer is
+     * permitted when HTTP/2.0 or later is used, or when the request
+     * header field <samp>{@value "%s" #TE_FIELD}</samp> includes the
+     * token <samp>{@value "%s" #TRAILERS_TOKEN}</samp>.
      * 
      * @return {@code true} if a trailer can be sent; {@code false}
      * otherwise
      */
-    private boolean responseTrailerAllowed() {
+    public boolean responseTrailerAllowed() {
         /* For HTTP/2, trailers are always permitted. */
         if (protocol.isMinimally("HTTP", 2, 0)) return true;
 
