@@ -47,11 +47,11 @@ import java.util.ServiceLoader;
  * 
  * <ul>
  * 
- * <li>{@link InputEncoding#getMapping(EncodingContext, Properties, ClassLoader, CharSequence...)},
+ * <li>{@link InputEncoding#getMapping(ClassLoader,EncodingContext, Properties, CharSequence...)},
  * 
  * <li>{@link InputEncoding#getMapping(EncodingContext, Properties, CharSequence...)},
  * 
- * <li>{@link OutputEncoding#getMapping(EncodingContext, Properties, ClassLoader, CharSequence...)}
+ * <li>{@link OutputEncoding#getMapping(ClassLoader, EncodingContext, Properties, CharSequence...)}
  * and
  * 
  * <li>{@link OutputEncoding#getMapping(EncodingContext, Properties, CharSequence...)}.

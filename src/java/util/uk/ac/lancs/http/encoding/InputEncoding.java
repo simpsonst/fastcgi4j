@@ -53,7 +53,7 @@ import java.util.TreeMap;
  * 
  * <ul>
  * 
- * <li>{@link InputEncoding#getMapping(EncodingContext, Properties, ClassLoader, CharSequence...)}
+ * <li>{@link InputEncoding#getMapping(ClassLoader, EncodingContext, Properties, CharSequence...)}
  * 
  * <li>{@link InputEncoding#getMapping(EncodingContext, Properties, CharSequence...)}
  * 
@@ -113,7 +113,7 @@ public interface InputEncoding extends Encoding {
      * supplied properties
      */
     static Map<String, InputEncoding>
-        getMapping(EncodingContext ctxt, Properties props, ClassLoader ldr,
+        getMapping(ClassLoader ldr, EncodingContext ctxt, Properties props,
                    CharSequence... pfxs) {
         Map<String, InputEncoding> result =
             new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
@@ -145,7 +145,7 @@ public interface InputEncoding extends Encoding {
     static Map<String, InputEncoding> getMapping(EncodingContext ctxt,
                                                  Properties props,
                                                  CharSequence... pfxs) {
-        return getMapping(ctxt, props,
-                          Thread.currentThread().getContextClassLoader(), pfxs);
+        return getMapping(Thread.currentThread().getContextClassLoader(), ctxt,
+                          props, pfxs);
     }
 }
