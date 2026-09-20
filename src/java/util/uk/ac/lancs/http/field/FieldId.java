@@ -172,19 +172,23 @@ public final class FieldId {
 
     private static final String CONTENT_LENGTH_CORE = "Content-Length";
 
+    /* Content-Length must be hop-by-hop, because it is forbidden to use
+     * it with Transfer-Encoding, which could change on each hop. */
     /**
-     * Identifies the standard end-to-end header field
+     * Identifies the standard hop-by-hop header field
      * <samp>{@value "%s" #CONTENT_LENGTH_CORE}</samp>.
      */
     public static final FieldId CONTENT_LENGTH =
-        FieldNamespace.STANDARD_END_TO_END.of(CONTENT_LENGTH_CORE);
+        FieldNamespace.STANDARD_HOP_BY_HOP.of(CONTENT_LENGTH_CORE);
+
+    private static final String TRANSFER_ENCODING_CORE = "Transfer-Encoding";
 
     private static final Set<String> STANDARD_END_TO_END_GENERAL_FIELD_NAMES =
         Set.of("Cache-Control", "Date", "Pragma", "Upgrade", "Via", "Man",
                "Opt");
 
     private static final Set<String> STANDARD_HOP_BY_HOP_GENERAL_FIELD_NAMES =
-        Set.of("Connection", "Transfer-Encoding", "C-Man", "C-Opt");
+        Set.of("Connection", TRANSFER_ENCODING_CORE, "C-Man", "C-Opt");
 
     private static final Set<String> STANDARD_END_TO_END_REQUEST_FIELD_NAMES =
         Set.of("Accept", "Accept-Charset", "Accept-Encoding", "Accept-Language",
@@ -204,12 +208,11 @@ public final class FieldId {
 
     private static final Set<String> STANDARD_END_TO_END_ENTITY_FIELD_NAMES =
         Set.of("Allow", "Content-Base", "Content-Encoding", "Content-Language",
-               "Content-Length", "Content-Location", "Content-MD5",
-               "Content-Range", "Content-Type", "Etag", "Expires",
-               "Last-Modified");
+               "Content-Location", "Content-MD5", "Content-Range",
+               CONTENT_TYPE_CORE, "Etag", "Expires", "Last-Modified");
 
     private static final Set<String> STANDARD_HOP_BY_HOP_ENTITY_FIELD_NAMES =
-        Set.of();
+        Set.of(CONTENT_LENGTH_CORE);
 
     private static final Set<FieldId> ILLEGALLY_SCOPED_FIELDS =
         Stream
