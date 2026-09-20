@@ -53,7 +53,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -62,16 +61,17 @@ import uk.ac.lancs.cgi.Http;
 import uk.ac.lancs.cgi.ServerProtocol;
 import uk.ac.lancs.fastcgi.RequestableSession;
 import uk.ac.lancs.fastcgi.ResponderSession;
-import uk.ac.lancs.http.ChunkedInputStream;
 import uk.ac.lancs.http.cache.InboundCacheControl;
 import uk.ac.lancs.http.encoding.BodyDecoder;
+import uk.ac.lancs.http.encoding.EncodingContext;
+import uk.ac.lancs.http.encoding.InputEncoding;
+import uk.ac.lancs.http.field.CGIRequestCap;
 import uk.ac.lancs.http.field.Cap;
 import uk.ac.lancs.http.field.EmptyCap;
 import uk.ac.lancs.http.field.ExtensionManager;
 import uk.ac.lancs.http.field.FieldExtension;
 import uk.ac.lancs.http.field.FieldId;
 import uk.ac.lancs.http.field.FieldNamespace;
-import uk.ac.lancs.io.PrecedingInputStream;
 import uk.ac.lancs.mime.MediaType;
 import uk.ac.lancs.mime.Tokenizer;
 
@@ -125,6 +125,8 @@ public class HttpResponderSession {
 
         this.base = base;
         this.ctxt = ctxt;
+        this.requestHeader =
+            new CGIRequestCap(requestExtMgr, base.parameters());
     }
 
     /**
@@ -181,7 +183,7 @@ public class HttpResponderSession {
      * 
      * <p>
      * For HTTP/2 and later, the field is ignored if it doesn't contain
-     * the token <samp>{@value "%s" #TRAILERS_TOKEN}</samp>.
+     * the sole token <samp>{@value "%s" #TRAILERS_TOKEN}</samp>.
      */
     private void getAcceptedTransferEncodings() {
         if (acceptedTransferEncodings != null) return;
@@ -199,15 +201,20 @@ public class HttpResponderSession {
             }
         }
         if (protocol.isMinimally("HTTP", 2, 0) &&
-            !result.containsKey(TRAILERS_TOKEN)) {
-            /* Later versions require "trailers" to always be listed if
-             * the field is to be accepted. */
+            (!result.containsKey(TRAILERS_TOKEN) || result.size() == 1)) {
+            /* HTTP/2 requires that this field only contain this single
+             * token, or not be present. */
             acceptedTransferEncodings = Collections.emptyMap();
         } else {
             acceptedTransferEncodings = Map.copyOf(result);
         }
     }
 
+    /**
+     * Specifies the token <samp>{@value "%s"}</samp> to appear in the
+     * <samp>{@value "%s" #TE_FIELD}</samp> header field to indicate
+     * that the client accepts a response trailer.
+     */
     private static final String TRAILERS_TOKEN = "trailers";
 
     /**
@@ -263,9 +270,17 @@ public class HttpResponderSession {
         return result;
     }
 
-    private InputStream trailerIn = null;
+    static final String ENCODINGS_PREFIX = "uk.ac.lancs.fastcgi.encodings.";
 
-    private List<String> rawRequestEncodings = null;
+    static final String TRANSFER_PREFIX = ENCODINGS_PREFIX + "transfer.";
+
+    static final String INPUT_TRANSFER_PREFIX = TRANSFER_PREFIX + "input.";
+
+    static final Map<String, InputEncoding> ALL_AVAILABLE_TRANSFER_DECODERS =
+        Map.copyOf(InputEncoding.getMapping(EncodingContext.TRANSFER,
+                                            System.getProperties(),
+                                            INPUT_TRANSFER_PREFIX,
+                                            TRANSFER_PREFIX, ENCODINGS_PREFIX));
 
     private static final String CHUNKED_TOKEN = "chunked";
 
@@ -288,48 +303,53 @@ public class HttpResponderSession {
             if (last.equalsIgnoreCase(CHUNKED_TOKEN)) {
                 transferEncodings.remove(--sz);
 
-                if (false) {
-                    /* Bizarrely, nginx and Apache decode the chunking
-                     * themselves, but leave the 'chunked' token on the
-                     * end of the Transfer-Encoding field. The trailer
-                     * itself isn't even presented, so this is all
-                     * pointless. */
-                    var head = new PrecedingInputStream(in);
-                    trailerIn = head.tail();
-                    in = new ChunkedInputStream(head);
-                }
+                /**
+                 * Bizarrely, nginx and Apache decode the chunking
+                 * themselves, but leave the 'chunked' token on the end
+                 * of the Transfer-Encoding field. The trailer itself
+                 * isn't even presented, so this is all pointless.
+                 * Here's what we would have done:
+                 * 
+                 * <pre>
+                 * var head = new PrecedingInputStream(in);
+                 * trailerIn = head.tail();
+                 * in = new ChunkedInputStream(head);
+                 * </pre>
+                 */
             }
 
-            BodyDecoder xferDecoder = new BodyDecoder(ctxt.decoders()::get);
+            /* Using the provided transfer decoders, clear all the
+             * transfer encodings. If we can't clear them all, it's an
+             * error. */
+            BodyDecoder xferDecoder =
+                new BodyDecoder(ctxt.transferDecoders()::get);
             in = xferDecoder.decode(in, transferEncodings);
             if (!transferEncodings.isEmpty())
                 throw new IOException("unknown transfer encoding "
                     + transferEncodings);
         }
 
-        /* Apply unhandled content decoding. */
-        if (rawRequestEncodings == null)
-            rawRequestEncodings = tokens(CONTENT_ENCODING_PARAM);
-        BodyDecoder contentDecoder = new BodyDecoder(ctxt.decoders()::get);
-        in = contentDecoder.decode(in, rawRequestEncodings);
+        /* Apply unhandled content decoding, according to what the
+         * application wants. */
+        requestEncodings();
+        in = InputEncoding.decode(in, handledRequestEncodings);
 
         return in;
     }
 
     /**
      * Get the stream for the request body. This excludes the trailer,
-     * which is present in the underlying stream if the body is chunked.
-     * Closing this stream discards any remaining request body, and
-     * causes the trailer to be parsed. {@link #requestTrailer()} then
-     * becomes available.
+     * which is often hidden by the server, and so is not available to
+     * any FastCGI/1.0 application. (This library proposes an extension
+     * allowing the trailer to be passed separately.)
      * 
      * <p>
-     * As specified by the <code>Content-Encoding</code> field in the
-     * request header, all content encodings are removed, unless the
-     * implementation can't handle one, or if the application has
-     * indicated that it can cope with the only remaining encodings by
-     * previously calling {@link #acceptEncodings(CharSequence...)} or
-     * {@link #acceptEncodings(Collection)}.
+     * As specified by the <samp>{@value "%s"
+     * #CONTENT_ENCODING_FIELD}</samp> field in the request header, and
+     * by {@link HttpResponderContext#contentDecoders()} on the
+     * configured context, recognized trailing content encodings are
+     * removed. Any remaining encodings are provided by
+     * {@link #requestEncodings()}.
      * 
      * <p>
      * All transfer encodings are also removed, including chunking.
@@ -400,10 +420,9 @@ public class HttpResponderSession {
         return protocol.isIncluded();
     }
 
-    private final Collection<String> acceptedEncodings =
-        new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+    private List<String> rawRequestEncodings = null;
 
-    private List<String> unhandledRequestEncodings = null;
+    private List<InputEncoding> handledRequestEncodings = null;
 
     private static final String CONTENT_ENCODING_FIELD = "Content-Encoding";
 
@@ -411,97 +430,25 @@ public class HttpResponderSession {
         Http.fieldNameAsCGI(CONTENT_ENCODING_FIELD);
 
     /**
-     * Get the sequence of encodings required to decode the request.
-     * This is obtained by parsing the HTTP request field
+     * Get the sequence of content encodings required to decode the
+     * request. This is obtained by parsing the HTTP request field
      * <samp>{@value "%s" #CONTENT_ENCODING_FIELD}</samp> as
      * comma-separated tokens. The first entry was applied first to
      * request body.
      * 
-     * <p>
-     * This method takes into account the application's calls to
-     * {@link #acceptEncodings(CharSequence...)} and
-     * {@link #acceptEncodings(Collection)}. It also makes no internal
-     * changes to the session state, and can be called before or after
-     * {@link #in()}.
-     * 
      * @return a mutable sequence of encodings required to decode the
-     * request stream, if {@link #in()} were about to be called for the
-     * first time
+     * request stream returned by {@link #in()}
      */
     public List<String> requestEncodings() {
-        if (unhandledRequestEncodings != null)
-            return new ArrayList<>(unhandledRequestEncodings);
-        if (rawRequestEncodings == null)
+        if (rawRequestEncodings == null) {
+            assert handledRequestEncodings == null;
             rawRequestEncodings = tokens(CONTENT_ENCODING_PARAM);
-        List<String> contentEncodings = new ArrayList<>(rawRequestEncodings);
-        return getApplicationHandledEncodings(contentEncodings);
-    }
-
-    /**
-     * Remove from the list of encodings a head of those handled by the
-     * application.
-     * 
-     * @param encodings the list to be modified
-     * 
-     * @return a mutable list of the encodings that form the head of the
-     * original list, and which the application is prepared to deal with
-     * itself
-     */
-    private List<String>
-        getApplicationHandledEncodings(List<String> encodings) {
-        List<String> unhandled = new ArrayList<>();
-        for (var iter = encodings.iterator(); iter.hasNext();) {
-            var name = iter.next();
-            if (acceptedEncodings.contains(name)) {
-                unhandled.add(name);
-                iter.remove();
-                continue;
-            }
-            break;
+            BodyDecoder contentDecoder =
+                new BodyDecoder(ctxt.contentDecoders()::get);
+            handledRequestEncodings =
+                contentDecoder.recognize(rawRequestEncodings);
         }
-        return unhandled;
-    }
-
-    /**
-     * Indicate that the application can deal with some content
-     * encodings.
-     * 
-     * @param names the names of content encodings that can be left on
-     * the request body when presented as a stream
-     * 
-     * @see #acceptEncodings(CharSequence...)
-     * 
-     * @throws IllegalStateException if the request stream has already
-     * been opened with {@link #in()}
-     */
-    public void acceptEncodings(Collection<? extends CharSequence> names) {
-        /* If the request stream has already been opened, throw an
-         * exception. */
-        if (in != null)
-            throw new IllegalStateException("request already opened");
-        for (var e : names)
-            acceptedEncodings.add(e.toString());
-    }
-
-    /**
-     * Indicate that the application can deal with some content
-     * encodings.
-     * 
-     * @param names the names of content encodings that can be left on
-     * the request body when presented as a stream
-     * 
-     * @see #acceptEncodings(Collection)
-     * 
-     * @throws IllegalStateException if the request stream has already
-     * been opened with {@link #in()}
-     */
-    public void acceptEncodings(CharSequence... names) {
-        /* If the request stream has already been opened, throw an
-         * exception. */
-        if (in != null)
-            throw new IllegalStateException("request already opened");
-        for (var e : names)
-            acceptedEncodings.add(e.toString());
+        return rawRequestEncodings;
     }
 
     /**
@@ -549,22 +496,14 @@ public class HttpResponderSession {
      * <p>
      * To extract a field from the environment, a field name is
      * converted to upper case, hyphens are replaced with underscores,
-     * and then <samp>HTTP_</samp> is prefixed. An additional namespace
-     * identifier may be prefixed. The transformed name is then looked
-     * up in the FastCGI environment.
+     * and optional namespace identifier may be prefixed, and then
+     * <samp>HTTP_</samp> is prefixed. The transformed name is then
+     * looked up in the FastCGI environment.
      * 
      * @return access to the request header fields
      */
     public Cap requestHeader() {
-        if (requestHeader == null) makeRequestHeader();
         return requestHeader;
-    }
-
-    private void makeRequestHeader() {
-        assert requestHeader == null;
-        /* TODO: Parse Cache-Control (or Pragma) fields. */
-        /* TODO */
-        throw new UnsupportedOperationException("unimplemented");
     }
 
     private final ExtensionManager requestExtMgr = new ExtensionManager();
@@ -578,7 +517,7 @@ public class HttpResponderSession {
         return requestExtMgr;
     }
 
-    private Cap requestHeader = null;
+    private final Cap requestHeader;
 
     /**
      * Get the extension manager for the response.

@@ -49,11 +49,43 @@ import uk.ac.lancs.http.encoding.InputEncoding;
  */
 public interface HttpResponderContext {
     /**
-     * Get the set of decoders indexed by case-insensitive name.
+     * Get the set of content encodings for requests, indexed by
+     * case-insensitive name. {@link HttpResponderSession#in()} and
+     * {@link HttpResponderSession#requestEncodings()} use this to
+     * remove content encodings from the request body.
      * 
      * @return an immutable map from decoder name to implementation
+     * 
+     * @implNote By default, an empty map is returned.
      */
-    default Map<String, InputEncoding> decoders() {
+    default Map<String, InputEncoding> contentDecoders() {
         return Collections.emptyMap();
+    }
+
+    /**
+     * Get the set of transfer encodings for requests, indexed by
+     * case-insensitive name. {@link HttpResponderSession#in()} uses
+     * this to remove transfer encodings from the request body.
+     * 
+     * @return an immutable map from decoder name to implementation
+     * 
+     * @implNote By default, all available transfer encodings are
+     * returned. These can be configured by setting system properties
+     * beginning with the following prefixes:
+     * 
+     * <ul>
+     * 
+     * <li><samp>{@value "%s"
+     * HttpResponderSession#INPUT_TRANSFER_PREFIX}</samp>
+     * 
+     * <li><samp>{@value "%s"
+     * HttpResponderSession#TRANSFER_PREFIX}</samp>
+     * 
+     * <li><samp>{@value "%s"
+     * HttpResponderSession#ENCODINGS_PREFIX}</samp>
+     * </ul>
+     */
+    default Map<String, InputEncoding> transferDecoders() {
+        return HttpResponderSession.ALL_AVAILABLE_TRANSFER_DECODERS;
     }
 }
