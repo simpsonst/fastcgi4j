@@ -217,8 +217,6 @@ public final class SessionAugment {
      * 
      * <ul>
      * 
-     * <li>{@link #sendDocument(Properties, Document))}
-     * 
      * <li>{@link #textOut(String, Charset)}
      * 
      * <li>{@link #textOut(String)}
