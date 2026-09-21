@@ -241,15 +241,15 @@ public class HttpResponderSession {
      * Parse a CGI parameter as HTTP comma-separated tokens. If the
      * parameter is not set, an empty list is returned.
      * 
-     * @param fieldName the name of the request parameter
+     * @param paramName the name of the request parameter
      * 
      * @return a list of tokens from the parameter
      * 
      * @throws IllegalArgumentException if the parameter is present, but
      * does not parse as comma-separated tokens
      */
-    private List<String> tokens(String fieldName) {
-        String field = base.parameters().get(fieldName);
+    private List<String> tokens(String paramName) {
+        String field = base.parameters().get(paramName);
         if (field == null) return Collections.emptyList();
         List<String> result = new ArrayList<>(field.length() / 5);
         /* TODO: We should really use an *HTTP* tokenizer, not MIME.
