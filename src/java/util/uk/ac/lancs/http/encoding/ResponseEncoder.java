@@ -45,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import uk.ac.lancs.http.Negotiation;
+import uk.ac.lancs.http.field.FieldNames;
 
 /**
  * Manages compression and other encodings on a response body.
@@ -60,13 +61,16 @@ public final class ResponseEncoder {
      * <ol>
      * 
      * <li>extraction of the client's preferences (usually from the
-     * <samp>Accept-Encoding</samp> and <samp>TE</samp> header fields,
-     * to perform content negotiation;
+     * <samp>{@value "%s"
+     * uk.ac.lancs.http.field.FieldNames#ACCEPT_ENCODING}</samp> and
+     * <samp>{@value "%s" FieldNames#TE}</samp> header fields), to
+     * perform content negotiation;
      * 
-     * <li>setting of the response header fields
-     * <samp>Content-Encoding</samp> and <samp>Transfer-Encoding</samp>
-     * as the result of content negotiation and any explicit application
-     * of content encodings by the application; and
+     * <li>setting of the response header fields <samp>{@value "%s"
+     * FieldNames#CONTENT_ENCODING}</samp> and <samp>{@value "%s"
+     * FieldNames#TRANSFER_ENCODING}</samp> as the result of content
+     * negotiation and any explicit application of content encodings by
+     * the application; and
      * 
      * <li>acquisition of the raw output stream, so the encodings can be
      * applied.

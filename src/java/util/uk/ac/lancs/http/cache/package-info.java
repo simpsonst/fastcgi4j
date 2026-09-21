@@ -37,6 +37,8 @@
  */
 
 /**
- * Manipulates HTTP's <samp>Cache-Control</samp> header field.
+ * Manipulates HTTP's
+ * <samp>{@value uk.ac.lancs.http.field.FieldNames#CACHE_CONTROL}</samp>
+ * header field.
  */
 package uk.ac.lancs.http.cache;

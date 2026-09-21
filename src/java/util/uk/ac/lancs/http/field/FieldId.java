@@ -161,82 +161,40 @@ public final class FieldId {
         return Objects.equals(this.namespace, other.namespace);
     }
 
-    private static final String CONTENT_TYPE_CORE = "Content-Type";
-
     /**
      * Identifies the standard end-to-end header field
-     * <samp>{@value "%s" #CONTENT_TYPE_CORE}</samp>.
+     * <samp>{@value "%s" FieldNames#CONTENT_TYPE}</samp>.
      */
     public static final FieldId CONTENT_TYPE =
-        FieldNamespace.STANDARD_END_TO_END.of(CONTENT_TYPE_CORE);
-
-    private static final String CONTENT_LENGTH_CORE = "Content-Length";
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.CONTENT_TYPE);
 
     /* Content-Length must be hop-by-hop, because it is forbidden to use
      * it with Transfer-Encoding, which could change on each hop. */
     /**
      * Identifies the standard hop-by-hop header field
-     * <samp>{@value "%s" #CONTENT_LENGTH_CORE}</samp>.
+     * <samp>{@value "%s" FieldNames#CONTENT_LENGTH}</samp>.
      */
     public static final FieldId CONTENT_LENGTH =
-        FieldNamespace.STANDARD_HOP_BY_HOP.of(CONTENT_LENGTH_CORE);
+        FieldNamespace.STANDARD_HOP_BY_HOP.of(FieldNames.CONTENT_LENGTH);
 
-    private static final String TRANSFER_ENCODING_CORE = "Transfer-Encoding";
-
-    private static final Set<String> STANDARD_END_TO_END_GENERAL_FIELD_NAMES =
-        Set.of("Cache-Control", "Date", "Pragma", "Upgrade", "Via", "Man",
-               "Opt");
-
-    private static final Set<String> STANDARD_HOP_BY_HOP_GENERAL_FIELD_NAMES =
-        Set.of("Connection", TRANSFER_ENCODING_CORE, "C-Man", "C-Opt");
-
-    private static final Set<String> STANDARD_END_TO_END_REQUEST_FIELD_NAMES =
-        Set.of("Accept", "Accept-Charset", "Accept-Encoding", "Accept-Language",
-               "Authorization", "From", "Host", "If-Modified-Since", "If-Match",
-               "If-None-Match", "If-Range", "If-Unmodified-Since", "Range",
-               "Referer", "User-Agent");
-
-    private static final Set<String> STANDARD_HOP_BY_HOP_REQUEST_FIELD_NAMES =
-        Set.of("Max-Forwards", "Proxy-Authorization");
-
-    private static final Set<String> STANDARD_END_TO_END_RESPONSE_FIELD_NAMES =
-        Set.of("Age", "Location", "Retry-After", "Server", "Vary", "Warning",
-               "WWW-Authenticate");
-
-    private static final Set<String> STANDARD_HOP_BY_HOP_RESPONSE_FIELD_NAMES =
-        Set.of("Proxy-Authenticate", "Public");
-
-    private static final Set<String> STANDARD_END_TO_END_ENTITY_FIELD_NAMES =
-        Set.of("Allow", "Content-Base", "Content-Encoding", "Content-Language",
-               "Content-Location", "Content-MD5", "Content-Range",
-               CONTENT_TYPE_CORE, "Etag", "Expires", "Last-Modified");
-
-    private static final Set<String> STANDARD_HOP_BY_HOP_ENTITY_FIELD_NAMES =
-        Set.of(CONTENT_LENGTH_CORE);
-
-    private static final Set<FieldId> ILLEGALLY_SCOPED_FIELDS =
-        Stream
+    private static final Set<FieldId> ILLEGALLY_SCOPED_FIELDS = Stream
+        .concat(Stream
             .concat(Stream
-                .concat(Stream.concat(Stream
-                    .concat(STANDARD_END_TO_END_GENERAL_FIELD_NAMES.stream(),
-                            STANDARD_END_TO_END_REQUEST_FIELD_NAMES.stream()),
-                                      STANDARD_END_TO_END_ENTITY_FIELD_NAMES
+                .concat(Stream.concat(FieldNameSets.GENERAL_END_TO_END.stream(),
+                                      FieldNameSets.REQUEST_END_TO_END
                                           .stream()),
-                        STANDARD_END_TO_END_RESPONSE_FIELD_NAMES.stream())
-                .map(s -> FieldNamespace.STANDARD_HOP_BY_HOP.of(s)),
-                    Stream
+                        FieldNameSets.ENTITY_END_TO_END.stream()),
+                    FieldNameSets.RESPONSE_END_TO_END.stream())
+            .map(s -> FieldNamespace.STANDARD_HOP_BY_HOP.of(s)),
+                Stream
+                    .concat(Stream
                         .concat(Stream
-                            .concat(Stream
-                                .concat(STANDARD_HOP_BY_HOP_GENERAL_FIELD_NAMES
-                                    .stream(),
-                                        STANDARD_HOP_BY_HOP_REQUEST_FIELD_NAMES
-                                            .stream()),
-                                    STANDARD_HOP_BY_HOP_ENTITY_FIELD_NAMES
-                                        .stream()),
-                                STANDARD_HOP_BY_HOP_RESPONSE_FIELD_NAMES
-                                    .stream())
-                        .map(s -> FieldNamespace.STANDARD_END_TO_END.of(s)))
-            .collect(Collectors.toSet());
+                            .concat(FieldNameSets.GENERAL_HOP_BY_HOP.stream(),
+                                    FieldNameSets.REQUEST_HOP_BY_HOP.stream()),
+                                FieldNameSets.ENTITY_HOP_BY_HOP.stream()),
+                            FieldNameSets.RESPONSE_HOP_BY_HOP.stream())
+                    .map(s -> FieldNamespace.STANDARD_END_TO_END.of(s)))
+        .collect(Collectors.toSet());
 
     /**
      * Determine whether a field identifier has an illegal scope. To

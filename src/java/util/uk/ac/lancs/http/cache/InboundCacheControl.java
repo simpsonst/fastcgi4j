@@ -47,7 +47,8 @@ import uk.ac.lancs.http.field.FieldId;
 import uk.ac.lancs.mime.Tokenizer;
 
 /**
- * Parses and holds the parameters of a <code>Cache-Control</code>
+ * Parses and holds the parameters of a
+ * <samp>{@value uk.ac.lancs.http.field.FieldNames#CACHE_CONTROL}</samp>
  * header field.
  * 
  * @author simpsons

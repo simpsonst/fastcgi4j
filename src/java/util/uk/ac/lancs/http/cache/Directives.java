@@ -40,7 +40,8 @@ package uk.ac.lancs.http.cache;
 
 /**
  * Defines symbolic constants for directives used in the HTTP
- * <samp>Cache-Control</samp> field.
+ * <samp>{@value uk.ac.lancs.http.field.FieldNames#CACHE_CONTROL}</samp>
+ * field.
  *
  * @author simpsons
  * 

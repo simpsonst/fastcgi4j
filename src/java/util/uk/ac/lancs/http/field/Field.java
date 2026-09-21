@@ -305,24 +305,23 @@ public abstract class Field<T> {
     }
 
     /**
-     * Defines the <samp>{@value "%s" FieldId#CONTENT_TYPE_CORE}</samp>
+     * Defines the <samp>{@value "%s" FieldNames#CONTENT_TYPE}</samp>
      * field.
      */
     public static final FlatField<MediaType> CONTENT_TYPE =
         Field.<MediaType>of(FieldId.CONTENT_TYPE).flat();
 
     /**
-     * Defines the <samp>{@value "%s"
-     * FieldId#CONTENT_LENGTH_CORE}</samp> field using {@code Long}.
+     * Defines the <samp>{@value "%s" FieldNames#CONTENT_LENGTH}</samp>
+     * field using {@code Long}.
      */
     public static final FlatField<Long> LONG_CONTENT_LENGTH = Field
         .<Long>of(FieldId.CONTENT_LENGTH).outward(v -> Long.toString(v, 10))
         .inward(Field::decimalLong).flat();
 
     /**
-     * Defines the <samp>{@value "%s"
-     * FieldId#CONTENT_LENGTH_CORE}</samp> field using
-     * {@link BigInteger}.
+     * Defines the <samp>{@value "%s" FieldNames#CONTENT_LENGTH}</samp>
+     * field using {@link BigInteger}.
      */
     public static final FlatField<BigInteger> BIG_CONTENT_LENGTH =
         Field.<BigInteger>of(FieldId.CONTENT_LENGTH).outward(v -> v.toString())

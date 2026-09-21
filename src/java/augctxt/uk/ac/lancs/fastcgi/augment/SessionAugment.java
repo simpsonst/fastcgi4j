@@ -64,6 +64,7 @@ import uk.ac.lancs.http.ResponseCodes;
 import uk.ac.lancs.http.encoding.EncodingContext;
 import uk.ac.lancs.http.encoding.OutputEncoding;
 import uk.ac.lancs.http.encoding.ResponseEncoder;
+import uk.ac.lancs.http.field.FieldNames;
 import uk.ac.lancs.mime.MediaGroup;
 import uk.ac.lancs.mime.MediaType;
 
@@ -79,17 +80,15 @@ import uk.ac.lancs.mime.MediaType;
 public final class SessionAugment {
     private final Session session;
 
-    private static final String ACCEPT_ENCODING_FIELD = "Accept-Encoding";
-
     private static final String ACCEPT_ENCODING_VAR =
-        Http.fieldNameAsCGI(ACCEPT_ENCODING_FIELD);
+        Http.fieldNameAsCGI(FieldNames.ACCEPT_ENCODING);
 
-    private static final String TE_VAR = Http.fieldNameAsCGI("TE");
+    private static final String TE_VAR = Http.fieldNameAsCGI(FieldNames.TE);
 
     /**
      * Get the client's encoding preference. This is extracted from the
-     * <samp>{@value "%s" #ACCEPT_ENCODING_FIELD}</samp> request header
-     * field if present.
+     * <samp>{@value "%s" FieldNames#ACCEPT_ENCODING}</samp> request
+     * header field if present.
      * {@link Negotiation#getAtomPreference(CharSequence)} is used to
      * parse the field value.
      * 
@@ -103,14 +102,13 @@ public final class SessionAugment {
         return Negotiation.getAtomPreference(session.parameters().get(varName));
     }
 
-    private static final String ACCEPT_FIELD = "Accept";
-
-    private static final String ACCEPT_VAR = Http.fieldNameAsCGI(ACCEPT_FIELD);
+    private static final String ACCEPT_VAR =
+        Http.fieldNameAsCGI(FieldNames.ACCEPT);
 
     /**
      * Get the client's media-type preferences. This is extracted from
-     * the <samp>{@value "%s" #ACCEPT_FIELD}</samp> request header field
-     * if present.
+     * the <samp>{@value "%s" FieldNames#ACCEPT}</samp> request header
+     * field if present.
      * {@link Negotiation#getMediaTypePreference(CharSequence)} is used
      * to parse the field value.
      * 
@@ -164,10 +162,6 @@ public final class SessionAugment {
                                            getEncodingOffer(EncodingContext.TRANSFER,
                                                             "transfer.");
 
-    private static final String CONTENT_ENCODING_VAR = "Content-Encoding";
-
-    private static final String TRANSFER_ENCODING_VAR = "Transfer-Encoding";
-
     private final ResponseEncoder.Context responseEncoderContext =
         new ResponseEncoder.Context() {
             @Override
@@ -188,13 +182,13 @@ public final class SessionAugment {
 
             @Override
             public void setContentEncoding(List<? extends CharSequence> names) {
-                setEncoding(CONTENT_ENCODING_VAR, names);
+                setEncoding(FieldNames.CONTENT_ENCODING, names);
             }
 
             @Override
             public void
                 setTransferEncoding(List<? extends CharSequence> names) {
-                setEncoding(TRANSFER_ENCODING_VAR, names);
+                setEncoding(FieldNames.TRANSFER_ENCODING, names);
             }
         };
 
@@ -213,10 +207,10 @@ public final class SessionAugment {
      * Get the output stream with encodings applied. On the first call,
      * encodings specified by other calls are applied to the basic
      * session's stream, and the <samp>{@value "%s"
-     * #CONTENT_ENCODING_VAR}</samp> and <samp>{@value "%s"
-     * #TRANSFER_ENCODING_VAR}</samp> header fields are set. Subsequent
-     * calls will yield the same stream. Calling this method prevents
-     * the calling of other methods that modify encoding.
+     * FieldNames#CONTENT_ENCODING}</samp> and <samp>{@value "%s"
+     * FieldNames#TRANSFER_ENCODING}</samp> header fields are set.
+     * Subsequent calls will yield the same stream. Calling this method
+     * prevents the calling of other methods that modify encoding.
      * 
      * <p>
      * Methods that implicitly call this method include:
@@ -256,7 +250,7 @@ public final class SessionAugment {
         throws IOException {
         MediaType mt = MediaType.of("text", minor).modify()
             .set("charset", charset.name()).apply();
-        session.setField("Content-Type", mt.toString());
+        session.setField(FieldNames.CONTENT_TYPE, mt.toString());
         return new PrintWriter(new OutputStreamWriter(out(), charset));
     }
 
@@ -285,14 +279,14 @@ public final class SessionAugment {
      */
     public void noContent() throws IOException {
         session.setStatus(ResponseCodes.NO_CONTENT);
-        session.clearField("Content-Type");
-        session.clearField("Content-Length");
-        session.clearField("Content-Encoding");
+        session.clearField(FieldNames.CONTENT_TYPE);
+        session.clearField(FieldNames.CONTENT_LENGTH);
+        session.clearField(FieldNames.CONTENT_ENCODING);
         session.out().close();
     }
 
     private void setLocation(URI location, int code) {
-        session.addField("Location", location.toASCIIString());
+        session.addField(FieldNames.LOCATION, location.toASCIIString());
         session.setStatus(code);
     }
 
@@ -398,7 +392,7 @@ public final class SessionAugment {
 
         try (var out = out()) {
             var dest = new StreamResult(out);
-            session.setField("Content-Type", contentType);
+            session.setField(FieldNames.CONTENT_TYPE, contentType);
             xf.transform(src, dest);
         }
     }

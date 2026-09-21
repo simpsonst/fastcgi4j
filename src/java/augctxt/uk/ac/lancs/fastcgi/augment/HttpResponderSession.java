@@ -61,6 +61,7 @@ import uk.ac.lancs.cgi.Http;
 import uk.ac.lancs.cgi.ServerProtocol;
 import uk.ac.lancs.fastcgi.RequestableSession;
 import uk.ac.lancs.fastcgi.ResponderSession;
+import uk.ac.lancs.fastcgi.Session;
 import uk.ac.lancs.http.cache.InboundCacheControl;
 import uk.ac.lancs.http.encoding.BodyDecoder;
 import uk.ac.lancs.http.encoding.EncodingContext;
@@ -71,6 +72,8 @@ import uk.ac.lancs.http.field.EmptyCap;
 import uk.ac.lancs.http.field.ExtensionManager;
 import uk.ac.lancs.http.field.FieldExtension;
 import uk.ac.lancs.http.field.FieldId;
+import uk.ac.lancs.http.field.FieldNameSets;
+import uk.ac.lancs.http.field.FieldNames;
 import uk.ac.lancs.http.field.FieldNamespace;
 import uk.ac.lancs.mime.MediaType;
 import uk.ac.lancs.mime.Tokenizer;
@@ -163,15 +166,13 @@ public class HttpResponderSession {
     }
 
     /**
-     * Caches the parsed value of the <samp>TE</samp> HTTP/1.1 request
-     * header. Call {@link #getAcceptedTransferEncodings()} to populate
-     * it lazily.
+     * Caches the parsed value of the <samp>{@value "%S"
+     * FieldNames#TE}</samp> HTTP/1.1 request header field. Call
+     * {@link #getAcceptedTransferEncodings()} to populate it lazily.
      */
     private Map<String, Map<String, String>> acceptedTransferEncodings = null;
 
-    private static final String TE_FIELD = "TE";
-
-    private static final String TE_PARAM = Http.fieldNameAsCGI(TE_FIELD);
+    private static final String TE_PARAM = Http.fieldNameAsCGI(FieldNames.TE);
 
     /**
      * Parse the <samp>{@value "%s" #TE_FIELD}</samp> request header
@@ -220,8 +221,8 @@ public class HttpResponderSession {
     /**
      * Determine whether a response trailer can be sent. A trailer is
      * permitted when HTTP/2.0 or later is used, or when the request
-     * header field <samp>{@value "%s" #TE_FIELD}</samp> includes the
-     * token <samp>{@value "%s" #TRAILERS_TOKEN}</samp>.
+     * header field <samp>{@value "%s" FieldNames#TE}</samp> includes
+     * the token <samp>{@value "%s" #TRAILERS_TOKEN}</samp>.
      * 
      * @return {@code true} if a trailer can be sent; {@code false}
      * otherwise
@@ -279,10 +280,8 @@ public class HttpResponderSession {
 
     private static final String CHUNKED_TOKEN = "chunked";
 
-    private static final String TRANSFER_ENCODING_FIELD = "Transfer-Encoding";
-
     private static final String TRANSFER_ENCODING_PARAM =
-        Http.fieldNameAsCGI(TRANSFER_ENCODING_FIELD);
+        Http.fieldNameAsCGI(FieldNames.TRANSFER_ENCODING);
 
     private InputStream makeIn() throws IOException {
         InputStream in = base.in();
@@ -340,8 +339,8 @@ public class HttpResponderSession {
      * 
      * <p>
      * As specified by the <samp>{@value "%s"
-     * #CONTENT_ENCODING_FIELD}</samp> field in the request header, and
-     * by {@link HttpResponderContext#contentDecoders()} on the
+     * FieldNames#CONTENT_ENCODING}</samp> field in the request header,
+     * and by {@link HttpResponderContext#contentDecoders()} on the
      * configured context, recognized trailing content encodings are
      * removed. Any remaining encodings are provided by
      * {@link #requestEncodings()}.
@@ -419,15 +418,13 @@ public class HttpResponderSession {
 
     private List<InputEncoding> handledRequestEncodings = null;
 
-    private static final String CONTENT_ENCODING_FIELD = "Content-Encoding";
-
     private static final String CONTENT_ENCODING_PARAM =
-        Http.fieldNameAsCGI(CONTENT_ENCODING_FIELD);
+        Http.fieldNameAsCGI(FieldNames.CONTENT_ENCODING);
 
     /**
      * Get the sequence of content encodings required to decode the
      * request. This is obtained by parsing the HTTP request field
-     * <samp>{@value "%s" #CONTENT_ENCODING_FIELD}</samp> as
+     * <samp>{@value "%s" FieldNames#CONTENT_ENCODING}</samp> as
      * comma-separated tokens. The first entry was applied first to
      * request body.
      * 
@@ -577,10 +574,12 @@ public class HttpResponderSession {
     private final Map<FieldId, List<String>> responseTrailerFields =
         new HashMap<>();
 
-    private static final Set<FieldId> FORBIDDEN_RESPONSE_FIELDS =
-        Set.of("Status", "Connection", "Transfer-Encoding", "Trailers").stream()
-            .flatMap(s -> Stream.of(FieldNamespace.STANDARD_END_TO_END.of(s)))
-            .collect(Collectors.toSet());
+    private static final Set<FieldId> FORBIDDEN_RESPONSE_FIELDS = Set
+        .of(Session.STATUS_FIELD, FieldNames.CONNECTION,
+            FieldNames.TRANSFER_ENCODING, FieldNames.TRAILER)
+        .stream()
+        .flatMap(s -> Stream.of(FieldNamespace.STANDARD_END_TO_END.of(s)))
+        .collect(Collectors.toSet());
 
     private final Cap responseHeader = new Cap() {
         @Override
@@ -659,17 +658,11 @@ public class HttpResponderSession {
      * Note that each field name is included twice, once as end-to-end
      * and once as hop-by-hop.
      */
-    private static final Set<FieldId> FORBIDDEN_TRAILER_FIELDS = Set
-        .of("Content-Encoding", "Content-Type", "Content-Range", "Trailer",
-            "Authorization", "WWW-Authenticate", "Proxy-Authorization",
-            "Proxy-Authenticate", "Set-Cookie", "Transfer-Encoding",
-            "Content-Length", "Host", "Cache-Control", "Max-Forwards", "TE",
-            "Man", "C-Man", "Opt", "C-Opt", "If-Modified-Since", "If-Match",
-            "If-None-Match", "If-Range", "If-Unmodified-Since", "Range")
-        .stream()
-        .flatMap(s -> Stream.of(FieldNamespace.STANDARD_END_TO_END.of(s),
-                                FieldNamespace.STANDARD_HOP_BY_HOP.of(s)))
-        .collect(Collectors.toSet());
+    private static final Set<FieldId> FORBIDDEN_TRAILER_FIELDS =
+        FieldNameSets.HEADER.stream()
+            .flatMap(s -> Stream.of(FieldNamespace.STANDARD_END_TO_END.of(s),
+                                    FieldNamespace.STANDARD_HOP_BY_HOP.of(s)))
+            .collect(Collectors.toSet());
 
     /**
      * Indicate that some fields are expected in the trailer. This
