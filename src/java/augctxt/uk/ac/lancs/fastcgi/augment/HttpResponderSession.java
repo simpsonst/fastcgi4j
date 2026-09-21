@@ -53,6 +53,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -68,13 +69,13 @@ import uk.ac.lancs.http.encoding.EncodingContext;
 import uk.ac.lancs.http.encoding.InputEncoding;
 import uk.ac.lancs.http.field.CGIRequestCap;
 import uk.ac.lancs.http.field.Cap;
-import uk.ac.lancs.http.field.EmptyCap;
 import uk.ac.lancs.http.field.ExtensionManager;
 import uk.ac.lancs.http.field.FieldExtension;
 import uk.ac.lancs.http.field.FieldId;
 import uk.ac.lancs.http.field.FieldNameSets;
 import uk.ac.lancs.http.field.FieldNames;
 import uk.ac.lancs.http.field.FieldNamespace;
+import uk.ac.lancs.http.field.TrailerMapCap;
 import uk.ac.lancs.mime.MediaType;
 import uk.ac.lancs.mime.Tokenizer;
 
@@ -528,6 +529,29 @@ public class HttpResponderSession {
         return responseExtMgr;
     }
 
+    private static final String CONNECTION_PARAM =
+        Http.fieldNameAsCGI(FieldNames.CONNECTION);
+
+    private Set<String> requestHopByHopFields = null;
+
+    /**
+     * Lazily get an immutable case-insensitive set of raw names of
+     * hop-by-hop request fields. These are derived from the
+     * <samp>{@value "%s" FieldNames#CONNECTION}</samp> field, which is
+     * parsed as comma-separated tokens.
+     * 
+     * @return the requested set
+     */
+    private Set<String> requestHopByHopFields() {
+        if (requestHopByHopFields == null) {
+            var t = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+            t.addAll(tokens(CONNECTION_PARAM));
+            t.addAll(FieldNameSets.HOP_BY_HOP);
+            requestHopByHopFields = Collections.unmodifiableSet(t);
+        }
+        return requestHopByHopFields;
+    }
+
     private Cap requestTrailer = null;
 
     /**
@@ -543,26 +567,24 @@ public class HttpResponderSession {
      * 
      * @return access to the request trailer fields
      * 
-     * @throws IllegalStateException if the request body stream has not
-     * been closed
+     * @throws IllegalStateException if called before EOF on the request
+     * body stream
      * 
      * @throws IOException if an I/O error occurs in reading the trailer
      * 
-     * @todo This can't work without extensions to FastCGI, or
-     * modifications to popular servers that would change existing
-     * behaviour. Until then, an empty trailer is returned.
+     * @throws InterruptedException if interrupted while waiting for the
+     * trailer to be received
+     * 
+     * @implNote This depends on
+     * {@link RequestableSession#requestTrailer()}.
      */
-    public Cap requestTrailer() throws IOException {
-        /* Provide the one already created, if it exists. */
-        if (requestTrailer != null) return requestTrailer;
-
-        /* TODO: This would require a second PARAMS sequence to appear
-         * after the STDIN sequence, and a flag (perhaps in
-         * BEGIN_REQUEST) to indicate that such a sequence is to be
-         * expected, and a capability in GET_VALUES(_RESULT) to indicate
-         * that the application could handle it. */
-
-        return EmptyCap.INSTANCE;
+    public Cap requestTrailer() throws IOException, InterruptedException {
+        if (requestTrailer == null) {
+            var hbh = requestHopByHopFields();
+            requestTrailer = new TrailerMapCap(requestExtMgr, hbh::contains,
+                                               base.requestTrailer());
+        }
+        return requestTrailer;
     }
 
     private final Map<FieldId, List<String>> responseHeaderFields =
