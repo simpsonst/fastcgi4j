@@ -38,14 +38,13 @@
 
 package uk.ac.lancs.http.field;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.function.BiConsumer;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -69,10 +68,32 @@ public class TrailerMapCap implements Cap {
      * to be recognized in the trailer; usually the same one used to
      * interpret the corresponding header
      * 
-     * @param hopByHop a set of raw field names that are considered
-     * hop-by-hop rather than end-to-end; normally derived from a
-     * comma-separated list of tokens in the <samp>Connection</samp>
-     * header field
+     * @param isHopByHop a predicate to case-insensitively recognize the
+     * raw name of a hop-by-hop field
+     * 
+     * @param base the base map describing the trailer, using raw field
+     * names as keys, and order-preserving lists as values; discarded
+     * after construction
+     */
+    public TrailerMapCap(ExtensionManager extMgr,
+                         Predicate<? super String> isHopByHop,
+                         Map<? extends CharSequence,
+                             ? extends List<? extends CharSequence>> base) {
+        this(extMgr, isHopByHop, base, (x, y) -> {});
+    }
+
+    /**
+     * Create a trailer cap from a map of raw fields, reporting unused
+     * keys.
+     * 
+     * @param <K> the raw key type
+     * 
+     * @param extMgr the extension manager defining namespace extensions
+     * to be recognized in the trailer; usually the same one used to
+     * interpret the corresponding header
+     * 
+     * @param isHopByHop a predicate to case-insensitively recognize the
+     * raw name of a hop-by-hop field
      * 
      * @param base the base map describing the trailer, using raw field
      * names as keys, and order-preserving lists as values; discarded
@@ -81,24 +102,23 @@ public class TrailerMapCap implements Cap {
      * @param unused destination for keys from the base that are
      * rejected, with the reason for rejection
      */
-    public TrailerMapCap(ExtensionManager extMgr,
-                         Collection<? extends CharSequence> hopByHop,
-                         Map<? extends CharSequence,
-                             ? extends List<? extends CharSequence>> base,
-                         BiConsumer<? super CharSequence,
-                                    ? super RejectionReason> unused) {
-        var hbh = hopByHop.stream().map(Object::toString).collect(Collectors
-            .toCollection(() -> new TreeSet<>(String.CASE_INSENSITIVE_ORDER)));
+    public <K extends CharSequence> TrailerMapCap(ExtensionManager extMgr,
+                                                  Predicate<? super String> isHopByHop,
+                                                  Map<? extends K,
+                                                      ? extends List<? extends CharSequence>> base,
+                                                  BiConsumer<? super K,
+                                                             ? super RejectionReason> unused) {
         for (var ent : base.entrySet()) {
-            String key = ent.getKey().toString();
+            var k = ent.getKey();
+            String key = k.toString();
             var val = ent.getValue();
-            FieldScope scope = hbh.contains(key) ? FieldScope.HOP_BY_HOP :
+            FieldScope scope = isHopByHop.test(key) ? FieldScope.HOP_BY_HOP :
                 FieldScope.END_TO_END;
 
             FieldNamespace ns;
             Matcher m = NAME_PATTERN.matcher(key);
             if (!m.matches()) {
-                unused.accept(key, RejectionReason.MALFORMED);
+                unused.accept(k, RejectionReason.MALFORMED);
                 continue;
             }
             String pfx = m.group(1);
@@ -116,16 +136,16 @@ public class TrailerMapCap implements Cap {
             } else {
                 ns = extMgr.seek(ExtensionPrefix.of(pfx));
                 if (ns == null) {
-                    unused.accept(key, RejectionReason.UNKNOWN_EXTENSION);
+                    unused.accept(k, RejectionReason.UNKNOWN_EXTENSION);
                     continue;
                 }
                 if (ns.scope() != scope) {
-                    unused.accept(key, RejectionReason.SCOPE_MISMATCH);
+                    unused.accept(k, RejectionReason.SCOPE_MISMATCH);
                     continue;
                 }
             }
             assert ns != null;
-            store.computeIfAbsent(ns, k -> newMap()).put(tail, val.stream()
+            store.computeIfAbsent(ns, ign -> newMap()).put(tail, val.stream()
                 .map(Object::toString).collect(Collectors.toList()));
         }
     }
