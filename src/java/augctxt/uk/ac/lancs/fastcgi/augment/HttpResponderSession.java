@@ -603,37 +603,29 @@ public class HttpResponderSession {
         .flatMap(s -> Stream.of(FieldNamespace.STANDARD_END_TO_END.of(s)))
         .collect(Collectors.toSet());
 
-    private final Cap responseHeader = new Cap() {
-        @Override
-        public List<String> get(FieldId id) {
-            /* Check for fields that we manage, and throw
-             * IllegalArgumentException. */
-            if (FORBIDDEN_RESPONSE_FIELDS.contains(id))
-                throw new IllegalArgumentException("managed field: " + id);
+    private final Cap responseHeader = (FieldId id) -> {
+        /* Check for fields that we manage, and throw
+         * IllegalArgumentException. */
+        if (FORBIDDEN_RESPONSE_FIELDS.contains(id))
+            throw new IllegalArgumentException("managed field: " + id);
 
-            /* TODO: When it's too late to change any header fields,
-             * return an immutable list. */
+        /* TODO: When it's too late to change any header fields, return
+         * an immutable list. */
 
-            return responseHeaderFields.computeIfAbsent(id,
-                                                        k -> new ArrayList<>());
-        }
+        return responseHeaderFields.computeIfAbsent(id, k -> new ArrayList<>());
     };
 
-    private final Cap responseTrailer = new Cap() {
-        @Override
-        public List<String> get(FieldId id) {
-            /* Check for fields that have not been declared before the
-             * header has been written throw IllegalStateException. */
-            if (!responseTrailerExpectation.contains(id))
-                throw new IllegalStateException("unexpected trailer field: "
-                    + id);
+    private final Cap responseTrailer = (FieldId id) -> {
+        /* Check for fields that have not been declared before the
+         * header has been written throw IllegalStateException. */
+        if (!responseTrailerExpectation.contains(id))
+            throw new IllegalStateException("unexpected trailer field: " + id);
 
-            /* TODO: When it's too late to change any trailer fields,
-             * return an immutable list. */
+        /* TODO: When it's too late to change any trailer fields, return
+         * an immutable list. */
 
-            return responseTrailerFields
-                .computeIfAbsent(id, k -> new ArrayList<>());
-        }
+        return responseTrailerFields.computeIfAbsent(id,
+                                                     k -> new ArrayList<>());
     };
 
     /**
