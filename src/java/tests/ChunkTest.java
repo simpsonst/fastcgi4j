@@ -1,22 +1,3 @@
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.security.DigestInputStream;
-import java.security.DigestOutputStream;
-import java.security.MessageDigest;
-import java.util.HexFormat;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.function.LongConsumer;
-import uk.ac.lancs.http.ChunkedInputStream;
-import uk.ac.lancs.http.ChunkedOutputStream;
-import uk.ac.lancs.io.CountingInputStream;
-import uk.ac.lancs.io.CountingOutputStream;
-
 // -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
 
 /*
@@ -54,6 +35,24 @@ import uk.ac.lancs.io.CountingOutputStream;
  *
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
+import java.security.DigestInputStream;
+import java.security.DigestOutputStream;
+import java.security.MessageDigest;
+import java.util.HexFormat;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.LongConsumer;
+import uk.ac.lancs.http.ChunkedInputStream;
+import uk.ac.lancs.http.ChunkedOutputStream;
+import uk.ac.lancs.io.CountingInputStream;
+import uk.ac.lancs.io.CountingOutputStream;
 
 /**
  * Tests that a file is fully preserved when chunked and de-chunked.
