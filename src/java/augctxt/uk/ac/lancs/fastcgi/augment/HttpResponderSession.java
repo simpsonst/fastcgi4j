@@ -70,11 +70,13 @@ import uk.ac.lancs.http.encoding.InputEncoding;
 import uk.ac.lancs.http.field.CGIRequestCap;
 import uk.ac.lancs.http.field.Cap;
 import uk.ac.lancs.http.field.ExtensionManager;
+import uk.ac.lancs.http.field.ExtensionPrefix;
 import uk.ac.lancs.http.field.FieldExtension;
 import uk.ac.lancs.http.field.FieldId;
 import uk.ac.lancs.http.field.FieldNameSets;
 import uk.ac.lancs.http.field.FieldNames;
 import uk.ac.lancs.http.field.FieldNamespace;
+import uk.ac.lancs.http.field.FieldScope;
 import uk.ac.lancs.http.field.TrailerMapCap;
 import uk.ac.lancs.mime.MediaType;
 import uk.ac.lancs.mime.Tokenizer;
@@ -708,7 +710,94 @@ public class HttpResponderSession {
     };
 
     private OutputStream makeOut() {
-        /* TODO */
+        /* Build up a collection of used hop-by-hop raw field names.
+         * We'll need to declare these at the end. */
+        Set<String> hopByHopFields =
+            new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+
+        /* Use the response extension manager to assign fresh prefixes
+         * for each namespace referenced in the response header, in the
+         * trailer, what is expected in the trailer, and any field value
+         * as instructed by the application. */
+        Stream
+            .concat(Stream.concat(responseHeaderFields.keySet().stream(),
+                                  responseTrailerFields.keySet().stream()),
+                    responseTrailerExpectation.stream())
+            .map(FieldId::namespace).map(FieldNamespace::asExtension)
+            .filter(Objects::nonNull).forEach(responseExtMgr::define);
+
+        /* Set the raw response header fields that define the necessary
+         * namespaces. Include any additional parameters specified for
+         * each namespace by the application. */
+        base.clearField(FieldNames.MAN);
+        base.clearField(FieldNames.OPT);
+        base.clearField(FieldNames.C_MAN);
+        base.clearField(FieldNames.C_OPT);
+        var extDefs = responseExtMgr.freeze();
+        for (var ent : extDefs.entrySet()) {
+            /* What extension is this? What field from RFC2774 do we
+             * define it with? What is its scope and strength? */
+            FieldExtension ext = ent.getKey();
+            final String field = ext.definingField();
+
+            /* Form the namespace extension definition. This begins with
+             * the NS URI in quotes, then an 'ns' attribute giving the
+             * namespace prefix without the dash, then other
+             * attributes. */
+            var v = ent.getValue();
+            ExtensionPrefix pfx = v.getKey();
+            Map<String, String> attrs = v.getValue();
+            StringBuilder value = new StringBuilder();
+            value.append('"').append(ext.nsuri).append("\"; ns=").append(pfx);
+            for (var attr : attrs.entrySet()) {
+                var attrName = attr.getKey();
+                if (FieldExtension.forbiddenAttribute(attrName)) continue;
+                value.append("; ").append(attrName).append('=')
+                    .append(Tokenizer.quoteOptionally(attr.getValue()));
+            }
+            base.addField(field, value.toString());
+
+            /* Ensure that the field defining this extension is labelled
+             * as hop-by-hop, if the extension is hop-by-hop. */
+            if (ext.scope() == FieldScope.HOP_BY_HOP) hopByHopFields.add(field);
+        }
+
+        /* Set raw response header fields based on our local namespaced
+         * collection. */
+        for (var ent : responseHeaderFields.entrySet()) {
+            FieldId fieldId = ent.getKey();
+            FieldNamespace ns = fieldId.namespace();
+            final String field = fieldId.prefixedName(responseExtMgr::seek);
+            var values = ent.getValue();
+            for (var value : values)
+                base.addField(field, value);
+            if (ns.scope() == FieldScope.HOP_BY_HOP) hopByHopFields.add(field);
+        }
+
+        /* Label explicit hop-by-hop fields. */
+        base.clearField(FieldNames.CONNECTION);
+        for (var field : hopByHopFields) {
+            if (FieldNameSets.IMPLICIT_HOP_BY_HOP.contains(field)) continue;
+            base.addField(FieldNames.CONNECTION, field);
+        }
+
+        /* Set a raw header field to express what is expected in the
+         * trailer. */
+        base.clearField(FieldNames.TRAILER);
+        for (var id : responseTrailerExpectation)
+            base.addField(FieldNames.TRAILER,
+                          id.prefixedName(responseExtMgr::seek));
+
+        /* TODO: Set any non-chunked transfer encoding based on what the
+         * application has supplied in the context, and on what the TE
+         * request field permitted. */
+
+        /* We only need to chunk if we expect trailer fields. */
+        if (responseTrailerExpectation.isEmpty()) return base.out();
+
+        /* TODO: Create a chunking output stream to the application.
+         * Ensure that, when it closes, the trailer is then written
+         * out. */
         throw new UnsupportedOperationException("unimplemented");
     }
 
