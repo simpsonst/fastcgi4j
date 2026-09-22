@@ -56,6 +56,8 @@ import uk.ac.lancs.io.UnclosedOutputStream;
 public class ChunkedOutputStream extends FilterOutputStream {
     private static final byte[] CRLF = { 13, 10 };
 
+    private final boolean closeBase;
+
     /* TODO: Allow the user to specify parameters to place in the chunk
      * header. */
 
@@ -63,18 +65,49 @@ public class ChunkedOutputStream extends FilterOutputStream {
      * Create a chunked output stream.
      * 
      * @param out the base stream
+     * 
+     * @param closeBase {@code true} if the base stream is to be closed
+     * when the wrapper is; {@code false} if the base stream is merely
+     * to be flushed
      */
-    public ChunkedOutputStream(OutputStream out) {
+    private ChunkedOutputStream(OutputStream out, boolean closeBase) {
         super(out);
+        this.closeBase = closeBase;
+    }
+
+    /**
+     * Create a chunked stream which closes its base after use.
+     * 
+     * @param out the base stream
+     * 
+     * @return the requested stream
+     * 
+     * @constructor
+     */
+    public static ChunkedOutputStream closing(OutputStream out) {
+        return new ChunkedOutputStream(out, true);
+    }
+
+    /**
+     * Create a chunked stream which leaves its base unclosed after use.
+     * 
+     * @param out the base stream
+     * 
+     * @return the requested stream
+     * 
+     * @constructor
+     */
+    public static ChunkedOutputStream flushing(OutputStream out) {
+        return new ChunkedOutputStream(out, false);
     }
 
     private boolean closed = false;
 
     /**
      * Close this stream. A final zero-length chunk is transmitted,
-     * i.e., an ASCII 0 (U+0048) and CRLF. The base stream is not
-     * closed, but it is flushed. Calling this method more than once has
-     * no additional effect.
+     * i.e., an ASCII 0 (U+0048) and CRLF. The base stream is either
+     * flushed or closed according to how this object was constructed.
+     * Calling this method more than once has no additional effect.
      * 
      * @throws IOException if an I/O error occurs in writing the
      * terminal chunk
@@ -85,7 +118,10 @@ public class ChunkedOutputStream extends FilterOutputStream {
         closed = true;
         out.write(48);
         out.write(CRLF);
-        out.close();
+        if (closeBase)
+            out.close();
+        else
+            out.flush();
     }
 
     /**

@@ -104,7 +104,7 @@ public class TrailingChunkingClient {
     }
 
     private static ChunkedOutputStream chunked(OutputStream out) {
-        return new ChunkedOutputStream(out);
+        return ChunkedOutputStream.closing(out);
     }
 
     private static GZIPOutputStream gzipped(OutputStream out)

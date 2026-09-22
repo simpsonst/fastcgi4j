@@ -94,7 +94,7 @@ public class ChunkTest {
     }
 
     private static OutputStream encode(OutputStream s) {
-        return new ChunkedOutputStream(s);
+        return ChunkedOutputStream.closing(s);
     }
 
     private static final String ALGO = "MD5";
