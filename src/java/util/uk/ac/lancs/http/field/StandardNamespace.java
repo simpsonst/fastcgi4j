@@ -38,6 +38,7 @@
 
 package uk.ac.lancs.http.field;
 
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -76,5 +77,22 @@ abstract class StandardNamespace extends StaticNamespace {
         if (m.matches()) throw new IllegalArgumentException("bad native"
             + " field core: " + core);
         return super.of(core);
+    }
+
+    /**
+     * {@inheritDoc}
+     * 
+     * @implNote Standard namespaces always use no prefix, so this
+     * method always returns an empty string.
+     * 
+     * @param extensionMapping ignored
+     * 
+     * @return an empty string
+     */
+    @Override
+    public final String
+        prefix(Function<? super FieldExtension,
+                        ? extends ExtensionPrefix> extensionMapping) {
+        return "";
     }
 }

@@ -70,9 +70,17 @@ public final class ExtensionManager {
     /**
      * Prevent further changes. This causes attempted modifications to
      * throw {@link IllegalStateException}.
+     * 
+     * @return the frozen mapping from each extension to its assigned
+     * prefix and attributes
      */
-    public void freeze() {
+    public Map<FieldExtension, Map.Entry<ExtensionPrefix, Map<String, String>>>
+        freeze() {
         frozen = true;
+        return prefixes.entrySet().stream()
+            .collect(Collectors
+                .toMap(Map.Entry::getKey,
+                       e -> Map.entry(e.getValue(), attributes(e.getKey()))));
     }
 
     /**

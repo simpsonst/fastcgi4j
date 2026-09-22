@@ -104,8 +104,6 @@ import uk.ac.lancs.mime.Tokenizer;
  * @author simpsons
  */
 public class CGIRequestCap implements Cap {
-    private static final String EXPERIMENTAL_PREFIX = "X-";
-
     private final ExtensionManager extMgr;
 
     private final Map<? extends String, ? extends CharSequence> env;
@@ -235,7 +233,8 @@ public class CGIRequestCap implements Cap {
 
         /* Experimental fields require a prefix of X_. */
         case EXPERIMENTAL:
-            key = Http.fieldNameAsCGI(EXPERIMENTAL_PREFIX + id.name());
+            key = Http
+                .fieldNameAsCGI(FieldExtension.EXPERIMENTAL_PREFIX + id.name());
             break;
 
         /* Extension fields require a prefix of HTTP_, a number of at

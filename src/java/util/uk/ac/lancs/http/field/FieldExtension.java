@@ -40,6 +40,8 @@ package uk.ac.lancs.http.field;
 
 import java.net.URI;
 import java.util.Objects;
+import java.util.function.Function;
+import uk.ac.lancs.mime.Tokenizer;
 
 /**
  * Defines an extension for a set of fields.
@@ -55,7 +57,7 @@ public final class FieldExtension extends FieldNamespace {
     /**
      * Specifies the scope of fields in this extension.
      */
-    public final FieldScope scope;
+    private final FieldScope scope;
 
     /**
      * Specifies the strength of the extension.
@@ -319,5 +321,88 @@ public final class FieldExtension extends FieldNamespace {
     @Override
     public FieldScope scope() {
         return scope;
+    }
+
+    /**
+     * Get the defining field for this namespace. Mandatory namespaces
+     * are defined with <samp>{@value "%s" FieldNames#MAN}</samp> or
+     * <samp>{@value "%s" FieldNames#C_MAN}</samp>; optionals with
+     * <samp>{@value "%s" FieldNames#OPT}</samp> or <samp>{@value "%s"
+     * FieldNames#C_OPT}</samp>. Hop-by-hop namespaces are defined with
+     * <samp>{@value "%s" FieldNames#C_MAN}</samp> or <samp>{@value "%s"
+     * FieldNames#C_OPT}</samp>.
+     * 
+     * <table summary="This table specifies which header field is used
+     * to define a namespace, given its scope (column) and strength
+     * (row).">
+     * 
+     * <tr>
+     * <td>
+     * <th scope="col"><span style= "writing-mode:
+     * sideways-lr">{@link FieldScope#END_TO_END}</span>
+     * <th scope="col"><span style= "writing-mode:
+     * sideways-lr">{@link FieldScope#HOP_BY_HOP}</span>
+     * <tr>
+     * <th scope="row">{@link FieldStrength#OPTIONAL}
+     * <td><samp>{@value "%s" FieldNames#OPT}</samp>
+     * <td><samp>{@value "%s" FieldNames#C_OPT}</samp>
+     * <tr>
+     * <th scope="row">{@link FieldStrength#MANDATORY}
+     * <td><samp>{@value "%s" FieldNames#MAN}</samp>
+     * <td><samp>{@value "%s" FieldNames#C_MAN}</samp>
+     * </table>
+     * 
+     * @return the raw name of the defining field
+     */
+    public String definingField() {
+        return switch (scope) {
+        case HOP_BY_HOP -> switch (strength) {
+        case MANDATORY -> FieldNames.C_MAN;
+        case OPTIONAL -> FieldNames.C_OPT;
+        };
+        case END_TO_END -> switch (strength) {
+        case MANDATORY -> FieldNames.MAN;
+        case OPTIONAL -> FieldNames.OPT;
+        };
+        };
+    }
+
+    /**
+     * {@inheritDoc}
+     * 
+     * @param extensionMapping {@inheritDoc}
+     * 
+     * @return {@inheritDoc}
+     * 
+     * @throws NullPointerException if this extension is not in the
+     * given mapping
+     */
+    @Override
+    public String prefix(Function<? super FieldExtension,
+                                  ? extends ExtensionPrefix> extensionMapping) {
+        return extensionMapping.apply(this).toString() + '-';
+    }
+
+    /**
+     * The name of the attribute that specifies the prefix in an
+     * extension namespace definition, namely <code>{@value}</code>
+     */
+    public static final String PREFIX_ATTRIBUTE = "ns";
+
+    /**
+     * Determine whether a proposed attribute name is forbidden. The
+     * name <code>{@value #PREFIX_ATTRIBUTE}</code> is forbidden, as it
+     * already has a role in a namespace definition. All non-token
+     * strings, as defined by {@link Tokenizer#isAtom(CharSequence)},
+     * are also forbidden.
+     * 
+     * @param name the attribute name
+     * 
+     * @return {@code true} if the name is forbidden for an attribute;
+     * {@code false} otherwise
+     */
+    public static boolean forbiddenAttribute(CharSequence name) {
+        if (PREFIX_ATTRIBUTE.contentEquals(name)) return true;
+        return !Tokenizer.isAtom(name);
     }
 }

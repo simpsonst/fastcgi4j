@@ -41,6 +41,7 @@ package uk.ac.lancs.http.field;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -103,6 +104,21 @@ public final class FieldId {
      */
     public String name() {
         return core;
+    }
+
+    /**
+     * Get the full prefixed name of this field, given a mapping
+     * context.
+     * 
+     * @param extensionMapping the mapping from extension to prefix,
+     * yielding {@code null} if not present
+     * 
+     * @return the full prefixed name within the given context
+     */
+    public String
+        prefixedName(Function<? super FieldExtension,
+                              ? extends ExtensionPrefix> extensionMapping) {
+        return namespace.prefix(extensionMapping) + core;
     }
 
     /**

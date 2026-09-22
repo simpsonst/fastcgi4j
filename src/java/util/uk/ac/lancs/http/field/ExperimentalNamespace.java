@@ -38,6 +38,8 @@
 
 package uk.ac.lancs.http.field;
 
+import java.util.function.Function;
+
 /**
  * Represents namespaces that use the experimental prefix
  * <code>X-</code>.
@@ -53,5 +55,23 @@ abstract class ExperimentalNamespace extends StaticNamespace {
     @Override
     public Kind kind() {
         return Kind.EXPERIMENTAL;
+    }
+
+    /**
+     * {@inheritDoc}
+     * 
+     * @implNote Experimental namespaces use the same prefix, which this
+     * method always returns.
+     * 
+     * @param extensionMapping ignored
+     * 
+     * @return the experimental prefix, <samp>{@value "%s"
+     * #EXPERIMENTAL_PREFIX}</samp>
+     */
+    @Override
+    public final String
+        prefix(Function<? super FieldExtension,
+                        ? extends ExtensionPrefix> extensionMapping) {
+        return EXPERIMENTAL_PREFIX;
     }
 }
