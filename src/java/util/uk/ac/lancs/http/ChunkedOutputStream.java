@@ -58,9 +58,6 @@ public class ChunkedOutputStream extends FilterOutputStream {
 
     private final boolean closeBase;
 
-    /* TODO: Allow the user to specify parameters to place in the chunk
-     * header. */
-
     /**
      * Create a chunked output stream.
      * 
@@ -70,7 +67,7 @@ public class ChunkedOutputStream extends FilterOutputStream {
      * when the wrapper is; {@code false} if the base stream is merely
      * to be flushed
      */
-    private ChunkedOutputStream(OutputStream out, boolean closeBase) {
+    protected ChunkedOutputStream(OutputStream out, boolean closeBase) {
         super(out);
         this.closeBase = closeBase;
     }
