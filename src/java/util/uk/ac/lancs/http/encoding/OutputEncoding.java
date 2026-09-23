@@ -83,12 +83,23 @@ public interface OutputEncoding extends Encoding {
     OutputStream encode(OutputStream out) throws IOException;
 
     /**
-     * Get the compression quality for this encoding.
+     * Get the offered quality for this encoding.
      * 
-     * @return the compression quality in the range [0.0, 1.0]; or
-     * {@code null} if encoding is not intended for compression
+     * @return the quality in the range [0.0, 1.0]
      */
-    Number compressionQuality();
+    float quality();
+
+    /**
+     * Get a measure of how compressed an uncompressed stream is after
+     * this encoding has been applied. This should indicate how
+     * worthwhile it would be to apply another encoding. The highest
+     * value, 1.0, indicates that the output is as compressible as the
+     * input.
+     * 
+     * @return the ratio of the typical sizes of a stream after versus
+     * before encoding, in the range [0.0, 1.0]
+     */
+    float compressionFactor();
 
     /**
      * Determine whether this encoding needs to be listed.
@@ -131,9 +142,8 @@ public interface OutputEncoding extends Encoding {
         for (var provider : ServiceLoader.load(EncodingProvider.class, ldr)) {
             var encoding = provider.getForOutput(ctxt, props, pfxs);
             if (encoding == null) continue;
-            var quality = encoding.compressionQuality();
-            if (quality == null) continue;
-            var entry = Map.entry(encoding, quality);
+            var quality = encoding.quality();
+            var entry = Map.<OutputEncoding, Number>entry(encoding, quality);
             for (var name : encoding.names())
                 result.put(name.toString(), entry);
         }

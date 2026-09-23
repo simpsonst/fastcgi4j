@@ -51,7 +51,10 @@ import uk.ac.lancs.http.field.FieldNames;
  * Manages compression and other encodings on a response body.
  *
  * @author simpsons
+ * 
+ * @deprecated Try {@link ResponseEncodingPlanner} instead.
  */
+@Deprecated
 public final class ResponseEncoder {
     /**
      * Provides the context for managing response encodings. This
@@ -270,21 +273,6 @@ public final class ResponseEncoder {
             prefix(enc);
     }
 
-    /**
-     * Determine whether any of the content encodings applies
-     * compression.
-     * 
-     * @return {@code true} if an applied content encoding applies
-     * compression; {@code false} otherwise
-     */
-    private boolean isContentCompressed() {
-        for (var entry : contentEncodings) {
-            var enc = entry.getKey();
-            if (enc.compressionQuality() != null) return true;
-        }
-        return false;
-    }
-
     private String suggestContentCompression() {
         var offer = contentAvailable.entrySet().stream()
             .collect(Collectors
@@ -349,7 +337,7 @@ public final class ResponseEncoder {
 
         /* Check whether compression is applied to any of the content
          * encodings. */
-        if (!isContentCompressed()) {
+        if (false) {
             /* Use content negotiation to determine whether suffix the
              * content encoding with a compression stage. */
             String ccomp = suggestContentCompression();

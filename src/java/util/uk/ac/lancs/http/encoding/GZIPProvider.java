@@ -129,13 +129,18 @@ public class GZIPProvider implements EncodingProvider {
             }
 
             @Override
-            public Number compressionQuality() {
+            public float quality() {
                 return qual;
             }
 
             @Override
             public Collection<? extends CharSequence> names() {
                 return NAMES;
+            }
+
+            @Override
+            public float compressionFactor() {
+                return 0.01F;
             }
         };
     }

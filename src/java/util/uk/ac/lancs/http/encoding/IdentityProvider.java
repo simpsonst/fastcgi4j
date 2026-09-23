@@ -139,7 +139,7 @@ public class IdentityProvider implements EncodingProvider {
             }
 
             @Override
-            public Number compressionQuality() {
+            public float quality() {
                 return qual;
             }
 
@@ -151,6 +151,11 @@ public class IdentityProvider implements EncodingProvider {
             @Override
             public boolean listed() {
                 return false;
+            }
+
+            @Override
+            public float compressionFactor() {
+                return 1.0F;
             }
         };
     }
