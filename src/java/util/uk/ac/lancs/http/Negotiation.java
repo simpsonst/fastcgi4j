@@ -38,10 +38,13 @@
 
 package uk.ac.lancs.http;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
 import uk.ac.lancs.http.encoding.IdentityProvider;
 import uk.ac.lancs.mime.MediaGroup;
 import uk.ac.lancs.mime.MediaType;
@@ -349,6 +352,66 @@ public final class Negotiation {
     }
 
     /**
+     * Get an applied quality for each subject given a preference and an
+     * offer.
+     * 
+     * <p>
+     * Subjects and preferences need not have the same type. A
+     * preference may indicate a set of subjects, and more than one
+     * preference may match the same subject. A {@link Qualitator}
+     * function yields the most apt preference, if there is one. For
+     * example, two preferences for a media type might be
+     * <samp>image/*</samp> and <samp>image/jpeg</samp>. An offered
+     * media type of <samp>image/jpeg</samp> matches both, but the
+     * latter is more apt.
+     * 
+     * <p>
+     * Preferences are presented with corresponding quality values in
+     * the range <samp>0f</samp> to <samp>1f</samp>, with higher
+     * qualities indicating greater preference. Offers are similarly
+     * presented, with higher qualities indicating greater capability on
+     * the part of the provider (e.g., higher fidelity, better
+     * compression, etc).
+     * 
+     * <p>
+     * For each offer, a quality is extracted from the preferences that
+     * best match it. An offer is rejected if there is no match. If
+     * there is a match, the product of qualities of the best matching
+     * preference and the offer yield a score for the offer. A list of
+     * offered subjects, by decreasing score.
+     * 
+     * @param <P> the preference type
+     * 
+     * @param <T> the subject type
+     * 
+     * @param qualitator a means of extracting the most apt quality for
+     * an offer
+     * 
+     * @param pref the preferences and their qualities
+     * 
+     * @param offer the offered subjects and their qualities
+     * 
+     * @return a list of acceptable subjects ordered by decreasing score
+     */
+    public static <P, T> List<T>
+        resolvePreferences(Qualitator<P, T> qualitator,
+                           Map<? extends P, ? extends Number> pref,
+                           Map<? extends T, ? extends Number> offer) {
+        List<Map.Entry<T, Number>> result = new ArrayList<>();
+        for (Map.Entry<? extends T, ? extends Number> oe : offer.entrySet()) {
+            T k = oe.getKey();
+            Number pv = qualitator.quality(pref, k);
+            if (pv == null) continue;
+            float sc = pv.floatValue() * oe.getValue().floatValue();
+            result.add(Map.entry(k, sc));
+        }
+        return result.stream()
+            .sorted((a, b) -> Float.compare(b.getValue().floatValue(),
+                                            a.getValue().floatValue()))
+            .map(Map.Entry::getKey).collect(Collectors.toList());
+    }
+
+    /**
      * Get the best locale for a given set of preferences.
      * 
      * @param pref the preferences and their qualities
@@ -405,6 +468,23 @@ public final class Negotiation {
     }
 
     /**
+     * Get ordered acceptable strings for a given set of preferences.
+     * This recognizes <samp>*</samp> as a wildcard.
+     * 
+     * @param pref the preferences and their qualities
+     * 
+     * @param offer the offered subjects and their qualities
+     * 
+     * @return a list of acceptable offers ordered by decreasing score
+     */
+    public static List<String>
+        resolveAtomPreferences(Map<? extends String, ? extends Number> pref,
+                               Map<? extends String, ? extends Number> offer) {
+        return resolvePreferences(makeQualitator(Negotiation::atomContains),
+                                  pref, offer);
+    }
+
+    /**
      * Get the best exact string for a given set of preferences.
      * 
      * @param pref the preferences and their qualities
@@ -417,6 +497,22 @@ public final class Negotiation {
         resolveStringPreference(Map<? extends String, ? extends Number> pref,
                                 Map<? extends String, ? extends Number> offer) {
         return resolvePreference((p, o) -> p.get(o), pref, offer);
+    }
+
+    /**
+     * Get ordered acceptable strings for a given set of preferences.
+     * 
+     * @param pref the preferences and their qualities
+     * 
+     * @param offer the offered subjects and their qualities
+     * 
+     * @return a list of acceptable offers ordered by decreasing score
+     */
+    public static List<String>
+        resolveStringPreferences(Map<? extends String, ? extends Number> pref,
+                                 Map<? extends String,
+                                     ? extends Number> offer) {
+        return resolvePreferences((p, o) -> p.get(o), pref, offer);
     }
 
     private Negotiation() {}
