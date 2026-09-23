@@ -311,7 +311,7 @@ public final class Negotiation {
      * 
      * <p>
      * For each offer, a quality is extracted from the preferences that
-     * best matches it. An offer is rejected if there is no match. If
+     * best match it. An offer is rejected if there is no match. If
      * there is a match, the product of qualities of the best matching
      * preference and the offer yield a score for the offer. An offer
      * with the highest score is returned.
