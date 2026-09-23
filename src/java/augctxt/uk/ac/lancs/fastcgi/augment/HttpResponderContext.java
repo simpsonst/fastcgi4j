@@ -41,6 +41,7 @@ package uk.ac.lancs.fastcgi.augment;
 import java.util.Collections;
 import java.util.Map;
 import uk.ac.lancs.http.encoding.InputEncoding;
+import uk.ac.lancs.http.encoding.OutputEncoding;
 
 /**
  * Provides re-usable context to HTTP responder sessions.
@@ -76,5 +77,43 @@ public interface HttpResponderContext {
      */
     default Map<String, InputEncoding> transferDecoders() {
         return HttpResponderSession.ALL_AVAILABLE_TRANSFER_DECODERS;
+    }
+
+    /**
+     * Get the set of transfer encodings for responses, indexed by
+     * case-sensitive name. {@link HttpResponderSession#out()} uses this
+     * to determine which transfer encodings should be applied to the
+     * response body.
+     * 
+     * @return an immutable map from encoder name to implementation and
+     * source-quality
+     * 
+     * @implNote By default, all available transfer encodings are
+     * returned. These can be configured by setting system properties
+     * beginning with the prefix <samp>{@value "%s"
+     * HttpResponderSession#ENCODINGS_PREFIX}</samp>.
+     */
+    default Map<String, Map.Entry<OutputEncoding, Number>> transferEncoders() {
+        return HttpResponderSession.ALL_AVAILABLE_TRANSFER_ENCODERS;
+    }
+
+    /**
+     * Get the set of content encodings for responses, indexed by
+     * case-sensitive name. {@link HttpResponderSession#out()} uses this
+     * to determine which content encodings should be applied to the
+     * response body.
+     * 
+     * @apiNote Applications are recommended not to override this method
+     * (so the default is that no content encoding is applied), but to
+     * configure encoding on a per-request basis through
+     * {@link HttpResponderSession#encodingControl()}.
+     * 
+     * @return an immutable map from encoder name to implementation and
+     * source-quality
+     * 
+     * @implNote By default, an empty map is returned.
+     */
+    default Map<String, Map.Entry<OutputEncoding, Number>> contentEncoders() {
+        return Collections.emptyMap();
     }
 }

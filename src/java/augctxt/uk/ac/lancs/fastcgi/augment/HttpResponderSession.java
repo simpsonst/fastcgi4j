@@ -41,7 +41,9 @@ package uk.ac.lancs.fastcgi.augment;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -63,10 +65,15 @@ import uk.ac.lancs.cgi.ServerProtocol;
 import uk.ac.lancs.fastcgi.RequestableSession;
 import uk.ac.lancs.fastcgi.ResponderSession;
 import uk.ac.lancs.fastcgi.Session;
+import uk.ac.lancs.http.ChunkedOutputStream;
 import uk.ac.lancs.http.cache.InboundCacheControl;
 import uk.ac.lancs.http.encoding.BodyDecoder;
 import uk.ac.lancs.http.encoding.EncodingContext;
+import uk.ac.lancs.http.encoding.EncodingPlan;
 import uk.ac.lancs.http.encoding.InputEncoding;
+import uk.ac.lancs.http.encoding.OutputEncoding;
+import uk.ac.lancs.http.encoding.ResponseEncodingControl;
+import uk.ac.lancs.http.encoding.ResponseEncodingPlanner;
 import uk.ac.lancs.http.field.CGIRequestCap;
 import uk.ac.lancs.http.field.Cap;
 import uk.ac.lancs.http.field.ExtensionManager;
@@ -133,6 +140,8 @@ public class HttpResponderSession {
         this.ctxt = ctxt;
         this.requestHeader =
             new CGIRequestCap(requestExtMgr, base.parameters());
+        this.responseEncodingPlanner
+            .offerContentEncodings(ctxt.contentEncoders());
     }
 
     /**
@@ -177,6 +186,34 @@ public class HttpResponderSession {
 
     private static final String TE_PARAM = Http.fieldNameAsCGI(FieldNames.TE);
 
+    private static final String ACCEPT_ENCODING_PARAM =
+        Http.fieldNameAsCGI(FieldNames.ACCEPT_ENCODING);
+
+    private Map<String, Float>
+        extractEncodingPreference(Map<String, Map<String, String>> src) {
+        return src.entrySet().stream().collect(Collectors
+            .toMap(Map.Entry::getKey,
+                   e -> Float.valueOf(e.getValue().getOrDefault("q", "1"))));
+    }
+
+    private Map<String, Map<String, String>>
+        getAcceptedEncodings(String param) {
+        var txt = base.parameters().get(param);
+        Map<String, Map<String, String>> result = new HashMap<>();
+        if (txt != null) {
+            var toks = new Tokenizer(txt);
+            CharSequence name;
+            Map<String, String> params = new HashMap<>();
+            while (toks.whitespace(0) &&
+                (name = toks.atomParameters(params, Tokenizer.PARAMS_CLEAR))
+                    != null) {
+                result.put(name.toString(), Map.copyOf(params));
+                if (!toks.whitespaceCharacter(0, ',')) break;
+            }
+        }
+        return result;
+    }
+
     /**
      * Parse the <samp>{@value "%s" #TE_FIELD}</samp> request header
      * field as a comma-separated sequence of tokens with optional
@@ -191,19 +228,8 @@ public class HttpResponderSession {
      */
     private void getAcceptedTransferEncodings() {
         if (acceptedTransferEncodings != null) return;
-        var txt = base.parameters().get(TE_PARAM);
-        Map<String, Map<String, String>> result = new HashMap<>();
-        if (txt != null) {
-            var toks = new Tokenizer(txt);
-            CharSequence name;
-            Map<String, String> params = new HashMap<>();
-            while (toks.whitespace(0) &&
-                (name = toks.atomParameters(params, Tokenizer.PARAMS_CLEAR))
-                    != null) {
-                result.put(name.toString(), Map.copyOf(params));
-                if (!toks.whitespaceCharacter(0, ',')) break;
-            }
-        }
+        Map<String, Map<String, String>> result =
+            getAcceptedEncodings(TE_PARAM);
         if (protocol.isMinimally("HTTP", 2, 0) &&
             (!result.containsKey(TRAILERS_TOKEN) || result.size() == 1)) {
             /* HTTP/2 requires that this field only contain this single
@@ -280,6 +306,14 @@ public class HttpResponderSession {
         Map.copyOf(InputEncoding.getMapping(EncodingContext.TRANSFER,
                                             System.getProperties(),
                                             ENCODINGS_PREFIX));
+
+    static final Map<String,
+                     Map.Entry<OutputEncoding,
+                               Number>> ALL_AVAILABLE_TRANSFER_ENCODERS =
+                                   Map.copyOf(OutputEncoding
+                                       .getMapping(EncodingContext.TRANSFER,
+                                                   System.getProperties(),
+                                                   ENCODINGS_PREFIX));
 
     private static final String CHUNKED_TOKEN = "chunked";
 
@@ -709,7 +743,19 @@ public class HttpResponderSession {
         responseTrailerExpectation.addAll(Arrays.asList(ids));
     };
 
-    private OutputStream makeOut() {
+    private final ResponseEncodingPlanner responseEncodingPlanner =
+        new ResponseEncodingPlanner();
+
+    /**
+     * Access the controls for content encoding on the response.
+     * 
+     * @return the controls for response content encoding
+     */
+    public ResponseEncodingControl encodingControl() {
+        return responseEncodingPlanner;
+    }
+
+    private OutputStream makeOut() throws IOException {
         /* Build up a collection of used hop-by-hop raw field names.
          * We'll need to declare these at the end. */
         Set<String> hopByHopFields =
@@ -784,21 +830,78 @@ public class HttpResponderSession {
         /* Set a raw header field to express what is expected in the
          * trailer. */
         base.clearField(FieldNames.TRAILER);
-        for (var id : responseTrailerExpectation)
-            base.addField(FieldNames.TRAILER,
-                          id.prefixedName(responseExtMgr::seek));
+        for (var id : responseTrailerExpectation) {
+            FieldNamespace ns = id.namespace();
+            final String field = id.prefixedName(responseExtMgr::seek);
+            base.addField(FieldNames.TRAILER, field);
+            if (ns.scope() == FieldScope.HOP_BY_HOP) hopByHopFields.add(field);
+        }
 
-        /* TODO: Set any non-chunked transfer encoding based on what the
-         * application has supplied in the context, and on what the TE
-         * request field permitted. */
+        /* Determine what non-chunked transfer/content encoding should
+         * be applied, based on what the application has supplied in the
+         * context, and on what the TE/Accept-Encoding request fields
+         * permitted. */
+        responseEncodingPlanner.offerTransferEncodings(ctxt.transferEncoders());
+        getAcceptedTransferEncodings();
+        var transferPref = extractEncodingPreference(acceptedTransferEncodings);
+        responseEncodingPlanner.preferTransferEncodings(transferPref);
+        var contentPref =
+            extractEncodingPreference(getAcceptedEncodings(ACCEPT_ENCODING_PARAM));
+        responseEncodingPlanner.preferContentEncodings(contentPref);
+        EncodingPlan transferPlan = responseEncodingPlanner.transferPlan();
+        EncodingPlan contentPlan = responseEncodingPlanner.contentPlan();
+        List<String> transferEncodings =
+            new ArrayList<>(transferPlan.declare());
+        List<String> contentEncodings = contentPlan.declare();
 
         /* We only need to chunk if we expect trailer fields. */
-        if (responseTrailerExpectation.isEmpty()) return base.out();
+        final boolean requireTrailer = !responseTrailerExpectation.isEmpty();
+        if (requireTrailer) transferEncodings.add(CHUNKED_TOKEN);
 
-        /* TODO: Create a chunking output stream to the application.
-         * Ensure that, when it closes, the trailer is then written
-         * out. */
-        throw new UnsupportedOperationException("unimplemented");
+        /* Set the encoding header fields, or clear them if not
+         * required. */
+        if (contentEncodings.isEmpty())
+            base.clearField(FieldNames.CONTENT_ENCODING);
+        else
+            base.setField(FieldNames.CONTENT_ENCODING, contentEncodings.stream()
+                .collect(Collectors.joining(", ")));
+        if (transferEncodings.isEmpty())
+            base.clearField(FieldNames.TRANSFER_ENCODING);
+        else
+            base.setField(FieldNames.TRANSFER_ENCODING, transferEncodings
+                .stream().collect(Collectors.joining(", ")));
+
+        OutputStream out = base.out();
+        if (requireTrailer) {
+            /* Create a chunking output stream to the application.
+             * Ensure that, when it closes, the trailer is then written
+             * out. */
+            out = new ChunkedOutputStream(out, false) {
+                @Override
+                public void close() throws IOException {
+                    super.close();
+                    try (PrintStream out =
+                        new PrintStream(this.out, false,
+                                        StandardCharsets.US_ASCII)) {
+                        /* Write the trailer to the base stream. */
+                        for (var ent : responseTrailerFields.entrySet()) {
+                            FieldId fieldId = ent.getKey();
+                            final String field =
+                                fieldId.prefixedName(responseExtMgr::seek);
+                            var values = ent.getValue();
+                            for (var val : values)
+                                out.printf("%s: %s\r\n", field, val);
+                        }
+                        out.printf("\r\n");
+                    }
+                }
+            };
+        }
+
+        out = transferPlan.apply(out);
+        out = contentPlan.apply(out);
+
+        return out;
     }
 
     private final List<String> outgoingEncodings = new ArrayList<>(4);
@@ -857,8 +960,11 @@ public class HttpResponderSession {
      * chunked.
      * 
      * @return the output stream for writing an unchunked response body
+     * 
+     * @throws IOException if an I/O error occurs in forming the output
+     * stream
      */
-    public OutputStream out() {
+    public OutputStream out() throws IOException {
         if (out == null) out = makeOut();
         return out;
     }
