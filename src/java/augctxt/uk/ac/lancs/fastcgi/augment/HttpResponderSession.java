@@ -698,21 +698,6 @@ public class HttpResponderSession {
     }
 
     /**
-     * Derive a digest from the submitted content before applying
-     * content encoding, and include it as a <code>Repr-Digest</code>
-     * trailer field.
-     * 
-     * @throws IllegalStateException if the response header has already
-     * been sent; if the client does not support response trailers
-     */
-    public void
-        includeRepresentationDigest(MessageDigest digest,
-                                    Function<byte[], String> formatter) {
-        /* TODO */
-        throw new UnsupportedOperationException("unimplemented");
-    }
-
-    /**
      * Identifies standard fields which cannot be set in the trailer.
      * Note that each field name is included twice, once as end-to-end
      * and once as hop-by-hop.
