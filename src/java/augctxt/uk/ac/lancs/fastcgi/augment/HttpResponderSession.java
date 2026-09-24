@@ -974,10 +974,6 @@ public class HttpResponderSession {
      * been closed.
      * 
      * @return the field trailer
-     * 
-     * @throws IllegalStateException if not activated before the
-     * response header is sent; or if the response body stream has been
-     * closed
      */
     public Cap responseTrailer() {
         return responseTrailer;
