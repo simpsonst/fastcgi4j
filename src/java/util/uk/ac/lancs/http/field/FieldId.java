@@ -219,6 +219,13 @@ public final class FieldId {
     public static final FieldId CONTENT_TYPE =
         FieldNamespace.STANDARD_END_TO_END.of(FieldNames.CONTENT_TYPE);
 
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#CONTENT_ENCODING}</samp>.
+     */
+    public static final FieldId CONTENT_ENCODING =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.CONTENT_ENCODING);
+
     /* Content-Length must be hop-by-hop, because it is forbidden to use
      * it with Transfer-Encoding, which could change on each hop. */
     /**
