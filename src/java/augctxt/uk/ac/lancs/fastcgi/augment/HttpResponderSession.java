@@ -729,7 +729,7 @@ public class HttpResponderSession {
      * @throws IllegalArgumentException if a field is not permitted in
      * the trailer
      */
-    public void expectTrailer(FieldId... ids) {
+    public void expectInTrailer(FieldId... ids) {
         /* If the header has been sent, we can't make these changes. */
         if (out != null) throw new IllegalStateException("output opened");
 
@@ -758,7 +758,7 @@ public class HttpResponderSession {
     }
 
     private OutputStream makeOut() throws IOException {
-        if (!digests.isEmpty()) expectTrailer(FieldId.CONTENT_DIGEST);
+        if (!digests.isEmpty()) expectInTrailer(FieldId.CONTENT_DIGEST);
 
         /* Build up a collection of used hop-by-hop raw field names.
          * We'll need to declare these at the end. */
