@@ -117,6 +117,8 @@ public final class InboundCacheControl {
      * <code>Cache-Control</code> field
      * 
      * @return the requested collection of parsed directives
+     * 
+     * @constructor
      */
     public static InboundCacheControl of(CharSequence line) {
         return new InboundCacheControl(line, 0);
@@ -130,6 +132,8 @@ public final class InboundCacheControl {
      * <code>Cache-Control</code> field
      * 
      * @return the requested collection of parsed directives
+     * 
+     * @constructor
      */
     public static InboundCacheControl ofRequest(CharSequence line) {
         return new InboundCacheControl(line, -1);
@@ -143,6 +147,8 @@ public final class InboundCacheControl {
      * <code>Cache-Control</code> field
      * 
      * @return the requested collection of parsed directives
+     * 
+     * @constructor
      */
     public static InboundCacheControl ofResponse(CharSequence line) {
         return new InboundCacheControl(line, +1);
