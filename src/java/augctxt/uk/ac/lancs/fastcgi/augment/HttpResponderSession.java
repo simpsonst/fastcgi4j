@@ -644,8 +644,13 @@ public class HttpResponderSession {
         if (FORBIDDEN_RESPONSE_FIELDS.contains(id))
             throw new IllegalArgumentException("managed field: " + id);
 
-        /* TODO: When it's too late to change any header fields, return
-         * an immutable list. */
+        if (this.out != null) {
+            /* When it's too late to change any header fields, return an
+             * immutable list. */
+            var val = responseHeaderFields.get(id);
+            if (val == null) return Collections.emptyList();
+            return Collections.unmodifiableList(val);
+        }
 
         return responseHeaderFields.computeIfAbsent(id, k -> new ArrayList<>());
     };
@@ -656,8 +661,13 @@ public class HttpResponderSession {
         if (!responseTrailerExpectation.contains(id))
             throw new IllegalStateException("unexpected trailer field: " + id);
 
-        /* TODO: When it's too late to change any trailer fields, return
-         * an immutable list. */
+        if (this.out != null) {
+            /* When it's too late to change any trailer fields, return
+             * an immutable list. */
+            var val = responseTrailerFields.get(id);
+            if (val == null) return Collections.emptyList();
+            return Collections.unmodifiableList(val);
+        }
 
         return responseTrailerFields.computeIfAbsent(id,
                                                      k -> new ArrayList<>());
@@ -727,8 +737,8 @@ public class HttpResponderSession {
      * the trailer
      */
     public void expectTrailer(FieldId... ids) {
-        /* TODO: If the header has been sent, throw
-         * IllegalStateException. */
+        /* If the header has been sent, we can't make these changes. */
+        if (out != null) throw new IllegalStateException("output opened");
 
         /* Fail if any id is not permitted in the trailer. */
         for (FieldId id : ids) {
