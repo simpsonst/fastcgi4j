@@ -655,13 +655,15 @@ public class HttpResponderSession {
         return responseHeaderFields.computeIfAbsent(id, k -> new ArrayList<>());
     };
 
+    private boolean trailerCommitted = false;
+
     private final Cap responseTrailer = (FieldId id) -> {
         /* Check for fields that have not been declared before the
          * header has been written throw IllegalStateException. */
         if (!responseTrailerExpectation.contains(id))
             throw new IllegalStateException("unexpected trailer field: " + id);
 
-        if (this.out != null) {
+        if (trailerCommitted) {
             /* When it's too late to change any trailer fields, return
              * an immutable list. */
             var val = responseTrailerFields.get(id);
@@ -874,6 +876,7 @@ public class HttpResponderSession {
                 @Override
                 public void close() throws IOException {
                     super.close();
+                    trailerCommitted = true;
                     try (PrintStream out =
                         new PrintStream(this.out, false,
                                         StandardCharsets.US_ASCII)) {
