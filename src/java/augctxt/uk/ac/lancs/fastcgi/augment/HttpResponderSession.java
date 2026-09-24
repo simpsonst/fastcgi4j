@@ -42,7 +42,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.ArrayList;
@@ -984,64 +983,6 @@ public class HttpResponderSession {
      */
     public Cap responseTrailer() {
         return responseTrailer;
-    }
-
-    /**
-     * Get details for an extension used in the request.
-     * 
-     * @param ns the identifying namespace URI
-     * 
-     * @return the extension details; or {@code null} if the extension
-     * was not used in the request
-     */
-    public FieldExtension requestExtension(URI ns) {
-        throw new UnsupportedOperationException("unimplemented");
-    }
-
-    /**
-     * Configure an extension with a named property.
-     * 
-     * @param nsuri the namespace URI of the extension
-     * 
-     * @param name the property name
-     * 
-     * @param value the property value
-     * 
-     * @throws IllegalArgumentException if the property name is not an
-     * HTTP token
-     */
-    public void requestExtensionProperty(URI nsuri, String name, String value) {
-        Objects.requireNonNull(nsuri, "ns");
-        Objects.requireNonNull(nsuri, "name");
-        name = name.trim();
-        /* TODO */
-        throw new UnsupportedOperationException("unimplemented");
-    }
-
-    /**
-     * Get the prefix for a request field extension.
-     * 
-     * @param nsuri the namespace URI of the extension
-     * 
-     * @return the defined prefix; or {@code null} if not defined
-     */
-    public String requestExtensionPrefix(URI nsuri) {
-        /* TODO */
-        throw new UnsupportedOperationException("unimplemented");
-    }
-
-    /**
-     * Get a parameter of a field extension.
-     * 
-     * @param nsuri the namespace URI of the extension
-     * 
-     * @param name the property name
-     * 
-     * @return the property value; or {@code null} if not defined
-     */
-    public String requestExtensionProperty(URI nsuri, String name) {
-        /* TODO */
-        throw new UnsupportedOperationException("unimplemented");
     }
 
     private InboundCacheControl requestCacheControl = null;
