@@ -43,9 +43,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -55,7 +57,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import uk.ac.lancs.cgi.CGIParameters;
@@ -685,18 +686,23 @@ public class HttpResponderSession {
         return responseHeader;
     }
 
+    private final Map<String, MessageDigest> digests = new HashMap<>();
+
     /**
      * Derive a digest from the submitted content after applying content
-     * encoding, and include it as a <code>Content-Digest</code> trailer
+     * encoding, and include it as a
+     * <code>{@value "%s" FieldNames#CONTENT_DIGEST}</code> trailer
      * field.
+     * 
+     * @param digest a fresh digest object
+     * 
+     * @param name the name to label the digest with
      * 
      * @throws IllegalStateException if the response header has already
      * been sent; if the client does not support response trailers
      */
-    public void includeContentDigest(MessageDigest digest,
-                                     Function<byte[], String> formatter) {
-        /* TODO */
-        throw new UnsupportedOperationException("unimplemented");
+    public void includeContentDigest(MessageDigest digest, CharSequence name) {
+        digests.put(name.toString(), digest);
     }
 
     /**
@@ -752,6 +758,8 @@ public class HttpResponderSession {
     }
 
     private OutputStream makeOut() throws IOException {
+        if (!digests.isEmpty()) expectTrailer(FieldId.CONTENT_DIGEST);
+
         /* Build up a collection of used hop-by-hop raw field names.
          * We'll need to declare these at the end. */
         Set<String> hopByHopFields =
@@ -876,6 +884,18 @@ public class HttpResponderSession {
                 @Override
                 public void close() throws IOException {
                     super.close();
+                    if (!digests.isEmpty()) {
+                        List<String> digestValues =
+                            responseTrailer().get(FieldId.CONTENT_DIGEST);
+                        Base64.Encoder enc = Base64.getEncoder();
+                        for (var ent : digests.entrySet()) {
+                            String key = ent.getKey();
+                            MessageDigest digest = ent.getValue();
+                            byte[] raw = digest.digest();
+                            digestValues.add(key + "=:"
+                                + enc.encodeToString(raw) + ':');
+                        }
+                    }
                     trailerCommitted = true;
                     try (PrintStream out =
                         new PrintStream(this.out, false,
@@ -896,6 +916,8 @@ public class HttpResponderSession {
         }
 
         out = transferPlan.apply(out);
+        for (var ent : digests.entrySet())
+            out = new DigestOutputStream(out, ent.getValue());
         out = contentPlan.apply(out);
 
         return out;
