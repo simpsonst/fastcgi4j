@@ -55,6 +55,7 @@ import uk.ac.lancs.mime.Tokenizer;
 public final class InboundCacheControl {
     private static void parse(CharSequence line, Map<String, String> qualified,
                               Collection<String> unqualified) {
+        if (line == null) return;
         Tokenizer tokens = new Tokenizer(line);
         boolean expected = false;
         for (;; expected = true) {
@@ -113,7 +114,8 @@ public final class InboundCacheControl {
      * regard to whether it is in a request or a response.
      * 
      * @param line the comma-concatenated value of the
-     * <code>{@value "%s" uk.ac.lancs.http.field.FieldNames#CACHE_CONTROL}</code> field
+     * <code>{@value "%s" uk.ac.lancs.http.field.FieldNames#CACHE_CONTROL}</code> field;
+     * {@code null} equivalent to empty string
      * 
      * @return the requested collection of parsed directives
      * 
@@ -128,7 +130,8 @@ public final class InboundCacheControl {
      * directives inappropriate for a response.
      * 
      * @param line the comma-concatenated value of the
-     * <code>{@value "%s" uk.ac.lancs.http.field.FieldNames#CACHE_CONTROL}</code> field
+     * <code>{@value "%s" uk.ac.lancs.http.field.FieldNames#CACHE_CONTROL}</code> field;
+     * {@code null} equivalent to empty string
      * 
      * @return the requested collection of parsed directives
      * 
@@ -143,7 +146,8 @@ public final class InboundCacheControl {
      * directives inappropriate for a request.
      * 
      * @param line the comma-concatenated value of the
-     * <code>{@value "%s" uk.ac.lancs.http.field.FieldNames#CACHE_CONTROL}</code> field
+     * <code>{@value "%s" uk.ac.lancs.http.field.FieldNames#CACHE_CONTROL}</code> field;
+     * {@code null} equivalent to empty string
      * 
      * @return the requested collection of parsed directives
      * 
@@ -157,7 +161,8 @@ public final class InboundCacheControl {
      * Derive cache-control parameters from a header field value.
      * 
      * @param line the comma-concatenated value of the
-     * <code>{@value "%s" uk.ac.lancs.http.field.FieldNames#CACHE_CONTROL}</code> field
+     * <code>{@value "%s" uk.ac.lancs.http.field.FieldNames#CACHE_CONTROL}</code> field;
+     * {@code null} equivalent to empty string
      * 
      * @param mode negative if directives invalid in a response field
      * are to be ignored; positive if directives in a request field are
