@@ -178,6 +178,34 @@ public final class FieldId {
     }
 
     /**
+     * Remove all instances of a field.
+     * 
+     * @param cap the raw destination fields
+     * 
+     * @throws UnsupportedOperationException if the cap is not for
+     * output
+     */
+    public final void clear(Cap cap) {
+        cap.get(this).clear();
+    }
+
+    /**
+     * Replace all instances of the field with a new value.
+     * 
+     * @param cap the raw destination fields
+     * 
+     * @param elem the new value
+     * 
+     * @throws UnsupportedOperationException if the cap is not for
+     * output
+     */
+    public final void set(Cap cap, CharSequence text) {
+        var vals = cap.get(this);
+        vals.clear();
+        vals.add(text.toString());
+    }
+
+    /**
      * Identifies the standard end-to-end header field
      * <samp>{@value "%s" FieldNames#CONTENT_DIGEST}</samp>.
      */

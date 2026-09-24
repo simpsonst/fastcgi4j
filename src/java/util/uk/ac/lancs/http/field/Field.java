@@ -154,9 +154,7 @@ public abstract class Field<T> {
      */
     public final void set(Cap cap, T elem) {
         checkOut();
-        var vals = cap.get(id);
-        vals.clear();
-        vals.add(generate(elem));
+        id.set(cap, generate(elem));
     }
 
     /**
@@ -169,7 +167,7 @@ public abstract class Field<T> {
      */
     public final void clear(Cap cap) {
         checkOut();
-        cap.get(id).clear();
+        id.clear(cap);
     }
 
     /**
