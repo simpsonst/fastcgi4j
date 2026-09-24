@@ -94,9 +94,6 @@ import uk.ac.lancs.mime.Tokenizer;
  * trailer, chunking the response body and writing the response trailer,
  * namespaced access to header/trailer fields, and so on.
  * 
- * <p>
- * <strong>This class is incomplete!</strong>
- * 
  * @author simpsons
  */
 public class HttpResponderSession {
