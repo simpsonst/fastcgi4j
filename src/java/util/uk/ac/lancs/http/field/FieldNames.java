@@ -486,4 +486,44 @@ public final class FieldNames {
      * RFC9110 {@value "%s"}
      */
     public static final String WWW_AUTHENTICATE = "WWW-Authenticate";
+
+    /**
+     * The name of the standard HTTP field <samp>{@value "%s"}</samp>
+     * 
+     * @todo Verify anchor.
+     * 
+     * @spec https://www.rfc-editor.org/info/rfc9530/#field.content-digest
+     * RFC9530 {@value "%s"}
+     */
+    public static final String CONTENT_DIGEST = "Content-Digest";
+
+    /**
+     * The name of the standard HTTP field <samp>{@value "%s"}</samp>
+     * 
+     * @todo Verify anchor.
+     * 
+     * @spec https://www.rfc-editor.org/info/rfc9530/#field.repr-digest
+     * RFC9530 {@value "%s"}
+     */
+    public static final String REPR_DIGEST = "Repr-Digest";
+
+    /**
+     * The name of the standard HTTP field <samp>{@value "%s"}</samp>
+     * 
+     * @todo Verify anchor.
+     * 
+     * @spec https://www.rfc-editor.org/info/rfc9530/#field.want-content-digest
+     * RFC9530 {@value "%s"}
+     */
+    public static final String WANT_CONTENT_DIGEST = "Want-Content-Digest";
+
+    /**
+     * The name of the standard HTTP field <samp>{@value "%s"}</samp>
+     * 
+     * @todo Verify anchor.
+     * 
+     * @spec https://www.rfc-editor.org/info/rfc9530/#field.want-repr-digest
+     * RFC9530 {@value "%s"}
+     */
+    public static final String WANT_REPR_DIGEST = "Want-Repr-Digest";
 }

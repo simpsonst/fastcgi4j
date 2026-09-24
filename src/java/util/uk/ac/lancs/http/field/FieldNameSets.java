@@ -93,7 +93,8 @@ public class FieldNameSets {
      */
     public static final Set<String> CAP_ENTITY_END_TO_END =
         nameSet(ALLOW, CONTENT_BASE, CONTENT_LANGUAGE, CONTENT_LOCATION,
-                CONTENT_MD5, ETAG, EXPIRES, LAST_MODIFIED);
+                CONTENT_MD5, ETAG, EXPIRES, LAST_MODIFIED, CONTENT_DIGEST,
+                REPR_DIGEST);
 
     /**
      * An immutable case-insensitive set of entity end-to-end field
@@ -148,7 +149,7 @@ public class FieldNameSets {
      */
     public static final Set<String> HEADER_RESPONSE_END_TO_END =
         nameSet(LOCATION, RETRY_AFTER, SERVER, VARY, WWW_AUTHENTICATE, EXT,
-                SET_COOKIE);
+                SET_COOKIE, WANT_CONTENT_DIGEST, WANT_REPR_DIGEST);
 
     /**
      * An immutable case-insensitive set of response end-to-end field
