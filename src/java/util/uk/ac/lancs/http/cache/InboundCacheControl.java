@@ -47,9 +47,8 @@ import uk.ac.lancs.http.field.FieldId;
 import uk.ac.lancs.mime.Tokenizer;
 
 /**
- * Parses and holds the parameters of a
- * <samp>{@value uk.ac.lancs.http.field.FieldNames#CACHE_CONTROL}</samp>
- * header field.
+ * Parses and holds the parameters of a <samp>{@value "%s"
+ * uk.ac.lancs.http.field.FieldNames#CACHE_CONTROL}</samp> header field.
  * 
  * @author simpsons
  */
@@ -114,7 +113,7 @@ public final class InboundCacheControl {
      * regard to whether it is in a request or a response.
      * 
      * @param line the comma-concatenated value of the
-     * <code>Cache-Control</code> field
+     * <code>{@value "%s" uk.ac.lancs.http.field.FieldNames#CACHE_CONTROL}</code> field
      * 
      * @return the requested collection of parsed directives
      * 
@@ -129,7 +128,7 @@ public final class InboundCacheControl {
      * directives inappropriate for a response.
      * 
      * @param line the comma-concatenated value of the
-     * <code>Cache-Control</code> field
+     * <code>{@value "%s" uk.ac.lancs.http.field.FieldNames#CACHE_CONTROL}</code> field
      * 
      * @return the requested collection of parsed directives
      * 
@@ -144,7 +143,7 @@ public final class InboundCacheControl {
      * directives inappropriate for a request.
      * 
      * @param line the comma-concatenated value of the
-     * <code>Cache-Control</code> field
+     * <code>{@value "%s" uk.ac.lancs.http.field.FieldNames#CACHE_CONTROL}</code> field
      * 
      * @return the requested collection of parsed directives
      * 
@@ -158,7 +157,7 @@ public final class InboundCacheControl {
      * Derive cache-control parameters from a header field value.
      * 
      * @param line the comma-concatenated value of the
-     * <code>Cache-Control</code> field
+     * <code>{@value "%s" uk.ac.lancs.http.field.FieldNames#CACHE_CONTROL}</code> field
      * 
      * @param mode negative if directives invalid in a response field
      * are to be ignored; positive if directives in a request field are
@@ -168,7 +167,7 @@ public final class InboundCacheControl {
      * number when expected to be
      * 
      * @throws IllegalArgumentException if the line does not parse as a
-     * <code>Cache-Control</code> value
+     * <code>{@value "%s" uk.ac.lancs.http.field.FieldNames#CACHE_CONTROL}</code> value
      */
     private InboundCacheControl(CharSequence line, int mode) {
         Map<String, String> qualifiedDirectives =
