@@ -179,6 +179,13 @@ public final class FieldId {
 
     /**
      * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#CONTENT_DIGEST}</samp>.
+     */
+    public static final FieldId CONTENT_DIGEST =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.CONTENT_DIGEST);
+
+    /**
+     * Identifies the standard end-to-end header field
      * <samp>{@value "%s" FieldNames#CONTENT_TYPE}</samp>.
      */
     public static final FieldId CONTENT_TYPE =
