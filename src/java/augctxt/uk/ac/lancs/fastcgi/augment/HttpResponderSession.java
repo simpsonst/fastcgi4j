@@ -117,6 +117,9 @@ public class HttpResponderSession {
      */
     protected final ServerProtocol protocol;
 
+    private final String CACHE_CONTROL_PARAM =
+        Http.fieldNameAsCGI(FieldNames.CACHE_CONTROL);
+
     /**
      * Create an HTTP responder session from an unspecialized session.
      * 
@@ -1010,8 +1013,9 @@ public class HttpResponderSession {
      * @return the cache-control directives for the request
      */
     public InboundCacheControl requestCacheControl() {
-        requestHeader();
-        assert requestCacheControl != null;
+        if (requestCacheControl == null)
+            requestCacheControl = InboundCacheControl
+                .ofRequest(base.parameters().get(CACHE_CONTROL_PARAM));
         return requestCacheControl;
     }
 }
