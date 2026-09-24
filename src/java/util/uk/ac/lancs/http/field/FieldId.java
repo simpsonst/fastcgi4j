@@ -207,6 +207,13 @@ public final class FieldId {
 
     /**
      * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#LOCATION}</samp>.
+     */
+    public static final FieldId LOCATION =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.LOCATION);
+
+    /**
+     * Identifies the standard end-to-end header field
      * <samp>{@value "%s" FieldNames#CONTENT_DIGEST}</samp>.
      */
     public static final FieldId CONTENT_DIGEST =

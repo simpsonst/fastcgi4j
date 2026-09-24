@@ -39,6 +39,7 @@
 package uk.ac.lancs.http.field;
 
 import java.math.BigInteger;
+import java.net.URI;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
@@ -324,4 +325,22 @@ public abstract class Field<T> {
     public static final FlatField<BigInteger> BIG_CONTENT_LENGTH =
         Field.<BigInteger>of(FieldId.CONTENT_LENGTH).outward(v -> v.toString())
             .inward(Field::decimalBigInteger).flat();
+
+    /**
+     * Defines the <samp>{@value "%s" FieldNames#LOCATION}</samp> field
+     * using {@link URI}.
+     */
+    public static final FlatField<URI> LOCATION =
+        Field.<URI>of(FieldId.LOCATION).outward(URI::toASCIIString)
+            .inward(Field::toURI).flat();
+
+    private static URI toURI(Tokenizer t) {
+        t.whitespace(0);
+        CharSequence x = t.set((c) -> !Character.isSpaceChar(c));
+        try {
+            return URI.create(x.toString());
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
+    }
 }
