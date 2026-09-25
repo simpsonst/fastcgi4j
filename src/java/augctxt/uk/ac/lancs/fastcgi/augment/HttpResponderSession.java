@@ -142,8 +142,7 @@ public class HttpResponderSession {
         this.ctxt = ctxt;
         this.requestHeader =
             new CGIRequestCap(requestExtMgr, base.parameters());
-        this.responseEncodingPlanner
-            .offerContentEncodings(ctxt.contentEncoders());
+        this.responseEncodingPlanner.contentOffer(ctxt.contentEncoders());
     }
 
     /**
@@ -846,13 +845,13 @@ public class HttpResponderSession {
          * be applied, based on what the application has supplied in the
          * context, and on what the TE/Accept-Encoding request fields
          * permitted. */
-        responseEncodingPlanner.offerTransferEncodings(ctxt.transferEncoders());
+        responseEncodingPlanner.transferOffer(ctxt.transferEncoders());
         getAcceptedTransferEncodings();
         var transferPref = extractEncodingPreference(acceptedTransferEncodings);
-        responseEncodingPlanner.preferTransferEncodings(transferPref);
+        responseEncodingPlanner.transferPreference(transferPref);
         var contentPref =
             extractEncodingPreference(getAcceptedEncodings(ACCEPT_ENCODING_PARAM));
-        responseEncodingPlanner.preferContentEncodings(contentPref);
+        responseEncodingPlanner.contentPreference(contentPref);
         List<Encoder> transferPlan = responseEncodingPlanner.transferPlan();
         List<Encoder> contentPlan = responseEncodingPlanner.contentPlan();
         List<String> transferEncodings =

@@ -60,25 +60,23 @@ import uk.ac.lancs.http.field.FieldNames;
  * 
  * <li>
  * <p>
- * {@link #offerContentEncodings(Map)} and
- * {@link #preferContentEncodings(Map)} determine the content encodings
- * to be used.
+ * {@link #contentOffer(Map)} and {@link #contentPreference(Map)}
+ * determine the content encodings to be used.
  * 
  * <li>
  * <p>
- * {@link #offerTransferEncodings(Map)} and
- * {@link #preferTransferEncodings(Map)} determine the transfer
- * encodings. However, these might also be influenced by content
- * encodings, which can make some transfer encodings superfluous.
+ * {@link #transferOffer(Map)} and {@link #transferPreference(Map)}
+ * determine the transfer encodings. However, these might also be
+ * influenced by content encodings, which can make some transfer
+ * encodings superfluous.
  * 
  * <li>
  * <p>
- * {@link #setCompressionFactorThreshold(float)} helps to prevent
- * multiple compression encodings from being applied. As encodings are
- * decided upon, the degree of compression is tracked, and further
- * compression can then be decided against. These methods set the
- * initial state of this tracking, and control the sensitivity to
- * further compression.
+ * {@link #threshold(float)} helps to prevent multiple compression
+ * encodings from being applied. As encodings are decided upon, the
+ * degree of compression is tracked, and further compression can then be
+ * decided against. These methods set the initial state of this
+ * tracking, and control the sensitivity to further compression.
  * 
  * <p>
  * Each {@link OutputEncoding output encoding} specifies the
@@ -90,23 +88,22 @@ import uk.ac.lancs.http.field.FieldNames;
  * [0, 1]. If this would be below a threshold, the additional encoding
  * is not considered worthwhile. The default threshold is
  * <code>{@value #DEFAULT_COMPRESSION_FACTOR_THRESHOLD}</code>, and it
- * can be set with {@link #setCompressionFactorThreshold(float)}.
+ * can be set with {@link #threshold(float)}.
  * 
  * <p>
  * If the application is providing content that is already well
  * compressed, it should expressed this by prefixing encodings with
- * {@link #applyPriorContentEncodings(List)}.
+ * {@link #force(List)}.
  * 
  * </ul>
  * 
  * <p>
- * {@link #offerContentEncodings(Map)} and
- * {@link #offerTransferEncodings(Map)} should be determined by the
- * application's own configuration. They describe what encoding
- * implementations are available, and which are preferred. In contrast,
- * {@link #preferContentEncodings(Map)} and
- * {@link #preferTransferEncodings(Map)} should be derived from the
- * client's preferences, typically the <samp>{@value "%s"
+ * {@link #contentOffer(Map)} and {@link #transferOffer(Map)} should be
+ * determined by the application's own configuration. They describe what
+ * encoding implementations are available, and which are preferred. In
+ * contrast, {@link #contentPreference(Map)} and
+ * {@link #transferPreference(Map)} should be derived from the client's
+ * preferences, typically the <samp>{@value "%s"
  * FieldNames#ACCEPT_ENCODING}</samp> and <samp>{@value "%s"
  * FieldNames#TE}</samp> header fields.
  * 
@@ -137,7 +134,7 @@ public class ResponseEncodingPlanner implements ResponseEncodingControl {
     /**
      * The default threshold for determining whether to apply another
      * level of compression, namely <code>{@value}</code>, overridden by
-     * {@link #setCompressionFactorThreshold(float)
+     * {@link #threshold(float)
      */
     public static final float DEFAULT_COMPRESSION_FACTOR_THRESHOLD = 0.7f;
 
@@ -155,7 +152,7 @@ public class ResponseEncodingPlanner implements ResponseEncodingControl {
     }
 
     @Override
-    public void setCompressionFactorThreshold(float threshold) {
+    public void threshold(float threshold) {
         if (threshold < 0.0f || threshold > 1.0f)
             throw new IllegalArgumentException("compression factor threshold "
                 + threshold + " outside [0,1]");
@@ -201,8 +198,7 @@ public class ResponseEncodingPlanner implements ResponseEncodingControl {
     private List<? extends OutputEncoding> priors = Collections.emptyList();
 
     @Override
-    public void
-        applyPriorContentEncodings(List<? extends OutputEncoding> prior) {
+    public void force(List<? extends OutputEncoding> prior) {
         this.priors = List.copyOf(prior);
         invalidate();
     }
@@ -222,18 +218,18 @@ public class ResponseEncodingPlanner implements ResponseEncodingControl {
      * @param offer a description of available transfer encodings
      */
     public void
-        offerTransferEncodings(Map<? extends String,
-                                   ? extends Map.Entry<? extends OutputEncoding,
-                                                       ? extends Number>> offer) {
+        transferOffer(Map<? extends String,
+                          ? extends Map.Entry<? extends OutputEncoding,
+                                              ? extends Number>> offer) {
         this.transferOffer = offer;
         invalidate();
     }
 
     @Override
     public void
-        offerContentEncodings(Map<? extends String,
-                                  ? extends Map.Entry<? extends OutputEncoding,
-                                                      ? extends Number>> offer) {
+        contentOffer(Map<? extends String,
+                         ? extends Map.Entry<? extends OutputEncoding,
+                                             ? extends Number>> offer) {
         this.contentOffer = offer;
         invalidate();
     }
@@ -251,8 +247,8 @@ public class ResponseEncodingPlanner implements ResponseEncodingControl {
      * @param preference a description of the client's transfer-encoding
      * preference
      */
-    public void preferTransferEncodings(Map<? extends String,
-                                            ? extends Number> preference) {
+    public void
+        transferPreference(Map<? extends String, ? extends Number> preference) {
         this.transferPreference = preference;
         invalidate();
     }
@@ -271,8 +267,8 @@ public class ResponseEncodingPlanner implements ResponseEncodingControl {
      * @param preference a description of the client's content-encoding
      * preference
      */
-    public void preferContentEncodings(Map<? extends String,
-                                           ? extends Number> preference) {
+    public void
+        contentPreference(Map<? extends String, ? extends Number> preference) {
         this.contentPreference = preference;
         invalidate();
     }

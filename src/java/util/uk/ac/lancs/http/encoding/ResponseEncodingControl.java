@@ -61,9 +61,9 @@ public interface ResponseEncodingControl {
      *
      * @param offer a description of available content encodings
      */
-    void offerContentEncodings(Map<? extends String,
-                                   ? extends Map.Entry<? extends OutputEncoding,
-                                                       ? extends Number>> offer);
+    void contentOffer(Map<? extends String,
+                          ? extends Map.Entry<? extends OutputEncoding,
+                                              ? extends Number>> offer);
 
     /**
      * Apply content encodings prior to negotiated ones. The application
@@ -90,7 +90,7 @@ public interface ResponseEncodingControl {
      * 
      * @param prior encodings to be applied before any negotiation
      */
-    void applyPriorContentEncodings(List<? extends OutputEncoding> prior);
+    void force(List<? extends OutputEncoding> prior);
 
     /**
      * Set the compression factor threshold. The default is
@@ -101,5 +101,5 @@ public interface ResponseEncodingControl {
      * @throws IllegalArgumentException if the threshold is outside the
      * range [0, 1]
      */
-    void setCompressionFactorThreshold(float threshold);
+    void threshold(float threshold);
 }
