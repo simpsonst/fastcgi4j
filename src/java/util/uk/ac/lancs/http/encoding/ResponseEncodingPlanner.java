@@ -163,6 +163,13 @@ public class ResponseEncodingPlanner implements ResponseEncodingControl {
     /**
      * Determine whether further theoretical compression is worthwhile.
      * 
+     * <p>
+     * If the new value is at least 1.0, the encoding is not considered
+     * to be compression, and is allowed. Otherwise, it is subtracted
+     * from the current value, and the difference is divided by the
+     * current value, to give the fractional drop. If this is below the
+     * threshold, the encoding is rejected.
+     * 
      * @param currentValue the current compression fraction
      * 
      * @param newValue the new compression fraction of a proposed
@@ -177,6 +184,7 @@ public class ResponseEncodingPlanner implements ResponseEncodingControl {
      */
     private static boolean worthCompressing(float currentValue, float newValue,
                                             float factorThreshold) {
+        if (newValue >= 1.0f) return true;
         return (currentValue - newValue) / currentValue >= factorThreshold;
     }
 
