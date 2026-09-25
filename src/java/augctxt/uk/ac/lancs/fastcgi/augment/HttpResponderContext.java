@@ -40,7 +40,7 @@ package uk.ac.lancs.fastcgi.augment;
 
 import java.util.Collections;
 import java.util.Map;
-import uk.ac.lancs.http.encoding.InputEncoding;
+import uk.ac.lancs.http.encoding.Decoder;
 import uk.ac.lancs.http.encoding.OutputEncoding;
 
 /**
@@ -59,7 +59,7 @@ public interface HttpResponderContext {
      * 
      * @implNote By default, an empty map is returned.
      */
-    default Map<String, InputEncoding> contentDecoders() {
+    default Map<String, Decoder> contentDecoders() {
         return Collections.emptyMap();
     }
 
@@ -75,7 +75,7 @@ public interface HttpResponderContext {
      * beginning with the prefix <samp>{@value "%s"
      * HttpResponderSession#ENCODINGS_PREFIX}</samp>.
      */
-    default Map<String, InputEncoding> transferDecoders() {
+    default Map<String, Decoder> transferDecoders() {
         return HttpResponderSession.ALL_AVAILABLE_TRANSFER_DECODERS;
     }
 
@@ -93,7 +93,8 @@ public interface HttpResponderContext {
      * beginning with the prefix <samp>{@value "%s"
      * HttpResponderSession#ENCODINGS_PREFIX}</samp>.
      */
-    default Map<String, Map.Entry<OutputEncoding, Number>> transferEncoders() {
+    default Map<String, Map.Entry<? extends OutputEncoding, ? extends Number>>
+        transferEncoders() {
         return HttpResponderSession.ALL_AVAILABLE_TRANSFER_ENCODERS;
     }
 
@@ -113,7 +114,8 @@ public interface HttpResponderContext {
      * 
      * @implNote By default, an empty map is returned.
      */
-    default Map<String, Map.Entry<OutputEncoding, Number>> contentEncoders() {
+    default Map<String, Map.Entry<? extends OutputEncoding, ? extends Number>>
+        contentEncoders() {
         return Collections.emptyMap();
     }
 }

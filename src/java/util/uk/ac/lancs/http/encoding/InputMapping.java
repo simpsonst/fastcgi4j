@@ -54,8 +54,8 @@ import java.util.function.Function;
  *
  * @author simpsons
  */
-public final class BodyDecoder {
-    private final Function<? super String, ? extends InputEncoding> mapping;
+public final class InputMapping {
+    private final Function<? super String, ? extends Decoder> mapping;
 
     /**
      * Create a decoder. The supplied mapping must yield {@code null} if
@@ -63,8 +63,8 @@ public final class BodyDecoder {
      * 
      * @param mapping the mapping from token to encoding
      */
-    public BodyDecoder(Function<? super String,
-                                ? extends InputEncoding> mapping) {
+    public InputMapping(Function<? super String,
+                                 ? extends Decoder> mapping) {
         this.mapping = mapping;
     }
 
@@ -86,7 +86,7 @@ public final class BodyDecoder {
      * This method should be equivalent to:
      * 
      * <pre>
-     * {@linkplain InputEncoding#decode(InputStream, List) InputEncoding.decode}(in, this.{@link #recognize(List) recognize}(encodings));
+     * {@link Decoder#decode(InputStream, List) InputEncoding.decode}(in, this.{@link #recognize(List) recognize}(encodings));
      * </pre>
      * 
      * @param in the source stream
@@ -130,8 +130,8 @@ public final class BodyDecoder {
      * 
      * @return a list of decoders to be applied
      */
-    public List<InputEncoding> recognize(List<String> encodings) {
-        List<InputEncoding> result = new ArrayList<>(encodings.size());
+    public List<Decoder> recognize(List<String> encodings) {
+        List<Decoder> result = new ArrayList<>(encodings.size());
         int sz = encodings.size();
         while (sz > 0) {
             var last = encodings.remove(--sz);

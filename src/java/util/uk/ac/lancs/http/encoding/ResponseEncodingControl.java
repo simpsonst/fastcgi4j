@@ -55,7 +55,7 @@ public interface ResponseEncodingControl {
      * pair of values: the encoding implementation, and the quality of
      * the encoding (akin to source-quality as defined by <a href=
      * "https://www.rfc-editor.org/info/rfc2295/#section-5.3">RFC2295</a>.
-     *
+     * 
      * <p>
      * By default, an empty map is assumed.
      *
@@ -66,16 +66,31 @@ public interface ResponseEncodingControl {
                                                        ? extends Number>> offer);
 
     /**
-     * Indicate that the response body will already be encoded. These
-     * encoding names will be prefixed to the plan, but they will use
-     * only identity encoding, so they won't actually change the stream,
-     * while still being listed. The impact of prior encodings should be
-     * expressed with {@link #setInitialCompressionFraction(float)}.
+     * Apply content encodings prior to negotiated ones. The application
+     * can use this to:
      * 
-     * @param prior names of encodings that will already have been
-     * applied
+     * <ul>
+     * 
+     * <li>force encodings that are not negotiated, by listing fully
+     * functional implementations, perhaps obtained directly from
+     * providers ({@link DeflateProvider#encoding(int)},
+     * {@link GZIPProvider#encoding()});
+     * 
+     * <li>declare encodings that are already applied, by using named
+     * identity encoders with non-unit compression fractions
+     * ({@link IdentityProvider#encoding(CharSequence, float)},
+     * {@link DeflateProvider#fakeEncoding(int)},
+     * {@link GZIPProvider#fakeEncoding()}); or
+     * 
+     * <li>account for media types that are already well compressed, by
+     * using anonymous identity encoders with non-unit compression
+     * fractions ({@link IdentityProvider#encoding(float)}).
+     * 
+     * </ul>
+     * 
+     * @param prior encodings to be applied before any negotiation
      */
-    void declarePriorContentEncodings(List<? extends CharSequence> prior);
+    void applyPriorContentEncodings(List<? extends OutputEncoding> prior);
 
     /**
      * Set the compression factor threshold. The default is
@@ -87,22 +102,4 @@ public interface ResponseEncodingControl {
      * range [0, 1]
      */
     void setCompressionFactorThreshold(float threshold);
-
-    /**
-     * Set the initial compression fraction. The default is
-     * {@value ResponseEncodingPlanner#DEFAULT_COMPRESSION_FRACTION}. If
-     * the content is already compressed in some way (for example, the
-     * content is a JPEG), setting a lower value should suppress further
-     * encodings that apply compression. If the encoding needs to be
-     * expressed in the <samp>{@value "%s"
-     * FieldNames#CONTENT_ENCODING}</samp> field (e.g., it's an already
-     * GZIPped file), it should be listed with
-     * {@link #declarePriorContentEncodings(List)}.
-     *
-     * @param c the new initial compression fraction
-     *
-     * @throws IllegalArgumentException if the compression fraction is
-     * outside the range [0, 1]
-     */
-    void setInitialCompressionFraction(float c);
 }

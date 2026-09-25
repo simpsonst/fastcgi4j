@@ -47,21 +47,21 @@ import java.util.ServiceLoader;
 import java.util.TreeMap;
 
 /**
- * Provides a named means of decoding an input stream. Input encodings
- * are best loaded via {@link EncodingProvider} implementations using
- * one of the following static methods:
+ * Decodes input streams. Input encodings are best loaded via
+ * {@link EncodingProvider} implementations using one of the following
+ * static methods:
  * 
  * <ul>
  * 
- * <li>{@link InputEncoding#getMapping(ClassLoader, EncodingContext, Properties, CharSequence...)}
+ * <li>{@link Decoder#getMapping(ClassLoader, EncodingContext, Properties, CharSequence[])}
  * 
- * <li>{@link InputEncoding#getMapping(EncodingContext, Properties, CharSequence...)}
+ * <li>{@link Decoder#getMapping(EncodingContext, Properties, CharSequence[])}
  * 
  * </ul>
  * 
  * @author simpsons
  */
-public interface InputEncoding extends Encoding {
+public interface Decoder {
     /**
      * Wrap a decoder around a stream.
      * 
@@ -86,8 +86,7 @@ public interface InputEncoding extends Encoding {
      * @throws IOException if an I/O error occurs in de-applying an
      * encoding
      */
-    static InputStream decode(InputStream in,
-                              List<? extends InputEncoding> encodings)
+    static InputStream decode(InputStream in, List<? extends Decoder> encodings)
         throws IOException {
         for (var enc : encodings)
             in = enc.decode(in);
@@ -112,17 +111,13 @@ public interface InputEncoding extends Encoding {
      * @return the mutable mapping configured by available classes and
      * supplied properties
      */
-    static Map<String, InputEncoding>
+    static Map<String, Decoder>
         getMapping(ClassLoader ldr, EncodingContext ctxt, Properties props,
                    CharSequence... pfxs) {
-        Map<String, InputEncoding> result =
+        Map<String, Decoder> result =
             new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-        for (var provider : ServiceLoader.load(EncodingProvider.class, ldr)) {
-            var encoding = provider.getForInput(ctxt, props, pfxs);
-            if (encoding == null) continue;
-            for (var name : encoding.names())
-                result.put(name.toString(), encoding);
-        }
+        for (var provider : ServiceLoader.load(EncodingProvider.class, ldr))
+            provider.getForInput(result, ctxt, props, pfxs);
 
         return result;
     }
@@ -142,9 +137,9 @@ public interface InputEncoding extends Encoding {
      * @return the mutable mapping configured by available classes and
      * supplied properties
      */
-    static Map<String, InputEncoding> getMapping(EncodingContext ctxt,
-                                                 Properties props,
-                                                 CharSequence... pfxs) {
+    static Map<String, Decoder> getMapping(EncodingContext ctxt,
+                                           Properties props,
+                                           CharSequence... pfxs) {
         return getMapping(Thread.currentThread().getContextClassLoader(), ctxt,
                           props, pfxs);
     }

@@ -38,9 +38,7 @@
 
 package uk.ac.lancs.http.encoding;
 
-import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -75,8 +73,7 @@ import uk.ac.lancs.http.field.FieldNames;
  * 
  * <li>
  * <p>
- * {@link #setInitialCompressionFraction(float)} and
- * {@link #setCompressionFactorThreshold(float)} help to prevent
+ * {@link #setCompressionFactorThreshold(float)} helps to prevent
  * multiple compression encodings from being applied. As encodings are
  * decided upon, the degree of compression is tracked, and further
  * compression can then be decided against. These methods set the
@@ -84,25 +81,21 @@ import uk.ac.lancs.http.field.FieldNames;
  * further compression.
  * 
  * <p>
- * Each {@linkplain OutputEncoding output encoding} specifies the
- * {@linkplain OutputEncoding#compressionFactor() compression factor} of
- * a stream after being applied to it. Another encoding should not be
+ * Each {@link OutputEncoding output encoding} specifies the
+ * {@link OutputEncoding#compressionFactor() compression factor} of a
+ * stream after being applied to it. Another encoding should not be
  * applied if it has a higher value, and indeed it must be significantly
  * lower to be worthwhile. Dividing the difference between the new value
  * and the old by the old value gives a compression factor in the range
  * [0, 1]. If this would be below a threshold, the additional encoding
  * is not considered worthwhile. The default threshold is
- * {@value #DEFAULT_COMPRESSION_FACTOR_THRESHOLD}, and it can be set
- * with {@link #setCompressionFactorThreshold(float)}.
+ * <code>{@value #DEFAULT_COMPRESSION_FACTOR_THRESHOLD}</code>, and it
+ * can be set with {@link #setCompressionFactorThreshold(float)}.
  * 
  * <p>
  * If the application is providing content that is already well
- * compressed, it should set the initial compression factor to a lower
- * value to suppress further compression. The default is
- * {@value #DEFAULT_COMPRESSION_FRACTION}, and it can be set with
- * {@link #setInitialCompressionFraction(float)}. To acknowledge prior
- * encodings, these should be declared with
- * {@link #declarePriorContentEncodings(List)}.
+ * compressed, it should expressed this by prefixing encodings with
+ * {@link #applyPriorContentEncodings(List)}.
  * 
  * </ul>
  * 
@@ -153,12 +146,9 @@ public class ResponseEncodingPlanner implements ResponseEncodingControl {
 
     /**
      * The default initial compression fraction, namely
-     * <code>{@value}</code>, overridden by
-     * {@link #setInitialCompressionFraction(float)
+     * <code>{@value}</code>
      */
-    public static final float DEFAULT_COMPRESSION_FRACTION = 1.0f;
-
-    private float initialCompressionFraction = DEFAULT_COMPRESSION_FRACTION;
+    private static final float DEFAULT_COMPRESSION_FRACTION = 1.0f;
 
     private void invalidate() {
         transferPlan = contentPlan = null;
@@ -208,22 +198,12 @@ public class ResponseEncodingPlanner implements ResponseEncodingControl {
                                 compressionFactorThreshold);
     }
 
-    private List<String> priors = Collections.emptyList();
+    private List<? extends OutputEncoding> priors = Collections.emptyList();
 
     @Override
     public void
-        declarePriorContentEncodings(List<? extends CharSequence> prior) {
-        this.priors =
-            prior.stream().map(Object::toString).collect(Collectors.toList());
-        invalidate();
-    }
-
-    @Override
-    public void setInitialCompressionFraction(float c) {
-        if (c < 0.0f || c > 1.0f)
-            throw new IllegalArgumentException("compression fraction " + c
-                + " outside [0,1]");
-        this.initialCompressionFraction = c;
+        applyPriorContentEncodings(List<? extends OutputEncoding> prior) {
+        this.priors = List.copyOf(prior);
         invalidate();
     }
 
@@ -337,44 +317,16 @@ public class ResponseEncodingPlanner implements ResponseEncodingControl {
      * than the input value
      */
     private float
-        applyCandidate(String cand, float fraction,
-                       List<Map.Entry<String, OutputEncoding>> plan,
+        applyCandidate(String cand, float fraction, List<Encoder> plan,
                        Map<? extends String,
                            ? extends Map.Entry<? extends OutputEncoding,
                                                ? extends Number>> offer) {
         var enc = offer.get(cand).getKey();
         if (!worthCompressing(fraction, enc)) return fraction;
-        plan.add(Map.entry(cand, enc));
+        plan.add(enc.encoder());
         assert fraction >= enc.compressionFactor();
         return enc.compressionFactor();
     }
-
-    private static final OutputEncoding IDENTITY = new OutputEncoding() {
-        @Override
-        public String name() {
-            return "not used";
-        }
-
-        @Override
-        public OutputStream encode(OutputStream out) {
-            return out;
-        }
-
-        @Override
-        public float quality() {
-            return 1.0f;
-        }
-
-        @Override
-        public float compressionFactor() {
-            return 1.0f;
-        }
-
-        @Override
-        public Collection<? extends CharSequence> names() {
-            return Collections.emptySet();
-        }
-    };
 
     /**
      * If no plan is already calculated, calculate a new one from the
@@ -385,13 +337,19 @@ public class ResponseEncodingPlanner implements ResponseEncodingControl {
 
         /* Keep track of how compressible the stream is after each
          * encoding. */
-        var factor = initialCompressionFraction;
+        var factor = DEFAULT_COMPRESSION_FRACTION;
 
-        List<Map.Entry<String, OutputEncoding>> contentPlan = new ArrayList<>();
-        for (var prior : priors)
-            contentPlan.add(Map.entry(prior, IDENTITY));
-        List<Map.Entry<String, OutputEncoding>> transferPlan =
-            new ArrayList<>();
+        /* Prepare encoding plans for content and transfer. */
+        List<Encoder> contentPlan = new ArrayList<>();
+        List<Encoder> transferPlan = new ArrayList<>();
+
+        /* Insert the prior encodings, applying their compression
+         * factors. */
+        for (var prior : priors) {
+            var nf = prior.compressionFactor();
+            if (nf < factor) factor = nf;
+            contentPlan.add(prior.encoder());
+        }
 
         /* Work out what content encoding is required. */
         List<String> contentCands =
@@ -405,13 +363,13 @@ public class ResponseEncodingPlanner implements ResponseEncodingControl {
         for (String cand : transferCands)
             factor = applyCandidate(cand, factor, transferPlan, transferOffer);
 
-        this.contentPlan = new EncodingPlan(contentPlan);
-        this.transferPlan = new EncodingPlan(transferPlan);
+        this.contentPlan = contentPlan;
+        this.transferPlan = transferPlan;
     }
 
-    private EncodingPlan transferPlan = null;
+    private List<Encoder> transferPlan = null;
 
-    private EncodingPlan contentPlan = null;
+    private List<Encoder> contentPlan = null;
 
     /**
      * Get the transfer-encoding plan. If the plan is invalidated, a new
@@ -419,7 +377,7 @@ public class ResponseEncodingPlanner implements ResponseEncodingControl {
      * 
      * @return the requested plan
      */
-    public EncodingPlan transferPlan() {
+    public List<Encoder> transferPlan() {
         resolve();
         return transferPlan;
     }
@@ -430,7 +388,7 @@ public class ResponseEncodingPlanner implements ResponseEncodingControl {
      * 
      * @return the requested plan
      */
-    public EncodingPlan contentPlan() {
+    public List<Encoder> contentPlan() {
         resolve();
         return contentPlan;
     }

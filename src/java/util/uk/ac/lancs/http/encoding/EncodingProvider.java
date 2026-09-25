@@ -38,6 +38,7 @@
 
 package uk.ac.lancs.http.encoding;
 
+import java.util.Map;
 import java.util.Properties;
 import java.util.ServiceLoader;
 
@@ -47,14 +48,14 @@ import java.util.ServiceLoader;
  * 
  * <ul>
  * 
- * <li>{@link InputEncoding#getMapping(ClassLoader,EncodingContext, Properties, CharSequence...)},
+ * <li>{@link Decoder#getMapping(ClassLoader, EncodingContext, Properties, CharSequence[])},
  * 
- * <li>{@link InputEncoding#getMapping(EncodingContext, Properties, CharSequence...)},
+ * <li>{@link Decoder#getMapping(EncodingContext, Properties, CharSequence[])},
  * 
- * <li>{@link OutputEncoding#getMapping(ClassLoader, EncodingContext, Properties, CharSequence...)}
+ * <li>{@link OutputEncoding#getMapping(ClassLoader, EncodingContext, Properties, CharSequence[])}
  * and
  * 
- * <li>{@link OutputEncoding#getMapping(EncodingContext, Properties, CharSequence...)}.
+ * <li>{@link OutputEncoding#getMapping(EncodingContext, Properties, CharSequence[])}.
  * 
  * </ul>
  * 
@@ -69,6 +70,9 @@ public interface EncodingProvider {
     /**
      * Get the input encoding provided by this object.
      * 
+     * @param into a mapping to be populated with names recognized by
+     * this provider and an implementation for each one
+     * 
      * @param ctxt the context for the encoding
      * 
      * @param pfxs a sequence of prefixes of property names to select
@@ -76,16 +80,18 @@ public interface EncodingProvider {
      * 
      * @param props properties defining configuration
      * 
-     * @return the encoding; or {@code null} if it cannot be provided
-     * 
      * @constructor
      */
-    InputEncoding getForInput(EncodingContext ctxt, Properties props,
-                              CharSequence... pfxs);
+    void getForInput(Map<? super String, ? super Decoder> into,
+                     EncodingContext ctxt, Properties props,
+                     CharSequence... pfxs);
 
     /**
      * Get the output encoding provided by this object.
      * 
+     * @param into a mapping to be populated with names recognized by
+     * this provider, and a scored implementation for each one
+     * 
      * @param ctxt the context for the encoding
      * 
      * @param pfxs a sequence of prefixes of property names to select
@@ -93,10 +99,11 @@ public interface EncodingProvider {
      * 
      * @param props properties defining configuration
      * 
-     * @return the encoding; or {@code null} if it cannot be provided
-     * 
      * @constructor
      */
-    OutputEncoding getForOutput(EncodingContext ctxt, Properties props,
-                                CharSequence... pfxs);
+    void getForOutput(Map<? super String,
+                          ? super Map.Entry<? extends OutputEncoding,
+                                            ? extends Number>> into,
+                      EncodingContext ctxt, Properties props,
+                      CharSequence... pfxs);
 }

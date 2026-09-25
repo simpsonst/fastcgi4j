@@ -38,18 +38,22 @@
 
 package uk.ac.lancs.http.encoding;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
+import uk.ac.lancs.http.field.FieldNames;
 import uk.ac.lancs.scc.jardeps.Service;
 
 /**
  * Provides identity encoding. This goes by the sole name
  * <samp>{@value "%s" #NAME}</samp>, and is used for both content
- * encoding. It is not listed in <samp>Content-Encoding</samp>.
+ * encoding. It is not listed in <samp>{@value "%s"
+ * FieldNames#CONTENT_ENCODING}</samp>. It is also not available for
+ * transfer encoding.
  * 
  * <p>
  * Properties are recognized with the following forms:
@@ -89,74 +93,117 @@ public class IdentityProvider implements EncodingProvider {
      * A sole instance of the identity encoding that can be used for all
      * input
      */
-    public static final InputEncoding INPUT_INSTANCE = new InputEncoding() {
-        @Override
-        public InputStream decode(InputStream in) {
-            return in;
-        }
-
-        @Override
-        public Collection<? extends CharSequence> names() {
-            return NAMES;
-        }
-    };
+    public static final Decoder INPUT_INSTANCE = (in) -> in;
 
     @Override
-    public InputEncoding getForInput(EncodingContext ctxt, Properties props,
-                                     CharSequence... pfxs) {
+    public void getForInput(Map<? super String, ? super Decoder> into,
+                            EncodingContext ctxt, Properties props,
+                            CharSequence... pfxs) {
         switch (ctxt) {
         case CONTENT:
-            return INPUT_INSTANCE;
-
-        default:
-            return null;
+            for (var name : NAMES)
+                into.put(name, INPUT_INSTANCE);
+            break;
         }
     }
 
-    @Override
-    public OutputEncoding getForOutput(EncodingContext ctxt, Properties props,
-                                       CharSequence... pfxs) {
-        switch (ctxt) {
-        case CONTENT:
-            break;
-
-        default:
-            return null;
-        }
-
-        var qual = Utils
-            .getDefault(props, QUALITY_PROP, DEFAULT_QUALITY, Float::parseFloat,
-                        Utils.multiplyForEncoding(NAME, OUTPFX, ctxt, pfxs));
-        return new OutputEncoding() {
+    /**
+     * Get an identity encoder with a given name.
+     * 
+     * @param name the name, which may be {@code null}
+     * 
+     * @return the requested encoder
+     */
+    public static Encoder encoder(CharSequence name) {
+        var n = Objects.toString(name, null);
+        return new Encoder() {
             @Override
-            public String name() {
-                return NAME;
-            }
-
-            @Override
-            public OutputStream encode(OutputStream out) throws IOException {
+            public OutputStream encode(OutputStream out) {
                 return out;
             }
 
             @Override
-            public float quality() {
-                return qual;
-            }
-
-            @Override
-            public Collection<? extends CharSequence> names() {
-                return NAMES;
-            }
-
-            @Override
-            public boolean listed() {
-                return false;
-            }
-
-            @Override
-            public float compressionFactor() {
-                return 1.0F;
+            public String name() {
+                return n;
             }
         };
+    }
+
+    private static OutputEncoding internalEncoding(String name, float factor) {
+        var encoder = encoder(name);
+        return new OutputEncoding() {
+            @Override
+            public float compressionFactor() {
+                return factor;
+            }
+
+            @Override
+            public Encoder encoder() {
+                return encoder;
+            }
+        };
+    }
+
+    private static final OutputEncoding ANONYMOUS_ENCODING_INSTANCE =
+        internalEncoding(null, 1.0F);
+
+    /**
+     * Get an identity encoding with a given name and compression
+     * factor.
+     * 
+     * <p>
+     * This is intended for use with
+     * {@link ResponseEncodingControl#applyPriorContentEncodings(List)}
+     * for responses that are already encoded with
+     * 
+     * @param name the declared name of the encoding
+     * 
+     * @param factor the compression factor
+     * 
+     * @return the requested encoding
+     */
+    public static OutputEncoding encoding(CharSequence name, float factor) {
+        Objects.requireNonNull(name, "name");
+        return internalEncoding(name.toString(), factor);
+    }
+
+    /**
+     * Get an anonymous identity encoding with a given compression
+     * factor.
+     * 
+     * <p>
+     * This is intended for use with
+     * {@link ResponseEncodingControl#applyPriorContentEncodings(List)}
+     * for media types that are already well compressed. An anonymous
+     * encoding won't be listed, an identity encoding will not transform
+     * the input, and the sub-unit compression factor will suppress
+     * further (negotiated) compression, an encoding of which qualities
+     * this method can return.
+     * 
+     * @param factor the compression factor
+     * 
+     * @return the requested encoding
+     */
+    public static OutputEncoding encoding(float factor) {
+        return internalEncoding(null, factor);
+    }
+
+    @Override
+    public void getForOutput(
+                             Map<? super String,
+                                 ? super Map.Entry<? extends OutputEncoding,
+                                                   ? extends Number>> into,
+                             EncodingContext ctxt, Properties props,
+                             CharSequence... pfxs) {
+        switch (ctxt) {
+        case CONTENT:
+            var qual = Utils.getDefault(props, QUALITY_PROP, DEFAULT_QUALITY,
+                                        Float::parseFloat,
+                                        Utils.multiplyForEncoding(NAME, OUTPFX,
+                                                                  ctxt, pfxs));
+            for (var name : NAMES)
+                into.put(name, Map.entry(ANONYMOUS_ENCODING_INSTANCE, qual));
+            break;
+        }
     }
 }

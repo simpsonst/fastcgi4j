@@ -39,9 +39,10 @@
 package uk.ac.lancs.http.encoding;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
@@ -90,59 +91,98 @@ public class GZIPProvider implements EncodingProvider {
 
     private static final float DEFAULT_QUALITY = 1.0f;
 
-    private static Collection<String> NAMES = Set.of(NAME, OTHER_NAME);
+    private static final Collection<String> NAMES = Set.of(NAME, OTHER_NAME);
 
-    private static final InputEncoding INPUT_INSTANCE = new InputEncoding() {
-        @Override
-        public InputStream decode(InputStream in) throws IOException {
-            return new GZIPInputStream(in);
-        }
-
-        @Override
-        public Collection<? extends CharSequence> names() {
-            return NAMES;
-        }
-    };
+    private static final Decoder INPUT_INSTANCE = GZIPInputStream::new;
 
     @Override
-    public InputEncoding getForInput(EncodingContext ctxt, Properties props,
-                                     CharSequence... pfxs) {
-        return INPUT_INSTANCE;
+    public void getForInput(Map<? super String, ? super Decoder> into,
+                            EncodingContext ctxt, Properties props,
+                            CharSequence... pfxs) {
+        for (var name : NAMES)
+            into.put(name, INPUT_INSTANCE);
     }
 
-    @Override
-    public OutputEncoding getForOutput(EncodingContext ctxt, Properties props,
-                                       CharSequence... pfxs) {
-        var qual = Utils
-            .getDefault(props, QUALITY_PROP, DEFAULT_QUALITY, Float::parseFloat,
-                        Utils.multiplyForEncoding(NAME, OUTPFX, ctxt, pfxs));
-
-        return new OutputEncoding() {
-            @Override
-            public String name() {
-                return NAME;
-            }
-
+    private static Encoder encoder(String name) {
+        return new Encoder() {
             @Override
             public OutputStream encode(OutputStream out) throws IOException {
                 return new GZIPOutputStream(out);
             }
 
             @Override
-            public float quality() {
-                return qual;
+            public String name() {
+                return name;
             }
+        };
+    }
 
-            @Override
-            public Collection<? extends CharSequence> names() {
-                return NAMES;
-            }
-
+    private static OutputEncoding internalEncoding(Encoder encoder) {
+        return new OutputEncoding() {
             @Override
             public float compressionFactor() {
                 return 0.01F;
             }
+
+            @Override
+            public Encoder encoder() {
+                return encoder;
+            }
         };
+    }
+
+    private static OutputEncoding internalEncoding(String name) {
+        return internalEncoding(encoder(name));
+    }
+
+    private static final OutputEncoding ENCODING_INSTANCE =
+        internalEncoding(NAME);
+
+    /**
+     * Get a GZIP output encoding using the canonical name
+     * <samp>{@value "%s" #NAME}</samp>.
+     * 
+     * <p>
+     * This is intended for use with
+     * {@link ResponseEncodingControl#applyPriorContentEncodings(List)}
+     * to force an unnegotiated encoding to be applied.
+     * 
+     * @return the requested encoding
+     */
+    public static OutputEncoding encoding() {
+        return ENCODING_INSTANCE;
+    }
+
+    private static final OutputEncoding FAKE_INSTANCE =
+        internalEncoding(IdentityProvider.encoder(NAME));
+
+    /**
+     * Get an identity encoding using the canonical name
+     * <samp>{@value "%s" #NAME}</samp>.
+     * 
+     * <p>
+     * This is intended for use with
+     * {@link ResponseEncodingControl#applyPriorContentEncodings(List)}
+     * to express encodings that have already been applied.
+     * 
+     * @return the requested encoding
+     */
+    public static OutputEncoding fakeEncoding() {
+        return FAKE_INSTANCE;
+    }
+
+    @Override
+    public void getForOutput(
+                             Map<? super String,
+                                 ? super Map.Entry<? extends OutputEncoding,
+                                                   ? extends Number>> into,
+                             EncodingContext ctxt, Properties props,
+                             CharSequence... pfxs) {
+        var qual = Utils
+            .getDefault(props, QUALITY_PROP, DEFAULT_QUALITY, Float::parseFloat,
+                        Utils.multiplyForEncoding(NAME, OUTPFX, ctxt, pfxs));
+        for (var name : NAMES)
+            into.put(name, Map.entry(internalEncoding(name), qual));
     }
 
 }

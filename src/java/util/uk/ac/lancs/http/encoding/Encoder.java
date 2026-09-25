@@ -1,5 +1,3 @@
-// -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
-
 /*
  * Copyright (c) 2026, Lancaster University
  * All rights reserved.
@@ -40,68 +38,80 @@ package uk.ac.lancs.http.encoding;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import uk.ac.lancs.http.field.FieldNames;
 
 /**
- * Records how a stream should be encoded, and how this encoding should
- * be declared. The declaration is usually needed before applying the
- * plan, because the declaration needs to go in an HTTP header before
- * the raw output stream can be obtained for wrapping.
+ * Provides a named means of encoding output streams. The name is used
+ * to populate fields such as <samp>{@value "%s"
+ * FieldNames#CONTENT_ENCODING}</samp> and <samp>{@value "%s"
+ * FieldNames#TRANSFER_ENCODING}</samp>. As it might be inappropriate to
+ * list some encodings (such as the identity), a name need not be
+ * provided.
  * 
  * @author simpsons
  */
-public final class EncodingPlan {
-    private final List<Map.Entry<String, OutputEncoding>> plan;
-
+public interface Encoder {
     /**
-     * Create an encoding plan from a collection. The iteration order of
-     * the collection is preserved within the plan.
-     * 
-     * @param plan a collection of elements of the plan
+     * Wrap an encoder around a stream.
+     *
+     * @param out the stream that encoded data will be written to
+     *
+     * @return a stream that unencoded data can be written to, causing
+     * it to be encoded and written to the provided stream
+     *
+     * @throws IOException if an I/O error occurs in creating the new
+     * stream
      */
-    EncodingPlan(Collection<? extends Map.Entry<? extends CharSequence,
-                                                ? extends OutputEncoding>> plan) {
-        this.plan = plan.stream()
-            .map(e -> Map.entry(e.getKey().toString(), e.getValue()))
-            .collect(Collectors.toList());
-    }
+    OutputStream encode(OutputStream out) throws IOException;
 
     /**
-     * Encode a stream using this plan. The supplied stream is wrapped
-     * by the {@link OutputEncoding#encode(OutputStream)} of each
+     * Get the name of that this encoding should be listed as.
+     *
+     * @return the declared name; or {@code null} if not to be listed
+     */
+    String name();
+
+    /**
+     * Encode a stream using according to a plan. The supplied stream is
+     * wrapped by the {@link Encoder#encode(OutputStream)} of each
      * encoding in the plan, in reverse order, so that the first one in
-     * the plan will be applied first.
+     * the plan will be applied first to bytes written to the result.
      * 
-     * @param base the base stream
+     * @param out the stream that will carry the encoded data
      * 
-     * @return the encoded stream
+     * @param encodings the encodings to be applied
+     * 
+     * @return the unencoded stream
      * 
      * @throws IOException if an I/O error occurs in applying an
      * encoding
      */
-    public OutputStream apply(OutputStream base) throws IOException {
-        for (var ent : plan.reversed())
-            base = ent.getValue().encode(base);
-        return base;
+    public static OutputStream encode(OutputStream out,
+                                      List<? extends Encoder> encodings)
+        throws IOException {
+        for (var ent : encodings.reversed())
+            out = ent.encode(out);
+        return out;
     }
 
     /**
      * Get a declaration of the encoding order. Encodings whose
-     * {@link OutputEncoding#listed()} method returns {@code false} are
-     * not included. The order is the same as that which should go in a
+     * {@link Encoder#name()} methods return {@code null} are not
+     * included. The order is the same as that which should go in a
      * <samp>{@value "%s" FieldNames#CONTENT_ENCODING}</samp> or
      * <samp>{@value "%s" FieldNames#TRANSFER_ENCODING}</samp> header
      * field.
      * 
+     * @param encodings the encodings to be applied
+     * 
      * @return the names of encodings that would be applied to a stream
-     * submitted to {@link #apply(OutputStream)}
+     * submitted to {@link #encode(OutputStream, List)}
      */
-    public List<String> declare() {
-        return plan.stream().filter(e -> e.getValue().listed())
-            .map(Map.Entry::getKey).collect(Collectors.toList());
+    public static List<String> declare(List<? extends Encoder> encodings) {
+        return encodings.stream().map(Encoder::name).filter(Objects::nonNull)
+            .collect(Collectors.toList());
     }
 }

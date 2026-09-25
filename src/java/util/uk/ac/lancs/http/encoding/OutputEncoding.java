@@ -38,56 +38,33 @@
 
 package uk.ac.lancs.http.encoding;
 
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.Map;
 import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.TreeMap;
 
 /**
- * Provides a named means of encoding an output stream. Output encodings
+ * Provides an encoding and its impact on compression. Output encodings
  * are best loaded via {@link EncodingProvider} implementations using
  * one of the following methods:
  * 
  * <ul>
  * 
- * <li>{@link OutputEncoding#getMapping(ClassLoader, EncodingContext, Properties, CharSequence...)}
+ * <li>{@link OutputEncoding#getMapping(ClassLoader, EncodingContext, Properties, CharSequence[])}
  * 
- * <li>{@link OutputEncoding#getMapping(EncodingContext, Properties, CharSequence...)}
+ * <li>{@link OutputEncoding#getMapping(EncodingContext, Properties, CharSequence[])}
  * 
  * </ul>
  *
  * @author simpsons
  */
-public interface OutputEncoding extends Encoding {
+public interface OutputEncoding {
     /**
-     * Get the canonical name of this encoding to be used when no
-     * explicit indication is made.
+     * Get an encoder for this encoding.
      * 
-     * @return the canonical name
+     * @return the requested encoder
      */
-    String name();
-
-    /**
-     * Wrap an encoder around a stream.
-     * 
-     * @param out the stream that encoded data will be written to
-     * 
-     * @return a stream that unencoded data can be written to, causing
-     * it to be encoded and written to the provided stream
-     * 
-     * @throws IOException if an I/O error occurs in creating the new
-     * stream
-     */
-    OutputStream encode(OutputStream out) throws IOException;
-
-    /**
-     * Get the offered quality for this encoding.
-     * 
-     * @return the quality in the range [0.0, 1.0]
-     */
-    float quality();
+    Encoder encoder();
 
     /**
      * Get a measure of how compressed an uncompressed stream is after
@@ -100,21 +77,6 @@ public interface OutputEncoding extends Encoding {
      * before encoding, in the range [0.0, 1.0]
      */
     float compressionFactor();
-
-    /**
-     * Determine whether this encoding needs to be listed.
-     * 
-     * @return {@code true} if the encoding must be listed;
-     * {@code false} otherwise
-     * 
-     * @apiNote All encodings should be listed, except the identity
-     * encoding.
-     * 
-     * @implNote The default behaviour is to return {@code true}.
-     */
-    default boolean listed() {
-        return true;
-    }
 
     /**
      * Create a mapping from names to encodings and their qualities for
@@ -134,19 +96,14 @@ public interface OutputEncoding extends Encoding {
      * @return the mutable mapping configured by available classes and
      * supplied properties
      */
-    static Map<String, Map.Entry<OutputEncoding, Number>>
+    static Map<String, Map.Entry<? extends OutputEncoding, ? extends Number>>
         getMapping(ClassLoader ldr, EncodingContext ctxt, Properties props,
                    CharSequence... pfxs) {
-        Map<String, Map.Entry<OutputEncoding, Number>> result =
-            new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-        for (var provider : ServiceLoader.load(EncodingProvider.class, ldr)) {
-            var encoding = provider.getForOutput(ctxt, props, pfxs);
-            if (encoding == null) continue;
-            var quality = encoding.quality();
-            var entry = Map.<OutputEncoding, Number>entry(encoding, quality);
-            for (var name : encoding.names())
-                result.put(name.toString(), entry);
-        }
+        Map<String,
+            Map.Entry<? extends OutputEncoding, ? extends Number>> result =
+                new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        for (var provider : ServiceLoader.load(EncodingProvider.class, ldr))
+            provider.getForOutput(result, ctxt, props, pfxs);
         return result;
     }
 
@@ -169,7 +126,7 @@ public interface OutputEncoding extends Encoding {
      * @return the mutable mapping configured by available classes and
      * supplied properties
      */
-    static Map<String, Map.Entry<OutputEncoding, Number>>
+    static Map<String, Map.Entry<? extends OutputEncoding, ? extends Number>>
         getMapping(EncodingContext ctxt, Properties props,
                    CharSequence... pfxs) {
         return getMapping(Thread.currentThread().getContextClassLoader(), ctxt,

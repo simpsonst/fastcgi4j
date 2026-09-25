@@ -68,10 +68,10 @@ import uk.ac.lancs.fastcgi.ResponderSession;
 import uk.ac.lancs.fastcgi.Session;
 import uk.ac.lancs.http.ChunkedOutputStream;
 import uk.ac.lancs.http.cache.InboundCacheControl;
-import uk.ac.lancs.http.encoding.BodyDecoder;
+import uk.ac.lancs.http.encoding.Decoder;
+import uk.ac.lancs.http.encoding.Encoder;
 import uk.ac.lancs.http.encoding.EncodingContext;
-import uk.ac.lancs.http.encoding.EncodingPlan;
-import uk.ac.lancs.http.encoding.InputEncoding;
+import uk.ac.lancs.http.encoding.InputMapping;
 import uk.ac.lancs.http.encoding.OutputEncoding;
 import uk.ac.lancs.http.encoding.ResponseEncodingControl;
 import uk.ac.lancs.http.encoding.ResponseEncodingPlanner;
@@ -304,14 +304,13 @@ public class HttpResponderSession {
 
     static final String ENCODINGS_PREFIX = "uk.ac.lancs.fastcgi.encodings.";
 
-    static final Map<String, InputEncoding> ALL_AVAILABLE_TRANSFER_DECODERS =
-        Map.copyOf(InputEncoding.getMapping(EncodingContext.TRANSFER,
-                                            System.getProperties(),
-                                            ENCODINGS_PREFIX));
+    static final Map<String, Decoder> ALL_AVAILABLE_TRANSFER_DECODERS = Map
+        .copyOf(Decoder.getMapping(EncodingContext.TRANSFER,
+                                   System.getProperties(), ENCODINGS_PREFIX));
 
     static final Map<String,
-                     Map.Entry<OutputEncoding,
-                               Number>> ALL_AVAILABLE_TRANSFER_ENCODERS =
+                     Map.Entry<? extends OutputEncoding,
+                               ? extends Number>> ALL_AVAILABLE_TRANSFER_ENCODERS =
                                    Map.copyOf(OutputEncoding
                                        .getMapping(EncodingContext.TRANSFER,
                                                    System.getProperties(),
@@ -354,8 +353,8 @@ public class HttpResponderSession {
             /* Using the provided transfer decoders, clear all the
              * transfer encodings. If we can't clear them all, it's an
              * error. */
-            BodyDecoder xferDecoder =
-                new BodyDecoder(ctxt.transferDecoders()::get);
+            InputMapping xferDecoder =
+                new InputMapping(ctxt.transferDecoders()::get);
             in = xferDecoder.decode(in, transferEncodings);
             if (!transferEncodings.isEmpty())
                 throw new IOException("unknown transfer encoding "
@@ -365,7 +364,7 @@ public class HttpResponderSession {
         /* Apply unhandled content decoding, according to what the
          * application wants. */
         requestEncodings();
-        in = InputEncoding.decode(in, handledRequestEncodings);
+        in = Decoder.decode(in, handledRequestEncodings);
 
         return in;
     }
@@ -455,7 +454,7 @@ public class HttpResponderSession {
 
     private List<String> rawRequestEncodings = null;
 
-    private List<InputEncoding> handledRequestEncodings = null;
+    private List<Decoder> handledRequestEncodings = null;
 
     private static final String CONTENT_ENCODING_PARAM =
         Http.fieldNameAsCGI(FieldNames.CONTENT_ENCODING);
@@ -474,8 +473,8 @@ public class HttpResponderSession {
         if (rawRequestEncodings == null) {
             assert handledRequestEncodings == null;
             rawRequestEncodings = tokens(CONTENT_ENCODING_PARAM);
-            BodyDecoder contentDecoder =
-                new BodyDecoder(ctxt.contentDecoders()::get);
+            InputMapping contentDecoder =
+                new InputMapping(ctxt.contentDecoders()::get);
             handledRequestEncodings =
                 contentDecoder.recognize(rawRequestEncodings);
         }
@@ -854,11 +853,11 @@ public class HttpResponderSession {
         var contentPref =
             extractEncodingPreference(getAcceptedEncodings(ACCEPT_ENCODING_PARAM));
         responseEncodingPlanner.preferContentEncodings(contentPref);
-        EncodingPlan transferPlan = responseEncodingPlanner.transferPlan();
-        EncodingPlan contentPlan = responseEncodingPlanner.contentPlan();
+        List<Encoder> transferPlan = responseEncodingPlanner.transferPlan();
+        List<Encoder> contentPlan = responseEncodingPlanner.contentPlan();
         List<String> transferEncodings =
-            new ArrayList<>(transferPlan.declare());
-        List<String> contentEncodings = contentPlan.declare();
+            new ArrayList<>(Encoder.declare(transferPlan));
+        List<String> contentEncodings = Encoder.declare(contentPlan);
 
         /* We only need to chunk if we expect trailer fields. */
         final boolean requireTrailer = !responseTrailerExpectation.isEmpty();
@@ -917,10 +916,10 @@ public class HttpResponderSession {
             };
         }
 
-        out = transferPlan.apply(out);
+        out = Encoder.encode(out, transferPlan);
         for (var ent : digests.entrySet())
             out = new DigestOutputStream(out, ent.getValue());
-        out = contentPlan.apply(out);
+        out = Encoder.encode(out, contentPlan);
 
         return out;
     }

@@ -66,10 +66,8 @@ import uk.ac.lancs.fastcgi.augment.FormHandler;
 import uk.ac.lancs.fastcgi.augment.HttpResponderContext;
 import uk.ac.lancs.fastcgi.augment.HttpResponderSession;
 import uk.ac.lancs.fastcgi.augment.OTSResponses;
-import uk.ac.lancs.http.encoding.BodyDecoder;
+import uk.ac.lancs.http.encoding.Decoder;
 import uk.ac.lancs.http.encoding.EncodingContext;
-import uk.ac.lancs.http.encoding.IdentityProvider;
-import uk.ac.lancs.http.encoding.InputEncoding;
 import uk.ac.lancs.mime.BinaryMessage;
 import uk.ac.lancs.mime.Message;
 import uk.ac.lancs.mime.MessageParser;
@@ -85,23 +83,9 @@ import uk.ac.lancs.mime.body.SmartMorgue;
  * @author simpsons
  */
 public class MD5SumResponder implements Responder {
-    private static final Map<String, InputEncoding> transferEncodings =
-        InputEncoding.getMapping(EncodingContext.TRANSFER,
-                                 System.getProperties(),
-                                 "uk.ac.lancs.fastrcgi.");
-
-    private static InputEncoding getChunkSafeEncoding(String name) {
-        switch (name) {
-        case "chunk":
-            return IdentityProvider.INPUT_INSTANCE;
-
-        default:
-            return transferEncodings.get(name);
-        }
-    }
-
-    private static final BodyDecoder transferDecoder =
-        new BodyDecoder(MD5SumResponder::getChunkSafeEncoding);
+    private static final Map<String, Decoder> transferEncodings =
+        Decoder.getMapping(EncodingContext.TRANSFER, System.getProperties(),
+                           "uk.ac.lancs.fastrcgi.");
 
     private static final String[] subpaths = { "", "/", "baz/qux", "/baz/qux",
         "baz/qux/quux", "baz/qux/", "baz/yan/tan/", "baz/yan/tan", "/baz/",
