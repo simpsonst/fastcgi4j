@@ -74,8 +74,6 @@ public interface ResponseEncodingControl {
      * 
      * @param prior names of encodings that will already have been
      * applied
-     * 
-     * @see #declarePriorContentEncodings(CharSequence...)
      */
     void declarePriorContentEncodings(List<? extends CharSequence> prior);
 
