@@ -55,7 +55,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 import uk.ac.lancs.cgi.FormSubmission;
-import uk.ac.lancs.cgi.Http;
 import uk.ac.lancs.cgi.path.Navigator;
 import uk.ac.lancs.cgi.path.PathConfiguration;
 import uk.ac.lancs.cgi.path.PathContext;
@@ -64,7 +63,9 @@ import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.ResponderSession;
 import uk.ac.lancs.fastcgi.SessionException;
 import uk.ac.lancs.fastcgi.augment.FormHandler;
-import uk.ac.lancs.fastcgi.augment.SessionAugment;
+import uk.ac.lancs.fastcgi.augment.HttpResponderContext;
+import uk.ac.lancs.fastcgi.augment.HttpResponderSession;
+import uk.ac.lancs.fastcgi.augment.OTSResponses;
 import uk.ac.lancs.http.encoding.BodyDecoder;
 import uk.ac.lancs.http.encoding.EncodingContext;
 import uk.ac.lancs.http.encoding.IdentityProvider;
@@ -73,7 +74,6 @@ import uk.ac.lancs.mime.BinaryMessage;
 import uk.ac.lancs.mime.Message;
 import uk.ac.lancs.mime.MessageParser;
 import uk.ac.lancs.mime.TextMessage;
-import uk.ac.lancs.mime.Tokenizer;
 import uk.ac.lancs.mime.body.BinaryBody;
 import uk.ac.lancs.mime.body.Morgue;
 import uk.ac.lancs.mime.body.SmartMorgue;
@@ -129,28 +129,27 @@ public class MD5SumResponder implements Responder {
     private static final FormHandler formHandler =
         new FormHandler(new MessageParser(morgue), StandardCharsets.UTF_8);
 
+    private static final HttpResponderContext httpRspCtxt =
+        new HttpResponderContext() {};
+
     @Override
     public void respond(ResponderSession session)
         throws IOException,
             SessionException,
             InterruptedException {
-        SessionAugment augment = new SessionAugment(session);
+        HttpResponderSession httpSession =
+            new HttpResponderSession(session, httpRspCtxt);
+        OTSResponses otsRsp =
+            new OTSResponses(httpSession.otsResponseControl());
         PathContext<String> pathCtxt =
             pathConfig.recognize(session.parameters());
         Navigator navigator = pathCtxt.navigator();
 
         final byte[] dig;
         {
-            List<String> xferEncs = Tokenizer.atomSequenceOf(session
-                .parameters().get(Http.fieldNameAsCGI("Transfer-Encoding")));
-            InputStream in = transferDecoder.decode(session.in(), xferEncs);
-            if (!xferEncs.isEmpty())
-                throw new IOException("unknown transfer encoding: "
-                    + xferEncs.get(xferEncs.size() - 1));
-
             try {
                 var md = MessageDigest.getInstance("md5");
-                try (var mdis = new DigestInputStream(in, md)) {
+                try (var mdis = new DigestInputStream(httpSession.in(), md)) {
                     mdis.transferTo(OutputStream.nullOutputStream());
                 }
                 dig = md.digest();
@@ -160,7 +159,7 @@ public class MD5SumResponder implements Responder {
         }
 
         if (navigator.resource().isEmpty()) {
-            augment.found(navigator.locate("/").absolute());
+            otsRsp.found(navigator.locate("/").absolute());
             return;
         }
         final FormSubmission submission;
@@ -185,13 +184,14 @@ public class MD5SumResponder implements Responder {
             submission = null;
         }
 
-        try (PrintWriter out = augment.textOut("plain")) {
+        try (PrintWriter out = otsRsp.textOut("plain")) {
             for (var entry : new TreeMap<>(session.parameters()).entrySet()) {
                 out.printf("[%s] = [%s]\n", entry.getKey(), entry.getValue());
             }
 
             out.printf("\nPath computations:\n");
-            out.printf("Script: %s\n", pathCtxt.script());
+            out.printf("Script: %s (deprecated)\n", pathCtxt.script());
+            out.printf("Script: %s\n", navigator.locate("").local());
             out.printf("Subpath: %s\n", navigator.resource());
             for (String sp : subpaths) {
                 try {

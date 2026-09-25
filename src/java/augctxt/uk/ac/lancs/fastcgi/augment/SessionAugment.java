@@ -243,7 +243,10 @@ public final class SessionAugment {
      * 
      * @throws IOException if an I/O error occurs in applying an
      * encoding
+     * 
+     * @deprecated Use {@link OTSResponses#textOut(String, Charset)}.
      */
+    @Deprecated
     public PrintWriter textOut(String minor, Charset charset)
         throws IOException {
         MediaType mt = MediaType.of("text", minor).modify()
@@ -261,7 +264,10 @@ public final class SessionAugment {
      * 
      * @throws IOException if an I/O error occurs in applying an
      * encoding
+     * 
+     * @deprecated Use {@link OTSResponses#textOut(String)}.
      */
+    @Deprecated
     public PrintWriter textOut(String minor) throws IOException {
         return textOut(minor, StandardCharsets.UTF_8);
     }
@@ -274,7 +280,10 @@ public final class SessionAugment {
      * 
      * @throws IOException if an I/O error occurs opening or closing the
      * stream
+     * 
+     * @deprecated Use {@link OTSResponses#noContent()}.
      */
+    @Deprecated
     public void noContent() throws IOException {
         session.setStatus(ResponseCodes.NO_CONTENT);
         session.clearField(FieldNames.CONTENT_TYPE);
@@ -298,7 +307,10 @@ public final class SessionAugment {
      * @param location the location to redirect to
      * 
      * @see ResponseCodes#SEE_OTHER
+     * 
+     * @deprecated Use {@link OTSResponses#seeOther(URI)}.
      */
+    @Deprecated
     public void seeOther(URI location) {
         setLocation(location, ResponseCodes.SEE_OTHER);
     }
@@ -312,7 +324,10 @@ public final class SessionAugment {
      * @param location the location to redirect to
      * 
      * @see ResponseCodes#MOVED_PERMANENTLY
+     * 
+     * @deprecated Use {@link OTSResponses#movedPermanently(URI)}.
      */
+    @Deprecated
     public void movedPermanently(URI location) {
         setLocation(location, ResponseCodes.MOVED_PERMANENTLY);
     }
@@ -330,7 +345,10 @@ public final class SessionAugment {
      * @param location the location to redirect to
      * 
      * @see ResponseCodes#FOUND
+     * 
+     * @deprecated Use {@link OTSResponses#found(URI)}.
      */
+    @Deprecated
     public void found(URI location) {
         setLocation(location, ResponseCodes.FOUND);
     }
@@ -343,7 +361,10 @@ public final class SessionAugment {
      * @param location the location to redirect to
      * 
      * @see ResponseCodes#TEMPORARY_REDIRECT
+     * 
+     * @deprecated Use {@link OTSResponses#temporaryRedirect(URI)}.
      */
+    @Deprecated
     public void temporaryRedirect(URI location) {
         setLocation(location, ResponseCodes.TEMPORARY_REDIRECT);
     }
@@ -356,7 +377,10 @@ public final class SessionAugment {
      * @param location the location to redirect to
      * 
      * @see ResponseCodes#PERMANENT_REDIRECT
+     * 
+     * @deprecated Use {@link OTSResponses#permanentRedirect(URI)}.
      */
+    @Deprecated
     public void permanentRedirect(URI location) {
         setLocation(location, ResponseCodes.PERMANENT_REDIRECT);
     }
@@ -377,7 +401,11 @@ public final class SessionAugment {
      * 
      * @throws IOException if an I/O error occurs in closing the
      * response
+     * 
+     * @deprecated Use
+     * {@link OTSResponses#sendXML(Document, Properties)}.
      */
+    @Deprecated
     public void transmit(Document doc, Properties xformProps)
         throws TransformerException,
             IOException {
@@ -393,5 +421,52 @@ public final class SessionAugment {
             session.setField(FieldNames.CONTENT_TYPE, contentType);
             xf.transform(src, dest);
         }
+    }
+
+    private final OTSResponses.Control otsResponseControl =
+        new OTSResponses.Control() {
+            @Override
+            public void setStatus(int code) {
+                session.setStatus(code);
+            }
+
+            @Override
+            public void clearContentType() {
+                session.clearField(FieldNames.CONTENT_TYPE);
+            }
+
+            @Override
+            public void clearContentLength() {
+                session.clearField(FieldNames.CONTENT_LENGTH);
+            }
+
+            @Override
+            public void clearContentEncoding() {
+                session.clearField(FieldNames.CONTENT_ENCODING);
+            }
+
+            @Override
+            public OutputStream out() throws IOException {
+                return SessionAugment.this.out();
+            }
+
+            @Override
+            public void setLocation(URI location) {
+                session.setField(FieldNames.LOCATION, location.toASCIIString());
+            }
+
+            @Override
+            public void setContentType(MediaType type) {
+                session.setField(FieldNames.CONTENT_TYPE, type.toString());
+            }
+        };
+
+    /**
+     * Get a view of this session for off-the-shelf responses.
+     * 
+     * @return the requested view
+     */
+    public final OTSResponses.Control otsResponseControl() {
+        return otsResponseControl;
     }
 }

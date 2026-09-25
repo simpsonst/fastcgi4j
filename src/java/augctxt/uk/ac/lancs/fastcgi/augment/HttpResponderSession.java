@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
@@ -78,6 +79,7 @@ import uk.ac.lancs.http.field.CGIRequestCap;
 import uk.ac.lancs.http.field.Cap;
 import uk.ac.lancs.http.field.ExtensionManager;
 import uk.ac.lancs.http.field.ExtensionPrefix;
+import uk.ac.lancs.http.field.Field;
 import uk.ac.lancs.http.field.FieldExtension;
 import uk.ac.lancs.http.field.FieldId;
 import uk.ac.lancs.http.field.FieldNameSets;
@@ -964,5 +966,52 @@ public class HttpResponderSession {
             requestCacheControl = InboundCacheControl
                 .ofRequest(base.parameters().get(CACHE_CONTROL_PARAM));
         return requestCacheControl;
+    }
+
+    private final OTSResponses.Control otsResponseControl =
+        new OTSResponses.Control() {
+            @Override
+            public void setStatus(int code) {
+                base.setStatus(code);
+            }
+
+            @Override
+            public void clearContentType() {
+                FieldId.CONTENT_TYPE.clear(responseHeader());
+            }
+
+            @Override
+            public void clearContentLength() {
+                FieldId.CONTENT_LENGTH.clear(responseHeader());
+            }
+
+            @Override
+            public void clearContentEncoding() {
+                FieldId.CONTENT_ENCODING.clear(responseHeader());
+            }
+
+            @Override
+            public OutputStream out() throws IOException {
+                return HttpResponderSession.this.out();
+            }
+
+            @Override
+            public void setLocation(URI location) {
+                Field.LOCATION.set(responseHeader(), location);
+            }
+
+            @Override
+            public void setContentType(MediaType type) {
+                Field.CONTENT_TYPE.set(requestHeader(), type);
+            }
+        };
+
+    /**
+     * Get a view of this session for off-the-shelf responses.
+     * 
+     * @return the requested view
+     */
+    public OTSResponses.Control otsResponseControl() {
+        return otsResponseControl;
     }
 }

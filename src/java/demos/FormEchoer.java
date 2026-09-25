@@ -47,7 +47,9 @@ import uk.ac.lancs.fastcgi.ResponderSession;
 import uk.ac.lancs.fastcgi.app.FastCGIApplication;
 import uk.ac.lancs.fastcgi.app.FastCGIConfiguration;
 import uk.ac.lancs.fastcgi.augment.FormHandler;
-import uk.ac.lancs.fastcgi.augment.SessionAugment;
+import uk.ac.lancs.fastcgi.augment.HttpResponderContext;
+import uk.ac.lancs.fastcgi.augment.HttpResponderSession;
+import uk.ac.lancs.fastcgi.augment.OTSResponses;
 import uk.ac.lancs.mime.BinaryMessage;
 import uk.ac.lancs.mime.Message;
 import uk.ac.lancs.mime.MessageParser;
@@ -72,11 +74,16 @@ public class FormEchoer extends FastCGIApplication implements Responder {
         return true;
     }
 
+    private final HttpResponderContext augCtxt = new HttpResponderContext() {};
+
     @Override
     public void respond(ResponderSession session) throws IOException {
-        SessionAugment augment = new SessionAugment(session);
+        HttpResponderSession httpSession =
+            new HttpResponderSession(session, augCtxt);
+        OTSResponses otsRsp =
+            new OTSResponses(httpSession.otsResponseControl());
         final FormSubmission submission = formHandler.get(session);
-        try (PrintWriter out = augment.textOut("plain")) {
+        try (PrintWriter out = otsRsp.textOut("plain")) {
             out.printf("\nForm fields:\n");
             for (var e : submission.map().entrySet()) {
                 List<Message> values = e.getValue();
