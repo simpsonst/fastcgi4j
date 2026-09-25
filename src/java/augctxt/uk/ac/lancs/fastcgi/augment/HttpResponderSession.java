@@ -923,56 +923,6 @@ public class HttpResponderSession {
         return out;
     }
 
-    private final List<String> outgoingEncodings = new ArrayList<>(4);
-
-    /**
-     * Set the content encodings that the application itself is applying
-     * to the response body. These are assumed to have been applied to
-     * any data written to the response stream {@link #out()}. The last
-     * name indicates the most recent transformation.
-     * 
-     * <p>
-     * This call replaces any previous setting. Encodings are not
-     * accumulated.
-     * 
-     * @param names the sequence of encodings already applied to the
-     * response body by the application
-     * 
-     * @see #setEncodings(CharSequence...)
-     * 
-     * @throws IllegalStateException if the response stream has already
-     * been obtained by {@link #out()}
-     */
-    public void setEncodings(List<? extends CharSequence> names) {
-        outgoingEncodings.clear();
-        for (var n : names)
-            outgoingEncodings.add(n.toString().toLowerCase());
-    }
-
-    /**
-     * Set the content encodings that the application itself is applying
-     * to the response body. These are assumed to have been applied to
-     * any data written to the response stream {@link #out()}. The last
-     * name indicates the most recent transformation.
-     * 
-     * <p>
-     * This call replaces any previous setting. Encodings are not
-     * accumulated.
-     * 
-     * @param names the sequence of encodings already applied to the
-     * response body by the application
-     * 
-     * @see #setEncodings(List)
-     * 
-     * @throws IllegalStateException if the response stream has already
-     * been obtained by {@link #out()}
-     */
-    public void setEncodings(CharSequence... names) {
-        outgoingEncodings.clear();
-        for (var n : names)
-            outgoingEncodings.add(n.toString().toLowerCase());
-    }
-
     /**
      * Get the stream for the response body. If the user has called
      * {@link #expectTrailer(FieldId...), the body will be transparently

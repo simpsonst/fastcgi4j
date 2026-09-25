@@ -36,6 +36,7 @@
 
 package uk.ac.lancs.http.encoding;
 
+import java.util.List;
 import java.util.Map;
 import uk.ac.lancs.http.field.FieldNames;
 
@@ -65,6 +66,20 @@ public interface ResponseEncodingControl {
                                                        ? extends Number>> offer);
 
     /**
+     * Indicate that the response body will already be encoded. These
+     * encoding names will be prefixed to the plan, but they will use
+     * only identity encoding, so they won't actually change the stream,
+     * while still being listed. The impact of prior encodings should be
+     * expressed with {@link #setInitialCompressionFraction(float)}.
+     * 
+     * @param prior names of encodings that will already have been
+     * applied
+     * 
+     * @see #declarePriorContentEncodings(CharSequence...)
+     */
+    void declarePriorContentEncodings(List<? extends CharSequence> prior);
+
+    /**
      * Set the compression factor threshold. The default is
      * {@value ResponseEncodingPlanner#DEFAULT_COMPRESSION_FACTOR_THRESHOLD}.
      *
@@ -77,7 +92,14 @@ public interface ResponseEncodingControl {
 
     /**
      * Set the initial compression fraction. The default is
-     * {@value ResponseEncodingPlanner#DEFAULT_COMPRESSION_FRACTION}.
+     * {@value ResponseEncodingPlanner#DEFAULT_COMPRESSION_FRACTION}. If
+     * the content is already compressed in some way (for example, the
+     * content is a JPEG), setting a lower value should suppress further
+     * encodings that apply compression. If the encoding needs to be
+     * expressed in the <samp>{@value "%s"
+     * FieldNames#CONTENT_ENCODING}</samp> field (e.g., it's an already
+     * GZIPped file), it should be listed with
+     * {@link #declarePriorContentEncodings(List)}.
      *
      * @param c the new initial compression fraction
      *

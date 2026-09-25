@@ -38,7 +38,9 @@
 
 package uk.ac.lancs.http.encoding;
 
+import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -98,7 +100,9 @@ import uk.ac.lancs.http.field.FieldNames;
  * compressed, it should set the initial compression factor to a lower
  * value to suppress further compression. The default is
  * {@value #DEFAULT_COMPRESSION_FRACTION}, and it can be set with
- * {@link #setInitialCompressionFraction(float)}.
+ * {@link #setInitialCompressionFraction(float)}. To acknowledge prior
+ * encodings, these should be declared with
+ * {@link #declarePriorContentEncodings(List)}.
  * 
  * </ul>
  * 
@@ -202,6 +206,16 @@ public class ResponseEncodingPlanner implements ResponseEncodingControl {
     private boolean worthCompressing(float currentValue, OutputEncoding enc) {
         return worthCompressing(currentValue, enc.compressionFactor(),
                                 compressionFactorThreshold);
+    }
+
+    private List<String> priors = Collections.emptyList();
+
+    @Override
+    public void
+        declarePriorContentEncodings(List<? extends CharSequence> prior) {
+        this.priors =
+            prior.stream().map(Object::toString).collect(Collectors.toList());
+        invalidate();
     }
 
     @Override
@@ -335,6 +349,33 @@ public class ResponseEncodingPlanner implements ResponseEncodingControl {
         return enc.compressionFactor();
     }
 
+    private static final OutputEncoding IDENTITY = new OutputEncoding() {
+        @Override
+        public String name() {
+            return "not used";
+        }
+
+        @Override
+        public OutputStream encode(OutputStream out) {
+            return out;
+        }
+
+        @Override
+        public float quality() {
+            return 1.0f;
+        }
+
+        @Override
+        public float compressionFactor() {
+            return 1.0f;
+        }
+
+        @Override
+        public Collection<? extends CharSequence> names() {
+            return Collections.emptySet();
+        }
+    };
+
     /**
      * If no plan is already calculated, calculate a new one from the
      * current settings.
@@ -347,6 +388,8 @@ public class ResponseEncodingPlanner implements ResponseEncodingControl {
         var factor = initialCompressionFraction;
 
         List<Map.Entry<String, OutputEncoding>> contentPlan = new ArrayList<>();
+        for (var prior : priors)
+            contentPlan.add(Map.entry(prior, IDENTITY));
         List<Map.Entry<String, OutputEncoding>> transferPlan =
             new ArrayList<>();
 
