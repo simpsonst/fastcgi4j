@@ -38,8 +38,10 @@
 
 /**
  * Holds classes to handle HTTP encoding. This is expressed in HTTP
- * using in the header fields <samp>Content-Encoding</samp> and
- * <samp>Accept-Encoding</samp>.
+ * using in the header fields <samp>{@value "%s"
+ * uk.ac.lancs.http.field.FieldNames#CONTENT_ENCODING}</samp> and
+ * <samp>{@value "%s"
+ * uk.ac.lancs.http.field.FieldNames#ACCEPT_ENCODING}</samp>.
  * 
  * @author simpsons
  */
