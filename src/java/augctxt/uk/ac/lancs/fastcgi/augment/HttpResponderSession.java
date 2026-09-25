@@ -100,7 +100,7 @@ public class HttpResponderSession {
     /**
      * The FastCGI responder session on which this HTTP session is based
      */
-    protected final ResponderSession base;
+    public final ResponderSession base;
 
     /**
      * Re-usable context that can be shared between sessions
