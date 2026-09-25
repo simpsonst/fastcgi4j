@@ -153,8 +153,8 @@ public class IdentityProvider implements EncodingProvider {
      * 
      * <p>
      * This is intended for use with
-     * {@link ResponseEncodingControl#applyPriorContentEncodings(List)}
-     * for responses that are already encoded with
+     * {@link ResponseEncodingControl#force(List)} for responses that
+     * are already encoded with
      * 
      * @param name the declared name of the encoding
      * 
@@ -173,12 +173,12 @@ public class IdentityProvider implements EncodingProvider {
      * 
      * <p>
      * This is intended for use with
-     * {@link ResponseEncodingControl#applyPriorContentEncodings(List)}
-     * for media types that are already well compressed. An anonymous
-     * encoding won't be listed, an identity encoding will not transform
-     * the input, and the sub-unit compression factor will suppress
-     * further (negotiated) compression, an encoding of which qualities
-     * this method can return.
+     * {@link ResponseEncodingControl#force(List)} for media types that
+     * are already well compressed. An anonymous encoding won't be
+     * listed, an identity encoding will not transform the input, and
+     * the sub-unit compression factor will suppress further
+     * (negotiated) compression, an encoding of which qualities this
+     * method can return.
      * 
      * @param factor the compression factor
      * 

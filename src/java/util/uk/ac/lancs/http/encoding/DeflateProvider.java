@@ -149,8 +149,8 @@ public class DeflateProvider implements EncodingProvider {
      * 
      * <p>
      * This is intended for use with
-     * {@link ResponseEncodingControl#applyPriorContentEncodings(List)}
-     * to force an unnegotiated encoding to be applied.
+     * {@link ResponseEncodingControl#force(List)} to force an
+     * unnegotiated encoding to be applied.
      * 
      * @param level the compression level, 0-9
      * 
@@ -166,8 +166,8 @@ public class DeflateProvider implements EncodingProvider {
      * 
      * <p>
      * This is intended for use with
-     * {@link ResponseEncodingControl#applyPriorContentEncodings(List)}
-     * to express encodings that have already been applied.
+     * {@link ResponseEncodingControl#force(List)} to express encodings
+     * that have already been applied.
      * 
      * @param level the compression level, 0-9
      * 
