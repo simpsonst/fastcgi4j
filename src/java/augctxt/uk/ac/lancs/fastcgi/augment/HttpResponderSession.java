@@ -226,9 +226,11 @@ public class HttpResponderSession {
      * <p>
      * For HTTP/2 and later, the field is ignored if it doesn't contain
      * the sole token <samp>{@value "%s" #TRAILERS_TOKEN}</samp>.
+     * 
+     * @return the computed or cached transfer preference
      */
-    private void getAcceptedTransferEncodings() {
-        if (acceptedTransferEncodings != null) return;
+    private Map<String, Map<String, String>> getAcceptedTransferEncodings() {
+        if (acceptedTransferEncodings != null) return acceptedTransferEncodings;
         Map<String, Map<String, String>> result =
             getAcceptedEncodings(TE_PARAM);
         if (protocol.isMinimally("HTTP", 2, 0) &&
@@ -239,6 +241,7 @@ public class HttpResponderSession {
         } else {
             acceptedTransferEncodings = Map.copyOf(result);
         }
+        return acceptedTransferEncodings;
     }
 
     /**
@@ -757,6 +760,14 @@ public class HttpResponderSession {
         return responseEncodingPlanner;
     }
 
+    private void setEncodingField(String name, List<String> encodings) {
+        if (encodings.isEmpty())
+            base.clearField(name);
+        else
+            base.setField(name,
+                          encodings.stream().collect(Collectors.joining(", ")));
+    }
+
     private OutputStream makeOut() throws IOException {
         if (!digests.isEmpty()) expectInTrailer(FieldId.CONTENT_DIGEST);
 
@@ -841,19 +852,29 @@ public class HttpResponderSession {
             if (ns.scope() == FieldScope.HOP_BY_HOP) hopByHopFields.add(field);
         }
 
+        /* Find out what encodings the client prefers, and record
+         * them. */
+        var transferPref =
+            extractEncodingPreference(getAcceptedTransferEncodings());
+        var contentPref =
+            extractEncodingPreference(getAcceptedEncodings(ACCEPT_ENCODING_PARAM));
+        responseEncodingPlanner.transferPreference(transferPref);
+        responseEncodingPlanner.contentPreference(contentPref);
+
+        /* Find out what transfer encoding implementations are available
+         * to us by context. */
+        responseEncodingPlanner.transferOffer(ctxt.transferEncoders());
+
         /* Determine what non-chunked transfer/content encoding should
          * be applied, based on what the application has supplied in the
          * context, and on what the TE/Accept-Encoding request fields
          * permitted. */
-        responseEncodingPlanner.transferOffer(ctxt.transferEncoders());
-        getAcceptedTransferEncodings();
-        var transferPref = extractEncodingPreference(acceptedTransferEncodings);
-        responseEncodingPlanner.transferPreference(transferPref);
-        var contentPref =
-            extractEncodingPreference(getAcceptedEncodings(ACCEPT_ENCODING_PARAM));
-        responseEncodingPlanner.contentPreference(contentPref);
         List<Encoder> transferPlan = responseEncodingPlanner.transferPlan();
         List<Encoder> contentPlan = responseEncodingPlanner.contentPlan();
+
+        /* Record what encodings are going to be applied. Transfer
+         * codings must be mutable, because we might add a final
+         * 'chunked' encoding. */
         List<String> transferEncodings =
             new ArrayList<>(Encoder.declare(transferPlan));
         List<String> contentEncodings = Encoder.declare(contentPlan);
@@ -864,16 +885,8 @@ public class HttpResponderSession {
 
         /* Set the encoding header fields, or clear them if not
          * required. */
-        if (contentEncodings.isEmpty())
-            base.clearField(FieldNames.CONTENT_ENCODING);
-        else
-            base.setField(FieldNames.CONTENT_ENCODING, contentEncodings.stream()
-                .collect(Collectors.joining(", ")));
-        if (transferEncodings.isEmpty())
-            base.clearField(FieldNames.TRANSFER_ENCODING);
-        else
-            base.setField(FieldNames.TRANSFER_ENCODING, transferEncodings
-                .stream().collect(Collectors.joining(", ")));
+        setEncodingField(FieldNames.CONTENT_ENCODING, contentEncodings);
+        setEncodingField(FieldNames.TRANSFER_ENCODING, transferEncodings);
 
         OutputStream out = base.out();
         if (requireTrailer) {
