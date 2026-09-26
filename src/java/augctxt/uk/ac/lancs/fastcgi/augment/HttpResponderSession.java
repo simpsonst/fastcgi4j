@@ -976,8 +976,8 @@ public class HttpResponderSession implements AutoCloseable {
 
     /**
      * Get the stream for the response body. If the user has called
-     * {@link #expectTrailer(FieldId...), the body will be transparently
-     * chunked.
+     * {@link #expectInTrailer(FieldId...)} the body will be
+     * transparently chunked.
      * 
      * @return the output stream for writing an unchunked response body
      * 
