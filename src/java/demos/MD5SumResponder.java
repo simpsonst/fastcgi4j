@@ -51,7 +51,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 import uk.ac.lancs.cgi.FormSubmission;
@@ -66,8 +65,6 @@ import uk.ac.lancs.fastcgi.augment.FormHandler;
 import uk.ac.lancs.fastcgi.augment.HttpResponderContext;
 import uk.ac.lancs.fastcgi.augment.HttpResponderSession;
 import uk.ac.lancs.fastcgi.augment.OTSResponses;
-import uk.ac.lancs.http.encoding.Decoder;
-import uk.ac.lancs.http.encoding.EncodingContext;
 import uk.ac.lancs.mime.BinaryMessage;
 import uk.ac.lancs.mime.Message;
 import uk.ac.lancs.mime.MessageParser;
@@ -83,10 +80,6 @@ import uk.ac.lancs.mime.body.SmartMorgue;
  * @author simpsons
  */
 public class MD5SumResponder implements Responder {
-    private static final Map<String, Decoder> transferEncodings =
-        Decoder.getMapping(EncodingContext.TRANSFER, System.getProperties(),
-                           "uk.ac.lancs.fastrcgi.");
-
     private static final String[] subpaths = { "", "/", "baz/qux", "/baz/qux",
         "baz/qux/quux", "baz/qux/", "baz/yan/tan/", "baz/yan/tan", "/baz/",
         "/baz", "/foo:bar/baz", "/foó/bär/båz" };
