@@ -1066,6 +1066,12 @@ public class HttpResponderSession implements AutoCloseable {
         return otsResponseControl;
     }
 
+    /**
+     * Close resources provided by this augmentation. This ensures that
+     * header fields are properly set, and the output stream is closed.
+     * 
+     * @throws IOException if an I/O exception occurs
+     */
     @Override
     public void close() throws IOException {
         out().close();
