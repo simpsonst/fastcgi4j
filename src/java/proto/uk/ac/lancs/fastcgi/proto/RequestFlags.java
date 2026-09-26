@@ -82,7 +82,8 @@ public final class RequestFlags {
         }
         for (int i = 0; i < 8; i++)
             if ((flags & (1 << i)) != 0) result.append("|FLAG_").append(i);
-        return result.toString();
+        if (result.isEmpty()) return "";
+        return result.substring(1);
     }
 
     /**
