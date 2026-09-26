@@ -760,12 +760,15 @@ public class HttpResponderSession {
         return responseEncodingPlanner;
     }
 
-    private void setEncodingField(String name, List<String> encodings) {
-        if (encodings.isEmpty())
+    private boolean setEncodingField(String name, List<String> encodings) {
+        if (encodings.isEmpty()) {
             base.clearField(name);
-        else
-            base.setField(name,
-                          encodings.stream().collect(Collectors.joining(", ")));
+            return false;
+        } else {
+            var val = encodings.stream().collect(Collectors.joining(", "));
+            base.setField(name, val);
+            return true;
+        }
     }
 
     private OutputStream makeOut() throws IOException {
@@ -884,9 +887,11 @@ public class HttpResponderSession {
         if (requireTrailer) transferEncodings.add(CHUNKED_TOKEN);
 
         /* Set the encoding header fields, or clear them if not
-         * required. */
+         * required. If there is any transfer encoding, Content-Length
+         * cannot be set. */
         setEncodingField(FieldNames.CONTENT_ENCODING, contentEncodings);
-        setEncodingField(FieldNames.TRANSFER_ENCODING, transferEncodings);
+        if (setEncodingField(FieldNames.TRANSFER_ENCODING, transferEncodings))
+            base.clearField(FieldNames.CONTENT_LENGTH);
 
         OutputStream out = base.out();
         if (requireTrailer) {
