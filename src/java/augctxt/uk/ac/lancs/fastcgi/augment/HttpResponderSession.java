@@ -65,7 +65,6 @@ import uk.ac.lancs.cgi.Http;
 import uk.ac.lancs.cgi.ServerProtocol;
 import uk.ac.lancs.fastcgi.RequestableSession;
 import uk.ac.lancs.fastcgi.ResponderSession;
-import uk.ac.lancs.fastcgi.Session;
 import uk.ac.lancs.http.ChunkedOutputStream;
 import uk.ac.lancs.http.cache.InboundCacheControl;
 import uk.ac.lancs.http.encoding.Decoder;
@@ -669,9 +668,8 @@ public class HttpResponderSession implements AutoCloseable {
         new HashMap<>();
 
     private static final Set<FieldId> FORBIDDEN_RESPONSE_FIELDS = Set
-        .of(Session.STATUS_FIELD, FieldNames.CONNECTION,
-            FieldNames.TRANSFER_ENCODING, FieldNames.TRAILER,
-            FieldNames.CONTENT_ENCODING)
+        .of(FieldNames.CONNECTION, FieldNames.TRANSFER_ENCODING,
+            FieldNames.TRAILER, FieldNames.CONTENT_ENCODING)
         .stream()
         .flatMap(s -> Stream.of(FieldNamespace.STANDARD_END_TO_END.of(s),
                                 FieldNamespace.STANDARD_HOP_BY_HOP.of(s)))
