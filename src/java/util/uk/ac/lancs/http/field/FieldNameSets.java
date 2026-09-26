@@ -62,7 +62,7 @@ public class FieldNameSets {
      */
     static Set<String> nameSet(CharSequence... names) {
         return Collections
-            .unmodifiableSet(nameSet(names).stream().map(Object::toString)
+            .unmodifiableSet(Set.of(names).stream().map(Object::toString)
                 .collect(Collectors.toCollection(FieldNameSets::newSet)));
     }
 
