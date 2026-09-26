@@ -102,7 +102,40 @@ public class HttpResponderSession implements AutoCloseable {
     /**
      * The FastCGI responder session on which this HTTP session is based
      */
-    public final ResponderSession base;
+    private final ResponderSession base;
+
+    /**
+     * Set the response status. The default is 200.
+     * 
+     * @param code the new response status
+     * 
+     * @throws IllegalArgumentException if the status code is negative
+     * 
+     * @throws IllegalStateException if the response output has been
+     * started (with {@link #out()})
+     */
+    public void setStatus(int code) {
+        base.setStatus(code);
+    }
+
+    /**
+     * Try to set the buffer size for writing the response. This cannot
+     * be set once output has started to be written. It might also be
+     * truncated to an implementation-defined limit. In these cases,
+     * rather than an exception, the return value indicates failure, as
+     * it usually does not constitute a functional failure. An exception
+     * is thrown if the argument is invalid.
+     * 
+     * @param amount the buffer size in bytes; 0 to disable buffering
+     * 
+     * @return {@code true} if the buffer size was set to the requested
+     * value; {@code false} otherwise
+     * 
+     * @throws IllegalArgumentException if the size is negative
+     */
+    public boolean setBufferSize(int amount) {
+        return base.setBufferSize(amount);
+    }
 
     /**
      * Re-usable context that can be shared between sessions
