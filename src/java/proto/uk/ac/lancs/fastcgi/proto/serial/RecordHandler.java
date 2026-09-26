@@ -237,4 +237,35 @@ public interface RecordHandler {
      * {@link #bad(int, int, int, int, int)}.
      */
     int BAD_REQ_ID = 16;
+
+    /**
+     * Get a string representation of a set of reason flags. The reasons
+     * are passed as the first argument of
+     * {@link #bad(int, int, int, int, int)}. The string representation
+     * is separated by <samp>|</samp>.
+     * 
+     * @param reasons the reasons as a bit set
+     * 
+     * @return a string representation of the reasons
+     * 
+     * @see #UNKNOWN_TYPE
+     * 
+     * @see #TOO_NEW
+     * 
+     * @see #BAD_VERSION
+     * 
+     * @see #BAD_LENGTH
+     * 
+     * @see #BAD_REQ_ID
+     */
+    static String reasonsToString(int reasons) {
+        StringBuilder r = new StringBuilder();
+        if ((reasons & UNKNOWN_TYPE) != 0) r.append("|UNKNOWN_TYPE");
+        if ((reasons & TOO_NEW) != 0) r.append("|TOO_NEW");
+        if ((reasons & BAD_VERSION) != 0) r.append("|BAD_VERSION");
+        if ((reasons & BAD_LENGTH) != 0) r.append("|BAD_LENGTH");
+        if ((reasons & BAD_REQ_ID) != 0) r.append("|BAD_REQ_ID");
+        if (r.isEmpty()) return "";
+        return r.substring(1);
+    }
 }

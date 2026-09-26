@@ -418,16 +418,9 @@ public class RecordReader {
                               int iplen, int fr) {
         logger.warning(() -> msg(
                                  "rejected %s ver=%d"
-                                     + " rid=%d clen=%d plen=%d%s%s%s",
+                                     + " rid=%d clen=%d plen=%d reason=%s",
                                  RecordTypes.toString(rtype), rver, rid, iclen,
-                                 iplen,
-                                 (fr & RecordHandler.BAD_VERSION) != 0 ?
-                                     " bad-version" : "",
-                                 (fr & RecordHandler.BAD_LENGTH) != 0 ?
-                                     " bad-length" : "",
-                                 (fr & RecordHandler.BAD_REQ_ID) != 0 ?
-                                     " bad-req-id" : ""));
-
+                                 iplen, RecordHandler.reasonsToString(fr)));
     }
 
     private static final Logger logger =
