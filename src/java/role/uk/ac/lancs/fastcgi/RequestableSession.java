@@ -49,7 +49,7 @@ import java.util.Map;
  *
  * @author simpsons
  */
-public interface RequestableSession extends Session {
+public interface RequestableSession extends FieldSession {
     /**
      * Get the stream for reading the request body.
      * 

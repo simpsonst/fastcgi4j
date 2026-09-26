@@ -63,8 +63,10 @@ import java.util.stream.Stream;
 import uk.ac.lancs.cgi.CGIParameters;
 import uk.ac.lancs.cgi.Http;
 import uk.ac.lancs.cgi.ServerProtocol;
+import uk.ac.lancs.fastcgi.Diagnostics;
 import uk.ac.lancs.fastcgi.RequestableSession;
 import uk.ac.lancs.fastcgi.ResponderSession;
+import uk.ac.lancs.fastcgi.Session;
 import uk.ac.lancs.http.ChunkedOutputStream;
 import uk.ac.lancs.http.cache.InboundCacheControl;
 import uk.ac.lancs.http.encoding.Decoder;
@@ -97,41 +99,18 @@ import uk.ac.lancs.mime.Tokenizer;
  * 
  * @author simpsons
  */
-public class HttpResponderSession implements AutoCloseable {
+public class HttpResponderSession implements AutoCloseable, Session {
     /**
      * The FastCGI responder session on which this HTTP session is based
      */
     private final ResponderSession base;
 
-    /**
-     * Set the response status. The default is 200.
-     * 
-     * @param code the new response status
-     * 
-     * @throws IllegalArgumentException if the status code is negative
-     * 
-     * @throws IllegalStateException if the response output has been
-     * started (with {@link #out()})
-     */
+    @Override
     public void setStatus(int code) {
         base.setStatus(code);
     }
 
-    /**
-     * Try to set the buffer size for writing the response. This cannot
-     * be set once output has started to be written. It might also be
-     * truncated to an implementation-defined limit. In these cases,
-     * rather than an exception, the return value indicates failure, as
-     * it usually does not constitute a functional failure. An exception
-     * is thrown if the argument is invalid.
-     * 
-     * @param amount the buffer size in bytes; 0 to disable buffering
-     * 
-     * @return {@code true} if the buffer size was set to the requested
-     * value; {@code false} otherwise
-     * 
-     * @throws IllegalArgumentException if the size is negative
-     */
+    @Override
     public boolean setBufferSize(int amount) {
         return base.setBufferSize(amount);
     }
@@ -981,9 +960,9 @@ public class HttpResponderSession implements AutoCloseable {
      * 
      * @return the output stream for writing an unchunked response body
      * 
-     * @throws IOException if an I/O error occurs in forming the output
-     * stream
+     * @throws IOException {@inheritDoc}
      */
+    @Override
     public OutputStream out() throws IOException {
         if (out == null) out = makeOut();
         return out;
@@ -1073,5 +1052,20 @@ public class HttpResponderSession implements AutoCloseable {
     @Override
     public void close() throws IOException {
         out().close();
+    }
+
+    @Override
+    public Diagnostics diagnostics() {
+        return base.diagnostics();
+    }
+
+    @Override
+    public PrintStream err() {
+        return base.err();
+    }
+
+    @Override
+    public Map<String, String> parameters() {
+        return base.parameters();
     }
 }

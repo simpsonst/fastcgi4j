@@ -36,6 +36,7 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import uk.ac.lancs.fastcgi.Authorizer;
@@ -66,7 +67,7 @@ import uk.ac.lancs.http.ResponseCodes;
  */
 public class DiagnosticAuthorizer implements Authorizer {
     @Override
-    public void authorize(AuthorizerSession session) {
+    public void authorize(AuthorizerSession session) throws IOException {
         String apacheRole = session.parameters().get("FCGI_APACHE_ROLE");
         for (var e : session.parameters().entrySet()) {
             System.err.printf("%s: %s\n", e.getKey(), e.getValue());

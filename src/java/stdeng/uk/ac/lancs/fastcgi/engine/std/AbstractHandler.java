@@ -62,8 +62,8 @@ import java.util.function.Predicate;
 import java.util.logging.Logger;
 import uk.ac.lancs.fastcgi.ConfigurationException;
 import uk.ac.lancs.fastcgi.Diagnostics;
+import uk.ac.lancs.fastcgi.FieldSession;
 import uk.ac.lancs.fastcgi.OverloadException;
-import uk.ac.lancs.fastcgi.Session;
 import uk.ac.lancs.fastcgi.SessionException;
 import uk.ac.lancs.fastcgi.proto.ProtocolStatuses;
 import uk.ac.lancs.fastcgi.proto.serial.ParamReader;
@@ -78,7 +78,7 @@ import uk.ac.lancs.io.UnclosedOutputStream;
  *
  * @author simpsons
  */
-abstract class AbstractHandler implements SessionHandler, Session {
+abstract class AbstractHandler implements SessionHandler, FieldSession {
     /**
      * Holds the session id (or request id in FastCGI parlance).
      */
@@ -675,7 +675,7 @@ abstract class AbstractHandler implements SessionHandler, Session {
     }
 
     void setFieldInternal(String name, String value) {
-        if (name.equalsIgnoreCase(Session.STATUS_FIELD))
+        if (name.equalsIgnoreCase(FieldSession.STATUS_FIELD))
             throw new IllegalArgumentException("reserved name " + name);
         if (statusCode < 0) throw new IllegalStateException("header sent");
         List<String> aval =
@@ -693,7 +693,7 @@ abstract class AbstractHandler implements SessionHandler, Session {
     }
 
     void addFieldInternal(String name, String value) {
-        if (name.equalsIgnoreCase(Session.STATUS_FIELD))
+        if (name.equalsIgnoreCase(FieldSession.STATUS_FIELD))
             throw new IllegalArgumentException("reserved name " + name);
         if (statusCode < 0) throw new IllegalStateException("header sent");
         outHeaders.computeIfAbsent(name, k -> new ArrayList<>()).add(value);

@@ -28,7 +28,7 @@ package uk.ac.lancs.fastcgi;
  * @spec https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.3
  * FastCGI Specification &mdash; Authorizer
  */
-public interface AuthorizerSession extends Session {
+public interface AuthorizerSession extends FieldSession {
     /**
      * Set an authentication/authorization variable. The status is set
      * to 200.
@@ -47,7 +47,7 @@ public interface AuthorizerSession extends Session {
      * 
      * @throws IllegalArgumentException if the name case-insensitively
      * begins with <code>{@value #VARIABLE_PREFIX}</code> or matches
-     * <code>{@value Session#STATUS_FIELD}</code>
+     * <code>{@value FieldSession#STATUS_FIELD}</code>
      * 
      * @throws IllegalStateException if the response output has been
      * started (with {@link #out()})
@@ -60,7 +60,7 @@ public interface AuthorizerSession extends Session {
      * 
      * @throws IllegalArgumentException if the name case-insensitively
      * begins with <code>{@value #VARIABLE_PREFIX}</code> or matches
-     * <code>{@value Session#STATUS_FIELD}</code>
+     * <code>{@value FieldSession#STATUS_FIELD}</code>
      * 
      * @throws IllegalStateException if the response output has been
      * started (with {@link #out()})
@@ -73,7 +73,7 @@ public interface AuthorizerSession extends Session {
      * 
      * @throws IllegalArgumentException if the name case-insensitively
      * begins with <code>{@value #VARIABLE_PREFIX}</code> or matches
-     * <code>{@value Session#STATUS_FIELD}</code>
+     * <code>{@value FieldSession#STATUS_FIELD}</code>
      * 
      * @throws IllegalStateException if the response output has been
      * started (with {@link #out()})
