@@ -82,7 +82,7 @@ public final class FieldId {
         Objects.requireNonNull(namespace, "namespace");
         Objects.requireNonNull(core, "core");
         Matcher m = FIELD_PATTERN.matcher(core);
-        if (m.matches())
+        if (!m.matches())
             throw new IllegalArgumentException("bad field id core: " + core);
         this.namespace = namespace;
         this.core = core.toString();
