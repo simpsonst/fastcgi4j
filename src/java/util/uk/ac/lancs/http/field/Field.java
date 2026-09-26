@@ -308,7 +308,8 @@ public abstract class Field<T> {
      * field.
      */
     public static final FlatField<MediaType> CONTENT_TYPE =
-        Field.<MediaType>of(FieldId.CONTENT_TYPE).flat();
+        Field.<MediaType>of(FieldId.CONTENT_TYPE).outward(Object::toString)
+            .inward(t -> MediaType.from(t, Tokenizer.PARAMS_END)).flat();
 
     /**
      * Defines the <samp>{@value "%s" FieldNames#CONTENT_LENGTH}</samp>
