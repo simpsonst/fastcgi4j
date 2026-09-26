@@ -98,7 +98,7 @@ import uk.ac.lancs.mime.Tokenizer;
  * 
  * @author simpsons
  */
-public class HttpResponderSession {
+public class HttpResponderSession implements AutoCloseable {
     /**
      * The FastCGI responder session on which this HTTP session is based
      */
@@ -1031,5 +1031,10 @@ public class HttpResponderSession {
      */
     public OTSResponses.Control otsResponseControl() {
         return otsResponseControl;
+    }
+
+    @Override
+    public void close() throws IOException {
+        out().close();
     }
 }

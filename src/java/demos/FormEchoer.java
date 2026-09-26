@@ -78,24 +78,26 @@ public class FormEchoer extends FastCGIApplication implements Responder {
 
     @Override
     public void respond(ResponderSession session) throws IOException {
-        HttpResponderSession httpSession =
-            new HttpResponderSession(session, augCtxt);
-        OTSResponses otsRsp =
-            new OTSResponses(httpSession.otsResponseControl());
-        final FormSubmission submission = formHandler.get(session);
-        try (PrintWriter out = otsRsp.textOut("plain")) {
-            out.printf("\nForm fields:\n");
-            for (var e : submission.map().entrySet()) {
-                List<Message> values = e.getValue();
-                out.printf("  %s (%d):\n", e.getKey(), values.size());
-                int i = 0;
-                for (Message msg : values) {
-                    final int pos = ++i;
-                    if (msg instanceof TextMessage tmsg) {
-                        out.printf("  %d: %s\n", pos, tmsg.textBody().get());
-                    } else if (msg instanceof BinaryMessage bmsg) {
-                        dump(String.format("%4d ", pos), out,
-                             bmsg.body().recover());
+        try (HttpResponderSession httpSession =
+            new HttpResponderSession(session, augCtxt)) {
+            OTSResponses otsRsp =
+                new OTSResponses(httpSession.otsResponseControl());
+            final FormSubmission submission = formHandler.get(session);
+            try (PrintWriter out = otsRsp.textOut("plain")) {
+                out.printf("\nForm fields:\n");
+                for (var e : submission.map().entrySet()) {
+                    List<Message> values = e.getValue();
+                    out.printf("  %s (%d):\n", e.getKey(), values.size());
+                    int i = 0;
+                    for (Message msg : values) {
+                        final int pos = ++i;
+                        if (msg instanceof TextMessage tmsg) {
+                            out.printf("  %d: %s\n", pos,
+                                       tmsg.textBody().get());
+                        } else if (msg instanceof BinaryMessage bmsg) {
+                            dump(String.format("%4d ", pos), out,
+                                 bmsg.body().recover());
+                        }
                     }
                 }
             }

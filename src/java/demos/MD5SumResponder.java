@@ -114,107 +114,118 @@ public class MD5SumResponder implements Responder {
         throws IOException,
             SessionException,
             InterruptedException {
-        HttpResponderSession httpSession =
-            new HttpResponderSession(session, httpRspCtxt);
-        OTSResponses otsRsp =
-            new OTSResponses(httpSession.otsResponseControl());
         PathContext<String> pathCtxt =
             pathConfig.recognize(session.parameters());
         Navigator navigator = pathCtxt.navigator();
+        try (HttpResponderSession httpSession =
+            new HttpResponderSession(session, httpRspCtxt)) {
+            OTSResponses otsRsp =
+                new OTSResponses(httpSession.otsResponseControl());
 
-        final byte[] dig;
-        {
-            try {
-                var md = MessageDigest.getInstance("md5");
-                try (var mdis = new DigestInputStream(httpSession.in(), md)) {
-                    mdis.transferTo(OutputStream.nullOutputStream());
-                }
-                dig = md.digest();
-            } catch (NoSuchAlgorithmException ex) {
-                throw new ConfigurationException("obtaining digest", ex);
-            }
-        }
-
-        if (navigator.resource().isEmpty()) {
-            otsRsp.found(navigator.locate("/").absolute());
-            return;
-        }
-        final FormSubmission submission;
-        final BinaryBody body;
-        if (false) {
-            submission = null;
-            body = null;
-            System.err.printf("Message body!!!!%n");
-            try (var in = session.in(); var out = new PrintWriter(System.err)) {
-                dump("body ", out, in);
-            }
-        } else if (false) {
-            submission = null;
-            try (var in = session.in()) {
-                body = morgue.store(in);
-            }
-        } else if (false) {
-            body = null;
-            submission = formHandler.get(session);
-        } else {
-            body = null;
-            submission = null;
-        }
-
-        try (PrintWriter out = otsRsp.textOut("plain")) {
-            for (var entry : new TreeMap<>(session.parameters()).entrySet()) {
-                out.printf("[%s] = [%s]\n", entry.getKey(), entry.getValue());
-            }
-
-            out.printf("\nPath computations:\n");
-            out.printf("Script: %s (deprecated)\n", pathCtxt.script());
-            out.printf("Script: %s\n", navigator.locate("").local());
-            out.printf("Subpath: %s\n", navigator.resource());
-            for (String sp : subpaths) {
+            final byte[] dig;
+            {
                 try {
-                    out.printf("Ref: [%s] -> [%s] [%s] [%s]%n", sp,
-                               navigator.locate(sp).relative().toASCIIString(),
-                               navigator.locate(sp).local().toASCIIString(),
-                               navigator.locate(sp).absolute().toASCIIString());
-                } catch (IllegalArgumentException ex) {
-                    out.printf("Ref: [%s] invalid (%s)%n", sp, ex.getMessage());
+                    var md = MessageDigest.getInstance("md5");
+                    try (var mdis =
+                        new DigestInputStream(httpSession.in(), md)) {
+                        mdis.transferTo(OutputStream.nullOutputStream());
+                    }
+                    dig = md.digest();
+                } catch (NoSuchAlgorithmException ex) {
+                    throw new ConfigurationException("obtaining digest", ex);
                 }
             }
 
-            if (dig != null) {
-                out.printf("\nDigest: ");
-                for (int i = 0; i < dig.length; i++) {
-                    out.printf("%02x", dig[i] & 0xff);
-                }
-                out.printf("\n");
+            if (navigator.resource().isEmpty()) {
+                var dest = navigator.locate("/").absolute();
+                System.err.printf("Redirecting \"%s\" to \"%s\"%n",
+                                  navigator.resource(), dest);
+                otsRsp.found(dest);
+                return;
             }
-
-            out.printf("\nDiagnostics: %s\n", session.diagnostics());
-
-            if (body != null) {
-                try (var in = body.recover()) {
+            final FormSubmission submission;
+            final BinaryBody body;
+            if (false) {
+                submission = null;
+                body = null;
+                System.err.printf("Message body!!!!%n");
+                try (var in = session.in();
+                     var out = new PrintWriter(System.err)) {
                     dump("body ", out, in);
                 }
+            } else if (false) {
+                submission = null;
+                try (var in = session.in()) {
+                    body = morgue.store(in);
+                }
+            } else if (false) {
+                body = null;
+                submission = formHandler.get(session);
+            } else {
+                body = null;
+                submission = null;
             }
 
-            if (submission != null) {
-                out.printf("\nForm fields:\n");
-                for (var e : submission.map().entrySet()) {
-                    List<Message> values = e.getValue();
-                    out.printf("  %s (%d):\n", e.getKey(), values.size());
-                    int i = 0;
-                    for (Message msg : values) {
-                        final int pos = ++i;
-                        if (msg instanceof TextMessage tmsg) {
-                            out.printf("  %d: %s\n", pos,
-                                       tmsg.textBody().get());
-                        } else if (msg instanceof BinaryMessage bmsg) {
-                            dump(String.format("%4d ", pos), out,
-                                 bmsg.body().recover());
-                        }
+            try (PrintWriter out = otsRsp.textOut("plain")) {
+                for (var entry : new TreeMap<>(session.parameters())
+                    .entrySet()) {
+                    out.printf("[%s] = [%s]\n", entry.getKey(),
+                               entry.getValue());
+                }
+
+                out.printf("\nPath computations:\n");
+                out.printf("Script: %s (deprecated)\n", pathCtxt.script());
+                out.printf("Script: %s\n", navigator.locate("").local());
+                out.printf("Subpath: %s\n", navigator.resource());
+                for (String sp : subpaths) {
+                    try {
+                        out.printf("Ref: [%s] -> [%s] [%s] [%s]%n", sp,
+                                   navigator.locate(sp).relative()
+                                       .toASCIIString(),
+                                   navigator.locate(sp).local().toASCIIString(),
+                                   navigator.locate(sp).absolute()
+                                       .toASCIIString());
+                    } catch (IllegalArgumentException ex) {
+                        out.printf("Ref: [%s] invalid (%s)%n", sp,
+                                   ex.getMessage());
                     }
                 }
-                Thread.sleep(Duration.ofSeconds(30));
+
+                if (dig != null) {
+                    out.printf("\nDigest: ");
+                    for (int i = 0; i < dig.length; i++) {
+                        out.printf("%02x", dig[i] & 0xff);
+                    }
+                    out.printf("\n");
+                }
+
+                out.printf("\nDiagnostics: %s\n", session.diagnostics());
+
+                if (body != null) {
+                    try (var in = body.recover()) {
+                        dump("body ", out, in);
+                    }
+                }
+
+                if (submission != null) {
+                    out.printf("\nForm fields:\n");
+                    for (var e : submission.map().entrySet()) {
+                        List<Message> values = e.getValue();
+                        out.printf("  %s (%d):\n", e.getKey(), values.size());
+                        int i = 0;
+                        for (Message msg : values) {
+                            final int pos = ++i;
+                            if (msg instanceof TextMessage tmsg) {
+                                out.printf("  %d: %s\n", pos,
+                                           tmsg.textBody().get());
+                            } else if (msg instanceof BinaryMessage bmsg) {
+                                dump(String.format("%4d ", pos), out,
+                                     bmsg.body().recover());
+                            }
+                        }
+                    }
+                    Thread.sleep(Duration.ofSeconds(30));
+                }
             }
         }
     }
