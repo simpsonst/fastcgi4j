@@ -159,7 +159,7 @@ public final class ExtensionManager {
         var existing = prefixes.get(ext);
         if (existing != null) return existing;
         do {
-            var pfx = ExtensionPrefix.of(nextWidth++, nextValue);
+            var pfx = ExtensionPrefix.of(nextWidth, nextValue++);
             if (nextValue == nextLimit) {
                 nextWidth++;
                 nextLimit *= 10;
