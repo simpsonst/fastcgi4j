@@ -409,10 +409,10 @@ public final class MediaType {
     @Override
     public String toString() {
         StringBuilder result = new StringBuilder();
+        /* TODO: Check elsewhere that the major and minor types are
+         * tokens. */
         result.append(major).append('/').append(minor);
         for (var e : params.entrySet()) {
-            /* TODO: Check elsewhere that the major and minor types are
-             * tokens. */
             /* TODO: Properly encode the value, including the
              * language. */
             result.append("; ").append(e.getKey()).append('=')
