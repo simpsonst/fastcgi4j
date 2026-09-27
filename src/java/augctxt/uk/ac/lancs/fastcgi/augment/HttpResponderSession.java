@@ -272,13 +272,15 @@ public class HttpResponderSession implements AutoCloseable, Session {
      * otherwise
      */
     public boolean responseTrailerAllowed() {
+        /* FastCGI does not support response trailers. */
+        if (true) return false;
+
         /* For HTTP/2, trailers are always permitted. */
         if (protocol.isMinimally("HTTP", 2, 0)) return true;
 
         /* For earlier versions, look for a "trailers" token in the "TE"
          * header field. */
-        getAcceptedTransferEncodings();
-        return acceptedTransferEncodings.containsKey(TRAILERS_TOKEN);
+        return getAcceptedTransferEncodings().containsKey(TRAILERS_TOKEN);
     }
 
     /**
@@ -679,9 +681,9 @@ public class HttpResponderSession implements AutoCloseable, Session {
         if (!responseTrailerExpectation.contains(id))
             throw new IllegalStateException("unexpected trailer field: " + id);
 
-        if (trailerCommitted) {
-            /* When it's too late to change any trailer fields, return
-             * an immutable list. */
+        if (!responseTrailerAllowed() || trailerCommitted) {
+            /* When it's too late to change any trailer fields, or
+             * trailers are unsupported, return an immutable list. */
             var val = responseTrailerFields.get(id);
             if (val == null) return Collections.emptyList();
             return Collections.unmodifiableList(val);
@@ -745,6 +747,10 @@ public class HttpResponderSession implements AutoCloseable, Session {
      * the trailer
      */
     public void expectInTrailer(FieldId... ids) {
+        /* Forbid trailer fields when trailers are not supported. */
+        if (!responseTrailerAllowed())
+            throw new UnsupportedOperationException("trailer");
+
         /* If the header has been sent, we can't make these changes. */
         if (out != null) throw new IllegalStateException("output opened");
 
