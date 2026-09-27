@@ -229,7 +229,7 @@ public final class FieldExtension extends FieldNamespace {
      * 
      * @return an object for defining the extension in stages
      */
-    public static Builder of(URI nsuri) {
+    public static Builder in(URI nsuri) {
         Objects.requireNonNull(nsuri, "ns");
         return new Builder(nsuri);
     }
@@ -247,7 +247,7 @@ public final class FieldExtension extends FieldNamespace {
      * 
      * @throws NullPointerException if the argument is {@code null}
      */
-    public static Builder of(String nsuri) {
+    public static Builder in(String nsuri) {
         Objects.requireNonNull(nsuri, "ns");
         return new Builder(URI.create(nsuri.trim()));
     }

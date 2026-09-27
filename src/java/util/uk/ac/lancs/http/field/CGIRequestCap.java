@@ -189,7 +189,7 @@ public class CGIRequestCap implements Cap {
                     tokens.whitespaceQuotedStringParameters(0, params, 0);
                 String pfxTxt = params.remove("ns");
                 var pfx = ExtensionPrefix.of(pfxTxt);
-                var ext = FieldExtension.of(nsuri).hopByHop(conn)
+                var ext = FieldExtension.in(nsuri).hopByHop(conn)
                     .mandatory(mand).complete();
                 extMgr.attributes(ext).putAll(params);
                 extMgr.define(ext, pfx);
