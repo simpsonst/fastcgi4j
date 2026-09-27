@@ -1030,7 +1030,7 @@ public class HttpResponderSession implements AutoCloseable, Session {
 
             @Override
             public void setContentType(MediaType type) {
-                Field.CONTENT_TYPE.set(requestHeader(), type);
+                Field.CONTENT_TYPE.set(responseHeader(), type);
             }
         };
 
