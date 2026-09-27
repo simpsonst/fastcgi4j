@@ -648,7 +648,7 @@ public class HttpResponderSession implements AutoCloseable, Session {
 
     private static final Set<FieldId> FORBIDDEN_RESPONSE_FIELDS = Set
         .of(FieldNames.CONNECTION, FieldNames.TRANSFER_ENCODING,
-            FieldNames.TRAILER, FieldNames.CONTENT_ENCODING)
+            FieldNames.TRAILER, FieldNames.CONTENT_ENCODING, FieldNames.VARY)
         .stream()
         .flatMap(s -> Stream.of(FieldNamespace.STANDARD_END_TO_END.of(s),
                                 FieldNamespace.STANDARD_HOP_BY_HOP.of(s)))
@@ -783,6 +783,22 @@ public class HttpResponderSession implements AutoCloseable, Session {
         }
     }
 
+    private final Collection<FieldId> varyingFields = new HashSet<>();
+
+    /**
+     * Ensure that cached content is negotiated on a field.
+     * 
+     * @param id the field to be negotiated
+     */
+    public void vary(FieldId id) {
+        varyingFields.add(id);
+    }
+
+    private static <E> Stream<E>
+        concat(Collection<? extends Collection<? extends E>> parts) {
+        return parts.stream().flatMap(e -> e.stream());
+    }
+
     private OutputStream makeOut() throws IOException {
         if (!digests.isEmpty()) expectInTrailer(FieldId.CONTENT_DIGEST);
 
@@ -793,12 +809,11 @@ public class HttpResponderSession implements AutoCloseable, Session {
 
         /* Use the response extension manager to assign fresh prefixes
          * for each namespace referenced in the response header, in the
-         * trailer, what is expected in the trailer, and any field value
-         * as instructed by the application. */
-        Stream
-            .concat(Stream.concat(responseHeaderFields.keySet().stream(),
-                                  responseTrailerFields.keySet().stream()),
-                    responseTrailerExpectation.stream())
+         * trailer, what is expected in the trailer, what caching varies
+         * on, and any field value as instructed by the application. */
+        concat(List.of(responseHeaderFields.keySet(),
+                       responseTrailerFields.keySet(),
+                       responseTrailerExpectation, varyingFields))
             .map(FieldId::namespace).map(FieldNamespace::asExtension)
             .filter(Objects::nonNull).forEach(responseExtMgr::define);
 
@@ -836,6 +851,14 @@ public class HttpResponderSession implements AutoCloseable, Session {
             /* Ensure that the field defining this extension is labelled
              * as hop-by-hop, if the extension is hop-by-hop. */
             if (ext.scope() == FieldScope.HOP_BY_HOP) hopByHopFields.add(field);
+        }
+
+        /* Set varying field ids. */
+        if (!varyingFields.isEmpty()) {
+            base.clearField(FieldNames.VARY);
+            for (var v : varyingFields)
+                base.addField(FieldNames.VARY,
+                              v.prefixedName(responseExtMgr::seek));
         }
 
         /* Set raw response header fields based on our local namespaced
