@@ -65,6 +65,8 @@ import uk.ac.lancs.fastcgi.augment.FormHandler;
 import uk.ac.lancs.fastcgi.augment.HttpResponderContext;
 import uk.ac.lancs.fastcgi.augment.HttpResponderSession;
 import uk.ac.lancs.fastcgi.augment.OTSResponses;
+import uk.ac.lancs.http.field.FieldExtension;
+import uk.ac.lancs.http.field.FieldId;
 import uk.ac.lancs.mime.BinaryMessage;
 import uk.ac.lancs.mime.Message;
 import uk.ac.lancs.mime.MessageParser;
@@ -80,6 +82,19 @@ import uk.ac.lancs.mime.body.SmartMorgue;
  * @author simpsons
  */
 public class MD5SumResponder implements Responder {
+    private static final FieldExtension MY_E2E_NAMESPACE = FieldExtension
+        .in("http://example.com/ns-e2e").endToEnd().optional().complete();
+
+    private static final FieldExtension MY_HBH_NAMESPACE = FieldExtension
+        .in("http://example.com/ns-hbh").hopByHop().optional().complete();
+
+    private static final FieldExtension MY_EMPTY_NAMESPACE = FieldExtension
+        .in("http://example.com/ns-empty").endToEnd().optional().complete();
+
+    private static final FieldId SILLY_FIELD = MY_E2E_NAMESPACE.of("Silly");
+
+    private static final FieldId STUPID_FIELD = MY_HBH_NAMESPACE.of("Stupid");
+
     private static final String[] subpaths = { "", "/", "baz/qux", "/baz/qux",
         "baz/qux/quux", "baz/qux/", "baz/yan/tan/", "baz/yan/tan", "/baz/",
         "/baz", "/foo:bar/baz", "/foó/bär/båz" };
@@ -166,6 +181,9 @@ public class MD5SumResponder implements Responder {
                 submission = null;
             }
 
+            httpSession.responseExtensions().define(MY_EMPTY_NAMESPACE);
+            SILLY_FIELD.set(httpSession.responseHeader(), "silliness");
+            STUPID_FIELD.set(httpSession.responseHeader(), "stupidity");
             try (PrintWriter out = otsRsp.textOut("plain")) {
                 for (var entry : new TreeMap<>(session.parameters())
                     .entrySet()) {
