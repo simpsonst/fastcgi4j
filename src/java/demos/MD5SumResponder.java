@@ -181,6 +181,7 @@ public class MD5SumResponder implements Responder {
                 submission = null;
             }
 
+            httpSession.vary(SILLY_FIELD);
             httpSession.responseExtensions().define(MY_EMPTY_NAMESPACE);
             SILLY_FIELD.set(httpSession.responseHeader(), "silliness");
             STUPID_FIELD.set(httpSession.responseHeader(), "stupidity");
