@@ -93,6 +93,8 @@ public class MD5SumResponder implements Responder {
 
     private static final FieldId SILLY_FIELD = MY_E2E_NAMESPACE.of("Silly");
 
+    private static final FieldId LATE_FIELD = MY_E2E_NAMESPACE.of("Late");
+
     private static final FieldId STUPID_FIELD = MY_HBH_NAMESPACE.of("Stupid");
 
     private static final String[] subpaths = { "", "/", "baz/qux", "/baz/qux",
@@ -181,6 +183,8 @@ public class MD5SumResponder implements Responder {
                 submission = null;
             }
 
+            boolean trailerAllowed = httpSession.responseTrailerAllowed();
+            if (trailerAllowed) httpSession.expectInTrailer(LATE_FIELD);
             httpSession.vary(SILLY_FIELD);
             httpSession.responseExtensions().define(MY_EMPTY_NAMESPACE);
             SILLY_FIELD.set(httpSession.responseHeader(), "silliness");
@@ -245,6 +249,8 @@ public class MD5SumResponder implements Responder {
                     }
                     Thread.sleep(Duration.ofSeconds(30));
                 }
+                if (trailerAllowed)
+                    LATE_FIELD.set(httpSession.responseTrailer(), "Hey!");
             }
         }
     }
