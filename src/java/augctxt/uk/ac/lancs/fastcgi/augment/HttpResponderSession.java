@@ -68,6 +68,7 @@ import uk.ac.lancs.fastcgi.RequestableSession;
 import uk.ac.lancs.fastcgi.ResponderSession;
 import uk.ac.lancs.fastcgi.Session;
 import uk.ac.lancs.http.ChunkedOutputStream;
+import uk.ac.lancs.http.Negotiation;
 import uk.ac.lancs.http.cache.InboundCacheControl;
 import uk.ac.lancs.http.encoding.Decoder;
 import uk.ac.lancs.http.encoding.Encoder;
@@ -154,7 +155,40 @@ public class HttpResponderSession implements AutoCloseable, Session {
         this.requestHeader =
             new CGIRequestCap(requestExtMgr, base.parameters());
         this.responseEncodingPlanner.contentOffer(ctxt.contentEncoders());
+
+        /* Get the transfer encodings accepted by the client. */
+        {
+            Map<String, Float> result =
+                Negotiation.getAtomPreference(base.parameters().get(TE_PARAM));
+
+            if (protocol.isMinimally("HTTP", 2, 0) &&
+                (!result.containsKey(TRAILERS_TOKEN) || result.size() == 1)) {
+                /* HTTP/2 requires that this field only contain this
+                 * single token, or not be present. TODO: How should
+                 * this error by the client be handled? */
+                transferPreference = Collections.emptyMap();
+            } else {
+                transferPreference = Map.copyOf(result);
+            }
+        }
+
+        /* Determine whether a response trailer can be sent. */
+        if (base.responseTrailer() == null) {
+            /* Either the server or the library don't support response
+             * trailers. */
+            responseTrailerAllowed = false;
+        } else if (protocol.isMinimally("HTTP", 2, 0)) {
+            /* HTTP/2 and later always supports trailers. */
+            responseTrailerAllowed = true;
+        } else {
+            /* For earlier HTTP, a response trailer should not be sent
+             * if the client does not accept it. */
+            responseTrailerAllowed =
+                transferPreference.containsKey(TRAILERS_TOKEN);
+        }
     }
+
+    private final boolean responseTrailerAllowed;
 
     /**
      * Test whether the method is one of several specified.
@@ -190,70 +224,16 @@ public class HttpResponderSession implements AutoCloseable, Session {
     }
 
     /**
-     * Caches the parsed value of the <samp>{@value "%S"
-     * FieldNames#TE}</samp> HTTP/1.1 request header field. Call
-     * {@link #getAcceptedTransferEncodings()} to populate it lazily.
+     * Holds the parsed value of the <samp>{@value "%S"
+     * FieldNames#TE}</samp> HTTP/1.1 request header field, mapping to
+     * the (possibly implicit) <samp>q</samp> value.
      */
-    private Map<String, Map<String, String>> acceptedTransferEncodings = null;
+    private final Map<String, Float> transferPreference;
 
     private static final String TE_PARAM = Http.fieldNameAsCGI(FieldNames.TE);
 
     private static final String ACCEPT_ENCODING_PARAM =
         Http.fieldNameAsCGI(FieldNames.ACCEPT_ENCODING);
-
-    private Map<String, Float>
-        extractEncodingPreference(Map<String, Map<String, String>> src) {
-        return src.entrySet().stream().collect(Collectors
-            .toMap(Map.Entry::getKey,
-                   e -> Float.valueOf(e.getValue().getOrDefault("q", "1"))));
-    }
-
-    private Map<String, Map<String, String>>
-        getAcceptedEncodings(String param) {
-        var txt = base.parameters().get(param);
-        Map<String, Map<String, String>> result = new HashMap<>();
-        if (txt != null) {
-            var toks = new Tokenizer(txt);
-            CharSequence name;
-            Map<String, String> params = new HashMap<>();
-            while (toks.whitespace(0) &&
-                (name = toks.atomParameters(params, Tokenizer.PARAMS_CLEAR))
-                    != null) {
-                result.put(name.toString(), Map.copyOf(params));
-                if (!toks.whitespaceCharacter(0, ',')) break;
-            }
-        }
-        return result;
-    }
-
-    /**
-     * Parse the <samp>{@value "%s" #TE_FIELD}</samp> request header
-     * field as a comma-separated sequence of tokens with optional
-     * parameters. The field is obtained through the CGI parameter. The
-     * result is stored in {@link #acceptedTransferEncodings} if it is
-     * currently {@code null}, so only the first call actually does
-     * anything.
-     * 
-     * <p>
-     * For HTTP/2 and later, the field is ignored if it doesn't contain
-     * the sole token <samp>{@value "%s" #TRAILERS_TOKEN}</samp>.
-     * 
-     * @return the computed or cached transfer preference
-     */
-    private Map<String, Map<String, String>> getAcceptedTransferEncodings() {
-        if (acceptedTransferEncodings != null) return acceptedTransferEncodings;
-        Map<String, Map<String, String>> result =
-            getAcceptedEncodings(TE_PARAM);
-        if (protocol.isMinimally("HTTP", 2, 0) &&
-            (!result.containsKey(TRAILERS_TOKEN) || result.size() == 1)) {
-            /* HTTP/2 requires that this field only contain this single
-             * token, or not be present. */
-            acceptedTransferEncodings = Collections.emptyMap();
-        } else {
-            acceptedTransferEncodings = Map.copyOf(result);
-        }
-        return acceptedTransferEncodings;
-    }
 
     /**
      * Specifies the token <samp>{@value "%s"}</samp> to appear in the
@@ -272,15 +252,29 @@ public class HttpResponderSession implements AutoCloseable, Session {
      * otherwise
      */
     public boolean responseTrailerAllowed() {
-        /* FastCGI does not support response trailers. */
-        if (true) return false;
+        return responseTrailerAllowed;
+    }
 
-        /* For HTTP/2, trailers are always permitted. */
-        if (protocol.isMinimally("HTTP", 2, 0)) return true;
+    /**
+     * Caches the parsed value of the <samp>{@value "%s"
+     * FieldNames#ACCEPT_ENCODING}</samp> field.
+     */
+    private Map<String, Float> contentPreference = null;
 
-        /* For earlier versions, look for a "trailers" token in the "TE"
-         * header field. */
-        return getAcceptedTransferEncodings().containsKey(TRAILERS_TOKEN);
+    /**
+     * Get the content-encoding preference of the client. This is
+     * derived from the <samp>{@value "%s"
+     * FieldNames#ACCEPT_ENCODING}</samp> field.
+     * 
+     * @implNote This value is computed and cached on demand.
+     * 
+     * @return a mapping from each accepted content encoding to its
+     * (possibly implicit) <samp>q</samp> value
+     */
+    public Map<String, Float> contentPreference() {
+        if (contentPreference == null) contentPreference = Negotiation
+            .getAtomPreference(base.parameters().get(ACCEPT_ENCODING_PARAM));
+        return contentPreference;
     }
 
     /**
@@ -898,12 +892,8 @@ public class HttpResponderSession implements AutoCloseable, Session {
 
         /* Find out what encodings the client prefers, and record
          * them. */
-        var transferPref =
-            extractEncodingPreference(getAcceptedTransferEncodings());
-        var contentPref =
-            extractEncodingPreference(getAcceptedEncodings(ACCEPT_ENCODING_PARAM));
-        responseEncodingPlanner.transferPreference(transferPref);
-        responseEncodingPlanner.contentPreference(contentPref);
+        responseEncodingPlanner.transferPreference(transferPreference);
+        responseEncodingPlanner.contentPreference(contentPreference());
 
         /* Find out what transfer encoding implementations are available
          * to us by context. */
