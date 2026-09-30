@@ -146,11 +146,12 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
      * Holds the accumulated request trailer. Once complete, the map is
      * frozen, and the user is notified. Keys are case-insensitive.
      */
-    Map<String, List<String>> trailer;
+    Map<String, List<String>> requestTrailer;
 
     /**
      * Holds context while parsing records that provide trailer fields,
-     * if expected. Each decoded field is written to {@link #trailer}.
+     * if expected. Each decoded field is written to
+     * {@link #requestTrailer}.
      */
     ParamReader trailerReader;
 
@@ -305,9 +306,9 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
 
         if (ctxt.expectTrailer) {
             /* Create a case-insensitive trailer reader. */
-            this.trailer = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+            this.requestTrailer = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
             this.trailerReader =
-                new ParamReader((k, v) -> this.trailer
+                new ParamReader((k, v) -> this.requestTrailer
                     .computeIfAbsent(k, k1 -> new ArrayList<>()).add(v),
                                 ctxt.charset, ctxt.paramBufs.getBuffer(),
                                 ctxt.paramBufs::returnParamBuf,
@@ -315,7 +316,7 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
         } else {
             /* Set the trailer to be an empty map, and mark it as ready
              * to read by cancelling the reader. */
-            this.trailer = Collections.emptyMap();
+            this.requestTrailer = Collections.emptyMap();
             this.trailerReader = null;
         }
 
@@ -597,7 +598,7 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
             } catch (IllegalStateException ex) {
                 ex.printStackTrace(err());
             }
-            trailer = Collections.unmodifiableMap(trailer);
+            requestTrailer = Collections.unmodifiableMap(requestTrailer);
             try {
                 trailerLock.lock();
                 trailerReader = null;
@@ -635,7 +636,7 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
             while (trailerReader != null) {
                 trailerReady.await();
             }
-            return trailer;
+            return requestTrailer;
         } finally {
             trailerLock.unlock();
         }
