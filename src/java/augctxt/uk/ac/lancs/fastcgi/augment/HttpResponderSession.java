@@ -711,7 +711,7 @@ public class HttpResponderSession implements AutoCloseable, Session {
      * @throws IllegalStateException if the response header has already
      * been sent; if the client does not support response trailers
      */
-    public void includeContentDigest(MessageDigest digest, CharSequence name) {
+    public void digestContent(MessageDigest digest, CharSequence name) {
         digests.put(name.toString(), digest);
     }
 
@@ -989,10 +989,9 @@ public class HttpResponderSession implements AutoCloseable, Session {
      * 
      * <p>
      * Digests specified by
-     * {@link #includeContentDigest(MessageDigest, CharSequence)} are
-     * applied to the content-encoded stream, but not the
-     * transfer-encoded stream. Results of the digest are added to the
-     * trailer.
+     * {@link #digestContent(MessageDigest, CharSequence)} are applied
+     * to the content-encoded stream, but not the transfer-encoded
+     * stream. Results of the digest are added to the trailer.
      * 
      * @return the output stream for writing an unencoded response body
      * 
