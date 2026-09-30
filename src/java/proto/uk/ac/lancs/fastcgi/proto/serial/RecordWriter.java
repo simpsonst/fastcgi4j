@@ -50,7 +50,9 @@ import uk.ac.lancs.fastcgi.proto.ProtocolStatuses;
 import uk.ac.lancs.fastcgi.proto.RecordTypes;
 
 /**
- * Writes complete FastCGI records from application to server.
+ * Writes complete FastCGI records from application to server. To write
+ * stream records, create a {@link RecordOutputStream} to wrap around a
+ * {@link RecordWriter}, specifying the record type and request id.
  * 
  * @author simpsons
  */
@@ -476,9 +478,9 @@ public class RecordWriter {
      * 
      * @throws RecordIOException if an I/O error occurred
      */
-    private int writeStream(String label, byte rt, int id, byte[] buf, int off,
-                            int len)
+    int writeStream(String label, byte rt, int id, byte[] buf, int off, int len)
         throws RecordIOException {
+        logger.fine(() -> msg("%s(%d, %d)", label, id, len));
         /* We must not send a zero-length message, as this is
          * interpreted as EOF. */
         if (len == 0) return 0;
@@ -560,8 +562,8 @@ public class RecordWriter {
      * 
      * @throws RecordIOException if an I/O error occurred
      */
-    private void writeEnd(String label, byte rt, int id)
-        throws RecordIOException {
+    void writeEnd(String label, byte rt, int id) throws RecordIOException {
+        logger.fine(() -> msg("%s(%d) end", label, id));
         ByteBuffer bf = getBuffer(8);
         bf.clear();
 
@@ -601,11 +603,16 @@ public class RecordWriter {
      * @throws RecordIOException if an I/O error occurred
      * 
      * @see RecordTypes#STDOUT
+     * 
+     * @deprecated Create a {@link RecordOutputStream} using
+     * {@link RecordTypes#STDOUT} and a label of <code>"STDOUT"</code>
+     * instead.
+     * 
      */
+    @Deprecated
     public int writeStdout(int id, byte[] buf, int off, int len)
         throws RecordIOException {
-        logger.fine(() -> msg("STDOUT(%d, %d)", id, len));
-        return writeStream("Stdout", RecordTypes.STDOUT, id, buf, off, len);
+        return writeStream("STDOUT", RecordTypes.STDOUT, id, buf, off, len);
     }
 
     /**
@@ -617,10 +624,14 @@ public class RecordWriter {
      * @throws RecordIOException if an I/O error occurred
      * 
      * @see RecordTypes#STDOUT
+     * 
+     * @deprecated Create a {@link RecordOutputStream} using
+     * {@link RecordTypes#STDOUT} and a label of <code>"STDOUT"</code>
+     * instead.
      */
+    @Deprecated
     public void writeStdoutEnd(int id) throws RecordIOException {
-        logger.fine(() -> msg("STDOUT(%d) end", id));
-        writeEnd("Stdout", RecordTypes.STDOUT, id);
+        writeEnd("STDOUT", RecordTypes.STDOUT, id);
     }
 
     /**
@@ -643,11 +654,15 @@ public class RecordWriter {
      * @throws RecordIOException if an I/O error occurred
      * 
      * @see RecordTypes#STDERR
+     * 
+     * @deprecated Create a {@link RecordOutputStream} using
+     * {@link RecordTypes#STDERR} and a label of <code>"STDERR"</code>
+     * instead.
      */
+    @Deprecated
     public int writeStderr(int id, byte[] buf, int off, int len)
         throws RecordIOException {
-        logger.fine(() -> msg("STDERR(%d, %d)", id, len));
-        return writeStream("Stderr", RecordTypes.STDERR, id, buf, off, len);
+        return writeStream("STDERR", RecordTypes.STDERR, id, buf, off, len);
     }
 
     /**
@@ -659,10 +674,14 @@ public class RecordWriter {
      * @throws RecordIOException if an I/O error occurred
      * 
      * @see RecordTypes#STDERR
+     * 
+     * @deprecated Create a {@link RecordOutputStream} using
+     * {@link RecordTypes#STDERR} and a label of <code>"STDERR"</code>
+     * instead.
      */
+    @Deprecated
     public void writeStderrEnd(int id) throws RecordIOException {
-        logger.fine(() -> msg("STDERR(%d) end", id));
-        writeEnd("Stderr", RecordTypes.STDERR, id);
+        writeEnd("STDERR", RecordTypes.STDERR, id);
     }
 
     private String msg(String fmt, Object... args) {

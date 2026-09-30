@@ -66,8 +66,10 @@ import uk.ac.lancs.fastcgi.FieldSession;
 import uk.ac.lancs.fastcgi.OverloadException;
 import uk.ac.lancs.fastcgi.SessionException;
 import uk.ac.lancs.fastcgi.proto.ProtocolStatuses;
+import uk.ac.lancs.fastcgi.proto.RecordTypes;
 import uk.ac.lancs.fastcgi.proto.serial.ParamReader;
 import uk.ac.lancs.fastcgi.proto.serial.RecordIOException;
+import uk.ac.lancs.fastcgi.proto.serial.RecordOutputStream;
 import uk.ac.lancs.fastcgi.proto.serial.RecordWriter;
 import uk.ac.lancs.http.ResponseCodes;
 import uk.ac.lancs.io.UnclosedOutputStream;
@@ -215,43 +217,7 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
     /**
      * Converts output-stream operations into FCGI_STDOUT records.
      */
-    private final OutputStream out = new OutputStream() {
-        private boolean closed = false;
-
-        private final byte[] buf1 = new byte[1];
-
-        @Override
-        public void write(int b) throws IOException {
-            if (closed) throw new IOException("closed");
-            buf1[0] = (byte) b;
-            int done = recordsOut.writeStdout(id, buf1, 0, 1);
-            if (done != 1) throw new IOException("failed single byte");
-        }
-
-        @Override
-        public void close() throws IOException {
-            if (closed) return;
-            closed = true;
-            recordsOut.writeStdoutEnd(id);
-        }
-
-        @Override
-        public void write(byte[] b, int off, int len) throws IOException {
-            if (closed) throw new IOException("closed");
-            checkBufferRange(b, "b", off, len);
-
-            /* Repeatedly write some data, and consume whatever was
-             * sent. The data might be longer than what can be sent in a
-             * single FastCGI frame. */
-            while (len > 0) {
-                int done = recordsOut.writeStdout(id, b, off, len);
-                assert done >= 0;
-                assert done <= len;
-                off += done;
-                len -= done;
-            }
-        }
-    };
+    private final OutputStream out;
 
     /**
      * Ensures that the response header has been transmitted. This
@@ -303,6 +269,8 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
         this.executor = ctxt.executor;
         this.charset = ctxt.charset;
         this.checkLastSession = ctxt.checkLastSession;
+        this.out = new RecordOutputStream("STDOUT", RecordTypes.STDOUT, id,
+                                          recordsOut);
 
         if (ctxt.expectTrailer) {
             /* Create a case-insensitive trailer reader. */
@@ -326,51 +294,12 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
                             ctxt.paramBufs::returnParamBuf,
                             "conn-" + this.connId + "-" + this.id);
         this.bufferSize = ctxt.stdoutBufferSize;
-        this.err = new PrintStream(new BufferedOutputStream(new OutputStream() {
-            private boolean closed = false;
-
-            private final byte[] buf1 = new byte[1];
-
-            @Override
-            public void write(int b) throws IOException {
-                if (closed) throw new IOException("closed");
-                buf1[0] = (byte) b;
-                int done = recordsOut.writeStderr(id, buf1, 0, 1);
-                if (done != 1) throw new IOException("failed single byte");
-            }
-
-            @Override
-            public void close() throws IOException {
-                if (closed) return;
-                closed = true;
-                recordsOut.writeStderrEnd(id);
-            }
-
-            @Override
-            public void write(byte[] b, int off, int len) throws IOException {
-                if (closed) throw new IOException("closed");
-                checkBufferRange(b, "b", off, len);
-
-                /* Repeatedly write some data, and consume whatever was
-                 * sent. The data might be longer than what can be sent
-                 * in a single FastCGI frame. */
-                while (len > 0) {
-                    int done = recordsOut.writeStderr(id, b, off, len);
-                    assert done >= 0;
-                    assert done <= len;
-                    off += done;
-                    len -= done;
-                }
-            }
-        }, ctxt.stderrBufferSize), true, charset);
-    }
-
-    private static void checkBufferRange(byte[] b, String bName, int off,
-                                         int len) {
-        Objects.requireNonNull(b, bName);
-        if (off < 0 || off > b.length) throw new IndexOutOfBoundsException(off);
-        if (off + len > b.length)
-            throw new IndexOutOfBoundsException(off + len);
+        var recErr = new RecordOutputStream("STDERR", RecordTypes.STDERR, id,
+                                            recordsOut);
+        this.err =
+            new PrintStream(new BufferedOutputStream(recErr,
+                                                     ctxt.stderrBufferSize),
+                            true, charset);
     }
 
     @Override
