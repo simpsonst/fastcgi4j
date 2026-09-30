@@ -38,12 +38,12 @@
 
 package uk.ac.lancs.fastcgi.augment;
 
+import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.util.ArrayList;
@@ -67,7 +67,6 @@ import uk.ac.lancs.fastcgi.Diagnostics;
 import uk.ac.lancs.fastcgi.RequestableSession;
 import uk.ac.lancs.fastcgi.ResponderSession;
 import uk.ac.lancs.fastcgi.Session;
-import uk.ac.lancs.http.ChunkedOutputStream;
 import uk.ac.lancs.http.Negotiation;
 import uk.ac.lancs.http.cache.InboundCacheControl;
 import uk.ac.lancs.http.encoding.Decoder;
@@ -909,13 +908,8 @@ public class HttpResponderSession implements AutoCloseable, Session {
         /* Record what encodings are going to be applied. Transfer
          * codings must be mutable, because we might add a final
          * 'chunked' encoding. */
-        List<String> transferEncodings =
-            new ArrayList<>(Encoder.declare(transferPlan));
+        List<String> transferEncodings = Encoder.declare(transferPlan);
         List<String> contentEncodings = Encoder.declare(contentPlan);
-
-        /* We only need to chunk if we expect trailer fields. */
-        final boolean requireTrailer = !responseTrailerExpectation.isEmpty();
-        if (requireTrailer) transferEncodings.add(CHUNKED_TOKEN);
 
         /* Set the encoding header fields, or clear them if not
          * required. If there is any transfer encoding, Content-Length
@@ -925,14 +919,15 @@ public class HttpResponderSession implements AutoCloseable, Session {
             base.clearField(FieldNames.CONTENT_LENGTH);
 
         OutputStream out = base.out();
-        if (requireTrailer) {
-            /* Create a chunking output stream to the application.
-             * Ensure that, when it closes, the trailer is then written
-             * out. */
-            out = new ChunkedOutputStream(out, false) {
+        if (!responseTrailerExpectation.isEmpty()) {
+            /* Ensure that, just before the base stream closes, the raw
+             * trailer fields are set from our namespaced ones. */
+            out = new FilterOutputStream(out) {
                 @Override
                 public void close() throws IOException {
-                    super.close();
+                    /* Now that the response body has been sent, add a
+                     * trailer field listing the requested digests, if
+                     * there's at least one. */
                     if (!digests.isEmpty()) {
                         List<String> digestValues =
                             responseTrailer().get(FieldId.CONTENT_DIGEST);
@@ -945,21 +940,21 @@ public class HttpResponderSession implements AutoCloseable, Session {
                                 + enc.encodeToString(raw) + ':');
                         }
                     }
+
+                    /* Further changes to the trailer are to be stopped,
+                     * as we convert our namespaced fields into raw ones
+                     * in the base session. */
                     trailerCommitted = true;
-                    try (PrintStream out =
-                        new PrintStream(this.out, false,
-                                        StandardCharsets.US_ASCII)) {
-                        /* Write the trailer to the base stream. */
-                        for (var ent : responseTrailerFields.entrySet()) {
-                            FieldId fieldId = ent.getKey();
-                            final String field =
-                                fieldId.prefixedName(responseExtMgr::seek);
-                            var values = ent.getValue();
-                            for (var val : values)
-                                out.printf("%s: %s\r\n", field, val);
-                        }
-                        out.printf("\r\n");
+                    var rawTrailer = base.responseTrailer();
+                    for (var ent : responseTrailerFields.entrySet()) {
+                        FieldId fieldId = ent.getKey();
+                        final String field =
+                            fieldId.prefixedName(responseExtMgr::seek);
+                        var dest = rawTrailer.get(field);
+                        dest.clear();
+                        dest.addAll(ent.getValue());
                     }
+                    super.close();
                 }
             };
         }
@@ -973,11 +968,33 @@ public class HttpResponderSession implements AutoCloseable, Session {
     }
 
     /**
-     * Get the stream for the response body. If the user has called
-     * {@link #expectInTrailer(FieldId...)} the body will be
-     * transparently chunked.
+     * Get the stream for the response body.
      * 
-     * @return the output stream for writing an unchunked response body
+     * <p>
+     * Content encodings prefixed by
+     * {@link ResponseEncodingControl#force(List)} on the object
+     * provided by {@link #encodingControl()} will be applied to the
+     * returned stream. Further content encodings offered by
+     * {@link HttpResponderContext#contentEncoders()} and
+     * {@link ResponseEncodingControl#contentOffer(Map)}, and accepted
+     * by the client according to the request header field
+     * <samp>{@value "%s" FieldNames#ACCEPT_ENCODING}</samp>, will be
+     * negotiated and then applied, provided they are not obviated by
+     * earlier encodings. Similarly, transfer encodings offered by
+     * {@link HttpResponderContext#transferEncoders()}, and accepted by
+     * the client according to the request header field
+     * <samp>{@value "%s" FieldNames#TE}</samp>, will be negotiated and
+     * then applied, provided they are not obviated by earlier
+     * encodings.
+     * 
+     * <p>
+     * Digests specified by
+     * {@link #includeContentDigest(MessageDigest, CharSequence)} are
+     * applied to the content-encoded stream, but not the
+     * transfer-encoded stream. Results of the digest are added to the
+     * trailer.
+     * 
+     * @return the output stream for writing an unencoded response body
      * 
      * @throws IOException {@inheritDoc}
      */
