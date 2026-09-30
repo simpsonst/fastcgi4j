@@ -321,6 +321,9 @@ class MultiplexGenericEngine implements Engine {
                 final boolean expectTrailer =
                     (role == RoleTypes.RESPONDER || role == RoleTypes.FILTER) &&
                         (flags & RequestFlags.EXPECT_TRAILER) != 0;
+                final boolean supplyTrailer =
+                    (role == RoleTypes.RESPONDER || role == RoleTypes.FILTER) &&
+                        (flags & RequestFlags.SUPPLY_TRAILER) != 0;
 
                 /* Package components required by all roles. */
                 Supplier<HandlerContext> ctxt =
@@ -332,7 +335,8 @@ class MultiplexGenericEngine implements Engine {
                                              this::checkLastCall, recordsOut,
                                              executor, charset, paramBufs,
                                              optimizedBufferSize,
-                                             stderrBufferSize, expectTrailer);
+                                             stderrBufferSize, expectTrailer,
+                                             supplyTrailer);
 
                 /* Create the session if there isn't one with the
                  * specified id, and the role type is recognized. */

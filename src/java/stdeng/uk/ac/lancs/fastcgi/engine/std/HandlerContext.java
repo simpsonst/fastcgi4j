@@ -79,6 +79,8 @@ class HandlerContext {
 
     final boolean expectTrailer;
 
+    final boolean supplyTrailer;
+
     /**
      * Create a handler context.
      * 
@@ -119,6 +121,9 @@ class HandlerContext {
      * 
      * @param expectTrailer {@code true} if the standard input shall be
      * followed by a request trailer; {@code false} otherwise
+     * 
+     * @param supplyTrailer {@code true} if standard output may be
+     * followed by a response trailer; {@code false} otherwise
      */
     public HandlerContext(int connId, int id, Package impl, String connDescr,
                           String intConnDescr, Runnable connAbort,
@@ -126,7 +131,8 @@ class HandlerContext {
                           Runnable checkLastSession, RecordWriter recordsOut,
                           Executor executor, Charset charset,
                           BufferPool paramBufs, int stdoutBufferSize,
-                          int stderrBufferSize, boolean expectTrailer) {
+                          int stderrBufferSize, boolean expectTrailer,
+                          boolean supplyTrailer) {
         this.connId = connId;
         this.id = id;
         this.impl = impl;
@@ -142,5 +148,6 @@ class HandlerContext {
         this.stdoutBufferSize = stdoutBufferSize;
         this.stderrBufferSize = stderrBufferSize;
         this.expectTrailer = expectTrailer;
+        this.supplyTrailer = supplyTrailer;
     }
 }
