@@ -625,7 +625,7 @@ public class RecordWriter {
 
     /**
      * Write bytes to the standard error output of a request. An
-     * <code>FCGI_STDIN</code> record is transmitted. If the provided
+     * <code>FCGI_STDERR</code> record is transmitted. If the provided
      * length is 0, no record is sent. Call {@link #writeStderrEnd(int)}
      * to indicate the end of the stream.
      * 
