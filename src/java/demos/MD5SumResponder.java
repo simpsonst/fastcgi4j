@@ -91,6 +91,8 @@ public class MD5SumResponder implements Responder {
     private static final FieldExtension MY_EMPTY_NAMESPACE = FieldExtension
         .in("http://example.com/ns-empty").endToEnd().optional().complete();
 
+    private static final FieldId REQUEST_FIELD = MY_E2E_NAMESPACE.of("Foo");
+
     private static final FieldId SILLY_FIELD = MY_E2E_NAMESPACE.of("Silly");
 
     private static final FieldId LATE_FIELD = MY_E2E_NAMESPACE.of("Late");
@@ -138,6 +140,9 @@ public class MD5SumResponder implements Responder {
             new HttpResponderSession(session, httpRspCtxt)) {
             OTSResponses otsRsp =
                 new OTSResponses(httpSession.otsResponseControl());
+
+            var foo = httpSession.requestHeader().get(REQUEST_FIELD);
+            System.err.printf("%s=%s%n", REQUEST_FIELD, foo);
 
             final byte[] dig;
             {
