@@ -127,6 +127,15 @@ public class CGIRequestCap implements Cap {
 
     private final Set<String> hopByHopKeys;
 
+    private static final Set<String> STANDARD_HOB_BY_HOP_KEYS =
+        FieldNameSets.HOP_BY_HOP.stream().map(Http::fieldNameAsCGI)
+            .collect(Collectors.toSet());
+
+    private boolean isHopByHopParameter(String param) {
+        if (STANDARD_HOB_BY_HOP_KEYS.contains(param)) return true;
+        return hopByHopKeys.contains(param);
+    }
+
     /**
      * Create a request header from a CGI environment.
      * 
@@ -153,6 +162,7 @@ public class CGIRequestCap implements Cap {
                 .stream().filter(CGIRequestCap::isConnectionFieldName)
                 .map(Http::fieldNameAsCGI), Stream.of(CONNECTION_FIELD_VAR))
             .collect(Collectors.toSet());
+        System.err.printf("stdhbh=%s%n", STANDARD_HOB_BY_HOP_KEYS);
 
         /* Go through each of the environmental fields matching those
          * which describe HTTP field extensions. */
@@ -243,7 +253,7 @@ public class CGIRequestCap implements Cap {
             var ext = ns.asExtension();
             assert ext != null;
             var pfx = extMgr.seek(ext);
-            if (pfx == null) return null;
+            if (pfx == null) return Collections.emptyList();
             key = Http.fieldNameAsCGI(pfx.toString() + '-' + id.name());
             break;
 
@@ -253,9 +263,9 @@ public class CGIRequestCap implements Cap {
 
         /* Verify that the scope is as expected. If not, it's not the
          * same field, so it must be discarded. */
-        var gotScope = hopByHopKeys.contains(key) ? FieldScope.HOP_BY_HOP :
+        var gotScope = isHopByHopParameter(key) ? FieldScope.HOP_BY_HOP :
             FieldScope.END_TO_END;
-        if (gotScope != ns.scope()) return null;
+        if (gotScope != ns.scope()) return Collections.emptyList();
 
         /* Get the field value. Because we don't know how to split, we
          * have to return a singleton. If the field is absent, we return

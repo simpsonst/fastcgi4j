@@ -53,7 +53,8 @@ public interface Cap {
      * @param id the field to extract
      * 
      * @return the field's raw values in transmission order; possibly
-     * immutable for an inward message
+     * immutable for an inward message; an empty list if the field is
+     * absent; never {@code null}
      */
     List<String> get(FieldId id);
 }
