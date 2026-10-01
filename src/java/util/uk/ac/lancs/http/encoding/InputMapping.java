@@ -63,8 +63,7 @@ public final class InputMapping {
      * 
      * @param mapping the mapping from token to encoding
      */
-    public InputMapping(Function<? super String,
-                                 ? extends Decoder> mapping) {
+    public InputMapping(Function<? super String, ? extends Decoder> mapping) {
         this.mapping = mapping;
     }
 
