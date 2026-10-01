@@ -420,7 +420,7 @@ public class HttpResponderSession implements AutoCloseable, Session {
      * is no body
      */
     public MediaType requestType() {
-        if (methodIs("GET", "HEAD")) return null;
+        if (methodIs("GET", "HEAD", "M-GET", "M-HEAD")) return null;
         if (requestType == null) {
             String field =
                 base.parameters().get(CGIParameters.REQUEST_TYPE_PARAM);
