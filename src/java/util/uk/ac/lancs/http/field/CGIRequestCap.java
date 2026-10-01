@@ -162,7 +162,6 @@ public class CGIRequestCap implements Cap {
                 .stream().filter(CGIRequestCap::isConnectionFieldName)
                 .map(Http::fieldNameAsCGI), Stream.of(CONNECTION_FIELD_VAR))
             .collect(Collectors.toSet());
-        System.err.printf("stdhbh=%s%n", STANDARD_HOB_BY_HOP_KEYS);
 
         /* Go through each of the environmental fields matching those
          * which describe HTTP field extensions. */
