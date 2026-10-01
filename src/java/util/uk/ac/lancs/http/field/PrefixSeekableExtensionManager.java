@@ -36,32 +36,19 @@
 
 package uk.ac.lancs.http.field;
 
-import java.util.Map;
-
 /**
- * Defines methods common to inbound and outbound extension managers.
- * This includes being able to look up the prefix and attributes of a
- * field extension.
+ * Allows an extension to be sought by prefix.
  *
  * @author simpsons
  */
-public interface ExtensionManager {
+public interface PrefixSeekableExtensionManager {
     /**
-     * Get the additional attributes of a namespace.
+     * Map a prefix to an extension.
      *
-     * @param ns the extension namespace
+     * @param pfx the prefix of the sought extension
      *
-     * @return additional attributes of the namespace, mutable if this
-     * object has not been frozen
+     * @return the extension if related to the prefix; {@code null}
+     * otherwise
      */
-    Map<String, String> attributes(FieldExtension ns);
-
-    /**
-     * Map an extension to a prefix.
-     *
-     * @param ext the extension whose prefix is sought
-     *
-     * @return the extension's prefix if defined; {@code null} otherwise
-     */
-    ExtensionPrefix seek(FieldExtension ext);
+    FieldExtension seek(ExtensionPrefix pfx);
 }

@@ -104,7 +104,7 @@ import uk.ac.lancs.mime.Tokenizer;
  * @author simpsons
  */
 public class CGIRequestCap implements Cap {
-    private final ExtensionManager extMgr;
+    private final DefinableExtensionManager extMgr;
 
     private final Map<? extends String, ? extends CharSequence> env;
 
@@ -148,7 +148,7 @@ public class CGIRequestCap implements Cap {
      * @throws IllegalArgumentException if a namespace declaration is
      * badly formed
      */
-    public CGIRequestCap(ExtensionManager extMgr,
+    public CGIRequestCap(DefinableExtensionManager extMgr,
                          Map<? extends String, ? extends CharSequence> env) {
         this.extMgr = extMgr;
         this.env = env;
@@ -213,9 +213,6 @@ public class CGIRequestCap implements Cap {
                     + key + " -> " + val);
             } while (true);
         }
-
-        /* Forbid further changes to the extensions. */
-        extMgr.freeze();
     }
 
     /**

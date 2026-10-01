@@ -1,0 +1,144 @@
+// -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
+
+/*
+ * Copyright (c) 2022,2023,2026, Lancaster University
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ * * Redistributions of source code must retain the above copyright
+ *   notice, this list of conditions and the following disclaimer.
+ *
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in the
+ *   documentation and/or other materials provided with the
+ *   distribution.
+ *
+ * * Neither the name of the copyright holder nor the names of its
+ *   contributors may be used to endorse or promote products derived
+ *   from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *
+ *  Author: Steven Simpson <https://github.com/simpsonst>
+ */
+
+package uk.ac.lancs.http.field;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+/**
+ * Tracks the relation between extensions and their local prefixes.
+ * 
+ * @author simpsons
+ */
+public final class BasicExtensionManager implements InboundExtensionManager,
+    OutboundExtensionManager, DefinableExtensionManager {
+    private int nextWidth = 2;
+
+    private int nextValue = 0;
+
+    private int nextLimit = 100;
+
+    private final Map<FieldExtension, ExtensionPrefix> prefixes =
+        new HashMap<>();
+
+    private final Map<ExtensionPrefix, FieldExtension> extensions =
+        new HashMap<>();
+
+    private final Map<FieldExtension, Map<String, String>> attributes =
+        new HashMap<>();
+
+    private boolean frozen = false;
+
+    /**
+     * Prevent further changes. This causes attempted modifications to
+     * throw {@link IllegalStateException}.
+     * 
+     * @return the frozen mapping from each extension to its assigned
+     * prefix and attributes
+     */
+    public Map<FieldExtension, Map.Entry<ExtensionPrefix, Map<String, String>>>
+        freeze() {
+        frozen = true;
+        return prefixes.entrySet().stream()
+            .collect(Collectors
+                .toMap(Map.Entry::getKey,
+                       e -> Map.entry(e.getValue(), attributes(e.getKey()))));
+    }
+
+    @Override
+    public ExtensionPrefix define(FieldExtension ext, ExtensionPrefix pfx) {
+        if (frozen) throw new IllegalStateException("frozen");
+        var existing = prefixes.get(ext);
+        if (existing != null) return existing;
+        if (extensions.containsKey(pfx))
+            throw new IllegalStateException("prefix in use: " + pfx);
+        prefixes.put(ext, pfx);
+        extensions.put(pfx, ext);
+        return pfx;
+    }
+
+    @Override
+    public Map<String, String> attributes(FieldExtension ns) {
+        if (frozen) {
+            var r = attributes.get(ns);
+            if (r == null) return Collections.emptyMap();
+            return Collections.unmodifiableMap(r);
+        }
+        return attributes.computeIfAbsent(ns, k -> new HashMap<>());
+    }
+
+    @Override
+    public FieldExtension seek(ExtensionPrefix pfx) {
+        return extensions.get(pfx);
+    }
+
+    @Override
+    public ExtensionPrefix seek(FieldExtension ext) {
+        return prefixes.get(ext);
+    }
+
+    @Override
+    public ExtensionPrefix define(FieldExtension ext) {
+        if (frozen) throw new IllegalStateException("frozen");
+        var existing = prefixes.get(ext);
+        if (existing != null) return existing;
+        do {
+            var pfx = ExtensionPrefix.of(nextWidth, nextValue++);
+            if (nextValue == nextLimit) {
+                nextWidth++;
+                nextLimit *= 10;
+                nextValue = 0;
+            }
+            if (extensions.containsKey(pfx)) continue;
+            prefixes.put(ext, pfx);
+            extensions.put(pfx, ext);
+            return pfx;
+        } while (true);
+    }
+
+    @Override
+    public Set<FieldExtension> mandatories() {
+        return prefixes.keySet().stream()
+            .filter(e -> e.strength == FieldStrength.MANDATORY)
+            .collect(Collectors.toSet());
+    }
+}

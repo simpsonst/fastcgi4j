@@ -76,9 +76,9 @@ import uk.ac.lancs.http.encoding.InputMapping;
 import uk.ac.lancs.http.encoding.OutputEncoding;
 import uk.ac.lancs.http.encoding.ResponseEncodingControl;
 import uk.ac.lancs.http.encoding.ResponseEncodingPlanner;
+import uk.ac.lancs.http.field.BasicExtensionManager;
 import uk.ac.lancs.http.field.CGIRequestCap;
 import uk.ac.lancs.http.field.Cap;
-import uk.ac.lancs.http.field.ExtensionManager;
 import uk.ac.lancs.http.field.ExtensionPrefix;
 import uk.ac.lancs.http.field.Field;
 import uk.ac.lancs.http.field.FieldExtension;
@@ -87,6 +87,8 @@ import uk.ac.lancs.http.field.FieldNameSets;
 import uk.ac.lancs.http.field.FieldNames;
 import uk.ac.lancs.http.field.FieldNamespace;
 import uk.ac.lancs.http.field.FieldScope;
+import uk.ac.lancs.http.field.InboundExtensionManager;
+import uk.ac.lancs.http.field.OutboundExtensionManager;
 import uk.ac.lancs.http.field.TrailerMapCap;
 import uk.ac.lancs.mime.MediaType;
 import uk.ac.lancs.mime.Tokenizer;
@@ -153,6 +155,7 @@ public class HttpResponderSession implements AutoCloseable, Session {
         this.ctxt = ctxt;
         this.requestHeader =
             new CGIRequestCap(requestExtMgr, base.parameters());
+        requestExtMgr.freeze();
         this.responseEncodingPlanner.contentOffer(ctxt.contentEncoders());
 
         /* Get the transfer encodings accepted by the client. */
@@ -544,14 +547,15 @@ public class HttpResponderSession implements AutoCloseable, Session {
         return requestHeader;
     }
 
-    private final ExtensionManager requestExtMgr = new ExtensionManager();
+    private final BasicExtensionManager requestExtMgr =
+        new BasicExtensionManager();
 
     /**
      * Get the extension manager for the request.
      * 
      * @return the request extension manager
      */
-    public ExtensionManager requestExtensions() {
+    public InboundExtensionManager requestExtensions() {
         return requestExtMgr;
     }
 
@@ -562,7 +566,8 @@ public class HttpResponderSession implements AutoCloseable, Session {
      * 
      * @return the response extension manager
      */
-    private final ExtensionManager responseExtMgr = new ExtensionManager();
+    private final BasicExtensionManager responseExtMgr =
+        new BasicExtensionManager();
 
     /**
      * Get the manager for extensions used in the response header and
@@ -570,7 +575,7 @@ public class HttpResponderSession implements AutoCloseable, Session {
      * 
      * @return the requested extension manager
      */
-    public ExtensionManager responseExtensions() {
+    public OutboundExtensionManager responseExtensions() {
         return responseExtMgr;
     }
 

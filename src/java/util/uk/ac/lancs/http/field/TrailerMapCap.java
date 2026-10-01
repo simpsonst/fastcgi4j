@@ -64,9 +64,8 @@ public class TrailerMapCap implements Cap {
     /**
      * Create a trailer cap from a map of raw fields.
      * 
-     * @param extMgr the extension manager defining namespace extensions
-     * to be recognized in the trailer; usually the same one used to
-     * interpret the corresponding header
+     * @param seek a function yielding the extension for a given prefix
+     * or {@code null} if not defined
      * 
      * @param isHopByHop a predicate to case-insensitively recognize the
      * raw name of a hop-by-hop field
@@ -75,11 +74,11 @@ public class TrailerMapCap implements Cap {
      * names as keys, and order-preserving lists as values; discarded
      * after construction
      */
-    public TrailerMapCap(ExtensionManager extMgr,
+    public TrailerMapCap(PrefixSeekableExtensionManager extMgr,
                          Predicate<? super String> isHopByHop,
                          Map<? extends CharSequence,
                              ? extends List<? extends CharSequence>> base) {
-        this(extMgr, isHopByHop, base, (x, y) -> {});
+        this(null, isHopByHop, base, (x, y) -> {});
     }
 
     /**
@@ -88,9 +87,8 @@ public class TrailerMapCap implements Cap {
      * 
      * @param <K> the raw key type
      * 
-     * @param extMgr the extension manager defining namespace extensions
-     * to be recognized in the trailer; usually the same one used to
-     * interpret the corresponding header
+     * @param seek a function yielding the extension for a given prefix
+     * or {@code null} if not defined
      * 
      * @param isHopByHop a predicate to case-insensitively recognize the
      * raw name of a hop-by-hop field
@@ -102,7 +100,7 @@ public class TrailerMapCap implements Cap {
      * @param unused destination for keys from the base that are
      * rejected, with the reason for rejection
      */
-    public <K extends CharSequence> TrailerMapCap(ExtensionManager extMgr,
+    public <K extends CharSequence> TrailerMapCap(PrefixSeekableExtensionManager extMgr,
                                                   Predicate<? super String> isHopByHop,
                                                   Map<? extends K,
                                                       ? extends List<? extends CharSequence>> base,

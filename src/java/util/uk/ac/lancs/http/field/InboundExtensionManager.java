@@ -1,3 +1,5 @@
+// -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
+
 /*
  * Copyright (c) 2026, Lancaster University
  * All rights reserved.
@@ -36,32 +38,19 @@
 
 package uk.ac.lancs.http.field;
 
-import java.util.Map;
+import java.util.Set;
 
 /**
- * Defines methods common to inbound and outbound extension managers.
- * This includes being able to look up the prefix and attributes of a
- * field extension.
- *
+ * Allows extension definitions to be interrogated.
+ * 
  * @author simpsons
  */
-public interface ExtensionManager {
+public interface InboundExtensionManager
+    extends ExtensionManager, PrefixSeekableExtensionManager {
     /**
-     * Get the additional attributes of a namespace.
+     * Identify mandatory field extensions registered with this manager.
      *
-     * @param ns the extension namespace
-     *
-     * @return additional attributes of the namespace, mutable if this
-     * object has not been frozen
+     * @return an immutable set of mandatory field extensions
      */
-    Map<String, String> attributes(FieldExtension ns);
-
-    /**
-     * Map an extension to a prefix.
-     *
-     * @param ext the extension whose prefix is sought
-     *
-     * @return the extension's prefix if defined; {@code null} otherwise
-     */
-    ExtensionPrefix seek(FieldExtension ext);
+    Set<FieldExtension> mandatories();
 }
