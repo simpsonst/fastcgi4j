@@ -363,12 +363,7 @@ public class FastCGIApplication {
                 var builder = Engine.start();
 
                 /* Indicate which roles the application supports. */
-                if (responder != null)
-                    builder = builder.with(Attribute.RESPONDER, responder);
-                if (filter != null)
-                    builder = builder.with(Attribute.FILTER, filter);
-                if (authorizer != null)
-                    builder = builder.with(Attribute.AUTHORIZER, authorizer);
+                builder = applyHandlers(builder);
 
                 /* Apply configuration from command-line arguments. */
                 builder = builder.using(props)
