@@ -47,6 +47,7 @@ import java.nio.channels.Channel;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
 import jdk.net.ExtendedSocketOptions;
@@ -87,10 +88,10 @@ import uk.ac.lancs.scc.jardeps.Service;
 @Service(TransportFactory.class)
 public class InheritedChannelTransportFactory implements TransportFactory {
     @Override
-    public Transport getTransport() {
+    public Collection<? extends Transport> getTransports() {
         try {
             Channel ic = System.inheritedChannel();
-            if (ic == null) return null;
+            if (ic == null) return Collections.emptyList();
             if (ic instanceof ServerSocketChannel ssc) {
                 SocketAddress addr = ssc.getLocalAddress();
                 if (addr instanceof UnixDomainSocketAddress) {
@@ -102,7 +103,7 @@ public class InheritedChannelTransportFactory implements TransportFactory {
                                 return permittedCallers.stream()
                                     .anyMatch(t -> t.test(principal));
                             };
-                    return new SocketChannelTransport(ssc) {
+                    var r = new SocketChannelTransport(ssc) {
                         @Override
                         protected String describe(SocketChannel sock)
                             throws IOException {
@@ -121,10 +122,11 @@ public class InheritedChannelTransportFactory implements TransportFactory {
                             return result;
                         }
                     };
+                    return Collections.singleton(r);
                 } else if (addr instanceof InetSocketAddress) {
                     final Collection<InetAddress> permittedCallers =
                         InvocationVariables.getAuthorizedInetPeers();
-                    return new SocketChannelTransport(ssc) {
+                    var r = new SocketChannelTransport(ssc) {
                         @Override
                         protected String describe(SocketChannel sock)
                             throws IOException {
@@ -139,9 +141,10 @@ public class InheritedChannelTransportFactory implements TransportFactory {
                             return result;
                         }
                     };
+                    return Collections.singleton(r);
                 }
             }
-            return null;
+            return Collections.emptyList();
         } catch (IOException ex) {
             throw new TransportConfigurationException("inherited channel", ex);
         }

@@ -39,6 +39,8 @@
 package uk.ac.lancs.fastcgi.transport;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.ServiceLoader;
 
 /**
@@ -59,33 +61,42 @@ public interface Transport {
     Connection nextConnection() throws IOException;
 
     /**
-     * Get the connection supply using a given class loader. This method
-     * will yield the same result for the same argument.
+     * Get the environmental connection supplies using a given class
+     * loader. This method will yield the same result for the same
+     * argument.
+     * 
+     * <p>
+     * {@linkplain ServiceLoader Services} of type
+     * {@link TransportFactory} are loaded, and
+     * {@link TransportFactory#getTransports()} is invoked on each one.
+     * All results are merged.
      * 
      * @param loader the class loader to be used to find services
      * implementing {@link TransportFactory}; or {@code null} to use the
-     * context class loader of the calling thread
+     * system class loader
      * 
-     * @return the connection supply
+     * @return the connection supplies
      * 
      * @throws UnsupportedOperationException if no suitable service
      * exists
      */
-    static Transport get(ClassLoader loader) {
+    static Collection<? extends Transport> get(ClassLoader loader) {
         return Transports.supplies.computeIfAbsent(loader, k -> {
+            Collection<Transport> result = new ArrayList<>();
             for (TransportFactory cfact : ServiceLoader
                 .load(TransportFactory.class, k)) {
-                var supply = cfact.getTransport();
-                if (supply != null) return supply;
+                result.addAll(cfact.getTransports());
             }
 
-            throw new UnsupportedOperationException("no service "
-                + "for connections");
+            if (result.isEmpty())
+                throw new UnsupportedOperationException("no service "
+                    + "for connections");
+            return result;
         });
     }
 
     /**
-     * Get the connection supply using the caller's context class
+     * Get the connection supplies using the caller's context class
      * loader. This method calls {@link #get(ClassLoader)}, passing the
      * result of {@link Thread#getContextClassLoader()} applied to the
      * calling thread.
@@ -94,12 +105,12 @@ public interface Transport {
      * implementing {@link TransportFactory}; or {@code null} to use the
      * context class loader of the calling thread
      * 
-     * @return the connection supply
+     * @return the connection supplies
      * 
      * @throws UnsupportedOperationException if no suitable service
      * exists
      */
-    static Transport get() {
+    static Collection<? extends Transport> get() {
         return get(Thread.currentThread().getContextClassLoader());
     }
 }

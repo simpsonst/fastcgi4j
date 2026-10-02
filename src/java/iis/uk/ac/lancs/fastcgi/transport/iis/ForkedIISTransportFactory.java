@@ -40,6 +40,8 @@ package uk.ac.lancs.fastcgi.transport.iis;
 
 import java.io.FileNotFoundException;
 import java.io.RandomAccessFile;
+import java.util.Collection;
+import java.util.Collections;
 import uk.ac.lancs.fastcgi.transport.Transport;
 import uk.ac.lancs.fastcgi.transport.TransportConfigurationException;
 import uk.ac.lancs.fastcgi.transport.TransportFactory;
@@ -54,12 +56,13 @@ import uk.ac.lancs.scc.jardeps.Service;
 @Service(TransportFactory.class)
 public class ForkedIISTransportFactory implements TransportFactory {
     @Override
-    public Transport getTransport() {
+    public Collection<? extends Transport> getTransports() {
         String pipeName = System.getenv(ENV_NAME);
-        if (pipeName == null) return null;
+        if (pipeName == null) return Collections.emptyList();
         try {
             RandomAccessFile file = new RandomAccessFile(pipeName, "rw");
-            return new ForkedIISTransport(file, pipeName);
+            return Collections
+                .singleton(new ForkedIISTransport(file, pipeName));
         } catch (FileNotFoundException ex) {
             throw new TransportConfigurationException(pipeName, ex);
         }

@@ -38,16 +38,22 @@
 
 package uk.ac.lancs.fastcgi.transport;
 
+import java.util.Collection;
+
 /**
  * Determines whether FastCGI connections are arriving over a specific
  * mechanism, and presents them to the application. Implementations
  * should read FastCGI-defined environment variables or look at file
  * descriptor 0 to determine how to receive FastCGI connections. An
- * implementation should need only test for one mechanism, returning
- * {@code null} if not recognized. Implementations should be declared as
- * services for this interface in line with
- * {@link java.util.ServiceLoader}, so they can be enabled simply by
- * adding to the class path.
+ * implementation should need only test for one mechanism, returning an
+ * empty collection if not recognized. An implementation may return
+ * multiple mechanisms to deal with (for example) binding to both IPv4
+ * and IPv6 addresses for a given host name.
+ * 
+ * <p>
+ * Implementations should be declared as services for this interface in
+ * line with {@link java.util.ServiceLoader}, so they can be enabled
+ * simply by adding to the class path.
  * 
  * @spec https://fastcgi-archives.github.io/FastCGI_Specification.html#S2
  * FastCGI Specification &mdash; Initial Process State
@@ -58,12 +64,12 @@ public interface TransportFactory {
     /**
      * Get a supply of connections that a FastCGI engine can use.
      * 
-     * @return a supply of connections; or {@code null} if none can be
-     * provided by the implementation
+     * @return a collection of suppliers of connections; an empty
+     * collection if none can be provided by the implementation
      * 
      * @throws TransportConfigurationException if a supported transport
      * was positively recognized but cannot be implemented because
      * configuration and environment are incompatible
      */
-    Transport getTransport();
+    Collection<? extends Transport> getTransports();
 }

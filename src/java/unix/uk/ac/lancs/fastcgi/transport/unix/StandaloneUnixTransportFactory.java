@@ -48,6 +48,7 @@ import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
@@ -81,7 +82,7 @@ import uk.ac.lancs.scc.jardeps.Service;
 @Service(TransportFactory.class)
 public class StandaloneUnixTransportFactory implements TransportFactory {
     @Override
-    public Transport getTransport() {
+    public Collection<? extends Transport> getTransports() {
         try {
             Path path = InvocationVariables.getUnixBindPath();
             if (path == null) return Collections.emptyList();
@@ -112,7 +113,7 @@ public class StandaloneUnixTransportFactory implements TransportFactory {
 
             /* Build a transport out of the server socket that checks
              * and names each accepted connection. */
-            return new SocketChannelTransport(ssc) {
+            var r = new SocketChannelTransport(ssc) {
                 @Override
                 protected String describe(SocketChannel channel)
                     throws IOException {
@@ -131,6 +132,7 @@ public class StandaloneUnixTransportFactory implements TransportFactory {
                     return result;
                 }
             };
+            return Collections.singleton(r);
         } catch (IOException ex) {
             throw new TransportConfigurationException(ex);
         }

@@ -43,6 +43,7 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -51,6 +52,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Defines constants for names of environment variables pertaining to
@@ -233,7 +235,7 @@ public final class InvocationVariables {
     /**
      * Convert a comma-separated string into a set of Internet
      * addresses. Each item is converted with
-     * {@link InetAddress#getByName(String)}.
+     * {@link InetAddress#getAllByName(String)}.
      * 
      * @param text the text to be converted
      * 
@@ -246,8 +248,8 @@ public final class InvocationVariables {
         throws UnknownHostException {
         Collection<InetAddress> result = new HashSet<>();
         for (String item : COMMA.split(text)) {
-            InetAddress addr = InetAddress.getByName(item);
-            result.add(addr);
+            InetAddress[] addrs = InetAddress.getAllByName(item);
+            result.addAll(Arrays.asList(addrs));
         }
         return Set.copyOf(result);
     }
@@ -372,11 +374,16 @@ public final class InvocationVariables {
     public static final String UNIX_BIND_ADDR = "FASTCGI4J_UNIX_BIND";
 
     /**
-     * Get the address that a stand-alone application process should
-     * bind to.
+     * Get the addresses that a stand-alone Internet-domain application
+     * process should bind to. The environment variable
+     * <samp>{@value "%s" #INET_BIND_ADDR}</samp> is read and parsed as
+     * <samp><var>host-name</var>:<var>port</var></samp>. Multiple
+     * addresses may be returned when, for example, the host name has
+     * both IPv4 and IPv6 addresses.
      * 
-     * @return the address to bind to; or {@code null} if this process
-     * should not be running stand-alone
+     * @return the addresses to bind to; or {@code null} if this process
+     * should not be running stand-alone because <samp>{@value "%s"
+     * #INET_BIND_ADDR}</samp> is not set
      * 
      * @throws IllegalArgumentException if the bind address does not end
      * with a colon-delimited port number
@@ -387,7 +394,7 @@ public final class InvocationVariables {
      * @throws UnknownHostException if the text before the last colon
      * cannot be parsed as a host name or IP address
      */
-    public static InetSocketAddress getInetBindAddress()
+    public static Collection<InetSocketAddress> getInetBindAddresses()
         throws UnknownHostException {
         String value = System.getenv(INET_BIND_ADDR);
         if (value == null) return null;
@@ -398,8 +405,10 @@ public final class InvocationVariables {
         String portText = value.substring(colon + 1);
         String hostText = value.substring(0, colon);
         int port = Integer.parseInt(portText);
-        InetAddress host = InetAddress.getByName(hostText);
-        var result = new InetSocketAddress(host, port);
+        InetAddress[] hosts = InetAddress.getAllByName(hostText);
+        var result = Arrays.asList(hosts).stream()
+            .map(h -> new InetSocketAddress(h, port))
+            .collect(Collectors.toList());
         logger.info(() -> String.format("stand-alone INET bind detected as %s",
                                         result));
         return result;

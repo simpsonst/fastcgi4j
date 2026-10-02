@@ -36,6 +36,14 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.engine.Attribute;
 import uk.ac.lancs.fastcgi.engine.Engine;
@@ -51,12 +59,36 @@ import uk.ac.lancs.scc.jardeps.Application;
 public class MD5SumApp {
     @SuppressWarnings("empty-statement")
     public static void main(String[] args) throws Exception {
-        Transport conns = Transport.get();
+        Collection<? extends Transport> transports = Transport.get();
         Responder rsper = new MD5SumResponder();
-        Engine engine = Engine.start().with(Attribute.MAX_CONN, 10)
+        var maker = Engine.start().with(Attribute.MAX_CONN, 10)
             .with(Attribute.MAX_SESS_PER_CONN, 10)
-            .with(Attribute.RESPONDER, rsper).build().apply(conns);
-        while (engine.process())
-            ;
+            .with(Attribute.RESPONDER, rsper).build();
+
+        final List<Future<Void>> results;
+        try (ExecutorService exec =
+            Executors.newVirtualThreadPerTaskExecutor()) {
+            results = exec.invokeAll(transports.stream()
+                .map(mapToEngineExhaust(maker)).collect(Collectors.toList()));
+        }
+        for (var r : results)
+            r.get();
+    }
+
+    private static Function<Transport, Callable<Void>>
+        mapToEngineExhaust(Function<? super Transport,
+                                    ? extends Engine> maker) {
+        return t -> exhaustEngine(maker, t);
+    }
+
+    private static Callable<Void>
+        exhaustEngine(Function<? super Transport, ? extends Engine> maker,
+                      Transport t) {
+        Engine engine = maker.apply(t);
+        return () -> {
+            while (engine.process())
+                ;
+            return null;
+        };
     }
 }

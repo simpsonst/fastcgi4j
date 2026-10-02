@@ -45,11 +45,19 @@ import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import java.util.ServiceLoader;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import uk.ac.lancs.fastcgi.Authorizer;
 import uk.ac.lancs.fastcgi.Filter;
 import uk.ac.lancs.fastcgi.Responder;
@@ -106,7 +114,16 @@ public class FastCGIApplication {
 
     /**
      * Start and run a FastCGI application, using command-line arguments
-     * as configuration.
+     * as configuration. Having parsed the command-line arguments, it
+     * either instantiates a named class sub-typing
+     * {@link FastCGIApplication} or seeks a {@linkplain ServiceLoader
+     * service} of that type, and then
+     * {@link FastCGIApplication#init(FastCGIConfiguration, String[])}
+     * is invoked on the created instance. A set of {@link Transport}s
+     * is obtained with {@link Transport#get()}, and then an engine is
+     * created for each one, and set to invoke the
+     * {@link FastCGIApplication}. A virtual thread continuously calls
+     * {@link Engine#process()} on each engine until exhausted.
      * 
      * @param args command-line arguments. These take the form
      * <kbd><var>options</var> <var>class-name</var>
@@ -359,7 +376,7 @@ public class FastCGIApplication {
 
                 /* Prepare to receive connections, and build the
                  * engine. */
-                Transport conns = Transport.get();
+                Collection<? extends Transport> conns = Transport.get();
                 var builder = Engine.start();
 
                 /* Indicate which roles the application supports. */
@@ -373,13 +390,34 @@ public class FastCGIApplication {
                     .tryingProperty(Attribute.BUFFER_SIZE, BUFFER_PROP);
 
                 /* Build the engine and start it. */
-                Engine engine = builder.build().apply(conns);
-                try {
-                    while (engine.process())
-                        ;
-                    return true;
-                } finally {
-                    app.term();
+                Function<? super Transport, ? extends Engine> engineMaker =
+                    builder.build();
+                final List<Future<Void>> results;
+                try (ExecutorService exec =
+                    Executors.newVirtualThreadPerTaskExecutor()) {
+                    results = exec.invokeAll(conns.stream()
+                        .map(mapToEngineExhaust(engineMaker))
+                        .collect(Collectors.toList()));
+                    try {
+                        for (var fb : results) {
+                            try {
+                                fb.get();
+                            } catch (ExecutionException ex) {
+                                try {
+                                    throw ex.getCause();
+                                } catch (IOException ex2) {
+                                    throw ex2;
+                                } catch (Throwable t) {
+                                    throw new AssertionError("unreachable", t);
+                                }
+                            }
+                        }
+                        return true;
+                    } finally {
+                        app.term();
+                    }
+                } catch (InterruptedException ex) {
+                    return false;
                 }
             }
         }
@@ -391,6 +429,23 @@ public class FastCGIApplication {
             System.err.printf("no suitable engine%n");
             System.exit(2);
         }
+    }
+
+    private static Function<Transport, Callable<Void>>
+        mapToEngineExhaust(Function<? super Transport,
+                                    ? extends Engine> maker) {
+        return t -> exhaustEngine(maker, t);
+    }
+
+    private static Callable<Void>
+        exhaustEngine(Function<? super Transport, ? extends Engine> maker,
+                      Transport t) {
+        Engine engine = maker.apply(t);
+        return () -> {
+            while (engine.process())
+                ;
+            return null;
+        };
     }
 
     private static final Pattern DEF_PATTERN =

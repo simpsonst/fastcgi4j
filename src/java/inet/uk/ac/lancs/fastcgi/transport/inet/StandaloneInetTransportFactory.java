@@ -42,7 +42,10 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import uk.ac.lancs.fastcgi.env.InvocationVariables;
 import uk.ac.lancs.fastcgi.transport.Transport;
 import uk.ac.lancs.fastcgi.transport.TransportConfigurationException;
@@ -69,25 +72,31 @@ import uk.ac.lancs.scc.jardeps.Service;
 @Service(TransportFactory.class)
 public class StandaloneInetTransportFactory implements TransportFactory {
     @Override
-    public Transport getTransport() {
+    public Collection<? extends Transport> getTransports() {
         try {
             /* What do we bind to? If not set, it's not our
              * transport. */
-            InetSocketAddress bindAddress =
-                InvocationVariables.getInetBindAddress();
-            if (bindAddress == null) return null;
+            Collection<InetSocketAddress> bindAddresses =
+                InvocationVariables.getInetBindAddresses();
+            if (bindAddresses == null) return Collections.emptyList();
 
             /* We must know what peers are permitted. */
             Collection<InetAddress> allowedPeers =
                 InvocationVariables.getAuthorizedStandaloneInetPeers();
-            if (allowedPeers == null) return null;
+            if (allowedPeers == null) return Collections.emptyList();
 
-            final ServerSocket ss;
-            final String descr;
-            ss = new ServerSocket(bindAddress.getPort(), 5,
-                                  bindAddress.getAddress());
-            descr = STANDALONE_DESCRIPTION;
-            return new StandaloneInetTransport(descr, ss, allowedPeers);
+            /* Create a server socket for each bind address, and then a
+             * transport from it. */
+            List<Transport> result = new ArrayList<>(bindAddresses.size());
+            for (var ba : bindAddresses) {
+                final ServerSocket ss;
+                final String descr;
+                ss = new ServerSocket(ba.getPort(), 5, ba.getAddress());
+                descr = STANDALONE_DESCRIPTION;
+                var ent = new StandaloneInetTransport(descr, ss, allowedPeers);
+                result.add(ent);
+            }
+            return result;
         } catch (IOException ex) {
             throw new TransportConfigurationException(ex);
         }

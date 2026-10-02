@@ -38,6 +38,7 @@
 
 package uk.ac.lancs.fastcgi.transport;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -51,6 +52,6 @@ final class Transports {
      * Provides lazy initialization of per-class-loader connection
      * supplies.
      */
-    static final Map<ClassLoader, Transport> supplies =
+    static final Map<ClassLoader, Collection<? extends Transport>> supplies =
         new ConcurrentHashMap<>();
 }
