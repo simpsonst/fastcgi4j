@@ -67,7 +67,8 @@ public final class InvocationVariables {
     /**
      * Specifies the name of the environment variable identifying IP
      * addresses of legitimate peers. The variable is called
-     * <samp>{@value "%s"}</samp>.
+     * <samp>{@value "%s"}</samp>, and is read by
+     * {@link #getAuthorizedInetPeers()}.
      */
     public static final String WEB_SERVER_ADDRS = "FCGI_WEB_SERVER_ADDRS";
 
@@ -340,7 +341,9 @@ public final class InvocationVariables {
      * Specifies the name of the environment variable identifying IP
      * addresses of legitimate peers (Internet-domain, when running in
      * stand-alone mode) or names of legitimate users/groups
-     * (Unix-domain). The variable is called <samp>{@value "%s"}</samp>.
+     * (Unix-domain). The variable is called <samp>{@value "%s"}</samp>,
+     * and is read by {@link #getAuthorizedStandaloneInetPeers()} and
+     * {@link #getAuthorizedStandalonePrincipals()}.
      * 
      * <p>
      * The value of the variable is a comma-separated list. For the
@@ -355,7 +358,8 @@ public final class InvocationVariables {
     /**
      * Specifies the name of the environment variable instructing the
      * application process to bind to an Internet-domain socket address.
-     * The variable is called <samp>{@value "%s"}</samp>.
+     * The variable is called <samp>{@value "%s"}</samp>, and is read by
+     * {@link #getInetBindAddresses()}.
      */
     public static final String INET_BIND_ADDR = "FASTCGI4J_INET_BIND";
 
