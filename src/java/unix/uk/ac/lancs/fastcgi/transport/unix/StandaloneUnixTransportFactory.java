@@ -45,7 +45,6 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Collection;
@@ -85,8 +84,8 @@ public class StandaloneUnixTransportFactory implements TransportFactory {
     @Override
     public Transport getTransport() {
         try {
-            String pathText = System.getenv(InvocationVariables.UNIX_BIND_ADDR);
-            if (pathText == null) return null;
+            Path path = InvocationVariables.getUnixBindPath();
+            if (path == null) return Collections.emptyList();
 
             /* Determine who is allowed to connect. */
             Collection<PrincipalRequirement> allowedPeers =
@@ -98,7 +97,6 @@ public class StandaloneUnixTransportFactory implements TransportFactory {
                 };
 
             /* Bind to the configured path. */
-            Path path = Paths.get(pathText);
             UnixDomainSocketAddress addr = UnixDomainSocketAddress.of(path);
             final ServerSocketChannel ssc =
                 ServerSocketChannel.open(StandardProtocolFamily.UNIX);

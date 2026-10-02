@@ -41,6 +41,8 @@ package uk.ac.lancs.fastcgi.env;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -360,7 +362,8 @@ public final class InvocationVariables {
     /**
      * Specifies the name of the environment variable instructing the
      * application process to bind to a Unix-domain socket address. The
-     * variable is called <samp>{@value "%s"}</samp>.
+     * variable is called <samp>{@value "%s"}</samp>, and is read by
+     * {@link #getUnixBindPath()}.
      */
     public static final String UNIX_BIND_ADDR = "FASTCGI4J_UNIX_BIND";
 
@@ -394,6 +397,25 @@ public final class InvocationVariables {
         InetAddress host = InetAddress.getByName(hostText);
         var result = new InetSocketAddress(host, port);
         logger.info(() -> String.format("stand-alone INET bind detected as %s",
+                                        result));
+        return result;
+    }
+
+    /**
+     * Get the path that a stand-alone Unix-domain application process
+     * should bind to. The environment variable <samp>{@value "%s"
+     * #UNIX_BIND_ADDR}</samp> is read and interpreted as a path using
+     * {@link Paths#get(String, String...)}.
+     * 
+     * @return the path to bind to; or {@code null} if this process
+     * should not be running stand-alone because is <samp>{@value "%s"
+     * #UNIX_BIND_ADDR}</samp> not set
+     */
+    public static Path getUnixBindPath() {
+        var pathText = System.getenv(UNIX_BIND_ADDR);
+        if (pathText == null) return null;
+        var result = Paths.get(pathText);
+        logger.info(() -> String.format("stand-alone UNIX bind detected as %s",
                                         result));
         return result;
     }
