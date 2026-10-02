@@ -80,7 +80,6 @@ import uk.ac.lancs.scc.jardeps.Service;
  */
 @Service(TransportFactory.class)
 public class StandaloneUnixTransportFactory implements TransportFactory {
-
     @Override
     public Transport getTransport() {
         try {
