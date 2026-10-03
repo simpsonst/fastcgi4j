@@ -77,7 +77,7 @@ public class TrailerMapCap implements Cap {
                          Predicate<? super String> isHopByHop,
                          Map<? extends CharSequence,
                              ? extends List<? extends CharSequence>> base) {
-        this(null, isHopByHop, base, (x, y) -> {});
+        this(extMgr, isHopByHop, base, (x, y) -> {});
     }
 
     /**
