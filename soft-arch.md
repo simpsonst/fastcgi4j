@@ -5,8 +5,8 @@ The library distributes FastCGI functionality across the following Java source t
 - `role` defines the interfaces that FastCGI applications must implement to receive requests (`Responder`, `Authorizer`, `Filter`), and the types that express those requests and accept responses (correspondingly, `ResponderSession`, `AuthorizerSession`, `FilterSession`).
   These are intentially kept basic and protocol-agnostic.
 - `transport` defines means of communication between web server and FastCGI application.
-  Here, the choice between server-managed and stand-alone lifecyles is made, as well as whether Unix- or Internet-domain sockets are used.
-  A plug-in framework permits new, environmentally selected transports to be deployed at run time, without application changes.
+  Here, the choice is made between server-managed and stand-alone lifecyles is made, as well as whether Unix- or Internet-domain sockets are used.
+  A plug-in framework enables new, environmentally selected transports to be deployed at run time, without application changes.
 - `proto` defines symbolic constants and tools for (de)serializing FastCGI records.
 - `engine` defines a plug-in framework for engines that bind a transport to an application's role implementations.
 - `threads` extends the engine framework to allow alternative threading strategies.
@@ -55,5 +55,3 @@ Here are the other trees' dependencies:
 
 *Note that `demos` includes some applications that divert around the application abstraction in `app`, and so consequently need access to `engine` and `transport`.
 Ordinary applications do not normally need these to compile.
-
-[!](tree-deps.svg)
