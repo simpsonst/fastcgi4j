@@ -69,7 +69,7 @@ import uk.ac.lancs.fastcgi.ResponderSession;
 import uk.ac.lancs.fastcgi.Session;
 import uk.ac.lancs.fastcgi.ots.OTSControl;
 import uk.ac.lancs.http.Negotiation;
-import uk.ac.lancs.http.cache.InboundCacheControl;
+import uk.ac.lancs.http.cache.CacheInstruction;
 import uk.ac.lancs.http.encoding.Decoder;
 import uk.ac.lancs.http.encoding.Encoder;
 import uk.ac.lancs.http.encoding.EncodingContext;
@@ -1019,7 +1019,7 @@ public class HttpResponderSession implements AutoCloseable, Session {
         return responseTrailer;
     }
 
-    private InboundCacheControl requestCacheControl = null;
+    private CacheInstruction requestCacheControl = null;
 
     /**
      * Get <code>Cache-Control</code> directives specified by the
@@ -1027,11 +1027,10 @@ public class HttpResponderSession implements AutoCloseable, Session {
      * 
      * @return the cache-control directives for the request
      */
-    public InboundCacheControl requestCacheControl() {
-        if (requestCacheControl == null)
-            requestCacheControl = InboundCacheControl
-                .ofRequest(requestExtMgr, requestHeader::isHopByHop,
-                           base.parameters().get(CACHE_CONTROL_PARAM));
+    public CacheInstruction requestCacheControl() {
+        if (requestCacheControl == null) requestCacheControl = CacheInstruction
+            .ofRequest(requestExtMgr, requestHeader::isHopByHop,
+                       base.parameters().get(CACHE_CONTROL_PARAM));
         return requestCacheControl;
     }
 

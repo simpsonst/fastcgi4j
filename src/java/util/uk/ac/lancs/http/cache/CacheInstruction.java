@@ -58,7 +58,7 @@ import uk.ac.lancs.mime.Tokenizer;
  * 
  * @author simpsons
  */
-public final class InboundCacheControl {
+public final class CacheInstruction {
     private static void parse(CharSequence line, Map<String, String> qualified,
                               Collection<String> unqualified) {
         if (line == null) return;
@@ -132,10 +132,10 @@ public final class InboundCacheControl {
      * 
      * @constructor
      */
-    public static InboundCacheControl of(ExtensionIndex exts,
-                                         Predicate<? super String> isHopByHop,
-                                         CharSequence line) {
-        return new InboundCacheControl(exts, isHopByHop, line, 0);
+    public static CacheInstruction of(ExtensionIndex exts,
+                                      Predicate<? super String> isHopByHop,
+                                      CharSequence line) {
+        return new CacheInstruction(exts, isHopByHop, line, 0);
     }
 
     /**
@@ -155,10 +155,10 @@ public final class InboundCacheControl {
      * 
      * @constructor
      */
-    public static InboundCacheControl
+    public static CacheInstruction
         ofRequest(ExtensionIndex exts, Predicate<? super String> isHopByHop,
                   CharSequence line) {
-        return new InboundCacheControl(exts, isHopByHop, line, -1);
+        return new CacheInstruction(exts, isHopByHop, line, -1);
     }
 
     /**
@@ -178,10 +178,10 @@ public final class InboundCacheControl {
      * 
      * @constructor
      */
-    public static InboundCacheControl
+    public static CacheInstruction
         ofResponse(ExtensionIndex exts, Predicate<? super String> isHopByHop,
                    CharSequence line) {
-        return new InboundCacheControl(exts, isHopByHop, line, +1);
+        return new CacheInstruction(exts, isHopByHop, line, +1);
     }
 
     /**
@@ -219,9 +219,9 @@ public final class InboundCacheControl {
      * @throws IllegalArgumentException if the line does not parse as a
      * <code>{@value "%s" FieldNames#CACHE_CONTROL}</code> value
      */
-    private InboundCacheControl(ExtensionIndex exts,
-                                Predicate<? super String> isHopByHop,
-                                CharSequence line, int mode) {
+    private CacheInstruction(ExtensionIndex exts,
+                             Predicate<? super String> isHopByHop,
+                             CharSequence line, int mode) {
         Map<String, String> qualifiedDirectives =
             new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         Collection<String> unqualifiedDirectives =
