@@ -40,7 +40,6 @@ package uk.ac.lancs.http.field;
 
 import java.net.URI;
 import java.util.Objects;
-import java.util.function.Function;
 import uk.ac.lancs.mime.Tokenizer;
 
 /**
@@ -370,7 +369,7 @@ public final class FieldExtension extends FieldNamespace {
     /**
      * {@inheritDoc}
      * 
-     * @param extensionMapping {@inheritDoc}
+     * @param mapping {@inheritDoc}
      * 
      * @return {@inheritDoc}
      * 
@@ -378,14 +377,14 @@ public final class FieldExtension extends FieldNamespace {
      * given mapping
      */
     @Override
-    public String prefix(Function<? super FieldExtension,
-                                  ? extends ExtensionPrefix> extensionMapping) {
-        return extensionMapping.apply(this).toString() + '-';
+    public String prefix(ExtensionTable mapping) {
+        return mapping.seek(this).toString() + '-';
     }
 
     /**
-     * The name of the attribute that specifies the prefix in an
-     * extension namespace definition, namely <code>{@value}</code>
+     * The name of the attribute that specifies the internal identifier
+     * in an extension namespace definition, namely
+     * <code>{@value}</code>
      */
     public static final String PREFIX_ATTRIBUTE = "ns";
 

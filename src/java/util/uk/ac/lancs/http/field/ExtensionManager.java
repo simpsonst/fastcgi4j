@@ -1,5 +1,7 @@
+// -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
+
 /*
- * Copyright (c) 2026, Lancaster University
+ * Copyright (c) 2022,2023,2026, Lancaster University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,32 +38,105 @@
 
 package uk.ac.lancs.http.field;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
- * Defines methods common to inbound and outbound extension managers.
- * This includes being able to look up the prefix and attributes of a
- * field extension.
- *
+ * Tracks the relation between extensions and their local identifiers.
+ * 
  * @author simpsons
  */
-public interface ExtensionManager {
-    /**
-     * Get the additional attributes of a namespace.
-     *
-     * @param ns the extension namespace
-     *
-     * @return additional attributes of the namespace, mutable if this
-     * object has not been frozen
-     */
-    Map<String, String> attributes(FieldExtension ns);
+public final class ExtensionManager
+    implements ExtensionRecord, ExtensionRegistry, ExtensionAccumulator {
+    private int nextWidth = 2;
+
+    private int nextValue = 0;
+
+    private int nextLimit = 100;
+
+    private final Map<FieldExtension, InternalId> ids = new HashMap<>();
+
+    private final Map<InternalId, FieldExtension> extensions = new HashMap<>();
+
+    private final Map<FieldExtension, Map<String, String>> attributes =
+        new HashMap<>();
+
+    private boolean frozen = false;
 
     /**
-     * Map an extension to a prefix.
-     *
-     * @param ext the extension whose prefix is sought
-     *
-     * @return the extension's prefix if defined; {@code null} otherwise
+     * Prevent further changes. This causes attempted modifications to
+     * throw {@link IllegalStateException}.
+     * 
+     * @return the frozen mapping from each extension to its assigned
+     * identifier and attributes
      */
-    ExtensionPrefix seek(FieldExtension ext);
+    public Map<FieldExtension, Map.Entry<InternalId, Map<String, String>>>
+        freeze() {
+        frozen = true;
+        return ids.entrySet().stream()
+            .collect(Collectors
+                .toMap(Map.Entry::getKey,
+                       e -> Map.entry(e.getValue(), attributes(e.getKey()))));
+    }
+
+    @Override
+    public InternalId define(FieldExtension ext, InternalId pfx) {
+        if (frozen) throw new IllegalStateException("frozen");
+        var existing = ids.get(ext);
+        if (existing != null) return existing;
+        if (extensions.containsKey(pfx))
+            throw new IllegalStateException("internal id in use: " + pfx);
+        ids.put(ext, pfx);
+        extensions.put(pfx, ext);
+        return pfx;
+    }
+
+    @Override
+    public Map<String, String> attributes(FieldExtension ns) {
+        if (frozen) {
+            var r = attributes.get(ns);
+            if (r == null) return Collections.emptyMap();
+            return Collections.unmodifiableMap(r);
+        }
+        return attributes.computeIfAbsent(ns, k -> new HashMap<>());
+    }
+
+    @Override
+    public FieldExtension seek(InternalId pfx) {
+        return extensions.get(pfx);
+    }
+
+    @Override
+    public InternalId seek(FieldExtension ext) {
+        return ids.get(ext);
+    }
+
+    @Override
+    public InternalId define(FieldExtension ext) {
+        if (frozen) throw new IllegalStateException("frozen");
+        var existing = ids.get(ext);
+        if (existing != null) return existing;
+        do {
+            var pfx = InternalId.of(nextWidth, nextValue++);
+            if (nextValue == nextLimit) {
+                nextWidth++;
+                nextLimit *= 10;
+                nextValue = 0;
+            }
+            if (extensions.containsKey(pfx)) continue;
+            ids.put(ext, pfx);
+            extensions.put(pfx, ext);
+            return pfx;
+        } while (true);
+    }
+
+    @Override
+    public Set<FieldExtension> mandatories() {
+        return ids.keySet().stream()
+            .filter(e -> e.strength == FieldStrength.MANDATORY)
+            .collect(Collectors.toSet());
+    }
 }

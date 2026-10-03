@@ -1,5 +1,3 @@
-// -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
-
 /*
  * Copyright (c) 2026, Lancaster University
  * All rights reserved.
@@ -39,23 +37,18 @@
 package uk.ac.lancs.http.field;
 
 /**
- * Allows extensions to be defined by received prefix.
+ * Allows an extension to be identified by its prefix.
  *
  * @author simpsons
  */
-public interface DefinableExtensionManager extends ExtensionManager {
+public interface ExtensionIndex {
     /**
-     * Relate an extension to a suggested prefix.
+     * Map a prefix to an extension.
      *
-     * @param pfx the suggested prefix
+     * @param pfx the prefix of the sought extension
      *
-     * @param ext the extension to relate
-     *
-     * @return the existing prefix if the extension has already been
-     * related; the new prefix if that is used
-     *
-     * @throws IllegalStateException if the extension has no related
-     * prefix, but the suggested prefix is already in use
+     * @return the extension if related to the prefix; {@code null}
+     * otherwise
      */
-    ExtensionPrefix define(FieldExtension ext, ExtensionPrefix pfx);
+    FieldExtension seek(InternalId pfx);
 }

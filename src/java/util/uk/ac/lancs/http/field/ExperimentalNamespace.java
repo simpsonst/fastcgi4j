@@ -38,11 +38,9 @@
 
 package uk.ac.lancs.http.field;
 
-import java.util.function.Function;
-
 /**
  * Represents namespaces that use the experimental prefix
- * <code>X-</code>.
+ * <samp>{@value "%s" FieldNamespace#EXPERIMENTAL_PREFIX}</samp>.
  * 
  * @author simpsons
  */
@@ -63,15 +61,13 @@ abstract class ExperimentalNamespace extends StaticNamespace {
      * @implNote Experimental namespaces use the same prefix, which this
      * method always returns.
      * 
-     * @param extensionMapping ignored
+     * @param table ignored
      * 
      * @return the experimental prefix, <samp>{@value "%s"
      * #EXPERIMENTAL_PREFIX}</samp>
      */
     @Override
-    public final String
-        prefix(Function<? super FieldExtension,
-                        ? extends ExtensionPrefix> extensionMapping) {
+    public final String prefix(ExtensionTable table) {
         return EXPERIMENTAL_PREFIX;
     }
 }

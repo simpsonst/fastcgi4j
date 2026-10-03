@@ -36,19 +36,22 @@
 
 package uk.ac.lancs.http.field;
 
+import java.util.Map;
+
 /**
- * Allows an extension to be sought by prefix.
+ * Provides a mapping from an extension to its prefix and its
+ * attributes.
  *
  * @author simpsons
  */
-public interface PrefixSeekableExtensionManager {
+public interface AttributedExtensionTable extends ExtensionTable {
     /**
-     * Map a prefix to an extension.
+     * Get the additional attributes of a namespace.
      *
-     * @param pfx the prefix of the sought extension
+     * @param ns the extension namespace
      *
-     * @return the extension if related to the prefix; {@code null}
-     * otherwise
+     * @return additional attributes of the namespace; mutable for
+     * outgoing extensions
      */
-    FieldExtension seek(ExtensionPrefix pfx);
+    Map<String, String> attributes(FieldExtension ns);
 }

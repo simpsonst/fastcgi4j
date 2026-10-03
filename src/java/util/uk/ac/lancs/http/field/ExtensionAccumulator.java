@@ -38,19 +38,24 @@
 
 package uk.ac.lancs.http.field;
 
-import java.util.Set;
-
 /**
- * Allows extension definitions to be interrogated.
- * 
+ * Keeps track of received extension definitions.
+ *
  * @author simpsons
  */
-public interface InboundExtensionManager
-    extends ExtensionManager, PrefixSeekableExtensionManager {
+public interface ExtensionAccumulator extends AttributedExtensionTable {
     /**
-     * Identify mandatory field extensions registered with this manager.
+     * Relate an extension to a suggested internal identifier.
      *
-     * @return an immutable set of mandatory field extensions
+     * @param pfx the suggested identifier
+     *
+     * @param ext the extension to relate
+     *
+     * @return the existing identifier if the extension has already been
+     * related; the suggested identifier if that is used
+     *
+     * @throws IllegalStateException if the extension has no related
+     * identifier, but the suggested identifier is already in use
      */
-    Set<FieldExtension> mandatories();
+    InternalId define(FieldExtension ext, InternalId pfx);
 }

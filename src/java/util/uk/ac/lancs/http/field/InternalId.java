@@ -39,38 +39,43 @@
 package uk.ac.lancs.http.field;
 
 /**
- * Expresses a numeric prefix for a field extension.
+ * Expresses an internal numeric identifier for a field extension. An
+ * internal id is only valid within the scope of a single HTTP message,
+ * but applies to both header and trailer. It is used as a shorthand for
+ * an extension namespace for field names, and may also apply to
+ * components of field values (especially when such values are defined
+ * to hold field names).
  *
  * @author simpsons
  */
-public final class ExtensionPrefix {
+public final class InternalId {
     /**
-     * The numeric value of the prefix
+     * The numeric value of the identifier
      */
     public final int value;
 
     /**
-     * The width of the prefix in decimal digits
+     * The width of the identifier in decimal digits
      */
     public final int width;
 
-    private ExtensionPrefix(int width, int value) {
+    private InternalId(int width, int value) {
         this.value = value;
         this.width = width;
     }
 
     /**
-     * Get the extension prefix from a character sequence.
+     * Get the extension identifier from a character sequence.
      * 
      * @param cs the source character sequence
      * 
-     * @return the extension prefix
+     * @return the extension identifier
      * 
      * @throws IllegalArgumentException if the sequence does not begin
      * with at least two decimal digits, or the digits are followed by
      * anything other than a dash
      */
-    public static ExtensionPrefix of(CharSequence cs) {
+    public static InternalId of(CharSequence cs) {
         final int ln = cs.length();
         int val = 0, wid = 0;
         for (int i = 0; i < ln; i++) {
@@ -93,52 +98,52 @@ public final class ExtensionPrefix {
 
             case '-':
                 if (wid < 2)
-                    throw new IllegalArgumentException("narrow prefix: "
+                    throw new IllegalArgumentException("narrow identifier: "
                         + cs.subSequence(0, i + 1));
-                return new ExtensionPrefix(wid, val);
+                return new InternalId(wid, val);
 
             default:
-                throw new IllegalArgumentException("bad prefix: "
+                throw new IllegalArgumentException("bad identifier: "
                     + cs.subSequence(0, i + 1));
             }
         }
-        return new ExtensionPrefix(wid, val);
+        return new InternalId(wid, val);
     }
 
     /**
-     * Create an extension prefix from width and value.
+     * Create an extension identifier from width and value.
      * 
-     * @param width the width of the prefix in decimal digits
+     * @param width the width of the identifier in decimal digits
      * 
-     * @param value the numeric value of the prefix
+     * @param value the numeric value of the identifier
      * 
-     * @return the extension prefix
+     * @return the extension identifier
      * 
      * @throws IllegalArgumentException if the width is less than 2; the
      * value is negative; or the value is too wide for the given width
      * 
      * @constructor
      */
-    public static ExtensionPrefix of(int width, int value) {
+    public static InternalId of(int width, int value) {
         if (width < 2)
-            throw new IllegalArgumentException("bad extension prefix width: "
+            throw new IllegalArgumentException("bad extension identifier width: "
                 + width);
         if (value < 0)
-            throw new IllegalArgumentException("negative extension prefix: "
+            throw new IllegalArgumentException("negative extension identifier: "
                 + value);
         int max = 1;
         for (int i = 0; i < width; i++)
             max *= 10;
         if (value >= max)
-            throw new IllegalArgumentException("extension prefix too wide: "
+            throw new IllegalArgumentException("extension identifier too wide: "
                 + value + " in " + width);
-        return new ExtensionPrefix(width, value);
+        return new InternalId(width, value);
     }
 
     /**
-     * Get a string representation of the prefix. The value is converted
-     * to decimal with the given number of digits, including leading
-     * zeroes if necessary.
+     * Get a string representation of the identifier. The value is
+     * converted to decimal with the given number of digits, including
+     * leading zeroes if necessary.
      * 
      * @return the string representation
      */
@@ -171,15 +176,15 @@ public final class ExtensionPrefix {
      * 
      * @param obj the object to test
      * 
-     * @return {@code true} if the object is an extension prefix with
-     * the same width and value; {@code false} otherwise
+     * @return {@code true} if the object is an extension identifier
+     * with the same width and value; {@code false} otherwise
      */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (obj == null) return false;
         if (getClass() != obj.getClass()) return false;
-        final ExtensionPrefix other = (ExtensionPrefix) obj;
+        final InternalId other = (InternalId) obj;
         if (this.value != other.value) return false;
         return this.width == other.width;
     }

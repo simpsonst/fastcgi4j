@@ -1,7 +1,5 @@
-// -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
-
 /*
- * Copyright (c) 2022,2023,2026, Lancaster University
+ * Copyright (c) 2026, Lancaster University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,58 +36,19 @@
 
 package uk.ac.lancs.http.field;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 /**
- * Represents the namespaces with no prefix.
+ * Provides a mapping from an extension to its internal identifier.
  *
  * @author simpsons
  */
-abstract class StandardNamespace extends StaticNamespace {
-    private static final String BAD_FIELD_PATTERN_TEXT = "^([0-9]{2,}|[Xx])-";
-
-    private static final Pattern BAD_FIELD_PATTERN =
-        Pattern.compile(BAD_FIELD_PATTERN_TEXT);
-
+public interface ExtensionTable {
     /**
-     * {@inheritDoc}
-     * 
-     * @return always {@link Kind#STANDARD}
+     * Get the internal identifier of an extension.
+     *
+     * @param ext the extension whose identifier is sought
+     *
+     * @return the extension's internal identifier if defined;
+     * {@code null} otherwise
      */
-    @Override
-    public Kind kind() {
-        return Kind.STANDARD;
-    }
-
-    /**
-     * {@inheritDoc} This fails if the core name matches
-     * <samp>{@value "%s" #BAD_FIELD_PATTERN_TEXT}</samp>.
-     * 
-     * @param core the core name for the field
-     * 
-     * @return {@inheritDoc}
-     */
-    @Override
-    public FieldId of(CharSequence core) {
-        Matcher m = BAD_FIELD_PATTERN.matcher(core);
-        if (m.matches()) throw new IllegalArgumentException("bad native"
-            + " field core: " + core);
-        return super.of(core);
-    }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @implNote Standard namespaces always use no prefix, so this
-     * method always returns an empty string.
-     * 
-     * @param table ignored
-     * 
-     * @return an empty string
-     */
-    @Override
-    public final String prefix(ExtensionTable table) {
-        return "";
-    }
+    InternalId seek(FieldExtension ext);
 }

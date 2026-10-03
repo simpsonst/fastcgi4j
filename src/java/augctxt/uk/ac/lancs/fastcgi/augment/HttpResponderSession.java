@@ -77,10 +77,12 @@ import uk.ac.lancs.http.encoding.InputMapping;
 import uk.ac.lancs.http.encoding.OutputEncoding;
 import uk.ac.lancs.http.encoding.ResponseEncodingControl;
 import uk.ac.lancs.http.encoding.ResponseEncodingPlanner;
-import uk.ac.lancs.http.field.BasicExtensionManager;
 import uk.ac.lancs.http.field.CGIRequestCap;
 import uk.ac.lancs.http.field.Cap;
-import uk.ac.lancs.http.field.ExtensionPrefix;
+import uk.ac.lancs.http.field.ExtensionManager;
+import uk.ac.lancs.http.field.InternalId;
+import uk.ac.lancs.http.field.ExtensionRecord;
+import uk.ac.lancs.http.field.ExtensionRegistry;
 import uk.ac.lancs.http.field.Field;
 import uk.ac.lancs.http.field.FieldExtension;
 import uk.ac.lancs.http.field.FieldId;
@@ -88,8 +90,6 @@ import uk.ac.lancs.http.field.FieldNameSets;
 import uk.ac.lancs.http.field.FieldNames;
 import uk.ac.lancs.http.field.FieldNamespace;
 import uk.ac.lancs.http.field.FieldScope;
-import uk.ac.lancs.http.field.InboundExtensionManager;
-import uk.ac.lancs.http.field.OutboundExtensionManager;
 import uk.ac.lancs.http.field.TrailerMapCap;
 import uk.ac.lancs.mime.MediaType;
 import uk.ac.lancs.mime.Tokenizer;
@@ -548,15 +548,14 @@ public class HttpResponderSession implements AutoCloseable, Session {
         return requestHeader;
     }
 
-    private final BasicExtensionManager requestExtMgr =
-        new BasicExtensionManager();
+    private final ExtensionManager requestExtMgr = new ExtensionManager();
 
     /**
-     * Get the extension manager for the request.
+     * Get the extension record for the request header and trailer.
      * 
-     * @return the request extension manager
+     * @return the request extension record
      */
-    public InboundExtensionManager requestExtensions() {
+    public ExtensionRecord requestExtensions() {
         return requestExtMgr;
     }
 
@@ -567,16 +566,15 @@ public class HttpResponderSession implements AutoCloseable, Session {
      * 
      * @return the response extension manager
      */
-    private final BasicExtensionManager responseExtMgr =
-        new BasicExtensionManager();
+    private final ExtensionManager responseExtMgr = new ExtensionManager();
 
     /**
-     * Get the manager for extensions used in the response header and
+     * Get the extension registry to be used for the response header and
      * trailer.
      * 
-     * @return the requested extension manager
+     * @return the response extension registry
      */
-    public OutboundExtensionManager responseExtensions() {
+    public ExtensionRegistry responseExtensions() {
         return responseExtMgr;
     }
 
@@ -841,7 +839,7 @@ public class HttpResponderSession implements AutoCloseable, Session {
              * namespace prefix without the dash, then other
              * attributes. */
             var v = ent.getValue();
-            ExtensionPrefix pfx = v.getKey();
+            InternalId pfx = v.getKey();
             Map<String, String> attrs = v.getValue();
             StringBuilder value = new StringBuilder();
             value.append('"').append(ext.nsuri).append("\"; ns=").append(pfx);
@@ -862,8 +860,7 @@ public class HttpResponderSession implements AutoCloseable, Session {
         if (!varyingFields.isEmpty()) {
             base.clearField(FieldNames.VARY);
             for (var v : varyingFields)
-                base.addField(FieldNames.VARY,
-                              v.prefixedName(responseExtMgr::seek));
+                base.addField(FieldNames.VARY, v.prefixedName(responseExtMgr));
         }
 
         /* Set raw response header fields based on our local namespaced
@@ -871,7 +868,7 @@ public class HttpResponderSession implements AutoCloseable, Session {
         for (var ent : responseHeaderFields.entrySet()) {
             FieldId fieldId = ent.getKey();
             FieldNamespace ns = fieldId.namespace();
-            final String field = fieldId.prefixedName(responseExtMgr::seek);
+            final String field = fieldId.prefixedName(responseExtMgr);
             var values = ent.getValue();
             for (var value : values)
                 base.addField(field, value);
@@ -890,7 +887,7 @@ public class HttpResponderSession implements AutoCloseable, Session {
         base.clearField(FieldNames.TRAILER);
         for (var id : responseTrailerExpectation) {
             FieldNamespace ns = id.namespace();
-            final String field = id.prefixedName(responseExtMgr::seek);
+            final String field = id.prefixedName(responseExtMgr);
             base.addField(FieldNames.TRAILER, field);
             if (ns.scope() == FieldScope.HOP_BY_HOP) hopByHopFields.add(field);
         }

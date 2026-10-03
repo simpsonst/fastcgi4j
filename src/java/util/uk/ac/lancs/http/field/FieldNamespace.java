@@ -38,8 +38,6 @@
 
 package uk.ac.lancs.http.field;
 
-import java.util.function.Function;
-
 /**
  * Allows fields with the same core name to be distinguished. Regular
  * fields can be defined using
@@ -175,15 +173,12 @@ public abstract class FieldNamespace {
     /**
      * Get the prefix used by this namespace, given a mapping context.
      * 
-     * @param extensionMapping the mapping from extension to prefix,
-     * yielding {@code null} if not present
+     * @param table the mapping from extension to prefix
      * 
      * @return the full prefix, including a trailing dash if not empty
      * 
      * @throws NullPointerException if this is an extension not present
      * in the mapping
      */
-    public abstract String
-        prefix(Function<? super FieldExtension,
-                        ? extends ExtensionPrefix> extensionMapping);
+    public abstract String prefix(ExtensionTable table);
 }

@@ -104,7 +104,7 @@ import uk.ac.lancs.mime.Tokenizer;
  * @author simpsons
  */
 public class CGIRequestCap implements Cap {
-    private final DefinableExtensionManager extMgr;
+    private final ExtensionAccumulator extMgr;
 
     private final Map<? extends String, ? extends CharSequence> env;
 
@@ -148,7 +148,7 @@ public class CGIRequestCap implements Cap {
      * @throws IllegalArgumentException if a namespace declaration is
      * badly formed
      */
-    public CGIRequestCap(DefinableExtensionManager extMgr,
+    public CGIRequestCap(ExtensionAccumulator extMgr,
                          Map<? extends String, ? extends CharSequence> env) {
         this.extMgr = extMgr;
         this.env = env;
@@ -197,7 +197,7 @@ public class CGIRequestCap implements Cap {
                 var nsuri =
                     tokens.whitespaceQuotedStringParameters(0, params, 0);
                 String pfxTxt = params.remove("ns");
-                var pfx = ExtensionPrefix.of(pfxTxt);
+                var pfx = InternalId.of(pfxTxt);
                 var ext = FieldExtension.in(nsuri).hopByHop(conn)
                     .mandatory(mand).complete();
                 extMgr.attributes(ext).putAll(params);

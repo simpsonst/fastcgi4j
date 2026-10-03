@@ -39,17 +39,19 @@
 package uk.ac.lancs.http.field;
 
 /**
- * Allows extensions to be defined for transmission.
+ * Allows extensions to be defined for transmission. Internal
+ * identifiers are allocated automatically.
  *
  * @author simpsons
  */
-public interface OutboundExtensionManager extends DefinableExtensionManager {
+public interface ExtensionRegistry extends AttributedExtensionTable {
     /**
-     * Relate an extension to a new prefix.
+     * Relate an extension to a new internal identifier. If the
+     * extension already has an internal id, that id will be returned.
      *
      * @param ext the extension to relate
      *
-     * @return the prefix related to the extension
+     * @return the internal identifier related to the extension
      */
-    ExtensionPrefix define(FieldExtension ext);
+    InternalId define(FieldExtension ext);
 }
