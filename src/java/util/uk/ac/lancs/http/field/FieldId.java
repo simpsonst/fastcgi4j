@@ -77,14 +77,14 @@ public final class FieldId {
      * 
      * @throws NullPointerException if either argument is {@code null}
      */
-    FieldId(FieldNamespace namespace, CharSequence core) {
+    FieldId(FieldNamespace namespace, String core) {
         Objects.requireNonNull(namespace, "namespace");
         Objects.requireNonNull(core, "core");
         Matcher m = FIELD_PATTERN.matcher(core);
         if (!m.matches())
             throw new IllegalArgumentException("bad field id core: " + core);
         this.namespace = namespace;
-        this.core = core.toString();
+        this.core = core;
     }
 
     /**

@@ -117,7 +117,7 @@ public abstract class FieldNamespace {
      * @constructor
      */
     public FieldId of(CharSequence core) {
-        return new FieldId(this, core);
+        return new FieldId(this, core.toString());
     }
 
     /**

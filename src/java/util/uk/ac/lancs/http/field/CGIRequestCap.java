@@ -104,7 +104,7 @@ import uk.ac.lancs.mime.Tokenizer;
  * @author simpsons
  */
 public class CGIRequestCap implements Cap {
-    private final ExtensionAccumulator extMgr;
+    private final ExtensionAccumulator exts;
 
     private final Map<? extends String, ? extends CharSequence> env;
 
@@ -137,9 +137,41 @@ public class CGIRequestCap implements Cap {
     }
 
     /**
+     * Determine whether a raw field name is hop-by-hop. The
+     * <samp>{@value "%s" FieldNames#CONNECTION}</samp> field identifies
+     * hop-by-hop fields by their raw names, and fields in
+     * {@link FieldNameSets#HOP_BY_HOP} are implicitly hop-by-hop.
+     * 
+     * @param rawName the raw field name
+     * 
+     * @return {@code true} if the field is hop-by-hop; {@code false} if
+     * it is end-to-end
+     */
+    public boolean isHopByHop(String rawName) {
+        return isHopByHopParameter(Http.fieldNameAsCGI(rawName));
+    }
+
+    /**
+     * Determine whether a namespaced field identifier is hop-by-hop.
+     * 
+     * @param id the field identifier to test
+     * 
+     * @return {@code true} if the field is hop-by-hop; {@code false} if
+     * end-to-end
+     */
+    public boolean isHopByHop(FieldId id) {
+        var ns = id.namespace();
+        var ext = ns.asExtension();
+        if (ext != null) return ext.scope() == FieldScope.HOP_BY_HOP;
+        String param = parameter(ns, id);
+        if (param == null) return false;
+        return isHopByHopParameter(param);
+    }
+
+    /**
      * Create a request header from a CGI environment.
      * 
-     * @param extMgr a record of extension definitions in the supplied
+     * @param exts a record of extension definitions in the supplied
      * environment
      * 
      * @param env the CGI environment, which must remain valid for the
@@ -148,9 +180,9 @@ public class CGIRequestCap implements Cap {
      * @throws IllegalArgumentException if a namespace declaration is
      * badly formed
      */
-    public CGIRequestCap(ExtensionAccumulator extMgr,
+    public CGIRequestCap(ExtensionAccumulator exts,
                          Map<? extends String, ? extends CharSequence> env) {
-        this.extMgr = extMgr;
+        this.exts = exts;
         this.env = env;
 
         /* Identify hop-by-hop fields. We get the Connection field,
@@ -200,8 +232,8 @@ public class CGIRequestCap implements Cap {
                 var pfx = InternalId.of(pfxTxt);
                 var ext = FieldExtension.in(nsuri).hopByHop(conn)
                     .mandatory(mand).complete();
-                extMgr.attributes(ext).putAll(params);
-                extMgr.define(ext, pfx);
+                exts.attributes(ext).putAll(params);
+                exts.define(ext, pfx);
 
                 /* Detect another extension declaration, the end of
                  * declarations, or something unexpected. */
@@ -211,6 +243,43 @@ public class CGIRequestCap implements Cap {
                 throw new IllegalArgumentException("bad extension definition: "
                     + key + " -> " + val);
             } while (true);
+        }
+    }
+
+    /**
+     * Get the CGI parameter name for a given namespaced field
+     * identifier.
+     * 
+     * @param ns the field namespace
+     * 
+     * @param id the field identifier
+     * 
+     * @return the CGI parameter name; or {@code null} if the field
+     * belongs to an extension not defined in the header
+     */
+    private String parameter(FieldNamespace ns, FieldId id) {
+        assert ns == id.namespace();
+        switch (ns.kind()) {
+        case STANDARD:
+            /* Standard fields require no prefix. */
+            return Http.fieldNameAsCGI(id.name());
+
+        /* Experimental fields require a prefix of X_. */
+        case EXPERIMENTAL:
+            return Http
+                .fieldNameAsCGI(FieldExtension.EXPERIMENTAL_PREFIX + id.name());
+
+        /* Extension fields require a prefix of HTTP_, a number of at
+         * least 2 digits, and another _. */
+        case EXTENSION:
+            var ext = ns.asExtension();
+            assert ext != null;
+            var pfx = exts.seek(ext);
+            if (pfx == null) return null;
+            return Http.fieldNameAsCGI(pfx.toString() + '-' + id.name());
+
+        default:
+            throw new AssertionError("unreachable");
         }
     }
 
@@ -230,32 +299,8 @@ public class CGIRequestCap implements Cap {
     public List<String> get(FieldId id) {
         /* Prefix the name according to the namespace of the field. */
         var ns = id.namespace();
-        final String key;
-        switch (ns.kind()) {
-        case STANDARD:
-            /* Standard fields require no prefix. */
-            key = Http.fieldNameAsCGI(id.name());
-            break;
-
-        /* Experimental fields require a prefix of X_. */
-        case EXPERIMENTAL:
-            key = Http
-                .fieldNameAsCGI(FieldExtension.EXPERIMENTAL_PREFIX + id.name());
-            break;
-
-        /* Extension fields require a prefix of HTTP_, a number of at
-         * least 2 digits, and another _. */
-        case EXTENSION:
-            var ext = ns.asExtension();
-            assert ext != null;
-            var pfx = extMgr.seek(ext);
-            if (pfx == null) return Collections.emptyList();
-            key = Http.fieldNameAsCGI(pfx.toString() + '-' + id.name());
-            break;
-
-        default:
-            throw new AssertionError("unreachable");
-        }
+        final String key = parameter(ns, id);
+        if (key == null) return Collections.emptyList();
 
         /* Verify that the scope is as expected. If not, it's not the
          * same field, so it must be discarded. */

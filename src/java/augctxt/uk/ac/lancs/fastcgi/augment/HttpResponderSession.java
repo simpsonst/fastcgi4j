@@ -80,7 +80,6 @@ import uk.ac.lancs.http.encoding.ResponseEncodingPlanner;
 import uk.ac.lancs.http.field.CGIRequestCap;
 import uk.ac.lancs.http.field.Cap;
 import uk.ac.lancs.http.field.ExtensionManager;
-import uk.ac.lancs.http.field.InternalId;
 import uk.ac.lancs.http.field.ExtensionRecord;
 import uk.ac.lancs.http.field.ExtensionRegistry;
 import uk.ac.lancs.http.field.Field;
@@ -90,6 +89,7 @@ import uk.ac.lancs.http.field.FieldNameSets;
 import uk.ac.lancs.http.field.FieldNames;
 import uk.ac.lancs.http.field.FieldNamespace;
 import uk.ac.lancs.http.field.FieldScope;
+import uk.ac.lancs.http.field.InternalId;
 import uk.ac.lancs.http.field.TrailerMapCap;
 import uk.ac.lancs.mime.MediaType;
 import uk.ac.lancs.mime.Tokenizer;
@@ -559,7 +559,7 @@ public class HttpResponderSession implements AutoCloseable, Session {
         return requestExtMgr;
     }
 
-    private final Cap requestHeader;
+    private final CGIRequestCap requestHeader;
 
     /**
      * Get the extension manager for the response.
@@ -1030,7 +1030,8 @@ public class HttpResponderSession implements AutoCloseable, Session {
     public InboundCacheControl requestCacheControl() {
         if (requestCacheControl == null)
             requestCacheControl = InboundCacheControl
-                .ofRequest(base.parameters().get(CACHE_CONTROL_PARAM));
+                .ofRequest(requestExtMgr, requestHeader::isHopByHop,
+                           base.parameters().get(CACHE_CONTROL_PARAM));
         return requestCacheControl;
     }
 

@@ -39,16 +39,22 @@
 package uk.ac.lancs.http.cache;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.function.Predicate;
+import uk.ac.lancs.http.field.ExtensionIndex;
 import uk.ac.lancs.http.field.FieldId;
+import uk.ac.lancs.http.field.FieldNames;
+import uk.ac.lancs.http.field.FieldResolver;
+import uk.ac.lancs.http.field.RejectionReason;
 import uk.ac.lancs.mime.Tokenizer;
 
 /**
- * Parses and holds the parameters of a <samp>{@value "%s"
- * uk.ac.lancs.http.field.FieldNames#CACHE_CONTROL}</samp> header field.
+ * Parses and holds the immutable parameters of a <samp>{@value "%s"
+ * FieldNames#CACHE_CONTROL}</samp> header field.
  * 
  * @author simpsons
  */
@@ -113,55 +119,94 @@ public final class InboundCacheControl {
      * Derive cache-control parameters from a field value, without
      * regard to whether it is in a request or a response.
      * 
+     * @param seek a mapping from internal id to extension
+     * 
+     * @param isHopByHop a predicate to case-insensitively recognize the
+     * raw name of a hop-by-hop field
+     * 
      * @param line the comma-concatenated value of the
-     * <code>{@value "%s" uk.ac.lancs.http.field.FieldNames#CACHE_CONTROL}</code> field;
+     * <code>{@value "%s" FieldNames#CACHE_CONTROL}</code> field;
      * {@code null} equivalent to empty string
      * 
      * @return the requested collection of parsed directives
      * 
      * @constructor
      */
-    public static InboundCacheControl of(CharSequence line) {
-        return new InboundCacheControl(line, 0);
+    public static InboundCacheControl of(ExtensionIndex exts,
+                                         Predicate<? super String> isHopByHop,
+                                         CharSequence line) {
+        return new InboundCacheControl(exts, isHopByHop, line, 0);
     }
 
     /**
      * Derive cache-control parameters from a field value, ignoring
      * directives inappropriate for a response.
      * 
+     * @param seek a mapping from internal id to extension
+     * 
+     * @param isHopByHop a predicate to case-insensitively recognize the
+     * raw name of a hop-by-hop field
+     * 
      * @param line the comma-concatenated value of the
-     * <code>{@value "%s" uk.ac.lancs.http.field.FieldNames#CACHE_CONTROL}</code> field;
+     * <code>{@value "%s" FieldNames#CACHE_CONTROL}</code> field;
      * {@code null} equivalent to empty string
      * 
      * @return the requested collection of parsed directives
      * 
      * @constructor
      */
-    public static InboundCacheControl ofRequest(CharSequence line) {
-        return new InboundCacheControl(line, -1);
+    public static InboundCacheControl
+        ofRequest(ExtensionIndex exts, Predicate<? super String> isHopByHop,
+                  CharSequence line) {
+        return new InboundCacheControl(exts, isHopByHop, line, -1);
     }
 
     /**
      * Derive cache-control parameters from a field value, ignoring
      * directives inappropriate for a request.
      * 
+     * @param seek a mapping from internal id to extension
+     * 
+     * @param isHopByHop a predicate to case-insensitively recognize the
+     * raw name of a hop-by-hop field
+     * 
      * @param line the comma-concatenated value of the
-     * <code>{@value "%s" uk.ac.lancs.http.field.FieldNames#CACHE_CONTROL}</code> field;
+     * <code>{@value "%s" FieldNames#CACHE_CONTROL}</code> field;
      * {@code null} equivalent to empty string
      * 
      * @return the requested collection of parsed directives
      * 
      * @constructor
      */
-    public static InboundCacheControl ofResponse(CharSequence line) {
-        return new InboundCacheControl(line, +1);
+    public static InboundCacheControl
+        ofResponse(ExtensionIndex exts, Predicate<? super String> isHopByHop,
+                   CharSequence line) {
+        return new InboundCacheControl(exts, isHopByHop, line, +1);
     }
+
+    /**
+     * Get a set of rejected <samp>{@value "%s"
+     * Directives#NO_CACHE}</samp> field names, and the reason for each
+     * rejection.
+     * 
+     * @return an immutable map of bad field names to rejection reasons
+     */
+    public Map<String, RejectionReason> rejectedNoCacheFields() {
+        return rejectedKeys;
+    }
+
+    private Map<String, RejectionReason> rejectedKeys;
 
     /**
      * Derive cache-control parameters from a header field value.
      * 
+     * @param seek a mapping from internal id to extension
+     * 
+     * @param isHopByHop a predicate to case-insensitively recognize the
+     * raw name of a hop-by-hop field
+     * 
      * @param line the comma-concatenated value of the
-     * <code>{@value "%s" uk.ac.lancs.http.field.FieldNames#CACHE_CONTROL}</code> field;
+     * <code>{@value "%s" FieldNames#CACHE_CONTROL}</code> field;
      * {@code null} equivalent to empty string
      * 
      * @param mode negative if directives invalid in a response field
@@ -172,9 +217,11 @@ public final class InboundCacheControl {
      * number when expected to be
      * 
      * @throws IllegalArgumentException if the line does not parse as a
-     * <code>{@value "%s" uk.ac.lancs.http.field.FieldNames#CACHE_CONTROL}</code> value
+     * <code>{@value "%s" FieldNames#CACHE_CONTROL}</code> value
      */
-    private InboundCacheControl(CharSequence line, int mode) {
+    private InboundCacheControl(ExtensionIndex exts,
+                                Predicate<? super String> isHopByHop,
+                                CharSequence line, int mode) {
         Map<String, String> qualifiedDirectives =
             new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         Collection<String> unqualifiedDirectives =
@@ -246,7 +293,18 @@ public final class InboundCacheControl {
                     throw new AssertionError("unreachable");
                 }
 
-                /* TODO: Convert the raw names into field ids. */
+                /* Convert the raw names into field ids. */
+                Map<String, RejectionReason> rejectedKeys =
+                    new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+                var resolver =
+                    new FieldResolver<CharSequence,
+                                      Void>(exts, isHopByHop,
+                                            (k, v) -> noCacheFields.add(k),
+                                            (k, r) -> rejectedKeys
+                                                .put(k.toString(), r));
+                for (var raw : rawNames)
+                    resolver.seek(f, null);
+                this.rejectedKeys = Collections.unmodifiableMap(rejectedKeys);
             }
             if (qualifiedDirectives.containsKey(Directives.S_MAXAGE)) {
                 this.sMaxAge = Integer

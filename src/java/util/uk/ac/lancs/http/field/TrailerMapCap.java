@@ -45,8 +45,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -55,16 +53,13 @@ import java.util.stream.Collectors;
  * @author simpsons
  */
 public class TrailerMapCap implements Cap {
-    private static final Pattern NAME_PATTERN =
-        Pattern.compile("^(X-|[0-9]{2,}-)?(.+)$", Pattern.CASE_INSENSITIVE);
-
     private final Map<FieldNamespace, Map<String, List<String>>> store =
         new HashMap<>();
 
     /**
      * Create a trailer cap from a map of raw fields.
      * 
-     * @param seek a mapping from internal id to extension
+     * @param exts a mapping from internal id to extension
      * 
      * @param isHopByHop a predicate to case-insensitively recognize the
      * raw name of a hop-by-hop field
@@ -73,11 +68,11 @@ public class TrailerMapCap implements Cap {
      * names as keys, and order-preserving lists as values; discarded
      * after construction
      */
-    public TrailerMapCap(ExtensionIndex extMgr,
+    public TrailerMapCap(ExtensionIndex exts,
                          Predicate<? super String> isHopByHop,
                          Map<? extends CharSequence,
                              ? extends List<? extends CharSequence>> base) {
-        this(extMgr, isHopByHop, base, (x, y) -> {});
+        this(exts, isHopByHop, base, (x, y) -> {});
     }
 
     /**
@@ -86,7 +81,7 @@ public class TrailerMapCap implements Cap {
      * 
      * @param <K> the raw key type
      * 
-     * @param seek a mapping from internal id to extension
+     * @param exts a mapping from internal id to extension
      * 
      * @param isHopByHop a predicate to case-insensitively recognize the
      * raw name of a hop-by-hop field
@@ -98,52 +93,22 @@ public class TrailerMapCap implements Cap {
      * @param unused destination for keys from the base that are
      * rejected, with the reason for rejection
      */
-    public <K extends CharSequence> TrailerMapCap(ExtensionIndex extMgr,
-                                                  Predicate<? super String> isHopByHop,
-                                                  Map<? extends K,
-                                                      ? extends List<? extends CharSequence>> base,
-                                                  BiConsumer<? super K,
-                                                             ? super RejectionReason> unused) {
-        for (var ent : base.entrySet()) {
-            var k = ent.getKey();
-            String key = k.toString();
-            var val = ent.getValue();
-            FieldScope scope = isHopByHop.test(key) ? FieldScope.HOP_BY_HOP :
-                FieldScope.END_TO_END;
-
-            FieldNamespace ns;
-            Matcher m = NAME_PATTERN.matcher(key);
-            if (!m.matches()) {
-                unused.accept(k, RejectionReason.MALFORMED);
-                continue;
-            }
-            String pfx = m.group(1);
-            String tail = m.group(2);
-            if (pfx == null) {
-                ns = switch (scope) {
-                case END_TO_END -> FieldNamespace.STANDARD_END_TO_END;
-                case HOP_BY_HOP -> FieldNamespace.STANDARD_HOP_BY_HOP;
-                };
-            } else if (pfx.length() == 2) {
-                ns = switch (scope) {
-                case END_TO_END -> FieldNamespace.EXPERIMENTAL_END_TO_END;
-                case HOP_BY_HOP -> FieldNamespace.EXPERIMENTAL_HOP_BY_HOP;
-                };
-            } else {
-                ns = extMgr.seek(InternalId.of(pfx));
-                if (ns == null) {
-                    unused.accept(k, RejectionReason.UNKNOWN_EXTENSION);
-                    continue;
-                }
-                if (ns.scope() != scope) {
-                    unused.accept(k, RejectionReason.SCOPE_MISMATCH);
-                    continue;
-                }
-            }
-            assert ns != null;
-            store.computeIfAbsent(ns, ign -> newMap()).put(tail, val.stream()
-                .map(Object::toString).collect(Collectors.toList()));
-        }
+    public <K> TrailerMapCap(ExtensionIndex exts,
+                             Predicate<? super String> isHopByHop,
+                             Map<? extends K,
+                                 ? extends List<? extends CharSequence>> base,
+                             BiConsumer<? super K,
+                                        ? super RejectionReason> unused) {
+        FieldResolver<K, List<? extends CharSequence>> resolver =
+            new FieldResolver<>(exts, isHopByHop,
+                                (k, v) -> store
+                                    .computeIfAbsent(k.namespace(),
+                                                     ign -> newMap())
+                                    .put(k.name(),
+                                         v.stream().map(Object::toString)
+                                             .collect(Collectors.toList())),
+                                unused);
+        resolver.seek(base);
     }
 
     private static TreeMap<String, List<String>> newMap() {
