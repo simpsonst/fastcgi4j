@@ -160,7 +160,7 @@ public class CGIRequestCap implements Cap {
         this.hopByHopKeys = Stream
             .concat(Tokenizer.atomSequenceOf(env.get(CONNECTION_FIELD_VAR))
                 .stream().filter(CGIRequestCap::isConnectionFieldName)
-                .map(Http::fieldNameAsCGI), Stream.of(CONNECTION_FIELD_VAR))
+                .map(Http::fieldNameAsCGI), FieldNameSets.HOP_BY_HOP.stream())
             .collect(Collectors.toSet());
 
         /* Go through each of the environmental fields matching those
