@@ -60,6 +60,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import uk.ac.lancs.fastcgi.ConfigurationException;
 import uk.ac.lancs.fastcgi.Diagnostics;
 import uk.ac.lancs.fastcgi.FieldSession;
@@ -737,8 +738,8 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
                 List<String> values = entry.getValue();
                 if (values.isEmpty()) continue;
                 String name = entry.getKey();
-                for (String value : values)
-                    pout.printf("%s: %s%n", name, value);
+                pout.printf("%s: %s%n", name,
+                            values.stream().collect(Collectors.joining(", ")));
             }
             pout.println();
         } finally {
