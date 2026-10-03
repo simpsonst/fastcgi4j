@@ -36,10 +36,9 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.augment;
+package uk.ac.lancs.fastcgi.ots;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.URI;
@@ -64,61 +63,7 @@ import uk.ac.lancs.mime.MediaType;
  * @author simpsons
  */
 public final class OTSResponses {
-    /**
-     * Controls aspects of the response.
-     */
-    public interface Control {
-        /**
-         * Set the status code.
-         * 
-         * @param code the new status code
-         */
-        void setStatus(int code);
-
-        /**
-         * Remove the <samp>{@value "%s" FieldNames#CONTENT_TYPE}</samp>
-         * field.
-         */
-        void clearContentType();
-
-        /**
-         * Remove the <samp>{@value "%s"
-         * FieldNames#CONTENT_LENGTH}</samp> field.
-         */
-        void clearContentLength();
-
-        /**
-         * Remove the <samp>{@value "%s"
-         * FieldNames#CONTENT_ENCODING}</samp> field.
-         */
-        void clearContentEncoding();
-
-        /**
-         * Get the output stream.
-         * 
-         * @return the output stream
-         * 
-         * @throws IOException if an I/O errors in setting up the stream
-         */
-        OutputStream out() throws IOException;
-
-        /**
-         * Set the <samp>{@value "%s" FieldNames#LOCATION}</samp> field.
-         * 
-         * @param location the new value for the field
-         */
-        void setLocation(URI location);
-
-        /**
-         * Set the <samp>{@value "%s" FieldNames#CONTENT_TYPE}</samp>
-         * field.
-         * 
-         * @param type the new content type
-         */
-        void setContentType(MediaType type);
-    }
-
-    private final Control base;
+    private final OTSControl base;
 
     /**
      * Prepare to send an off-the-shelf response.
@@ -126,7 +71,7 @@ public final class OTSResponses {
      * @param base the minimum controls for sending off-the-shelf
      * responses
      */
-    public OTSResponses(Control base) {
+    public OTSResponses(OTSControl base) {
         this.base = base;
     }
 

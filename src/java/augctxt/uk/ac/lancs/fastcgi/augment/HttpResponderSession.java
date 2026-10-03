@@ -67,6 +67,7 @@ import uk.ac.lancs.fastcgi.Diagnostics;
 import uk.ac.lancs.fastcgi.RequestableSession;
 import uk.ac.lancs.fastcgi.ResponderSession;
 import uk.ac.lancs.fastcgi.Session;
+import uk.ac.lancs.fastcgi.ots.OTSControl;
 import uk.ac.lancs.http.Negotiation;
 import uk.ac.lancs.http.cache.InboundCacheControl;
 import uk.ac.lancs.http.encoding.Decoder;
@@ -1036,50 +1037,49 @@ public class HttpResponderSession implements AutoCloseable, Session {
         return requestCacheControl;
     }
 
-    private final OTSResponses.Control otsResponseControl =
-        new OTSResponses.Control() {
-            @Override
-            public void setStatus(int code) {
-                base.setStatus(code);
-            }
+    private final OTSControl otsResponseControl = new OTSControl() {
+        @Override
+        public void setStatus(int code) {
+            base.setStatus(code);
+        }
 
-            @Override
-            public void clearContentType() {
-                FieldId.CONTENT_TYPE.clear(responseHeader());
-            }
+        @Override
+        public void clearContentType() {
+            FieldId.CONTENT_TYPE.clear(responseHeader());
+        }
 
-            @Override
-            public void clearContentLength() {
-                FieldId.CONTENT_LENGTH.clear(responseHeader());
-            }
+        @Override
+        public void clearContentLength() {
+            FieldId.CONTENT_LENGTH.clear(responseHeader());
+        }
 
-            @Override
-            public void clearContentEncoding() {
-                FieldId.CONTENT_ENCODING.clear(responseHeader());
-            }
+        @Override
+        public void clearContentEncoding() {
+            FieldId.CONTENT_ENCODING.clear(responseHeader());
+        }
 
-            @Override
-            public OutputStream out() throws IOException {
-                return HttpResponderSession.this.out();
-            }
+        @Override
+        public OutputStream out() throws IOException {
+            return HttpResponderSession.this.out();
+        }
 
-            @Override
-            public void setLocation(URI location) {
-                Field.LOCATION.set(responseHeader(), location);
-            }
+        @Override
+        public void setLocation(URI location) {
+            Field.LOCATION.set(responseHeader(), location);
+        }
 
-            @Override
-            public void setContentType(MediaType type) {
-                Field.CONTENT_TYPE.set(responseHeader(), type);
-            }
-        };
+        @Override
+        public void setContentType(MediaType type) {
+            Field.CONTENT_TYPE.set(responseHeader(), type);
+        }
+    };
 
     /**
      * Get a view of this session for off-the-shelf responses.
      * 
      * @return the requested view
      */
-    public OTSResponses.Control otsResponseControl() {
+    public OTSControl otsResponseControl() {
         return otsResponseControl;
     }
 

@@ -64,7 +64,7 @@ import uk.ac.lancs.fastcgi.SessionException;
 import uk.ac.lancs.fastcgi.augment.FormHandler;
 import uk.ac.lancs.fastcgi.augment.HttpResponderContext;
 import uk.ac.lancs.fastcgi.augment.HttpResponderSession;
-import uk.ac.lancs.fastcgi.augment.OTSResponses;
+import uk.ac.lancs.fastcgi.ots.OTSResponses;
 import uk.ac.lancs.http.field.FieldExtension;
 import uk.ac.lancs.http.field.FieldId;
 import uk.ac.lancs.mime.BinaryMessage;

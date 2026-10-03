@@ -49,7 +49,7 @@ import uk.ac.lancs.fastcgi.app.FastCGIConfiguration;
 import uk.ac.lancs.fastcgi.augment.FormHandler;
 import uk.ac.lancs.fastcgi.augment.HttpResponderContext;
 import uk.ac.lancs.fastcgi.augment.HttpResponderSession;
-import uk.ac.lancs.fastcgi.augment.OTSResponses;
+import uk.ac.lancs.fastcgi.ots.OTSResponses;
 import uk.ac.lancs.mime.BinaryMessage;
 import uk.ac.lancs.mime.Message;
 import uk.ac.lancs.mime.MessageParser;
