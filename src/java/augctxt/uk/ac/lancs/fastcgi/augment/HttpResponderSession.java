@@ -704,9 +704,8 @@ public class HttpResponderSession implements AutoCloseable, Session {
 
     /**
      * Derive a digest from the submitted content after applying content
-     * encoding, and include it as a
-     * <code>{@value "%s" FieldNames#CONTENT_DIGEST}</code> trailer
-     * field.
+     * encoding, and include it as a <samp>{@value "%s"
+     * FieldNames#CONTENT_DIGEST}</samp> trailer field.
      * 
      * @param digest a fresh digest object
      * 
@@ -1022,8 +1021,8 @@ public class HttpResponderSession implements AutoCloseable, Session {
     private CacheInstruction requestCacheControl = null;
 
     /**
-     * Get <code>Cache-Control</code> directives specified by the
-     * client.
+     * Get <samp>{@value "%s" FieldNames#CACHE_CONTROL}</samp>
+     * directives specified by the client.
      * 
      * @return the cache-control directives for the request
      */
