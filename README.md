@@ -288,3 +288,5 @@ you can't have a Unix-domain [`ServerSocket`](https://docs.oracle.com/en/java/ja
 
 As far back as JDK 1.5, [`System.inheritedChannel`](https://docs.oracle.com/en/java/javase/20/docs/api/java.base/java/lang/System.html#inheritedChannel()) could provide access (on Linux, at least) to file descriptor 0, and generate a `ServerSocketChannel` from it.
 Hence, both Unix-domain and server-managed implementations (and the combination of both) are possible natively.
+
+See also the [software architecture](soft-arch.md).
