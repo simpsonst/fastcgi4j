@@ -41,7 +41,9 @@ package uk.ac.lancs.http.cache;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import uk.ac.lancs.http.field.ExtensionManager;
 import uk.ac.lancs.http.field.FieldNames;
+import uk.ac.lancs.http.field.FieldNamespace;
 import uk.ac.lancs.mime.Tokenizer;
 
 /**
@@ -199,5 +201,45 @@ public final class OutCacheControl extends AbstractCacheControl {
             if (mode < 0 && !d.forResponses()) continue;
             d.emit(ctxt, q -> emit(k, q, d.forceQuoting(), dest), p.getValue());
         }
+    }
+
+    /**
+     * @hidden
+     */
+    public static void main(String[] args) throws Exception {
+        Consumer<String> dest = s -> System.out.printf(" %s", s);
+        OutCacheControl ctrl = OutCacheControl.forResponse();
+        ExtensionManager exts = new ExtensionManager();
+        OutCacheContext ctxt = new OutCacheContext(exts);
+
+        System.out.print("empty:>");
+        ctrl.write(ctxt, dest);
+        System.out.println("<");
+
+        System.out.print("max-stale=20 excluded as req-only:>");
+        try {
+            CacheDirective.MAX_STALE.set(ctrl, 20);
+        } catch (IllegalArgumentException ex) {}
+        ctrl.write(ctxt, dest);
+        System.out.println("<");
+
+        CacheDirective.NO_CACHE.set(ctrl);
+        System.out.print("no-cache:>");
+        ctrl.write(ctxt, dest);
+        System.out.println("<");
+
+        CacheDirective.MAX_AGE.set(ctrl, 10);
+        System.out.print("max-stale=10:>");
+        ctrl.write(ctxt, dest);
+        System.out.println("<");
+
+        CacheDirective.NO_CACHE_FIELDS
+            .include(ctrl, FieldNamespace.STANDARD_END_TO_END.of("Ext"));
+        CacheDirective.NO_CACHE_FIELDS
+            .include(ctrl,
+                     FieldNamespace.STANDARD_END_TO_END.of("Content-Type"));
+        System.out.print("no-cache ext:>");
+        ctrl.write(ctxt, dest);
+        System.out.println("<");
     }
 }
