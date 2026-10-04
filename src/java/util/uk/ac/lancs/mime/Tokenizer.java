@@ -964,9 +964,12 @@ public final class Tokenizer {
         int last = 0;
         for (int i = 0; i < len; i++) {
             char c = text.charAt(i);
-            if (!CharacterSet.TOKEN_CHARS.contains(c)) {
+            switch (c) {
+            case '"':
+            case '\\':
                 result.append(text.subSequence(last, i)).append('\\').append(c);
                 last = i + 1;
+                break;
             }
         }
         result.append(text.subSequence(last, len));
@@ -990,10 +993,13 @@ public final class Tokenizer {
                 int last = ++i;
                 while (i < len) {
                     c = text.charAt(i);
-                    if (!CharacterSet.TOKEN_CHARS.contains(c)) {
+                    switch (c) {
+                    case '"':
+                    case '\\':
                         result.append(text.subSequence(last, i)).append('\\')
                             .append(c);
                         last = i + 1;
+                        break;
                     }
                     i++;
                 }
