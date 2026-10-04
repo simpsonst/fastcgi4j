@@ -40,6 +40,7 @@ package uk.ac.lancs.http.field;
 
 import java.net.URI;
 import java.util.Objects;
+import java.util.Optional;
 import uk.ac.lancs.mime.Tokenizer;
 
 /**
@@ -366,19 +367,11 @@ public final class FieldExtension extends FieldNamespace {
         };
     }
 
-    /**
-     * {@inheritDoc}
-     * 
-     * @param mapping {@inheritDoc}
-     * 
-     * @return {@inheritDoc}
-     * 
-     * @throws NullPointerException if this extension is not in the
-     * given mapping
-     */
     @Override
-    public String prefix(ExtensionTable mapping) {
-        return mapping.seek(this).toString() + '-';
+    public Optional<String> optionalPrefix(ExtensionTable mapping) {
+        var internalId = mapping.seek(this);
+        if (internalId == null) return Optional.empty();
+        return Optional.of(internalId.toString() + '-');
     }
 
     /**

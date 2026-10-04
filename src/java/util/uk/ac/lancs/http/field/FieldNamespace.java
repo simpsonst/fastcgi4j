@@ -38,6 +38,9 @@
 
 package uk.ac.lancs.http.field;
 
+import java.util.NoSuchElementException;
+import java.util.Optional;
+
 /**
  * Allows fields with the same core name to be distinguished. Regular
  * fields can be defined using
@@ -177,8 +180,22 @@ public abstract class FieldNamespace {
      * 
      * @return the full prefix, including a trailing dash if not empty
      * 
-     * @throws NullPointerException if this is an extension not present
-     * in the mapping
+     * @throws NoSuchElementException if this is an extension not
+     * present in the mapping
      */
-    public abstract String prefix(ExtensionTable table);
+    public final String prefix(ExtensionTable table) {
+        return optionalPrefix(table)
+            .orElseThrow(() -> new NoSuchElementException(this.toString()));
+    }
+
+    /**
+     * Get the prefix used by this namespace if defined, given a mapping
+     * context.
+     * 
+     * @param table the mapping from extension to prefix
+     * 
+     * @return the full prefix, including a trailing dash if not empty;
+     * r an empty value if not defined in the table
+     */
+    public abstract Optional<String> optionalPrefix(ExtensionTable table);
 }

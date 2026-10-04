@@ -1,7 +1,7 @@
 // -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
 
 /*
- * Copyright (c) 2022,2023,2026, Lancaster University
+ * Copyright (c) 2026, Lancaster University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,63 +36,69 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.http.field;
+package uk.ac.lancs.http.cache;
 
-import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.function.Consumer;
 
 /**
- * Represents the namespaces with no prefix.
+ * Implements a cache directive which is either present or absent.
  *
  * @author simpsons
  */
-abstract class StandardNamespace extends StaticNamespace {
-    private static final String BAD_FIELD_PATTERN_TEXT = "^([0-9]{2,}|[Xx])-";
-
-    private static final Pattern BAD_FIELD_PATTERN =
-        Pattern.compile(BAD_FIELD_PATTERN_TEXT);
-
+public class BooleanCacheDirective extends AbstractCacheDirective<Boolean> {
     /**
-     * {@inheritDoc}
+     * Create a Boolean cache directive.
      * 
-     * @return always {@link Kind#STANDARD}
+     * @param key the token identifying the directive
+     * 
+     * @param forRequests {@code true} if the directive applies to
+     * requests; {@code false otherwise}
+     * 
+     * @param forResponses {@code true} if the directive applies to
+     * responses; {@code false otherwise}
      */
+    public BooleanCacheDirective(String key, boolean forRequests,
+                                 boolean forResponses) {
+        super(Boolean.class, key, forRequests, forResponses);
+    }
+
     @Override
-    public Kind kind() {
-        return Kind.STANDARD;
+    public void parse(InCacheContext ctxt, String qualification,
+                      Consumer<? super Boolean> dest) {
+        if (qualification == null) dest.accept(Boolean.TRUE);
+    }
+
+    @Override
+    public void emit(OutCacheContext ctxt, Consumer<? super String> dest,
+                     Object state) {
+        if (owns((Boolean) state)) dest.accept(null);
     }
 
     /**
-     * {@inheritDoc} This fails if the core name matches
-     * <samp>{@value "%s" #BAD_FIELD_PATTERN_TEXT}</samp>.
+     * Test whether the directive is present.
      * 
-     * @param core the core name for the field
+     * @param ctrl the cache control
      * 
-     * @return {@inheritDoc}
+     * @return {@code true} if the directive is present; {@code false}
+     * otherwise
      */
-    @Override
-    public FieldId of(CharSequence core) {
-        Matcher m = BAD_FIELD_PATTERN.matcher(core);
-        if (m.matches()) throw new IllegalArgumentException("bad native"
-            + " field core: " + core);
-        return super.of(core);
+    public boolean test(CacheControl ctrl) {
+        return owns(ctrl.get(this));
     }
 
     /**
-     * {@inheritDoc}
+     * Enable the directive in the control.
      * 
-     * @implNote Standard namespaces always use no prefix, so this
-     * method always returns an empty string.
-     * 
-     * @param table ignored
-     * 
-     * @return an empty string
+     * @param ctrl the cache control
      */
-    @Override
-    public final Optional<String> optionalPrefix(ExtensionTable table) {
-        return PREFIX;
+    public void set(OutCacheControl ctrl) {
+        ctrl.set(this, Boolean.TRUE);
     }
 
-    private static final Optional<String> PREFIX = Optional.of("");
+    @Override
+    public boolean owns(Boolean state) {
+        /* Yes, we do want object identity here. It's the only value we
+         * use. */
+        return state == Boolean.TRUE;
+    }
 }

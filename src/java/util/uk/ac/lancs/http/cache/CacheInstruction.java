@@ -58,7 +58,8 @@ import uk.ac.lancs.mime.Tokenizer;
  * 
  * @author simpsons
  */
-public final class CacheInstruction {
+@Deprecated
+final class CacheInstruction {
     private static void parse(CharSequence line, Map<String, String> qualified,
                               Collection<String> unqualified) {
         if (line == null) return;
@@ -102,18 +103,6 @@ public final class CacheInstruction {
             throw new AssertionError("unreachable");
         }
     }
-
-    /**
-     * Specifies that a resource never goes stale. This means that
-     * <samp>{@value "%s" Directives#MAX_STALE}</samp> was specified
-     * without a value.
-     */
-    public static final int UNLIMITED = -2;
-
-    /**
-     * Indicates that no maximum age or staleness was specified.
-     */
-    public static final int UNSPECIFIED = -1;
 
     /**
      * Derive cache-control parameters from a field value, without
@@ -241,21 +230,21 @@ public final class CacheInstruction {
             if (this.maxAge < 0)
                 throw new NumberFormatException("-ve " + Directives.MAX_AGE);
         } else
-            maxAge = UNSPECIFIED;
+            maxAge = Directives.UNSPECIFIED;
 
         /* These directives are only valid in requests. */
         if (mode <= 0) {
             this.onlyIfCached =
                 unqualifiedDirectives.contains(Directives.ONLY_IF_CACHED);
             if (unqualifiedDirectives.contains(Directives.MAX_STALE))
-                this.maxStale = UNLIMITED;
+                this.maxStale = Directives.UNLIMITED;
             else if (qualifiedDirectives.containsKey(Directives.MAX_STALE)) {
                 this.maxStale = Integer
                     .parseInt(qualifiedDirectives.get(Directives.MAX_STALE));
                 if (this.maxStale < 0) throw new NumberFormatException("-ve "
                     + Directives.MAX_STALE);
             } else
-                maxStale = UNSPECIFIED;
+                maxStale = Directives.UNSPECIFIED;
 
             if (qualifiedDirectives.containsKey(Directives.MIN_FRESH)) {
                 this.minFresh = Integer
@@ -263,11 +252,11 @@ public final class CacheInstruction {
                 if (this.minFresh < 0) throw new NumberFormatException("-ve "
                     + Directives.MIN_FRESH);
             } else
-                minFresh = UNSPECIFIED;
+                minFresh = Directives.UNSPECIFIED;
         } else {
             this.onlyIfCached = false;
-            this.maxStale = UNSPECIFIED;
-            this.minFresh = UNSPECIFIED;
+            this.maxStale = Directives.UNSPECIFIED;
+            this.minFresh = Directives.UNSPECIFIED;
         }
 
         /* These directives are only valid in responses. */
@@ -312,7 +301,7 @@ public final class CacheInstruction {
                 if (this.sMaxAge < 0) throw new NumberFormatException("-ve "
                     + Directives.S_MAXAGE);
             } else
-                sMaxAge = UNSPECIFIED;
+                sMaxAge = Directives.UNSPECIFIED;
 
             this.mustRevalidate =
                 unqualifiedDirectives.contains(Directives.MUST_REVALIDATE);
@@ -327,7 +316,7 @@ public final class CacheInstruction {
             this.staleWhileRevalidate = unqualifiedDirectives
                 .contains(Directives.STALE_WHILE_REVALIDATE);
         } else {
-            sMaxAge = UNSPECIFIED;
+            sMaxAge = Directives.UNSPECIFIED;
             this.mustRevalidate = false;
             this.proxyRevalidate = false;
             this.mustUnderstand = false;
@@ -464,7 +453,7 @@ public final class CacheInstruction {
      * Directives#S_MAXAGE}</samp> directive.
      * 
      * @return the non-negative integral value of the directive; or
-     * {@link #UNSPECIFIED} if not specified
+     * {@link Directives#UNSPECIFIED} if not specified
      */
     public int sMaxAge() {
         return sMaxAge;
@@ -475,9 +464,9 @@ public final class CacheInstruction {
      * Directives#MAX_AGE}</samp> directive.
      * 
      * @return the non-negative integral value of the directive; or
-     * {@link #UNSPECIFIED} if not specified
+     * {@link Directives#UNSPECIFIED} if not specified
      * 
-     * @spec https://www.rfc-editor.org/rfc/rfc9111.html#name-max-age
+     * @spec https://www.rfc-editor.org/info/rfc9111/#name-max-age
      * RFC9111 §5.2.1.1 <code>max-age</code>
      */
     public int maxAge() {
@@ -489,10 +478,11 @@ public final class CacheInstruction {
      * Directives#MAX_STALE}</samp> directive.
      * 
      * @return the non-negative integral value of the directive; or
-     * {@link #UNLIMITED} if the directive was specified without a
-     * value; or {@link #UNSPECIFIED} if not specified
+     * {@link Directives#UNLIMITED} if the directive was specified
+     * without a value; or {@link Directives#UNSPECIFIED} if not
+     * specified
      * 
-     * @spec https://www.rfc-editor.org/rfc/rfc9111.html#name-max-stale
+     * @spec https://www.rfc-editor.org/info/rfc9111/#name-max-stale
      * RFC9111 §5.2.1.2 <code>max-stale</code>
      */
     public int maxStale() {
@@ -517,7 +507,7 @@ public final class CacheInstruction {
      * @return {@code true} if the directive is present; {@code false}
      * otherwise
      * 
-     * @spec https://www.rfc-editor.org/rfc/rfc9111.html#name-no-cache
+     * @spec https://www.rfc-editor.org/info/rfc9111/#name-no-cache
      * RFC9111 §5.2.1.4 <code>no-cache</code>
      */
     public boolean noCache() {

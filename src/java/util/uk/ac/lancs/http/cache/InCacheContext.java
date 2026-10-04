@@ -1,7 +1,7 @@
 // -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
 
 /*
- * Copyright (c) 2022,2023,2026, Lancaster University
+ * Copyright (c) 2026, Lancaster University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,63 +36,37 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.http.field;
+package uk.ac.lancs.http.cache;
 
-import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.function.Predicate;
+import uk.ac.lancs.http.field.ExtensionIndex;
 
 /**
- * Represents the namespaces with no prefix.
- *
+ * Holds the context required to parse cache directives.
+ * 
  * @author simpsons
  */
-abstract class StandardNamespace extends StaticNamespace {
-    private static final String BAD_FIELD_PATTERN_TEXT = "^([0-9]{2,}|[Xx])-";
-
-    private static final Pattern BAD_FIELD_PATTERN =
-        Pattern.compile(BAD_FIELD_PATTERN_TEXT);
+public final class InCacheContext {
+    /**
+     * A mapping from internal identifier to namespace
+     */
+    public final ExtensionIndex index;
 
     /**
-     * {@inheritDoc}
-     * 
-     * @return always {@link Kind#STANDARD}
+     * Tests whether a raw name is for a hop-by-hop field.
      */
-    @Override
-    public Kind kind() {
-        return Kind.STANDARD;
-    }
+    public final Predicate<? super String> isHopByHop;
 
     /**
-     * {@inheritDoc} This fails if the core name matches
-     * <samp>{@value "%s" #BAD_FIELD_PATTERN_TEXT}</samp>.
+     * Create a context for parsing cache directives.
      * 
-     * @param core the core name for the field
+     * @param index mapping from internal identifier to namespace
      * 
-     * @return {@inheritDoc}
+     * @param isHopByHop a test for raw names of hop-by-hop fields
      */
-    @Override
-    public FieldId of(CharSequence core) {
-        Matcher m = BAD_FIELD_PATTERN.matcher(core);
-        if (m.matches()) throw new IllegalArgumentException("bad native"
-            + " field core: " + core);
-        return super.of(core);
+    public InCacheContext(ExtensionIndex index,
+                          Predicate<? super String> isHopByHop) {
+        this.index = index;
+        this.isHopByHop = isHopByHop;
     }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @implNote Standard namespaces always use no prefix, so this
-     * method always returns an empty string.
-     * 
-     * @param table ignored
-     * 
-     * @return an empty string
-     */
-    @Override
-    public final Optional<String> optionalPrefix(ExtensionTable table) {
-        return PREFIX;
-    }
-
-    private static final Optional<String> PREFIX = Optional.of("");
 }

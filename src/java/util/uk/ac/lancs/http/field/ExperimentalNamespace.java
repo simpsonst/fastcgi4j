@@ -38,6 +38,8 @@
 
 package uk.ac.lancs.http.field;
 
+import java.util.Optional;
+
 /**
  * Represents namespaces that use the experimental prefix
  * <samp>{@value "%s" FieldNamespace#EXPERIMENTAL_PREFIX}</samp>.
@@ -67,7 +69,10 @@ abstract class ExperimentalNamespace extends StaticNamespace {
      * #EXPERIMENTAL_PREFIX}</samp>
      */
     @Override
-    public final String prefix(ExtensionTable table) {
-        return EXPERIMENTAL_PREFIX;
+    public final Optional<String> optionalPrefix(ExtensionTable table) {
+        return PREFIX;
     }
+
+    private static final Optional<String> PREFIX =
+        Optional.of(EXPERIMENTAL_PREFIX);
 }

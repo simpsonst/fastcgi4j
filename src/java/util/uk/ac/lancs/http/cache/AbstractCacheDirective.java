@@ -1,7 +1,7 @@
 // -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
 
 /*
- * Copyright (c) 2022,2023,2026, Lancaster University
+ * Copyright (c) 2026, Lancaster University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,63 +36,65 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.http.field;
-
-import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+package uk.ac.lancs.http.cache;
 
 /**
- * Represents the namespaces with no prefix.
+ * Provides a basic implementation of a cache directive, including its
+ * key token, internal state type, and whether it is for requests and/or
+ * responses.
  *
+ * @param <S> the internal state type
+ * 
  * @author simpsons
  */
-abstract class StandardNamespace extends StaticNamespace {
-    private static final String BAD_FIELD_PATTERN_TEXT = "^([0-9]{2,}|[Xx])-";
+public abstract class AbstractCacheDirective<S> implements CacheDirective<S> {
+    private final String key;
 
-    private static final Pattern BAD_FIELD_PATTERN =
-        Pattern.compile(BAD_FIELD_PATTERN_TEXT);
+    private final Class<S> type;
 
-    /**
-     * {@inheritDoc}
-     * 
-     * @return always {@link Kind#STANDARD}
-     */
-    @Override
-    public Kind kind() {
-        return Kind.STANDARD;
-    }
+    private final boolean forResponses;
+
+    private final boolean forRequests;
 
     /**
-     * {@inheritDoc} This fails if the core name matches
-     * <samp>{@value "%s" #BAD_FIELD_PATTERN_TEXT}</samp>.
+     * Create an abstract cache directive.
      * 
-     * @param core the core name for the field
+     * @param key the token identifying the directive
      * 
-     * @return {@inheritDoc}
+     * @param type the internal state type
+     * 
+     * @param forRequests {@code true} if the directive applies to
+     * requests; {@code false otherwise}
+     * 
+     * @param forResponses {@code true} if the directive applies to
+     * responses; {@code false otherwise}
      */
-    @Override
-    public FieldId of(CharSequence core) {
-        Matcher m = BAD_FIELD_PATTERN.matcher(core);
-        if (m.matches()) throw new IllegalArgumentException("bad native"
-            + " field core: " + core);
-        return super.of(core);
+    protected AbstractCacheDirective(Class<S> type, String key,
+                                     boolean forRequests,
+                                     boolean forResponses) {
+        this.key = key;
+        this.type = type;
+        this.forRequests = forRequests;
+        this.forResponses = forResponses;
     }
 
-    /**
-     * {@inheritDoc}
-     * 
-     * @implNote Standard namespaces always use no prefix, so this
-     * method always returns an empty string.
-     * 
-     * @param table ignored
-     * 
-     * @return an empty string
-     */
     @Override
-    public final Optional<String> optionalPrefix(ExtensionTable table) {
-        return PREFIX;
+    public final String key() {
+        return key;
     }
 
-    private static final Optional<String> PREFIX = Optional.of("");
+    @Override
+    public Class<S> type() {
+        return type;
+    }
+
+    @Override
+    public boolean forResponses() {
+        return forResponses;
+    }
+
+    @Override
+    public boolean forRequests() {
+        return forRequests;
+    }
 }

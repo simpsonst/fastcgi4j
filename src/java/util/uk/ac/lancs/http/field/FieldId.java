@@ -39,7 +39,9 @@
 package uk.ac.lancs.http.field;
 
 import java.util.Locale;
+import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -112,9 +114,24 @@ public final class FieldId {
      * @param table the mapping from extension to prefix
      * 
      * @return the full prefixed name within the given context
+     * 
+     * @throws NoSuchElementException if the field's namespace is not
+     * present in the table
      */
     public String prefixedName(ExtensionTable table) {
         return namespace.prefix(table) + core;
+    }
+
+    /**
+     * Get the full prefixed name of this field, if present in a mapping
+     * context.
+     * 
+     * @param table the mapping from extension to prefix
+     * 
+     * @return the full prefixed name within the given context
+     */
+    public Optional<String> optionalPrefixedName(ExtensionTable table) {
+        return namespace.optionalPrefix(table).map(s -> s + core);
     }
 
     /**

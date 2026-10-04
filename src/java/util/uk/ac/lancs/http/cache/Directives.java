@@ -200,5 +200,17 @@ final class Directives {
      */
     static final String ONLY_IF_CACHED = "only-if-cached";
 
+    /**
+     * Indicates that no maximum age or staleness was specified.
+     */
+    public static final int UNSPECIFIED = -1;
+
+    /**
+     * Specifies that a resource never goes stale. This means that
+     * <samp>{@value "%s" Directives#MAX_STALE}</samp> was specified
+     * without a value.
+     */
+    public static final int UNLIMITED = -2;
+
     private Directives() {}
 }

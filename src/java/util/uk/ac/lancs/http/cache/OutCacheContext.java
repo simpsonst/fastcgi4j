@@ -1,7 +1,7 @@
 // -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
 
 /*
- * Copyright (c) 2022,2023,2026, Lancaster University
+ * Copyright (c) 2026, Lancaster University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,63 +36,28 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.http.field;
+package uk.ac.lancs.http.cache;
 
-import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import uk.ac.lancs.http.field.ExtensionTable;
 
 /**
- * Represents the namespaces with no prefix.
+ * Holds the context required to generate cache-directives.
  *
  * @author simpsons
  */
-abstract class StandardNamespace extends StaticNamespace {
-    private static final String BAD_FIELD_PATTERN_TEXT = "^([0-9]{2,}|[Xx])-";
-
-    private static final Pattern BAD_FIELD_PATTERN =
-        Pattern.compile(BAD_FIELD_PATTERN_TEXT);
+public final class OutCacheContext {
+    /**
+     * A mapping from namespace to internal identifier
+     */
+    public final ExtensionTable exts;
 
     /**
-     * {@inheritDoc}
+     * Create a context for generating cache directives.
      * 
-     * @return always {@link Kind#STANDARD}
+     * @param exts a mapping from namespace to internal identifier
      */
-    @Override
-    public Kind kind() {
-        return Kind.STANDARD;
+    public OutCacheContext(ExtensionTable exts) {
+        this.exts = exts;
     }
-
-    /**
-     * {@inheritDoc} This fails if the core name matches
-     * <samp>{@value "%s" #BAD_FIELD_PATTERN_TEXT}</samp>.
-     * 
-     * @param core the core name for the field
-     * 
-     * @return {@inheritDoc}
-     */
-    @Override
-    public FieldId of(CharSequence core) {
-        Matcher m = BAD_FIELD_PATTERN.matcher(core);
-        if (m.matches()) throw new IllegalArgumentException("bad native"
-            + " field core: " + core);
-        return super.of(core);
-    }
-
-    /**
-     * {@inheritDoc}
-     * 
-     * @implNote Standard namespaces always use no prefix, so this
-     * method always returns an empty string.
-     * 
-     * @param table ignored
-     * 
-     * @return an empty string
-     */
-    @Override
-    public final Optional<String> optionalPrefix(ExtensionTable table) {
-        return PREFIX;
-    }
-
-    private static final Optional<String> PREFIX = Optional.of("");
 }
+ 
