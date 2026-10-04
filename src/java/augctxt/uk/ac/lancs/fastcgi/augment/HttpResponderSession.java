@@ -72,6 +72,8 @@ import uk.ac.lancs.http.Negotiation;
 import uk.ac.lancs.http.cache.CacheDirective;
 import uk.ac.lancs.http.cache.InCacheContext;
 import uk.ac.lancs.http.cache.InCacheControl;
+import uk.ac.lancs.http.cache.OutCacheContext;
+import uk.ac.lancs.http.cache.OutCacheControl;
 import uk.ac.lancs.http.encoding.Decoder;
 import uk.ac.lancs.http.encoding.Encoder;
 import uk.ac.lancs.http.encoding.EncodingContext;
@@ -649,7 +651,8 @@ public class HttpResponderSession implements AutoCloseable, Session {
 
     private static final Set<FieldId> FORBIDDEN_RESPONSE_FIELDS = Set
         .of(FieldNames.CONNECTION, FieldNames.TRANSFER_ENCODING,
-            FieldNames.TRAILER, FieldNames.CONTENT_ENCODING, FieldNames.VARY)
+            FieldNames.TRAILER, FieldNames.CONTENT_ENCODING, FieldNames.VARY,
+            FieldNames.CACHE_CONTROL)
         .stream()
         .flatMap(s -> Stream.of(FieldNamespace.STANDARD_END_TO_END.of(s),
                                 FieldNamespace.STANDARD_HOP_BY_HOP.of(s)))
@@ -864,6 +867,11 @@ public class HttpResponderSession implements AutoCloseable, Session {
                 base.addField(FieldNames.VARY, v.prefixedName(responseExtMgr));
         }
 
+        base.clearField(FieldNames.CACHE_CONTROL);
+        var outCache = responseCacheControl();
+        outCache.forResponse(new OutCacheContext(responseExtMgr),
+                             s -> base.addField(FieldNames.CACHE_CONTROL, s));
+
         /* Set raw response header fields based on our local namespaced
          * collection. */
         for (var ent : responseHeaderFields.entrySet()) {
@@ -1035,6 +1043,20 @@ public class HttpResponderSession implements AutoCloseable, Session {
                        CacheDirective.ALL_DIRECTIVES,
                        base.parameters().get(CACHE_CONTROL_PARAM));
         return requestCacheControl;
+    }
+
+    private OutCacheControl responseCacheControl = null;
+
+    /**
+     * Access <samp>{@value "%s" FieldNames#CACHE_CONTROL}</samp>
+     * directives to be set by the application.
+     * 
+     * @return the cache-control directives for the request
+     */
+    public OutCacheControl responseCacheControl() {
+        if (responseCacheControl == null)
+            responseCacheControl = new OutCacheControl();
+        return responseCacheControl;
     }
 
     private final OTSControl otsResponseControl = new OTSControl() {
