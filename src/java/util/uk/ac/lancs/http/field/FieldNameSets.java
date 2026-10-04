@@ -108,7 +108,7 @@ public class FieldNameSets {
      * names that may only appear in a header
      */
     public static final Set<String> HEADER_GENERAL_END_TO_END =
-        Set.of(CACHE_CONTROL, MAN, OPT, DATE, PRAGMA, UPGRADE, VIA);
+        Set.of(CACHE_CONTROL, MAN, OPT, DATE, PRAGMA, VIA);
 
     /**
      * An immutable case-insensitive set of general end-to-end field
@@ -203,7 +203,7 @@ public class FieldNameSets {
      * field
      */
     public static final Set<String> HEADER_GENERAL_IMPLICIT_HOP_BY_HOP =
-        nameSet(CONNECTION, TRANSFER_ENCODING, TRAILER);
+        nameSet(CONNECTION, TRANSFER_ENCODING, TRAILER, UPGRADE);
 
     /**
      * An immutable case-insensitive set of general hop-by-hop field
