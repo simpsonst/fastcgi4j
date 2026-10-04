@@ -971,10 +971,11 @@ public final class Tokenizer {
                     if (!CharacterSet.TOKEN_CHARS.contains(c)) {
                         result.append(text.subSequence(last, i)).append('\\')
                             .append(c);
-                        last = i;
+                        last = i + 1;
                     }
+                    i++;
                 }
-                result.append(text.subSequence(last, i)).append('\\').append(c);
+                result.append(text.subSequence(last, i));
                 return result.append('"').toString();
             }
         }
@@ -1022,5 +1023,16 @@ public final class Tokenizer {
             throw new TokenException("not token list: " + text);
         }
         return List.copyOf(result);
+    }
+
+    /**
+     * @hidden
+     */
+    public static void main(String[] args) {
+        System.out.println(Tokenizer.quoteOptionally("foobar"));
+        System.out.println(Tokenizer.quoteOptionally("\"foobar"));
+        System.out.println(Tokenizer.quoteOptionally("foobar\""));
+        System.out.println(Tokenizer.quoteOptionally("\"foo\"bar"));
+        System.out.println(Tokenizer.quoteOptionally("foo\"bar\""));
     }
 }
