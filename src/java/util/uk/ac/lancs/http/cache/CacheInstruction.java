@@ -303,7 +303,7 @@ public final class CacheInstruction {
                                             (k, r) -> rejectedKeys
                                                 .put(k.toString(), r));
                 for (var raw : rawNames)
-                    resolver.seek(f, null);
+                    resolver.seek(raw, null);
                 this.rejectedKeys = Collections.unmodifiableMap(rejectedKeys);
             }
             if (qualifiedDirectives.containsKey(Directives.S_MAXAGE)) {
