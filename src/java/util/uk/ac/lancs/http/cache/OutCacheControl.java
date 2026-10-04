@@ -39,7 +39,6 @@
 package uk.ac.lancs.http.cache;
 
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import uk.ac.lancs.http.field.FieldNames;
@@ -51,9 +50,43 @@ import uk.ac.lancs.mime.Tokenizer;
  * 
  * @author simpsons
  */
-public final class OutCacheControl implements CacheControl {
-    private final Map<String, Map.Entry<CacheDirective<?>, Object>> states =
-        new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+public final class OutCacheControl extends AbstractCacheControl {
+    private final int mode;
+
+    /**
+     * Create a cache control with a given mode.
+     * 
+     * @param mode -1 for a request; +1 for a response
+     */
+    private OutCacheControl(int mode) {
+        this.mode = mode;
+    }
+
+    private void checkDirection(CacheDirective<?> dir) {
+        if (mode < 0 && !dir.forResponses())
+            throw new IllegalArgumentException(dir.key()
+                + " not for responses");
+        if (mode > 0 && !dir.forRequests())
+            throw new IllegalArgumentException(dir.key() + " not for requests");
+    }
+
+    /**
+     * Create a cache control for emitting a response.
+     * 
+     * @return the requested cache control
+     */
+    public static OutCacheControl forResponse() {
+        return new OutCacheControl(-1);
+    }
+
+    /**
+     * Create a cache control for emitting a request.
+     * 
+     * @return the requested cache control
+     */
+    public static OutCacheControl forRequest() {
+        return new OutCacheControl(+1);
+    }
 
     /**
      * Remove a directive. This does not remove another directive with
@@ -70,24 +103,21 @@ public final class OutCacheControl implements CacheControl {
     }
 
     /**
-     * Get the internal state of a directive.
+     * {@inheritDoc}
      * 
      * @param <S> the internal state type of the directive
      * 
-     * @param dir the directive whose internal state is sought
+     * @param dir {@inheritDoc}
      * 
-     * @return the internal state; or {@code null} if the directive is
-     * not set (even if another directive with the same
-     * {@linkplain CacheDirective#key() key} is present
+     * @return {@inheritDoc}
+     * 
+     * @throws IllegalArgumentException if the directive is not suitable
+     * for the mode of the cache control
      */
     @Override
     public <S> S get(CacheDirective<S> dir) {
-        var state = states.get(dir.key());
-        if (state == null) return null;
-        var t = dir.type();
-        if (!t.isInstance(state)) return null;
-        S s = t.cast(state);
-        return dir.owns(s) ? s : null;
+        checkDirection(dir);
+        return super.get(dir);
     }
 
     /**
@@ -103,8 +133,15 @@ public final class OutCacheControl implements CacheControl {
      * @param newState a means to create new, empty state if necessary
      * 
      * @return the internal state of the directive
+     * 
+     * @throws IllegalArgumentException if the directive is not suitable
+     * for the mode of the cache control
      */
     public <S> S ensure(CacheDirective<S> dir, Supplier<S> newState) {
+        checkDirection(dir);
+
+        /* Get the existing state. If not present, or for a different
+         * directive, we're setting/replacing it. */
         var state = get(dir);
         if (state == null) {
             state = newState.get();
@@ -125,28 +162,24 @@ public final class OutCacheControl implements CacheControl {
      * @param newState the replacement state
      * 
      * @return the internal state of the directive
+     * 
+     * @throws IllegalArgumentException if the directive is not suitable
+     * for the mode of the cache control
      */
     public <S> S set(CacheDirective<S> dir, S newState) {
+        checkDirection(dir);
         states.put(dir.key(), Map.entry(dir, newState));
         return newState;
     }
 
-    private void emit(String key, String qualification,
+    private void emit(String key, String qualification, boolean forceQuotes,
                       Consumer<? super String> dest) {
         if (qualification == null)
             dest.accept(key);
         else
-            dest.accept(key + '=' + Tokenizer.quoteOptionally(qualification));
-    }
-
-    private void write(OutCacheContext ctxt, Consumer<? super String> dest,
-                       int mode) {
-        for (var ent : states.values()) {
-            var d = ent.getKey();
-            if (mode > 0 && !d.forResponses()) continue;
-            if (mode < 0 && !d.forRequests()) continue;
-            d.emit(ctxt, q -> emit(d.key(), q, dest), ent.getValue());
-        }
+            dest.accept(key + '='
+                + (forceQuotes ? Tokenizer.quote(qualification) :
+                    Tokenizer.quoteOptionally(qualification)));
     }
 
     /**
@@ -157,21 +190,14 @@ public final class OutCacheControl implements CacheControl {
      * 
      * @param dest an object invoked with each comma-separated value
      */
-    public void forRequest(OutCacheContext ctxt,
-                           Consumer<? super String> dest) {
-        write(ctxt, dest, -1);
-    }
-
-    /**
-     * Generate field values for the <samp>{@value "%s"
-     * FieldNames#CACHE_CONTROL}</samp> header field of a response.
-     * 
-     * @param ctxt a context for generating values
-     * 
-     * @param dest an object invoked with each comma-separated value
-     */
-    public void forResponse(OutCacheContext ctxt,
-                            Consumer<? super String> dest) {
-        write(ctxt, dest, +1);
+    public void write(OutCacheContext ctxt, Consumer<? super String> dest) {
+        for (var ent : states.entrySet()) {
+            var k = ent.getKey();
+            var p = ent.getValue();
+            var d = p.getKey();
+            if (mode > 0 && !d.forRequests()) continue;
+            if (mode < 0 && !d.forResponses()) continue;
+            d.emit(ctxt, q -> emit(k, q, d.forceQuoting(), dest), p.getValue());
+        }
     }
 }

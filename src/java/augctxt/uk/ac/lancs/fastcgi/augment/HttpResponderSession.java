@@ -869,8 +869,8 @@ public class HttpResponderSession implements AutoCloseable, Session {
 
         base.clearField(FieldNames.CACHE_CONTROL);
         var outCache = responseCacheControl();
-        outCache.forResponse(new OutCacheContext(responseExtMgr),
-                             s -> base.addField(FieldNames.CACHE_CONTROL, s));
+        outCache.write(new OutCacheContext(responseExtMgr),
+                       s -> base.addField(FieldNames.CACHE_CONTROL, s));
 
         /* Set raw response header fields based on our local namespaced
          * collection. */
@@ -1055,7 +1055,7 @@ public class HttpResponderSession implements AutoCloseable, Session {
      */
     public OutCacheControl responseCacheControl() {
         if (responseCacheControl == null)
-            responseCacheControl = new OutCacheControl();
+            responseCacheControl = OutCacheControl.forResponse();
         return responseCacheControl;
     }
 

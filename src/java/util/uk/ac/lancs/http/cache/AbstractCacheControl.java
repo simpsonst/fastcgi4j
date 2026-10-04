@@ -38,60 +38,54 @@
 
 package uk.ac.lancs.http.cache;
 
-import java.util.function.Consumer;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
- * Implements a cache directive which is either present or absent.
+ * Provides the basic readable storage for inbound and outbound cache
+ * controls.
  *
  * @author simpsons
  */
-public class BooleanCacheDirective extends AbstractCacheDirective<Boolean> {
+public abstract class AbstractCacheControl implements CacheControl {
     /**
-     * Create a Boolean cache directive.
-     * 
-     * @param key the token identifying the directive
-     * 
-     * @param forRequests {@code true} if the directive applies to
-     * requests; {@code false otherwise}
-     * 
-     * @param forResponses {@code true} if the directive applies to
-     * responses; {@code false otherwise}
+     * Indexes directive state by key. The value is a pair giving the
+     * directive and the state. For an access to an existing state to be
+     * valid, the calling directive must be object-identical to the key
+     * part of the pair. This must be ensured by inserting only pairs
+     * where the key part generated the value part.
      */
-    public BooleanCacheDirective(String key, boolean forRequests,
-                                 boolean forResponses) {
-        super(Boolean.class, key, forRequests, forResponses);
-    }
+    protected final Map<String, Map.Entry<CacheDirective<?>, Object>> states =
+        new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
+    /**
+     * {@inheritDoc}
+     * 
+     * @param <S> the internal state type of the directive
+     * 
+     * @param dir {@inheritDoc}
+     * 
+     * @return {@inheritDoc}
+     * 
+     * @implNote The directive is also considered not set even if a
+     * state exists under the directive's key, when the key part of the
+     * value is not that directive.
+     */
     @Override
-    public void parse(InCacheContext ctxt, String qualification,
-                      Consumer<? super Boolean> dest) {
-        if (qualification == null) dest.accept(Boolean.TRUE);
-    }
+    public <S> S get(CacheDirective<S> dir) {
+        /* See if we have an entry for this key. If not, the result is
+         * null. */
+        var pair = states.get(dir.key());
+        if (pair == null) return null;
 
-    @Override
-    public void emit(OutCacheContext ctxt, Consumer<? super String> dest,
-                     Object state) {
-        dest.accept(null);
-    }
+        /* There is a value. Did this directive put it in? */
+        if (pair.getKey() != dir) return null;
 
-    /**
-     * Test whether the directive is present.
-     * 
-     * @param ctrl the cache control
-     * 
-     * @return {@code true} if the directive is present; {@code false}
-     * otherwise
-     */
-    public boolean test(CacheControl ctrl) {
-        return ctrl.get(this) != null;
-    }
-
-    /**
-     * Enable the directive in the control.
-     * 
-     * @param ctrl the cache control
-     */
-    public void set(OutCacheControl ctrl) {
-        ctrl.set(this, Boolean.TRUE);
+        /* Extract the value, and cast to the right type. Prior checks
+         * ensure that we have an object of the right type, so no
+         * class-cast exception. */
+        var t = dir.type();
+        var state = pair.getValue();
+        return t.cast(state);
     }
 }

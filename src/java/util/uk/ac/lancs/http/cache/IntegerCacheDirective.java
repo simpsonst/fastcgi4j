@@ -64,11 +64,6 @@ public class IntegerCacheDirective extends AbstractCacheDirective<Integer> {
     }
 
     @Override
-    public boolean owns(Integer state) {
-        return true;
-    }
-
-    @Override
     public void parse(InCacheContext ctxt, String qualification,
                       Consumer<? super Integer> dest) {
         if (qualification == null) return;

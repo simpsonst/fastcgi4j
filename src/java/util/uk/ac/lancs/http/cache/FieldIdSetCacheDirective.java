@@ -72,6 +72,19 @@ public class FieldIdSetCacheDirective extends SetCacheDirective<FieldId> {
         super(() -> new HashSet<>(), key, forRequests, forResponses);
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * @return {@inheritDoc}
+     * 
+     * @implNote Qualifications for this type of directive always
+     * require quoting.
+     */
+    @Override
+    public boolean forceQuoting() {
+        return true;
+    }
+
     @Override
     public void parse(InCacheContext ctxt, String qualification,
                       Consumer<? super Set> dest) {
@@ -113,7 +126,7 @@ public class FieldIdSetCacheDirective extends SetCacheDirective<FieldId> {
             set.stream().map(id -> id.optionalPrefixedName(ctxt.exts))
                 .filter(Optional::isPresent).map(Optional::get)
                 .collect(Collectors.toSet());
-        if (rawNames.isEmpty()) return;
-        dest.accept(rawNames.stream().collect(Collectors.joining(",")));
+        if (!rawNames.isEmpty())
+            dest.accept(rawNames.stream().collect(Collectors.joining(",")));
     }
 }

@@ -70,12 +70,6 @@ public abstract class SetCacheDirective<T> extends AbstractCacheDirective<Set> {
     }
 
     @SuppressWarnings("unchecked")
-    @Override
-    public boolean owns(Set state) {
-        return Set.class.isInstance(state);
-    }
-
-    @SuppressWarnings("unchecked")
     private Set<T> ensureState(OutCacheControl ctrl) {
         return ctrl.ensure(this, () -> constructor.get());
     }
@@ -89,6 +83,7 @@ public abstract class SetCacheDirective<T> extends AbstractCacheDirective<Set> {
      */
     public void include(OutCacheControl ctrl, T elem) {
         ensureState(ctrl).add(elem);
+        assert ctrl.get(this).contains(elem);
     }
 
     /**

@@ -49,7 +49,7 @@ import uk.ac.lancs.mime.Tokenizer;
  *
  * @author simpsons
  */
-public final class InCacheControl implements CacheControl {
+public final class InCacheControl extends AbstractCacheControl {
     private static void parse(CharSequence line, Map<String, String> qualified,
                               Collection<String> unqualified) {
         if (line == null) return;
@@ -151,15 +151,5 @@ public final class InCacheControl implements CacheControl {
                    Collection<? extends CacheDirective<?>> dirs,
                    CharSequence line) {
         return new InCacheControl(ctxt, dirs, line, +1);
-    }
-
-    @Override
-    public <S> S get(CacheDirective<S> dir) {
-        var state = states.get(dir.key());
-        if (state == null) return null;
-        var t = dir.type();
-        if (!t.isInstance(state)) return null;
-        S s = t.cast(state);
-        return dir.owns(s) ? s : null;
     }
 }

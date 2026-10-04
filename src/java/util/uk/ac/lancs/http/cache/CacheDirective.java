@@ -68,16 +68,17 @@ public interface CacheDirective<S> {
     Class<S> type();
 
     /**
-     * Test whether this directive owns some internal state. This is
-     * only used when two directive share the same {@linkplain #key()
-     * key}.
+     * Determine whether the directive qualification requires a quoted
+     * string.
      * 
-     * @param state the state to be tested
+     * @return {@code true} if the qualification requires a quoted
+     * string; {@code false} if it make be a token
      * 
-     * @return {@code true} if this directive owns the state;
-     * {@code false} otherwise
+     * @implNote The default is to not require a quoted string.
      */
-    boolean owns(S state);
+    default boolean forceQuoting() {
+        return false;
+    }
 
     /**
      * Interpret the raw value of a cache directive.
