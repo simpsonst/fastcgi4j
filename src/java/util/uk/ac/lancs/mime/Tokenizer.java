@@ -952,6 +952,28 @@ public final class Tokenizer {
     }
 
     /**
+     * Create a quoted string.
+     * 
+     * @param text the literal text of the string
+     * 
+     * @return the encoded text as a quoted string
+     */
+    public static String quote(CharSequence text) {
+        StringBuilder result = new StringBuilder("\"");
+        final int len = text.length();
+        int last = 0;
+        for (int i = 0; i < len; i++) {
+            char c = text.charAt(i);
+            if (!CharacterSet.TOKEN_CHARS.contains(c)) {
+                result.append(text.subSequence(last, i)).append('\\').append(c);
+                last = i + 1;
+            }
+        }
+        result.append(text.subSequence(last, len));
+        return result.append('"').toString();
+    }
+
+    /**
      * Create a token or a quoted string (if necessary).
      * 
      * @param text the literal text of the token or string
@@ -1034,5 +1056,10 @@ public final class Tokenizer {
         System.out.println(Tokenizer.quoteOptionally("foobar\""));
         System.out.println(Tokenizer.quoteOptionally("\"foo\"bar"));
         System.out.println(Tokenizer.quoteOptionally("foo\"bar\""));
+        System.out.println(Tokenizer.quote("foobar"));
+        System.out.println(Tokenizer.quote("\"foobar"));
+        System.out.println(Tokenizer.quote("foobar\""));
+        System.out.println(Tokenizer.quote("\"foo\"bar"));
+        System.out.println(Tokenizer.quote("foo\"bar\""));
     }
 }
