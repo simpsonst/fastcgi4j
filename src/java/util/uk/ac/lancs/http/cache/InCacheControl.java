@@ -92,7 +92,7 @@ public final class InCacheControl extends AbstractCacheControl {
             tokens.whitespace(0);
             if (tokens.end()) break;
             if (tokens.character(',')) continue;
-            tokens.abort("comma/end expcected");
+            tokens.abort("comma/end expected");
             throw new AssertionError("unreachable");
         }
     }
