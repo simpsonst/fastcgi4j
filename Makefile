@@ -306,6 +306,7 @@ distclean:: blank
 	$(RM) VERSION BUILD
 
 test_suite += uk.ac.lancs.io.infpipe.TestCachePiper
+test_suite += uk.ac.lancs.http.cache.TestCacheControl
 
 jtests: $(jars:%=$(JARDEPS_OUTDIR)/%.jar)
 	@for class in $(test_suite) ; do \
