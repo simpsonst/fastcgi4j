@@ -58,7 +58,7 @@ public final class OutCacheControl extends AbstractCacheControl {
     /**
      * Create a cache control with a given mode.
      * 
-     * @param mode -1 for a request; +1 for a response
+     * @param mode +1 for a request; -1 for a response
      */
     private OutCacheControl(int mode) {
         this.mode = mode;
