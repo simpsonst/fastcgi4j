@@ -45,7 +45,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
-import uk.ac.lancs.http.field.FieldNames;
+import uk.ac.lancs.http.FieldNames;
 import uk.ac.lancs.scc.jardeps.Service;
 
 /**

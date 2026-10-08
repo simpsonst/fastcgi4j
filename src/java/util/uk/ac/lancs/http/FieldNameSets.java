@@ -36,14 +36,14 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.http.field;
+package uk.ac.lancs.http;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
-import static uk.ac.lancs.http.field.FieldNames.*;
+import static uk.ac.lancs.http.FieldNames.*;
 
 /**
  * Defines immutable, case-insensitive sets of standard field names.

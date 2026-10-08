@@ -42,7 +42,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import uk.ac.lancs.http.field.ExtensionManager;
-import uk.ac.lancs.http.field.FieldNames;
+import uk.ac.lancs.http.FieldNames;
 import uk.ac.lancs.http.field.FieldNamespace;
 import uk.ac.lancs.mime.Tokenizer;
 

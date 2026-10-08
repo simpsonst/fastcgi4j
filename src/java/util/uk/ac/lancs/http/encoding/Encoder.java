@@ -41,7 +41,7 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import uk.ac.lancs.http.field.FieldNames;
+import uk.ac.lancs.http.FieldNames;
 
 /**
  * Provides a named means of encoding output streams. The name is used

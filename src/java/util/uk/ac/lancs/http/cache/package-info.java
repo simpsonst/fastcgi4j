@@ -38,6 +38,6 @@
 
 /**
  * Manipulates HTTP's <samp>{@value "%s"
- * uk.ac.lancs.http.field.FieldNames#CACHE_CONTROL}</samp> header field.
+ * uk.ac.lancs.http.FieldNames#CACHE_CONTROL}</samp> header field.
  */
 package uk.ac.lancs.http.cache;

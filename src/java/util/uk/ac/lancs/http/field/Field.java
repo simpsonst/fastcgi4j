@@ -43,6 +43,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
+import uk.ac.lancs.http.FieldNames;
 import uk.ac.lancs.mime.MediaType;
 import uk.ac.lancs.mime.Tokenizer;
 

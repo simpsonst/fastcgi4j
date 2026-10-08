@@ -39,7 +39,7 @@ package uk.ac.lancs.fastcgi.ots;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
-import uk.ac.lancs.http.field.FieldNames;
+import uk.ac.lancs.http.FieldNames;
 import uk.ac.lancs.mime.MediaType;
 
 /**

@@ -53,8 +53,8 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Document;
+import uk.ac.lancs.http.FieldNames;
 import uk.ac.lancs.http.ResponseCodes;
-import uk.ac.lancs.http.field.FieldNames;
 import uk.ac.lancs.mime.MediaType;
 
 /**

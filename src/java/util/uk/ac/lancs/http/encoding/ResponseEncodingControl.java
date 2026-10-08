@@ -38,7 +38,7 @@ package uk.ac.lancs.http.encoding;
 
 import java.util.List;
 import java.util.Map;
-import uk.ac.lancs.http.field.FieldNames;
+import uk.ac.lancs.http.FieldNames;
 
 /**
  * Allows an application to specify content encoding compatible with

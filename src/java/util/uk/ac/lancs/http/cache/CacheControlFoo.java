@@ -45,7 +45,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import uk.ac.lancs.http.field.ExtensionTable;
 import uk.ac.lancs.http.field.FieldId;
-import uk.ac.lancs.http.field.FieldNames;
+import uk.ac.lancs.http.FieldNames;
 import uk.ac.lancs.mime.Tokenizer;
 
 /**

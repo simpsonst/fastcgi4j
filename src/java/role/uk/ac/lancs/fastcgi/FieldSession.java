@@ -112,8 +112,8 @@ public interface FieldSession extends Session {
      * <p>
      * Some server protocols may impose other requirements. For example,
      * HTTP usually requires trailer field names to be listed in the
-     * <samp>{@value "%s"
-     * uk.ac.lancs.http.field.FieldNames#TRAILER}</samp> header field.
+     * <samp>{@value "%s" uk.ac.lancs.http.FieldNames#TRAILER}</samp>
+     * header field.
      * 
      * <p>
      * This is an experimental extension to FastCGI/1.0. It will only be

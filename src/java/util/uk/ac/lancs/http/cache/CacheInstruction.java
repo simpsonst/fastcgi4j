@@ -47,7 +47,7 @@ import java.util.TreeSet;
 import java.util.function.Predicate;
 import uk.ac.lancs.http.field.ExtensionIndex;
 import uk.ac.lancs.http.field.FieldId;
-import uk.ac.lancs.http.field.FieldNames;
+import uk.ac.lancs.http.FieldNames;
 import uk.ac.lancs.http.field.FieldResolver;
 import uk.ac.lancs.http.field.RejectionReason;
 import uk.ac.lancs.mime.Tokenizer;

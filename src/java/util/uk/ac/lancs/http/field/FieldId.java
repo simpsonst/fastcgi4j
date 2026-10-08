@@ -47,6 +47,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import uk.ac.lancs.http.FieldNameSets;
+import uk.ac.lancs.http.FieldNames;
 
 /**
  * Holds a valid header or trailer field name, possibly with a

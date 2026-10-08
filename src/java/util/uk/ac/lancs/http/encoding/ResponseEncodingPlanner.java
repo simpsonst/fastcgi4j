@@ -44,7 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import uk.ac.lancs.http.Negotiation;
-import uk.ac.lancs.http.field.FieldNames;
+import uk.ac.lancs.http.FieldNames;
 
 /**
  * Works out how to encode a response body, based on encoding

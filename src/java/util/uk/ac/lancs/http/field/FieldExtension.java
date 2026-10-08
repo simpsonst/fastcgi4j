@@ -41,6 +41,7 @@ package uk.ac.lancs.http.field;
 import java.net.URI;
 import java.util.Objects;
 import java.util.Optional;
+import uk.ac.lancs.http.FieldNames;
 import uk.ac.lancs.mime.Tokenizer;
 
 /**

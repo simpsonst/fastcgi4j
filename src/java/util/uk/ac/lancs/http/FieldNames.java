@@ -36,7 +36,7 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.http.field;
+package uk.ac.lancs.http;
 
 /**
  * Defines symbols for standard HTTP field names. Each field name is
