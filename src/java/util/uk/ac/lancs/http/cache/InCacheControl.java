@@ -94,9 +94,6 @@ public final class InCacheControl extends AbstractCacheControl {
         }
     }
 
-    private final Map<String, Map.Entry<CacheDirective<?>, Object>> states =
-        new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-
     private InCacheControl(InCacheContext ctxt,
                            Collection<? extends CacheDirective<?>> dirs,
                            CharSequence line, int mode) {
