@@ -76,6 +76,8 @@ public final class OutCacheControl extends AbstractCacheControl {
      * Create a cache control for emitting a response.
      * 
      * @return the requested cache control
+     * 
+     * @constructor
      */
     public static OutCacheControl forResponse() {
         return new OutCacheControl(-1);
@@ -85,6 +87,8 @@ public final class OutCacheControl extends AbstractCacheControl {
      * Create a cache control for emitting a request.
      * 
      * @return the requested cache control
+     * 
+     * @constructor
      */
     public static OutCacheControl forRequest() {
         return new OutCacheControl(+1);

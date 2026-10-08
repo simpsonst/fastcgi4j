@@ -127,6 +127,8 @@ public final class InCacheControl extends AbstractCacheControl {
      * @param line the field value
      * 
      * @return the cache control parsed from the value
+     * 
+     * @constructor
      */
     public static InCacheControl
         ofRequest(InCacheContext ctxt,
@@ -145,6 +147,8 @@ public final class InCacheControl extends AbstractCacheControl {
      * @param line the field value
      * 
      * @return the cache control parsed from the value
+     * 
+     * @constructor
      */
     public static InCacheControl
         ofResponse(InCacheContext ctxt,
