@@ -39,6 +39,7 @@
 package uk.ac.lancs.http.cache;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -99,22 +100,65 @@ public final class InCacheControl extends AbstractCacheControl {
 
     private InCacheControl(InCacheContext ctxt,
                            Collection<? extends CacheDirective<?>> dirs,
-                           CharSequence line, int mode) {
-        Map<String, String> qualifiedDirectives =
-            new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-        Collection<String> unqualifiedDirectives =
-            new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-        parse(line, qualifiedDirectives, unqualifiedDirectives);
-        for (var dir : dirs) {
-            var key = dir.key();
-            if (mode > 0 && !dir.forResponses()) continue;
-            if (mode < 0 && !dir.forRequests()) continue;
-            var qual = qualifiedDirectives.get(key);
-            if (qual != null)
-                dir.parse(ctxt, qual, s -> states.put(key, Map.entry(dir, s)));
-            else if (unqualifiedDirectives.contains(key))
-                dir.parse(ctxt, null, s -> states.put(key, Map.entry(dir, s)));
+                           Collection<? extends CharSequence> lines, int mode) {
+        for (var line : lines) {
+            Map<String, String> qualifiedDirectives =
+                new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+            Collection<String> unqualifiedDirectives =
+                new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+            parse(line, qualifiedDirectives, unqualifiedDirectives);
+            for (var dir : dirs) {
+                var key = dir.key();
+                if (mode > 0 && !dir.forResponses()) continue;
+                if (mode < 0 && !dir.forRequests()) continue;
+                var qual = qualifiedDirectives.get(key);
+                if (qual != null)
+                    dir.parse(ctxt, qual,
+                              s -> states.put(key, Map.entry(dir, s)));
+                else if (unqualifiedDirectives.contains(key)) dir
+                    .parse(ctxt, null, s -> states.put(key, Map.entry(dir, s)));
+            }
         }
+    }
+
+    /**
+     * Create a cache control from a sequence of request field values.
+     * 
+     * @param ctxt a context for resolving parts of the value
+     * 
+     * @param dirs the set of directives to look for
+     * 
+     * @param lines the field values
+     * 
+     * @return the cache control parsed from the value
+     * 
+     * @constructor
+     */
+    public static InCacheControl
+        ofRequest(InCacheContext ctxt,
+                  Collection<? extends CacheDirective<?>> dirs,
+                  Collection<? extends CharSequence> lines) {
+        return new InCacheControl(ctxt, dirs, lines, -1);
+    }
+
+    /**
+     * Create a cache control from a sequence of response field values.
+     * 
+     * @param ctxt a context for resolving parts of the value
+     * 
+     * @param dirs the set of directives to look for
+     * 
+     * @param line the field values
+     * 
+     * @return the cache control parsed from the value
+     * 
+     * @constructor
+     */
+    public static InCacheControl
+        ofResponse(InCacheContext ctxt,
+                   Collection<? extends CacheDirective<?>> dirs,
+                   Collection<? extends CharSequence> lines) {
+        return new InCacheControl(ctxt, dirs, lines, +1);
     }
 
     /**
@@ -134,7 +178,7 @@ public final class InCacheControl extends AbstractCacheControl {
         ofRequest(InCacheContext ctxt,
                   Collection<? extends CacheDirective<?>> dirs,
                   CharSequence line) {
-        return new InCacheControl(ctxt, dirs, line, -1);
+        return ofRequest(ctxt, dirs, Collections.singleton(line));
     }
 
     /**
@@ -154,6 +198,6 @@ public final class InCacheControl extends AbstractCacheControl {
         ofResponse(InCacheContext ctxt,
                    Collection<? extends CacheDirective<?>> dirs,
                    CharSequence line) {
-        return new InCacheControl(ctxt, dirs, line, +1);
+        return ofResponse(ctxt, dirs, Collections.singleton(line));
     }
 }
