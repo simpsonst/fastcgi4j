@@ -246,6 +246,300 @@ public final class FieldId {
     public static final FieldId CONTENT_ENCODING =
         FieldNamespace.STANDARD_END_TO_END.of(FieldNames.CONTENT_ENCODING);
 
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#ACCEPT}</samp>.
+     */
+    public static final FieldId ACCEPT =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.ACCEPT);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#ACCEPT_CHARSET}</samp>.
+     */
+    public static final FieldId ACCEPT_CHARSET =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.ACCEPT_CHARSET);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#ACCEPT_ENCODING}</samp>.
+     */
+    public static final FieldId ACCEPT_ENCODING =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.ACCEPT_ENCODING);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#ACCEPT_LANGUAGE}</samp>.
+     */
+    public static final FieldId ACCEPT_LANGUAGE =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.ACCEPT_LANGUAGE);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#AGE}</samp>.
+     */
+    public static final FieldId AGE =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.AGE);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#ALLOW}</samp>.
+     */
+    public static final FieldId ALLOW =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.ALLOW);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#AUTHORIZATION}</samp>.
+     */
+    public static final FieldId AUTHORIZATION =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.AUTHORIZATION);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#CACHE_CONTROL}</samp>.
+     */
+    public static final FieldId CACHE_CONTROL =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.CACHE_CONTROL);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#CONTENT_BASE}</samp>.
+     */
+    public static final FieldId CONTENT_BASE =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.CONTENT_BASE);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#CONTENT_LANGUAGE}</samp>.
+     */
+    public static final FieldId CONTENT_LANGUAGE =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.CONTENT_LANGUAGE);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#CONTENT_LOCATION}</samp>.
+     */
+    public static final FieldId CONTENT_LOCATION =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.CONTENT_LOCATION);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#CONTENT_MD5}</samp>.
+     */
+    public static final FieldId CONTENT_MD5 =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.CONTENT_MD5);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#CONTENT_RANGE}</samp>.
+     */
+    public static final FieldId CONTENT_RANGE =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.CONTENT_RANGE);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#COOKIE}</samp>.
+     */
+    public static final FieldId COOKIE =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.COOKIE);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#DATE}</samp>.
+     */
+    public static final FieldId DATE =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.DATE);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#ETAG}</samp>.
+     */
+    public static final FieldId ETAG =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.ETAG);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#EXPIRES}</samp>.
+     */
+    public static final FieldId EXPIRES =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.EXPIRES);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#EXT}</samp>.
+     */
+    public static final FieldId EXT =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.EXT);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#FROM}</samp>.
+     */
+    public static final FieldId FROM =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.FROM);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#HOST}</samp>.
+     */
+    public static final FieldId HOST =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.HOST);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#IF_MATCH}</samp>.
+     */
+    public static final FieldId IF_MATCH =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.IF_MATCH);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#IF_MODIFIED_SINCE}</samp>.
+     */
+    public static final FieldId IF_MODIFIED_SINCE =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.IF_MODIFIED_SINCE);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#IF_NONE_MATCH}</samp>.
+     */
+    public static final FieldId IF_NONE_MATCH =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.IF_NONE_MATCH);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#IF_RANGE}</samp>.
+     */
+    public static final FieldId IF_RANGE =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.IF_RANGE);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#IF_UNMODIFIED_SINCE}</samp>.
+     */
+    public static final FieldId IF_UNMODIFIED_SINCE =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.IF_UNMODIFIED_SINCE);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#LAST_MODIFIED}</samp>.
+     */
+    public static final FieldId LAST_MODIFIED =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.LAST_MODIFIED);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#MAN}</samp>.
+     */
+    public static final FieldId MAN =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.MAN);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#OPT}</samp>.
+     */
+    public static final FieldId OPT =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.OPT);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#PRAGMA}</samp>.
+     */
+    public static final FieldId PRAGMA =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.PRAGMA);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#RANGE}</samp>.
+     */
+    public static final FieldId RANGE =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.RANGE);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#REFERER}</samp>.
+     */
+    public static final FieldId REFERER =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.REFERER);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#REPR_DIGEST}</samp>.
+     */
+    public static final FieldId REPR_DIGEST =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.REPR_DIGEST);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#RETRY_AFTER}</samp>.
+     */
+    public static final FieldId RETRY_AFTER =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.RETRY_AFTER);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#SERVER}</samp>.
+     */
+    public static final FieldId SERVER =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.SERVER);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#SET_COOKIE}</samp>.
+     */
+    public static final FieldId SET_COOKIE =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.SET_COOKIE);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#USER_AGENT}</samp>.
+     */
+    public static final FieldId USER_AGENT =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.USER_AGENT);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#VARY}</samp>.
+     */
+    public static final FieldId VARY =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.VARY);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#VIA}</samp>.
+     */
+    public static final FieldId VIA =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.VIA);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#WANT_CONTENT_DIGEST}</samp>.
+     */
+    public static final FieldId WANT_CONTENT_DIGEST =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.WANT_CONTENT_DIGEST);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#WANT_REPR_DIGEST}</samp>.
+     */
+    public static final FieldId WANT_REPR_DIGEST =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.WANT_REPR_DIGEST);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#WARNING}</samp>.
+     */
+    public static final FieldId WARNING =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.WARNING);
+
+    /**
+     * Identifies the standard end-to-end header field
+     * <samp>{@value "%s" FieldNames#WWW_AUTHENTICATE}</samp>.
+     */
+    public static final FieldId WWW_AUTHENTICATE =
+        FieldNamespace.STANDARD_END_TO_END.of(FieldNames.WWW_AUTHENTICATE);
+
     /* Content-Length must be hop-by-hop, because it is forbidden to use
      * it with Transfer-Encoding, which could change on each hop. */
     /**
@@ -254,6 +548,90 @@ public final class FieldId {
      */
     public static final FieldId CONTENT_LENGTH =
         FieldNamespace.STANDARD_HOP_BY_HOP.of(FieldNames.CONTENT_LENGTH);
+
+    /**
+     * Identifies the standard hop-by-hop header field
+     * <samp>{@value "%s" FieldNames#C_EXT}</samp>.
+     */
+    public static final FieldId C_EXT =
+        FieldNamespace.STANDARD_HOP_BY_HOP.of(FieldNames.C_EXT);
+
+    /**
+     * Identifies the standard hop-by-hop header field
+     * <samp>{@value "%s" FieldNames#C_MAN}</samp>.
+     */
+    public static final FieldId C_MAN =
+        FieldNamespace.STANDARD_HOP_BY_HOP.of(FieldNames.C_MAN);
+
+    /**
+     * Identifies the standard hop-by-hop header field
+     * <samp>{@value "%s" FieldNames#C_OPT}</samp>.
+     */
+    public static final FieldId C_OPT =
+        FieldNamespace.STANDARD_HOP_BY_HOP.of(FieldNames.C_OPT);
+
+    /**
+     * Identifies the standard hop-by-hop header field
+     * <samp>{@value "%s" FieldNames#CONNECTION}</samp>.
+     */
+    public static final FieldId CONNECTION =
+        FieldNamespace.STANDARD_HOP_BY_HOP.of(FieldNames.CONNECTION);
+
+    /**
+     * Identifies the standard hop-by-hop header field
+     * <samp>{@value "%s" FieldNames#MAX_FORWARDS}</samp>.
+     */
+    public static final FieldId MAX_FORWARDS =
+        FieldNamespace.STANDARD_HOP_BY_HOP.of(FieldNames.MAX_FORWARDS);
+
+    /**
+     * Identifies the standard hop-by-hop header field
+     * <samp>{@value "%s" FieldNames#PROXY_AUTHENTICATE}</samp>.
+     */
+    public static final FieldId PROXY_AUTHENTICATE =
+        FieldNamespace.STANDARD_HOP_BY_HOP.of(FieldNames.PROXY_AUTHENTICATE);
+
+    /**
+     * Identifies the standard hop-by-hop header field
+     * <samp>{@value "%s" FieldNames#PROXY_AUTHORIZATION}</samp>.
+     */
+    public static final FieldId PROXY_AUTHORIZATION =
+        FieldNamespace.STANDARD_HOP_BY_HOP.of(FieldNames.PROXY_AUTHORIZATION);
+
+    /**
+     * Identifies the standard hop-by-hop header field
+     * <samp>{@value "%s" FieldNames#PUBLIC}</samp>.
+     */
+    public static final FieldId PUBLIC =
+        FieldNamespace.STANDARD_HOP_BY_HOP.of(FieldNames.PUBLIC);
+
+    /**
+     * Identifies the standard hop-by-hop header field
+     * <samp>{@value "%s" FieldNames#TE}</samp>.
+     */
+    public static final FieldId TE =
+        FieldNamespace.STANDARD_HOP_BY_HOP.of(FieldNames.TE);
+
+    /**
+     * Identifies the standard hop-by-hop header field
+     * <samp>{@value "%s" FieldNames#TRAILER}</samp>.
+     */
+    public static final FieldId TRAILER =
+        FieldNamespace.STANDARD_HOP_BY_HOP.of(FieldNames.TRAILER);
+
+    /**
+     * Identifies the standard hop-by-hop header field
+     * <samp>{@value "%s" FieldNames#TRANSFER_ENCODING}</samp>.
+     */
+    public static final FieldId TRANSFER_ENCODING =
+        FieldNamespace.STANDARD_HOP_BY_HOP.of(FieldNames.TRANSFER_ENCODING);
+
+    /**
+     * Identifies the standard hop-by-hop header field
+     * <samp>{@value "%s" FieldNames#UPGRADE}</samp>.
+     */
+    public static final FieldId UPGRADE =
+        FieldNamespace.STANDARD_HOP_BY_HOP.of(FieldNames.UPGRADE);
 
     private static final Set<FieldId> ILLEGALLY_SCOPED_FIELDS = Stream
         .concat(Stream
