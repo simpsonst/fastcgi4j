@@ -305,6 +305,13 @@ public class FieldNameSets {
                        REQUEST_HOP_BY_HOP, RESPONSE_HOP_BY_HOP));
 
     /**
+     * An immutable case-insensitive set of end-to-end field names
+     */
+    public static final Set<String> END_TO_END =
+        nameSet(Set.of(GENERAL_END_TO_END, ENTITY_END_TO_END,
+                       REQUEST_END_TO_END, RESPONSE_END_TO_END));
+
+    /**
      * An immutable case-insensitive set of field names that may only
      * appear in a header
      */
