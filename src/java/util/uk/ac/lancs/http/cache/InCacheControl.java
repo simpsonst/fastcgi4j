@@ -71,6 +71,10 @@ public final class InCacheControl extends AbstractCacheControl {
                 throw new AssertionError("unreachable");
             }
             tokens.whitespace(0);
+            if (tokens.end()) {
+                unqualified.add(key.toString());
+                break;
+            }
             if (tokens.character(',')) {
                 unqualified.add(key.toString());
                 continue;
