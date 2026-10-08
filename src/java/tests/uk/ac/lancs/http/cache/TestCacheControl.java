@@ -38,6 +38,8 @@
 
 package uk.ac.lancs.http.cache;
 
+import java.util.ArrayList;
+import java.util.List;
 import junit.framework.TestCase;
 import org.junit.Test;
 import uk.ac.lancs.http.field.ExtensionManager;
@@ -48,13 +50,17 @@ import uk.ac.lancs.http.field.FieldId;
  * @author simpsons
  */
 public class TestCacheControl extends TestCase {
+    static final ExtensionManager exts = new ExtensionManager();
+
+    static final InCacheContext inCtxt = new InCacheContext(exts, t -> false);
+
+    static final OutCacheContext outCtxt = new OutCacheContext(exts);
+
     @Test
     public void testParsing() {
-        var ctxt = new InCacheContext(new ExtensionManager(), t -> false);
-
         {
             var ctrl = InCacheControl
-                .ofRequest(ctxt, CacheDirective.ALL_DIRECTIVES, "");
+                .ofRequest(inCtxt, CacheDirective.ALL_DIRECTIVES, "");
             assertFalse("immutable absent",
                         CacheDirective.IMMUTABLE.test(ctrl));
             assertFalse("max-stale unlimited",
@@ -92,7 +98,7 @@ public class TestCacheControl extends TestCase {
 
         {
             var ctrl =
-                InCacheControl.ofRequest(ctxt, CacheDirective.ALL_DIRECTIVES,
+                InCacheControl.ofRequest(inCtxt, CacheDirective.ALL_DIRECTIVES,
                                          "private, no-transform, no-cache");
             assertFalse("immutable absent",
                         CacheDirective.IMMUTABLE.test(ctrl));
@@ -131,7 +137,7 @@ public class TestCacheControl extends TestCase {
 
         {
             var ctrl = InCacheControl
-                .ofRequest(ctxt, CacheDirective.ALL_DIRECTIVES,
+                .ofRequest(inCtxt, CacheDirective.ALL_DIRECTIVES,
                            "max-age=23, no-cache=\"location\", foo");
             assertFalse("immutable absent",
                         CacheDirective.IMMUTABLE.test(ctrl));
@@ -172,7 +178,7 @@ public class TestCacheControl extends TestCase {
 
         {
             var ctrl = InCacheControl
-                .ofResponse(ctxt, CacheDirective.ALL_DIRECTIVES,
+                .ofResponse(inCtxt, CacheDirective.ALL_DIRECTIVES,
                             "max-age=23, no-cache=\"location\", foo");
             assertFalse("immutable absent",
                         CacheDirective.IMMUTABLE.test(ctrl));
@@ -209,6 +215,38 @@ public class TestCacheControl extends TestCase {
                         CacheDirective.S_MAXAGE.get(ctrl).isPresent());
             assertTrue("no-cache empty", CacheDirective.NO_CACHE_FIELDS
                 .test(ctrl, FieldId.LOCATION));
+        }
+    }
+
+    @Test
+    public void testGenerating() {
+        var ouCtrl = OutCacheControl.forResponse();
+        CacheDirective.MUST_UNDERSTAND.set(ouCtrl);
+        CacheDirective.MAX_AGE.set(ouCtrl, 23);
+        CacheDirective.NO_CACHE_FIELDS.include(ouCtrl, FieldId.LOCATION);
+        CacheDirective.NO_CACHE_FIELDS.include(ouCtrl, FieldId.CONTENT_DIGEST);
+
+        {
+            List<String> elems = new ArrayList<>();
+            ouCtrl.write(outCtxt, elems::add);
+            System.err.println(elems);
+            var inCtrl = InCacheControl
+                .ofResponse(inCtxt, CacheDirective.ALL_DIRECTIVES, elems);
+            assertTrue("must-understand present",
+                       CacheDirective.MUST_UNDERSTAND.test(inCtrl));
+            assertTrue("max-age present",
+                       CacheDirective.MAX_AGE.get(inCtrl).isPresent());
+            assertEquals("max-age=23",
+                         CacheDirective.MAX_AGE.get(inCtrl).getAsInt(), 23);
+            assertTrue("no-cache includes Location",
+                       CacheDirective.NO_CACHE_FIELDS.test(inCtrl,
+                                                           FieldId.LOCATION));
+            assertTrue("no-cache includes Content-Digest",
+                       CacheDirective.NO_CACHE_FIELDS
+                           .test(inCtrl, FieldId.CONTENT_DIGEST));
+            assertFalse("no-cache excludes Content-Type",
+                        CacheDirective.NO_CACHE_FIELDS
+                            .test(inCtrl, FieldId.CONTENT_TYPE));
         }
     }
 }
