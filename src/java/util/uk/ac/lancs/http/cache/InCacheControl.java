@@ -88,7 +88,6 @@ public final class InCacheControl extends AbstractCacheControl {
                     throw new AssertionError("unreachable");
                 }
                 qualified.put(key.toString(), val.toString());
-                continue;
             }
             tokens.whitespace(0);
             if (tokens.end()) break;
