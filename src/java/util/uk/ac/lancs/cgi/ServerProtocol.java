@@ -183,41 +183,41 @@ public final class ServerProtocol {
         return new ServerProtocol(m.group("name"), major, minor, false);
     }
 
-    private static final String PROTO_VAR = "SERVER_PROTOCOL";
-
     /**
      * Extract the server protocol from CGI parameters if present. The
-     * value of the parameter <samp>{@value "%s" #PROTO_VAR}</samp> is
-     * parsed if present.
+     * value of the parameter <samp>{@value "%s"
+     * CGIParameters#SERVER_PROTOCOL}</samp> is parsed if present.
      * 
      * @param params the CGI parameters
      * 
      * @return the parsed protocol; or {@code null} if
-     * <samp>{@value "%s" #PROTO_VAR}</samp> is not defined in the
-     * parameters
+     * <samp>{@value "%s" CGIParameters#SERVER_PROTOCOL}</samp> is not
+     * defined in the parameters
      */
     public static ServerProtocol
         ofOptional(Map<? super String, ? extends CharSequence> params) {
-        var text = params.get(PROTO_VAR);
+        var text = params.get(CGIParameters.SERVER_PROTOCOL);
         if (text == null) return null;
         return of(text);
     }
 
     /**
      * Extract the server protocol from CGI parameters. The value of the
-     * parameter <samp>{@value "%s" #PROTO_VAR}</samp> is parsed.
+     * parameter <samp>{@value "%s"
+     * CGIParameters#SERVER_PROTOCOL}</samp> is parsed.
      * 
      * @param params the CGI parameters
      * 
      * @return the parsed protocol
      * 
      * @throws NullPointerException if <samp>{@value "%s"
-     * #PROTO_VAR}</samp> is not defined in the parameters
+     * CGIParameters#SERVER_PROTOCOL}</samp> is not defined in the
+     * parameters
      */
     public static ServerProtocol
         of(Map<? super String, ? extends CharSequence> params) {
         ServerProtocol r = ofOptional(params);
-        Objects.requireNonNull(r, PROTO_VAR);
+        Objects.requireNonNull(r, CGIParameters.SERVER_PROTOCOL);
         return r;
     }
 
