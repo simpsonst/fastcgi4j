@@ -72,7 +72,6 @@ import uk.ac.lancs.fastcgi.proto.serial.ParamReader;
 import uk.ac.lancs.fastcgi.proto.serial.RecordIOException;
 import uk.ac.lancs.fastcgi.proto.serial.RecordOutputStream;
 import uk.ac.lancs.fastcgi.proto.serial.RecordWriter;
-import uk.ac.lancs.http.FieldNames;
 import uk.ac.lancs.http.ResponseCodes;
 import uk.ac.lancs.io.UnclosedOutputStream;
 
@@ -728,7 +727,7 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
      * if the field can be folded
      */
     private static boolean unfoldable(String fieldName) {
-        return fieldName.equalsIgnoreCase(FieldNames.SET_COOKIE);
+        return true;
     }
 
     private void ensureResponseHeader() throws IOException {
