@@ -130,7 +130,7 @@ public class HttpResponderSession implements AutoCloseable, Session {
     /**
      * Identifies the protocol used by the client to talk to the server.
      * This is taken from the CGI parameter <samp>{@value "%s"
-     * CGIParameters#SERVER_PROTOCOL_PARAM}</samp>.
+     * CGIParameters#SERVER_PROTOCOL}</samp>.
      */
     protected final ServerProtocol protocol;
 
@@ -216,7 +216,7 @@ public class HttpResponderSession implements AutoCloseable, Session {
 
     /**
      * Get the request method. The value of the CGI parameter
-     * <samp>{@value "%s" CGIParameters#METHOD_PARAM}</samp> is
+     * <samp>{@value "%s" CGIParameters#REQUEST_METHOD}</samp> is
      * returned.
      * 
      * @return the request method
@@ -224,9 +224,9 @@ public class HttpResponderSession implements AutoCloseable, Session {
      * @throws IllegalStateException if the request method is not set
      */
     public String method() {
-        var r = base.parameters().get(CGIParameters.METHOD_PARAM);
+        var r = base.parameters().get(CGIParameters.REQUEST_METHOD);
         if (r == null) throw new IllegalStateException("CGI parameter not set: "
-            + CGIParameters.METHOD_PARAM);
+            + CGIParameters.REQUEST_METHOD);
         return r;
     }
 
@@ -419,7 +419,7 @@ public class HttpResponderSession implements AutoCloseable, Session {
 
     /**
      * Get the content type of the request body. The parameter
-     * <samp>{@value "%s" CGIParameters#REQUEST_TYPE_PARAM}</samp> is
+     * <samp>{@value "%s" CGIParameters#CONTENT_TYPE}</samp> is
      * consulted. If a request body is expected, but no request content
      * type has been specified, <samp>application/octet-stream</samp> is
      * returned.
@@ -430,8 +430,7 @@ public class HttpResponderSession implements AutoCloseable, Session {
     public MediaType requestType() {
         if (methodIs("GET", "HEAD", "M-GET", "M-HEAD")) return null;
         if (requestType == null) {
-            String field =
-                base.parameters().get(CGIParameters.REQUEST_TYPE_PARAM);
+            String field = base.parameters().get(CGIParameters.CONTENT_TYPE);
             requestType =
                 field == null ? MediaType.of("application", "octet-stream") :
                     MediaType.fromString(field);
@@ -508,7 +507,7 @@ public class HttpResponderSession implements AutoCloseable, Session {
 
     /**
      * Get the request body's length. The parameter <samp>{@value "%s"
-     * CGIParameters#REQUEST_LENGTH_PARAM}</samp> is read as a decimal
+     * CGIParameters#CONTENT_LENGTH}</samp> is read as a decimal
      * integer. If not present, or an empty string, the length is deemed
      * unknown.
      * 
@@ -523,7 +522,7 @@ public class HttpResponderSession implements AutoCloseable, Session {
      */
     public long requestLength() {
         if (requestLength >= -1) return requestLength;
-        String text = base.parameters().get(CGIParameters.REQUEST_LENGTH_PARAM);
+        String text = base.parameters().get(CGIParameters.CONTENT_LENGTH);
         if (text == null || text.isEmpty()) return -1L;
         try {
             long r = Long.parseLong(text, 10);
@@ -532,7 +531,7 @@ public class HttpResponderSession implements AutoCloseable, Session {
             // Fall through.
         }
         throw new IllegalStateException("invalid CGI parameter "
-            + CGIParameters.REQUEST_LENGTH_PARAM + ": " + text);
+            + CGIParameters.CONTENT_LENGTH + ": " + text);
     }
 
     /**

@@ -83,15 +83,15 @@ public final class PathConfiguration<I> {
     public static final class Builder<I> {
         private Function<? super Map<? super String, ? extends String>,
                          ? extends String> scriptFilename =
-                             m -> m.get(CGIParameters.SCRIPT_FILENAME_PARAM);
+                             m -> m.get(CGIParameters.SCRIPT_FILENAME);
 
         private Function<? super Map<? super String, ? extends String>,
                          ? extends String> pathInfo =
-                             m -> m.get(CGIParameters.PATH_INFO_PARAM);
+                             m -> m.get(CGIParameters.PATH_INFO);
 
         private Function<? super Map<? super String, ? extends String>,
                          ? extends String> scriptName =
-                             m -> m.get(CGIParameters.SCRIPT_NAME_PARAM);
+                             m -> m.get(CGIParameters.SCRIPT_NAME);
 
         private final Map<URI, Map<List<String>, Instance<I>>> instances =
             new HashMap<>();

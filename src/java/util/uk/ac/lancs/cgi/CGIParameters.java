@@ -65,7 +65,7 @@ public final class CGIParameters {
      * </p>
      * </blockquote>
      */
-    public static final String SCHEME_PARAM = "REQUEST_SCHEME";
+    public static final String REQUEST_SCHEME = "REQUEST_SCHEME";
 
     /**
      * Names the CGI parameter providing the query string. The value is
@@ -74,7 +74,7 @@ public final class CGIParameters {
      * @spec https://datatracker.ietf.org/doc/html/rfc3875#section-4.1.7
      * RFC3875 &sect;4.1.7
      */
-    public static final String QUERY_STRING_PARAM = "QUERY_STRING";
+    public static final String QUERY_STRING = "QUERY_STRING";
 
     /**
      * Names the CGI parameter stating the protocol used between server
@@ -83,7 +83,7 @@ public final class CGIParameters {
      * @spec https://datatracker.ietf.org/doc/html/rfc3875#section-4.1.16
      * RFC3875 &sect;4.1.16
      */
-    public static final String SERVER_PROTOCOL_PARAM = "SERVER_PROTOCOL";
+    public static final String SERVER_PROTOCOL = "SERVER_PROTOCOL";
 
     /**
      * Names the CGI parameter stating the name of the server's host
@@ -93,7 +93,7 @@ public final class CGIParameters {
      * @spec https://datatracker.ietf.org/doc/html/rfc3875#section-4.1.14
      * RFC3875 &sect;4.1.14
      */
-    public static final String SERVER_NAME_PARAM = "SERVER_NAME";
+    public static final String SERVER_NAME = "SERVER_NAME";
 
     /**
      * Names the CGI parameter stating the port of the server's host
@@ -103,7 +103,7 @@ public final class CGIParameters {
      * @spec https://datatracker.ietf.org/doc/html/rfc3875#section-4.1.15
      * RFC3875 &sect;4.1.15
      */
-    public static final String SERVER_PORT_PARAM = "SERVER_PORT";
+    public static final String SERVER_PORT = "SERVER_PORT";
 
     /**
      * Names the CGI parameter indicating the request method. The value
@@ -112,7 +112,7 @@ public final class CGIParameters {
      * @spec https://datatracker.ietf.org/doc/html/rfc3875/#section-4.1.12
      * RFC3875 &sect;4.1.12
      */
-    public static final String METHOD_PARAM = "REQUEST_METHOD";
+    public static final String REQUEST_METHOD = "REQUEST_METHOD";
 
     /**
      * Names the CGI parameter giving the request body's content type.
@@ -121,7 +121,7 @@ public final class CGIParameters {
      * @spec https://datatracker.ietf.org/doc/html/rfc3875/#section-4.1.3
      * RFC3875 &sect;4.1.3
      */
-    public static final String REQUEST_TYPE_PARAM = "CONTENT_TYPE";
+    public static final String CONTENT_TYPE = "CONTENT_TYPE";
 
     /**
      * Names the CGI parameter giving the length of the request body.
@@ -130,7 +130,7 @@ public final class CGIParameters {
      * @spec https://datatracker.ietf.org/doc/html/rfc3875/#section-4.1.2
      * RFC3875 &sect;4.1.2
      */
-    public static final String REQUEST_LENGTH_PARAM = "CONTENT_LENGTH";
+    public static final String CONTENT_LENGTH = "CONTENT_LENGTH";
 
     /**
      * Names the CGI parameter containing any sub-path beyond that which
@@ -140,7 +140,7 @@ public final class CGIParameters {
      * @spec https://datatracker.ietf.org/doc/html/rfc3875/#section-4.1.5
      * RFC3875 &sect;4.1.5
      */
-    public static final String PATH_INFO_PARAM = "PATH_INFO";
+    public static final String PATH_INFO = "PATH_INFO";
 
     /**
      * Names the CGI parameter identifying the script. The value is
@@ -149,7 +149,7 @@ public final class CGIParameters {
      * @spec https://datatracker.ietf.org/doc/html/rfc3875/#section-4.1.13
      * RFC3875 &sect;4.1.13
      */
-    public static final String SCRIPT_NAME_PARAM = "SCRIPT_NAME";
+    public static final String SCRIPT_NAME = "SCRIPT_NAME";
 
     /**
      * Identifies the absolute pathname of the currently executing
@@ -157,7 +157,7 @@ public final class CGIParameters {
      * 
      * @see <a href=
      * "https://www.php.net/manual/en/reserved.variables.server.php">PHP
-     * <code class="php">$_SERVER</code</a>
+     * <code class="php">$_SERVER</code></a>
      */
-    public static final String SCRIPT_FILENAME_PARAM = "SCRIPT_FILENAME";
+    public static final String SCRIPT_FILENAME = "SCRIPT_FILENAME";
 }
