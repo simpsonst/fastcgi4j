@@ -42,18 +42,14 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.Reader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.time.Duration;
-import java.util.List;
 import java.util.Properties;
 import java.util.TreeMap;
-import uk.ac.lancs.cgi.FormSubmission;
 import uk.ac.lancs.cgi.path.Navigator;
 import uk.ac.lancs.cgi.path.PathConfiguration;
 import uk.ac.lancs.cgi.path.PathContext;
@@ -61,19 +57,11 @@ import uk.ac.lancs.fastcgi.ConfigurationException;
 import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.ResponderSession;
 import uk.ac.lancs.fastcgi.SessionException;
-import uk.ac.lancs.fastcgi.augment.FormHandler;
 import uk.ac.lancs.fastcgi.augment.HttpResponderContext;
 import uk.ac.lancs.fastcgi.augment.HttpResponderSession;
 import uk.ac.lancs.fastcgi.ots.OTSResponses;
 import uk.ac.lancs.http.field.FieldExtension;
 import uk.ac.lancs.http.field.FieldId;
-import uk.ac.lancs.mime.BinaryMessage;
-import uk.ac.lancs.mime.Message;
-import uk.ac.lancs.mime.MessageParser;
-import uk.ac.lancs.mime.TextMessage;
-import uk.ac.lancs.mime.body.BinaryBody;
-import uk.ac.lancs.mime.body.Morgue;
-import uk.ac.lancs.mime.body.SmartMorgue;
 
 /**
  * Responds by echoing all headers, and displaying a hex MD5 sum of the
@@ -119,12 +107,6 @@ public class MD5SumResponder implements Responder {
             .instances(props, "", s -> s).create();
     }
 
-    private static final Morgue morgue =
-        SmartMorgue.start().singleThreshold(20).build();
-
-    private static final FormHandler formHandler =
-        new FormHandler(new MessageParser(morgue), StandardCharsets.UTF_8);
-
     private static final HttpResponderContext httpRspCtxt =
         new HttpResponderContext() {};
 
@@ -164,28 +146,6 @@ public class MD5SumResponder implements Responder {
                                   navigator.resource(), dest);
                 otsRsp.found(dest);
                 return;
-            }
-            final FormSubmission submission;
-            final BinaryBody body;
-            if (false) {
-                submission = null;
-                body = null;
-                System.err.printf("Message body!!!!%n");
-                try (var in = session.in();
-                     var out = new PrintWriter(System.err)) {
-                    dump("body ", out, in);
-                }
-            } else if (false) {
-                submission = null;
-                try (var in = session.in()) {
-                    body = morgue.store(in);
-                }
-            } else if (false) {
-                body = null;
-                submission = formHandler.get(session);
-            } else {
-                body = null;
-                submission = null;
             }
 
             boolean trailerAllowed = httpSession.responseTrailerAllowed();
@@ -230,32 +190,6 @@ public class MD5SumResponder implements Responder {
                 }
 
                 out.printf("\nDiagnostics: %s\n", session.diagnostics());
-
-                if (body != null) {
-                    try (var in = body.recover()) {
-                        dump("body ", out, in);
-                    }
-                }
-
-                if (submission != null) {
-                    out.printf("\nForm fields:\n");
-                    for (var e : submission.map().entrySet()) {
-                        List<Message> values = e.getValue();
-                        out.printf("  %s (%d):\n", e.getKey(), values.size());
-                        int i = 0;
-                        for (Message msg : values) {
-                            final int pos = ++i;
-                            if (msg instanceof TextMessage tmsg) {
-                                out.printf("  %d: %s\n", pos,
-                                           tmsg.textBody().get());
-                            } else if (msg instanceof BinaryMessage bmsg) {
-                                dump(String.format("%4d ", pos), out,
-                                     bmsg.body().recover());
-                            }
-                        }
-                    }
-                    Thread.sleep(Duration.ofSeconds(30));
-                }
                 if (trailerAllowed)
                     LATE_FIELD.set(httpSession.responseTrailer(), "Hey!");
             }
