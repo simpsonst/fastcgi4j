@@ -191,9 +191,11 @@ public class MD5SumResponder implements Responder {
             boolean trailerAllowed = httpSession.responseTrailerAllowed();
             if (trailerAllowed) httpSession.expectInTrailer(LATE_FIELD);
             httpSession.vary(SILLY_FIELD);
-            httpSession.responseExtensions().define(MY_EMPTY_NAMESPACE);
+            var emptyId =
+                httpSession.responseExtensions().define(MY_EMPTY_NAMESPACE);
             SILLY_FIELD.set(httpSession.responseHeader(), "silliness");
-            STUPID_FIELD.set(httpSession.responseHeader(), "stupidity");
+            STUPID_FIELD.set(httpSession.responseHeader(),
+                             emptyId.toString() + "-stupidity");
             try (PrintWriter out = otsRsp.textOut("plain")) {
                 for (var entry : new TreeMap<>(session.parameters())
                     .entrySet()) {
