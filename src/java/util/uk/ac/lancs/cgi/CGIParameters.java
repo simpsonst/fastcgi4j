@@ -150,4 +150,14 @@ public final class CGIParameters {
      * RFC3875 &sect;4.1.13
      */
     public static final String SCRIPT_NAME_PARAM = "SCRIPT_NAME";
+
+    /**
+     * Identifies the absolute pathname of the currently executing
+     * script. The value is <samp>{@value "%s"}</samp>.
+     * 
+     * @see <a href=
+     * "https://www.php.net/manual/en/reserved.variables.server.php">PHP
+     * <code class="php">$_SERVER</code</a>
+     */
+    public static final String SCRIPT_FILENAME_PARAM = "SCRIPT_FILENAME";
 }

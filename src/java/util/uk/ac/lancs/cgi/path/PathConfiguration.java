@@ -83,7 +83,7 @@ public final class PathConfiguration<I> {
     public static final class Builder<I> {
         private Function<? super Map<? super String, ? extends String>,
                          ? extends String> scriptFilename =
-                             m -> m.get("SCRIPT_FILENAME");
+                             m -> m.get(CGIParameters.SCRIPT_FILENAME_PARAM);
 
         private Function<? super Map<? super String, ? extends String>,
                          ? extends String> pathInfo =
