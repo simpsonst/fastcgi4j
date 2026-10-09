@@ -48,14 +48,17 @@ import java.util.stream.Collectors;
 
 /**
  * Understands the context of the invocation of a service. This consists
- * of knowing which instance of the service has been invoked, and
- * knowing which resource within the instance has been invoked (and
- * therefore how to locate other internal resources).
+ * of knowing which instance of the service has been invoked (i.e., a
+ * context of an application-specific type), and knowing which resource
+ * within the instance has been invoked (and therefore how to locate
+ * other internal resources, i.e., a navigator).
  * 
  * @author simpsons
+ * 
+ * @param <C> the context type
  */
-public final class PathContext<I> {
-    private final I instance;
+public final class PathContext<C> {
+    private final C instance;
 
     private final URI server;
 
@@ -99,7 +102,7 @@ public final class PathContext<I> {
      * ending with an additional empty element to refer to a
      * directory-like path
      */
-    PathContext(I instance, URI server, List<? extends String> script,
+    PathContext(C instance, URI server, List<? extends String> script,
                 List<? extends String> resource) {
         final int rlen = resource.size();
         assert rlen > 0 : "empty resource";
@@ -160,7 +163,7 @@ public final class PathContext<I> {
      * 
      * @return the instance context
      */
-    public I instance() {
+    public C instance() {
         return instance;
     }
 

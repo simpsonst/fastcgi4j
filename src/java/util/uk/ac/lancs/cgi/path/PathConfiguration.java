@@ -53,20 +53,76 @@ import uk.ac.lancs.cgi.CGIParameters;
 
 /**
  * Understands how to navigate based on future invocations of a service.
+ * Each service has a context of a given application-specific type,
+ * which is the type parameter of this class, and could be used (for
+ * example) to point each instance at a different database, or root of a
+ * directory structure. Each service also has an internal prefix and an
+ * external one. A {@link PathConfiguration} can recognize the internal
+ * prefix expressed as various CGI parameters, and map them to a
+ * {@link PathContext}, which provides both the external prefix and the
+ * application-defined context.
+ * 
+ * <p>
+ * For example, if an application is externally accessible through this
+ * prefix:
+ * 
+ * <pre>
+ * https://example.org
+ * </pre>
+ * 
+ * <p>
+ * &hellip;but that is just a reverse proxy onto this internal prefix:
+ * 
+ * <pre>
+ * http://backend.local:3000/foo
+ * </pre>
+ * 
+ * <p>
+ * &hellip;and the application receives a request for:
+ * 
+ * <pre>
+ * http://backend.local:3000/foo/bar/baz
+ * </pre>
+ * 
+ * <p>
+ * &hellip;then a {@link PathConfiguration} can be created to map from
+ * that to the external URI:
+ * 
+ * <pre>
+ * https://example.org/bar/baz
+ * </pre>
+ * 
+ * <p>
+ * &hellip;as well as to any application-specific context that helps the
+ * application to fulfil requests under <samp>https://example.org</samp>
+ * as opposed to (say) <samp>https://example.com</samp>, which could be
+ * forwarded via a distinct reverse proxy. Multiple such mappings can be
+ * defined in a single {@link PathConfiguration}.
+ * 
+ * <p>
+ * A context for each instance is defined by a call to
+ * {@link Builder#instance(Object, String, String)}, and multiple
+ * contexts can be defined from Java properties with
+ * {@link Builder#instances(Properties, String, Function)}. Such
+ * contexts must be created before the {@link PathConfiguration} is
+ * created, so this class is intended for static instances at irregular
+ * paths. For something more regular, the application can perform its
+ * own context search internally, which makes this class redundant
+ * (except perhaps for making a single instance).
  * 
  * @author simpsons
  * 
- * @param <I> the instance type
+ * @param <C> the context type
  */
-public final class PathConfiguration<I> {
-    private static class Instance<I> {
+public final class PathConfiguration<C> {
+    private static class Instance<C> {
         public final URI server;
 
         public final List<String> prefix;
 
-        public final I context;
+        public final C context;
 
-        public Instance(URI server, List<String> prefix, I context) {
+        public Instance(URI server, List<String> prefix, C context) {
             this.server = server;
             this.prefix = prefix;
             this.context = context;
@@ -76,9 +132,9 @@ public final class PathConfiguration<I> {
     /**
      * Creates navigation in stages.
      * 
-     * @param <I> the instance type
+     * @param <C> the context type
      */
-    public static final class Builder<I> {
+    public static final class Builder<C> {
         private Function<? super Map<? super String, ? extends String>,
                          ? extends String> scriptFilename =
                              m -> m.get(CGIParameters.SCRIPT_FILENAME);
@@ -91,7 +147,7 @@ public final class PathConfiguration<I> {
                          ? extends String> scriptName =
                              m -> m.get(CGIParameters.SCRIPT_NAME);
 
-        private final Map<URI, Map<List<String>, Instance<I>>> instances =
+        private final Map<URI, Map<List<String>, Instance<C>>> instances =
             new HashMap<>();
 
         Builder() {}
@@ -105,7 +161,7 @@ public final class PathConfiguration<I> {
          * 
          * @return this builder
          */
-        public Builder<I>
+        public Builder<C>
             scriptFilename(Function<? super Map<? super String,
                                                 ? extends String>,
                                     ? extends String> func) {
@@ -125,7 +181,7 @@ public final class PathConfiguration<I> {
          * "https://datatracker.ietf.org/doc/html/rfc3875#section-4.1.13">RFC3875
          * Section 4.1.13</a>
          */
-        public Builder<I>
+        public Builder<C>
             scriptName(Function<? super Map<? super String, ? extends String>,
                                 ? extends String> func) {
             this.scriptName = Objects.requireNonNull(func, "func");
@@ -145,7 +201,7 @@ public final class PathConfiguration<I> {
          * "https://datatracker.ietf.org/doc/html/rfc3875section-4.1.5">RFC3875
          * Section 4.1.5</a>
          */
-        public Builder<I>
+        public Builder<C>
             pathInfo(Function<? super Map<? super String, ? extends String>,
                               ? extends String> func) {
             this.pathInfo = Objects.requireNonNull(func, "func");
@@ -155,7 +211,7 @@ public final class PathConfiguration<I> {
         /**
          * Specify an instance of the service.
          * 
-         * @param instance the instance context
+         * @param context the instance context
          * 
          * @param externalService the external service URI prefix
          * 
@@ -163,7 +219,7 @@ public final class PathConfiguration<I> {
          * 
          * @return this object
          */
-        public Builder<I> instance(I instance, String externalService,
+        public Builder<C> instance(C context, String externalService,
                                    String internalService) {
             /* Parse the internal service URI prefix as a URI, separate
              * the path elements from the server, and index on server
@@ -177,7 +233,7 @@ public final class PathConfiguration<I> {
             extSrv = extSrv.resolve("/");
 
             instances.computeIfAbsent(intSrv, k -> new HashMap<>())
-                .put(intPfx, new Instance<>(extSrv, extPfx, instance));
+                .put(intPfx, new Instance<>(extSrv, extPfx, context));
             return this;
         }
 
@@ -191,7 +247,8 @@ public final class PathConfiguration<I> {
          * may be set to specify an internal URI prefix for the
          * instance, but it is assumed to be the same as the external
          * URI prefix. The <var>instance</var> string is mapped to the
-         * user-specified instance type.
+         * application-specified instance type through
+         * <samp>instanceMap</samp>.
          * 
          * @param props container of the properties
          * 
@@ -202,8 +259,8 @@ public final class PathConfiguration<I> {
          * 
          * @return this object
          */
-        public Builder<I> instances(Properties props, String prefix,
-                                    Function<? super String, I> instanceMap) {
+        public Builder<C> instances(Properties props, String prefix,
+                                    Function<? super String, C> instanceMap) {
             Pattern pat = Pattern
                 .compile("^" + Pattern.quote(prefix) + "(.*)" + "\\.external$");
             for (var exk : props.stringPropertyNames()) {
@@ -225,7 +282,7 @@ public final class PathConfiguration<I> {
          * 
          * @constructor
          */
-        public PathConfiguration<I> create() {
+        public PathConfiguration<C> create() {
             return new PathConfiguration<>(scriptFilename, pathInfo, scriptName,
                                            Map.copyOf(instances));
         }
@@ -234,13 +291,13 @@ public final class PathConfiguration<I> {
     /**
      * Start building navigation.
      * 
-     * @param <I> the instance type
+     * @param <C> the context type
      * 
      * @return a fresh builder
      * 
      * @constructor
      */
-    public static <I> Builder<I> start() {
+    public static <C> Builder<C> start() {
         return new Builder<>();
     }
 
@@ -250,7 +307,7 @@ public final class PathConfiguration<I> {
                                ? extends String> pathInfo,
                       Function<? super Map<? super String, ? extends String>,
                                ? extends String> scriptName,
-                      Map<URI, Map<List<String>, Instance<I>>> instances) {
+                      Map<URI, Map<List<String>, Instance<C>>> instances) {
         this.scriptFilename = scriptFilename;
         this.pathInfo = pathInfo;
         this.scriptName = scriptName;
@@ -266,26 +323,28 @@ public final class PathConfiguration<I> {
     private final Function<? super Map<? super String, ? extends String>,
                            ? extends String> scriptName;
 
-    private final Map<URI, Map<List<String>, Instance<I>>> instances;
+    private final Map<URI, Map<List<String>, Instance<C>>> instances;
 
     /**
-     * Get a collection of all instances.
+     * Get a collection of all instances' contexts.
      * 
-     * @return a collection of instances
+     * @return a collection of the defined instance contexts
      */
-    public Collection<I> getInstances() {
+    public Collection<C> getInstances() {
         return instances.values().stream().map(Map::values)
             .flatMap(Collection::stream).map(i -> i.context).toList();
     }
 
     /**
-     * Get a navigator for a CGI context.
+     * Get the path context for a CGI context. The result can in turn
+     * provide a navigator and the application context corresponding to
+     * the provided CGI context.
      * 
      * @param params the CGI parameters defining the context
      * 
-     * @return the requested navigator
+     * @return the path context corresponding to the CGI context
      */
-    public PathContext<I>
+    public PathContext<C>
         recognize(Map<? super String, ? extends String> params) {
         /* Determine from the local environment the correct internal
          * script name and path info. */
@@ -322,7 +381,7 @@ public final class PathConfiguration<I> {
         /* Combine the script name with the local server details,
          * gradually shortening the path until we get a match. */
         final List<String> scriptElems = Utils.decomposePathPrefix(scriptName);
-        Instance<I> instance = null;
+        Instance<C> instance = null;
         List<String> remainder = null;
         List<String> prior;
         if (sm != null) {
@@ -334,7 +393,7 @@ public final class PathConfiguration<I> {
             }
         }
 
-        final I ctxt;
+        final C ctxt;
         final URI server;
         final List<String> script;
         if (instance == null) {
