@@ -72,6 +72,7 @@ import uk.ac.lancs.fastcgi.proto.serial.ParamReader;
 import uk.ac.lancs.fastcgi.proto.serial.RecordIOException;
 import uk.ac.lancs.fastcgi.proto.serial.RecordOutputStream;
 import uk.ac.lancs.fastcgi.proto.serial.RecordWriter;
+import uk.ac.lancs.http.FieldNames;
 import uk.ac.lancs.http.ResponseCodes;
 import uk.ac.lancs.io.UnclosedOutputStream;
 
@@ -718,6 +719,18 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
         statusCode = code;
     }
 
+    /**
+     * Determine whether a field can't be folded into a single line.
+     * 
+     * @param fieldName the name of the field to be tested
+     * 
+     * @return {@code true} if the field cannot be folded; {@code false}
+     * if the field can be folded
+     */
+    private static boolean unfoldable(String fieldName) {
+        return fieldName.equalsIgnoreCase(FieldNames.SET_COOKIE);
+    }
+
     private void ensureResponseHeader() throws IOException {
         /* A negative status code means we've already done this. */
         if (statusCode < 0) return;
@@ -738,8 +751,12 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
                 List<String> values = entry.getValue();
                 if (values.isEmpty()) continue;
                 String name = entry.getKey();
-                pout.printf("%s: %s%n", name,
-                            values.stream().collect(Collectors.joining(", ")));
+                if (unfoldable(name))
+                    for (var val : values)
+                        pout.printf("%s: %s%n", name, val);
+                else
+                    pout.printf("%s: %s%n", name, values.stream()
+                        .collect(Collectors.joining(", ")));
             }
             pout.println();
         } finally {
