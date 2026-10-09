@@ -307,7 +307,7 @@ class Utils {
         return output;
     }
 
-    static final String HOST_VAR_NAME = Http.fieldNameAsCGI("Host");
+    static final String HOST_PARAM = Http.fieldNameAsCGI("Host");
 
     /**
      * Append the host and port based on protocol.
@@ -330,7 +330,7 @@ class Utils {
                               Map<? super String, ? extends String> params) {
         switch (protocol) {
         case "HTTP" -> {
-            String httpHost = params.get(HOST_VAR_NAME);
+            String httpHost = params.get(HOST_PARAM);
             if (httpHost != null) {
                 result.append(httpHost);
                 return true;

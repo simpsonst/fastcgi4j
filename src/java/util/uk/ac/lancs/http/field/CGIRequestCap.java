@@ -113,7 +113,7 @@ public class CGIRequestCap implements Cap {
     private static final Pattern FIELD_PATTERN = Pattern.compile("^"
         + Pattern.quote(Http.META_PREFIX) + "(?<c>C_)?(?<ns>OPT|MAN)$");
 
-    private static final String CONNECTION_FIELD_VAR =
+    private static final String CONNECTION_PARAM =
         Http.fieldNameAsCGI("CONNECTION");
 
     private static boolean isConnectionFieldName(String s) {
@@ -192,8 +192,8 @@ public class CGIRequestCap implements Cap {
          * like "close" and "keep-alive", convert the rest to CGI
          * variable names, and add in the connection field itself. */
         this.hopByHopKeys = Stream
-            .concat(Tokenizer.atomSequenceOf(env.get(CONNECTION_FIELD_VAR))
-                .stream().filter(CGIRequestCap::isConnectionFieldName)
+            .concat(Tokenizer.atomSequenceOf(env.get(CONNECTION_PARAM)).stream()
+                .filter(CGIRequestCap::isConnectionFieldName)
                 .map(Http::fieldNameAsCGI), FieldNameSets.HOP_BY_HOP.stream())
             .collect(Collectors.toSet());
 
