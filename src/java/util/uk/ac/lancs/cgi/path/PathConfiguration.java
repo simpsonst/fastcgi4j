@@ -46,10 +46,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.function.Function;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import uk.ac.lancs.cgi.CGIParameters;
 
@@ -234,26 +232,6 @@ public final class PathConfiguration<I> {
     }
 
     /**
-     * Convert a string to a URI prefix. The input is first treated as a
-     * URI, then its path is extracted, split on forward slashes, then
-     * empty elements are removed, and then each remaining element is
-     * prefixed with a forward slash, and they are concatenated, and
-     * resolved against the original URI. For example,
-     * <samp>http://example.com/foo/bar/baz/</samp> becomes
-     * <samp>http://example.com/foo/bar/baz</samp>, but that itself
-     * would be returned unchanged.
-     * 
-     * @param input the raw URI prefix input
-     * 
-     * @return the input as a URI prefix
-     */
-    private static URI getPrefix(String input) {
-        URI raw = URI.create(input).normalize();
-        return raw.resolve(Utils.decomposePathPrefix(raw.getPath()).stream()
-            .map(s -> "/" + s).collect(Collectors.joining()));
-    }
-
-    /**
      * Start building navigation.
      * 
      * @param <I> the instance type
@@ -346,7 +324,7 @@ public final class PathConfiguration<I> {
         final List<String> scriptElems = Utils.decomposePathPrefix(scriptName);
         Instance<I> instance = null;
         List<String> remainder = null;
-        List<String> prior = null;
+        List<String> prior;
         if (sm != null) {
             final int scriptLen = scriptElems.size();
             for (int i = 0; i <= scriptLen && instance == null; i++) {
@@ -374,9 +352,6 @@ public final class PathConfiguration<I> {
         List<String> resource = Utils.decomposeInternalPath(pathInfo);
         return new PathContext<>(ctxt, server, script, resource);
     }
-
-    private static final Logger logger =
-        Logger.getLogger(PathConfiguration.class.getPackageName());
 
     /**
      * @hidden
