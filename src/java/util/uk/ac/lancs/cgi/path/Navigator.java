@@ -52,14 +52,16 @@ import java.util.stream.Collectors;
  * <li>
  * <p>
  * It knows which resource within the script is being accessed. This is
- * usually equivalent to the <samp>PATH_INFO</samp> CGI parameter, and
- * can be used to determine what content to provide, and generate
- * relative URIs to other resources within the same script.
+ * usually equivalent to the
+ * <samp>{@value uk.ac.lancs.cgi.CGIParameters#PATH_INFO}</samp> CGI
+ * parameter, and can be used to determine what content to provide, and
+ * generate relative URIs to other resources within the same script.
  * 
  * <li>
  * <p>
  * It knows the script's external URI, so it can generate absolute URIs,
- * usually required for <samp>Location</samp> header fields.
+ * usually required for <samp>{@value "%s"
+ * uk.ac.lancs.http.FieldNames#LOCATION}</samp> header fields.
  * 
  * </ol>
  *
