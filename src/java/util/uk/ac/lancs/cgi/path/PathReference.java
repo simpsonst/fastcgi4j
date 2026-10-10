@@ -112,6 +112,16 @@ public final class PathReference {
     }
 
     /**
+     * Clear the fragment identifier.
+     * 
+     * @return this object
+     */
+    public PathReference noFragment() {
+        this.fragment = null;
+        return this;
+    }
+
+    /**
      * Set the query parameters. Previously set parameters are
      * discarded. Parameters are added in iteration order. Iteration
      * only occurs when building the URI with {@link #relative()},
