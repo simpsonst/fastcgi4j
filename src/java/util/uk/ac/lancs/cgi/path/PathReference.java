@@ -46,7 +46,8 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 /**
- * Refers to a resource within the script.
+ * Refers to a resource within the script, with options to mutate the
+ * query string and fragment identifier.
  * 
  * @author simpsons
  */

@@ -47,11 +47,12 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
- * Understands the context of the invocation of a service. This consists
- * of knowing which instance of the service has been invoked (i.e., a
- * context of an application-specific type), and knowing which resource
- * within the instance has been invoked (and therefore how to locate
- * other internal resources, i.e., a navigator).
+ * Holds the context a service based on the path under which it was
+ * invoked. This consists of knowing which instance of the service has
+ * been invoked (i.e., a context of an application-specific type
+ * {@code <C>}), and knowing which resource within the instance has been
+ * invoked (and therefore how to locate other internal resources, i.e.,
+ * a {@link Navigator}).
  * 
  * @author simpsons
  * 

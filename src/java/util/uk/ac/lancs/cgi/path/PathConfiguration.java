@@ -250,6 +250,24 @@ public final class PathConfiguration<C> {
          * application-specified instance type through
          * <samp>instanceMap</samp>.
          * 
+         * <p>
+         * For example, with an empty prefix, the following properties
+         * will result in invocations to {@code instanceMap} with
+         * <samp>apache</samp> and <samp>nginx</samp>, and will result
+         * in a {@link PathConfiguration} recognizing invocations under
+         * <samp>http://localhost/test</samp> and
+         * <samp>http://localhost:8000/test</samp>, yielding
+         * {@link Navigator}s within
+         * <samp>https://foo.example.com</samp> and
+         * <samp>https://bar.example.com</samp> respectively:
+         * 
+         * <pre class="java-props">
+         * apache.internal=http://localhost/test
+         * apache.external=https://foo.example.com
+         * nginx.internal=http://localhost:8000/test
+         * nginx.external=https://bar.example.com
+         * </pre>
+         * 
          * @param props container of the properties
          * 
          * @param prefix prefix of property names to match
