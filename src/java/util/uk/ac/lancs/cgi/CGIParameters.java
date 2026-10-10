@@ -155,9 +155,33 @@ public final class CGIParameters {
      * Identifies the absolute pathname of the currently executing
      * script. The value is <samp>{@value "%s"}</samp>.
      * 
+     * <p>
+     * Under Apache at least, this should have an identical value to
+     * that of {@link #REQUEST_FILENAME}.
+     * 
      * @see <a href=
      * "https://www.php.net/manual/en/reserved.variables.server.php">PHP
      * <code class="php">$_SERVER</code></a>
+     * 
+     * @see <a href=
+     * "https://httpd.apache.org/docs/trunk/mod/mod_rewrite.html#rewritecond-servervars">Server
+     * and CGI Variables</a> (Apache
+     * <code class="apachecfg">RewriteCond</code>)
      */
     public static final String SCRIPT_FILENAME = "SCRIPT_FILENAME";
+
+    /**
+     * Identifies the absolute pathname of the currently executing
+     * script. The value is <samp>{@value "%s"}</samp>.
+     * 
+     * <p>
+     * Under Apache at least, this should have an identical value to
+     * that of {@link #SCRIPT_FILENAME}.
+     * 
+     * @see <a href=
+     * "https://httpd.apache.org/docs/trunk/mod/mod_rewrite.html#rewritecond-servervars">Server
+     * and CGI Variables</a> (Apache
+     * <code class="apachecfg">RewriteCond</code>)
+     */
+    public static final String REQUEST_FILENAME = "REQUEST_FILENAME";
 }
