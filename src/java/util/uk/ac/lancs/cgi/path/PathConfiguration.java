@@ -361,6 +361,8 @@ public final class PathConfiguration<C> {
      * @param params the CGI parameters defining the context
      * 
      * @return the path context corresponding to the CGI context
+     * 
+     * @constructor
      */
     public PathContext<C>
         recognize(Map<? super String, ? extends String> params) {
