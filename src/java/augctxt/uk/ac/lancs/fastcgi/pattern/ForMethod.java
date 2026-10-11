@@ -1,5 +1,3 @@
-package uk.ac.lancs.fastcgi.pattern;
-
 // -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
 
 /*
@@ -37,6 +35,8 @@ package uk.ac.lancs.fastcgi.pattern;
  *
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
+
+package uk.ac.lancs.fastcgi.pattern;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Repeatable;
