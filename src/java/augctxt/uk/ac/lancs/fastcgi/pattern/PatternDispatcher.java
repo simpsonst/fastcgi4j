@@ -103,7 +103,7 @@ public final class PatternDispatcher<T, R> {
      * 
      * @constructor
      */
-    public <T, R> Builder<T, R> start() {
+    public static <T, R> Builder<T, R> start() {
         return new Builder<>();
     }
 
