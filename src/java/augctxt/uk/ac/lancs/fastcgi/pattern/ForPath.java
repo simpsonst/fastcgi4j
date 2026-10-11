@@ -47,7 +47,7 @@ import java.lang.annotation.Target;
  * Identifies a method to be dispatched to, based on the local path
  * matching a regular expression.
  * 
- * @see PatternDispatcher#of(Class, Class)
+ * @see PatternDispatcher#of(Class)
  * 
  * @author simpsons
  */

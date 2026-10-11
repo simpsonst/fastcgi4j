@@ -47,7 +47,7 @@ import java.lang.annotation.Target;
  * Allows a Java method to accept HTTP requests of multiple HTTP
  * methods.
  * 
- * @see PatternDispatcher#of(Class, Class)
+ * @see PatternDispatcher#of(Class)
  *
  * @author simpsons
  */

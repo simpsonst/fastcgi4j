@@ -49,7 +49,7 @@ import java.lang.annotation.Target;
  * HTTP method. If this annotation is absent on a method annotated with
  * {@link ForPath}, all methods are acceptable.
  * 
- * @see PatternDispatcher#of(Class, Class)
+ * @see PatternDispatcher#of(Class)
  * 
  * @author simpsons
  */

@@ -47,6 +47,8 @@ import java.lang.annotation.Target;
  * Holds the priority for matching methods. Lower values are higher
  * priorities. Methods with no explicit priority have the lowest
  * priority.
+ * 
+ * @see PatternDispatcher#of(Class)
  *
  * @author simpsons
  */

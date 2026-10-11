@@ -49,24 +49,20 @@ import uk.ac.lancs.fastcgi.SessionException;
  * Defines the signature for methods dispatched to by
  * {@link PatternDispatcher}.
  * 
- * @param <R> the result type of submissions
- * 
- * @see PatternDispatcher#of(Class, Class)
+ * @see PatternDispatcher#of(Class)
  * 
  * @see PatternDispatcher.Builder#with(Pattern, Predicate, Function)
  * 
  * @author simpsons
  */
 @FunctionalInterface
-public interface PatternHandler<R> {
+public interface PatternHandler {
     /**
      * Accept the result of a successful match of a path against a
      * regular expression.
      * 
      * @param matcher the result of matching against the regular
      * expression
-     * 
-     * @return the result of the submission
      * 
      * @throws InterruptedException if the application was interrupted
      * (usually by the server or the remote client aborting the session)
@@ -77,7 +73,7 @@ public interface PatternHandler<R> {
      * @throws IOException if an I/O error occurs in processing any of
      * the streams of the session context
      */
-    R accept(Matcher matcher)
+    void accept(Matcher matcher)
         throws SessionException,
             IOException,
             InterruptedException;
