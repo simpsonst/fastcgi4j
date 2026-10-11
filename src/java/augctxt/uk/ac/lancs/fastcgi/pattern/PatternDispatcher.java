@@ -280,9 +280,13 @@ public final class PatternDispatcher<T, R> {
                 var pathAnnot = method.getAnnotation(ForPath.class);
                 if (pathAnnot == null) continue;
                 var params = method.getParameterTypes();
-                if (params.length != 1) continue;
-                if (!params[0].isAssignableFrom(Matcher.class)) continue;
-                if (!method.getReturnType().isAssignableFrom(returnType))
+                if (params.length != 1)
+                    throw new IllegalArgumentException("bad number of params: "
+                        + method);
+                if (!params[0].isAssignableFrom(Matcher.class))
+                    throw new IllegalArgumentException("bad param type: "
+                        + method);
+                if (!returnType.isAssignableFrom(method.getReturnType()))
                     throw new IllegalArgumentException("bad return type: "
                         + method);
                 for (var ext : method.getExceptionTypes())
