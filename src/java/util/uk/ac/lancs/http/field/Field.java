@@ -40,10 +40,14 @@ package uk.ac.lancs.http.field;
 
 import java.math.BigInteger;
 import java.net.URI;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import uk.ac.lancs.http.FieldNames;
+import uk.ac.lancs.http.Timing;
+import uk.ac.lancs.mime.MediaGroup;
 import uk.ac.lancs.mime.MediaType;
 import uk.ac.lancs.mime.Tokenizer;
 
@@ -305,6 +309,57 @@ public abstract class Field<T> {
     }
 
     /**
+     * Defines the <samp>{@value "%s" FieldNames#ACCEPT}</samp> field.
+     */
+    public static final SequentialField<Map.Entry<MediaGroup, Float>> ACCEPT =
+        Field.<Map.Entry<MediaGroup, Float>>of(FieldId.ACCEPT)
+            .inward(Field::parseQualifiedMediaGroup)
+            .outward(Field::fromMediaGroup).sequential();
+
+    private static Map.Entry<MediaGroup, Float>
+        parseQualifiedMediaGroup(Tokenizer t) {
+        t.whitespace(0);
+        var mg = MediaGroup.from(t);
+        if (mg == null) return null;
+        float[] qa = { 1.0f };
+        if (!t.parameters((k, v) -> {
+            if (k.equals("q")) qa[0] = Float.parseFloat(v);
+        }, 0)) qa[0] = 1.0f;
+        return Map.entry(mg, qa[0]);
+    }
+
+    private static String fromMediaGroup(Map.Entry<MediaGroup, Float> ent) {
+        StringBuilder r = new StringBuilder(ent.getKey().toString());
+        float v = ent.getValue();
+        if (v >= 0.0f && v < 1.0f)
+            r.append("; q=").append(String.format("%.3f", v));
+        return r.toString();
+    }
+
+    /**
+     * Defines the <samp>{@value "%s" FieldNames#ALLOW}</samp> field.
+     */
+    public static final SequentialField<String> ALLOW =
+        Field.<String>of(FieldId.ALLOW).outward(s -> s)
+            .inward(t -> t.atom().toString()).sequential();
+
+    /**
+     * Defines the <samp>{@value "%s"
+     * FieldNames#CONTENT_ENCODING}</samp> field.
+     */
+    public static final SequentialField<String> CONTENT_ENCODING =
+        Field.<String>of(FieldId.CONTENT_ENCODING).outward(s -> s)
+            .inward(t -> t.atom().toString()).sequential();
+
+    /**
+     * Defines the <samp>{@value "%s"
+     * FieldNames#TRANSFER_ENCODING}</samp> field.
+     */
+    public static final SequentialField<String> TRANSFER_ENCODING =
+        Field.<String>of(FieldId.TRANSFER_ENCODING).outward(s -> s)
+            .inward(t -> t.atom().toString()).sequential();
+
+    /**
      * Defines the <samp>{@value "%s" FieldNames#CONTENT_TYPE}</samp>
      * field.
      */
@@ -315,16 +370,20 @@ public abstract class Field<T> {
     /**
      * Defines the <samp>{@value "%s" FieldNames#CONTENT_LENGTH}</samp>
      * field using {@code Long}.
+     * 
+     * @see #CONTENT_LENGTH_BIG
      */
-    public static final FlatField<Long> LONG_CONTENT_LENGTH = Field
+    public static final FlatField<Long> CONTENT_LENGTH_LONG = Field
         .<Long>of(FieldId.CONTENT_LENGTH).outward(v -> Long.toString(v, 10))
         .inward(Field::decimalLong).flat();
 
     /**
      * Defines the <samp>{@value "%s" FieldNames#CONTENT_LENGTH}</samp>
      * field using {@link BigInteger}.
+     * 
+     * @see #CONTENT_LENGTH_LONG
      */
-    public static final FlatField<BigInteger> BIG_CONTENT_LENGTH =
+    public static final FlatField<BigInteger> CONTENT_LENGTH_BIG =
         Field.<BigInteger>of(FieldId.CONTENT_LENGTH).outward(v -> v.toString())
             .inward(Field::decimalBigInteger).flat();
 
@@ -335,6 +394,107 @@ public abstract class Field<T> {
     public static final FlatField<URI> LOCATION =
         Field.<URI>of(FieldId.LOCATION).outward(URI::toASCIIString)
             .inward(Field::toURI).flat();
+
+    /**
+     * Defines the <samp>{@value "%s"
+     * FieldNames#CONTENT_LOCATION}</samp> field using {@link URI}.
+     */
+    public static final FlatField<URI> CONTENT_LOCATION =
+        Field.<URI>of(FieldId.CONTENT_LOCATION).outward(URI::toASCIIString)
+            .inward(Field::toURI).flat();
+
+    /**
+     * Defines the <samp>{@value "%s" FieldNames#DATE}</samp> field
+     * using milliseconds as {@link Long}.
+     * 
+     * @see #DATE
+     */
+    public static final FlatField<Long> DATE_MILLIS =
+        Field.<Long>of(FieldId.DATE).inward(Field::toMillis)
+            .outward(Timing::generateTimestamp).flat();
+
+    /**
+     * Defines the <samp>{@value "%s" FieldNames#LAST_MODIFIED}</samp>
+     * field using milliseconds as {@link Long}.
+     * 
+     * @see #LAST_MODIFIED
+     */
+    public static final FlatField<Long> LAST_MODIFIED_MILLIS =
+        Field.<Long>of(FieldId.LAST_MODIFIED).inward(Field::toMillis)
+            .outward(Timing::generateTimestamp).flat();
+
+    /**
+     * Defines the <samp>{@value "%s"
+     * FieldNames#IF_MODIFIED_SINCE}</samp> field using milliseconds as
+     * {@link Long}.
+     * 
+     * @see #IF_MODIFIED_SINCE
+     */
+    public static final FlatField<Long> IF_MODIFIED_SINCE_MILLIS =
+        Field.<Long>of(FieldId.IF_MODIFIED_SINCE).inward(Field::toMillis)
+            .outward(Timing::generateTimestamp).flat();
+
+    /**
+     * Defines the <samp>{@value "%s"
+     * FieldNames#IF_UNMODIFIED_SINCE}</samp> field using milliseconds
+     * as {@link Long}.
+     * 
+     * @see #IF_UNMODIFIED_SINCE
+     */
+    public static final FlatField<Long> IF_UNMODIFIED_SINCE_MILLIS =
+        Field.<Long>of(FieldId.IF_UNMODIFIED_SINCE).inward(Field::toMillis)
+            .outward(Timing::generateTimestamp).flat();
+
+    /**
+     * Defines the <samp>{@value "%s" FieldNames#DATE}</samp> field
+     * using {@link Date}.
+     * 
+     * @see #DATE_MILLIS
+     */
+    public static final FlatField<Date> DATE = Field.<Date>of(FieldId.DATE)
+        .inward(Field::toDate).outward(Field::fromDate).flat();
+
+    /**
+     * Defines the <samp>{@value "%s" FieldNames#LAST_MODIFIED}</samp>
+     * field using {@link Date}.
+     * 
+     * @see #LAST_MODIFIED_MILLIS
+     */
+    public static final FlatField<Date> LAST_MODIFIED =
+        Field.<Date>of(FieldId.LAST_MODIFIED).inward(Field::toDate)
+            .outward(Field::fromDate).flat();
+
+    /**
+     * Defines the <samp>{@value "%s"
+     * FieldNames#IF_MODIFIED_SINCE}</samp> field using {@link Date}.
+     * 
+     * @see #IF_MODIFIED_SINCE_MILLIS
+     */
+    public static final FlatField<Date> IF_MODIFIED_SINCE =
+        Field.<Date>of(FieldId.IF_MODIFIED_SINCE).inward(Field::toDate)
+            .outward(Field::fromDate).flat();
+
+    /**
+     * Defines the <samp>{@value "%s"
+     * FieldNames#IF_UNMODIFIED_SINCE}</samp> field using {@link Date}.
+     * 
+     * @see #IF_UNMODIFIED_SINCE_MILLIS
+     */
+    public static final FlatField<Date> IF_UNMODIFIED_SINCE =
+        Field.<Date>of(FieldId.IF_UNMODIFIED_SINCE).inward(Field::toDate)
+            .outward(Field::fromDate).flat();
+
+    private static Long toMillis(Tokenizer t) {
+        return Timing.parseTimestamp(t.remnant().toString().trim());
+    }
+
+    private static Date toDate(Tokenizer t) {
+        return new Date(toMillis(t));
+    }
+
+    private static String fromDate(Date d) {
+        return Timing.generateTimestamp(d.getTime());
+    }
 
     private static URI toURI(Tokenizer t) {
         t.whitespace(0);

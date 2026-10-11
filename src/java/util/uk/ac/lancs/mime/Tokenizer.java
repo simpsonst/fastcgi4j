@@ -723,6 +723,34 @@ public final class Tokenizer {
     }
 
     /**
+     * Parse as many parameters as possible, trailing white space, and
+     * optionally the end of input. Parameters are submitted to a
+     * consumer. Some parameters may be submitted even if parsing
+     * eventually fails.
+     * 
+     * @param dest where to store parameters
+     * 
+     * @param flags flags governing optional behaviour
+     * 
+     * @return {@code true} if if the end of input was parsed
+     * 
+     * @see #PARAMS_END
+     */
+    public boolean parameters(BiConsumer<? super String, ? super String> dest,
+                              int flags) {
+        final int p = pos;
+        do {
+            while (parameter(dest))
+                ;
+            whitespace(0);
+            if ((flags & PARAMS_END) != 0 && !end()) break;
+            return true;
+        } while (false);
+        pos = p;
+        return false;
+    }
+
+    /**
      * Parse an atom, and as many parameters as possible, trailing white
      * space, and optionally the end of input.
      * 
