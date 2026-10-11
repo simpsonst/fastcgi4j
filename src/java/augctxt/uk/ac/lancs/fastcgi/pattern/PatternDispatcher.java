@@ -233,6 +233,80 @@ public final class PatternDispatcher<T> {
         }
 
         /**
+         * Append an entry to the sequence, using a pre-compiled
+         * pattern, and matching specific request methods.
+         * 
+         * @param pattern the pattern to match against the path
+         * 
+         * @param methods a test for matching request methods
+         * 
+         * @param selector a means to select the method to be invoked on
+         * the application-specific receiver
+         * 
+         * @return this object
+         * 
+         * @see #with(String, Predicate, Function)
+         * 
+         * @see #with(Pattern, Function)
+         * 
+         * @see #with(String, Function)
+         */
+        public Builder<T>
+            with(Pattern pattern, Predicate<? super String> methods,
+                 Function<? super T, ? extends PatternHandler> selector) {
+            entries.add(new Entry<>(pattern, methods, selector));
+            return this;
+        }
+
+        /**
+         * Append an entry to the sequence, matching specific request
+         * methods.
+         * 
+         * @param pattern the pattern to match against the path
+         * 
+         * @param methods a test for matching request methods
+         * 
+         * @param selector a means to select the method to be invoked on
+         * the application-specific receiver
+         * 
+         * @return this object
+         * 
+         * @throws PatternSyntaxException if the pattern is not a valid
+         * regular expression
+         * 
+         * @implNote This compiles the pattern with
+         * {@link Pattern#compile(String)}, and then passes the result
+         * and other arguments to {@link #with(Pattern, Function)}.
+         */
+        public Builder<T>
+            with(String pattern, Predicate<? super String> methods,
+                 Function<? super T, ? extends PatternHandler> selector) {
+            return with(Pattern.compile(pattern), methods, selector);
+        }
+
+        /**
+         * Append an entry to the sequence, using a pre-compiled
+         * pattern.
+         * 
+         * @param pattern the pattern to match against the path
+         * 
+         * @param selector a means to select the method to be invoked on
+         * the application-specific receiver
+         * 
+         * @return this object
+         * 
+         * @implNote This invokes
+         * {@link #with(Pattern, Predicate, Function)}, passing a
+         * predicate that always returns {@code true} as the second
+         * argument.
+         */
+        public Builder<T>
+            with(Pattern pattern,
+                 Function<? super T, ? extends PatternHandler> selector) {
+            return with(pattern, m -> true, selector);
+        }
+
+        /**
          * Append an entry to the sequence.
          * 
          * @param pattern the pattern to match against the path
@@ -243,12 +317,19 @@ public final class PatternDispatcher<T> {
          * the application-specific receiver
          * 
          * @return this object
+         * 
+         * @throws PatternSyntaxException if the pattern is not a valid
+         * regular expression
+         * 
+         * @implNote This invokes
+         * {@link #with(String, Predicate, Function)}, passing a
+         * predicate that always returns {@code true} as the second
+         * argument.
          */
         public Builder<T>
-            with(Pattern pattern, Predicate<? super String> methods,
+            with(String pattern,
                  Function<? super T, ? extends PatternHandler> selector) {
-            entries.add(new Entry<>(pattern, methods, selector));
-            return this;
+            return with(pattern, m -> true, selector);
         }
     }
 
