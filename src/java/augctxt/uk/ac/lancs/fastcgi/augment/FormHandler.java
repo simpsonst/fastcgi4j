@@ -41,9 +41,8 @@ package uk.ac.lancs.fastcgi.augment;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Map;
-import java.util.function.Supplier;
 import uk.ac.lancs.cgi.FormSubmission;
-import uk.ac.lancs.fastcgi.RequestableSession;
+import uk.ac.lancs.fastcgi.RequestBodySession;
 import uk.ac.lancs.mime.MessageParser;
 
 /**
@@ -72,9 +71,10 @@ public final class FormHandler {
     }
 
     /**
-     * Get the form submission from a session. This simply calls
-     * {@link FormSubmission#fromCGI(Map, Supplier, Charset, MessageParser)}
-     * using the parameters provided during construction.
+     * Get the form submission from a raw session. This simply calls
+     * {@link FormSubmission#fromCGI(Map, FormSubmission.InputStreamSupplier, Charset, MessageParser)}
+     * using the parameters and input stream from the session, and the
+     * parameters provided during construction.
      * 
      * @param session the request session providing the method, query
      * string and request body
@@ -85,7 +85,7 @@ public final class FormHandler {
      * @throws IOException if an I/O error occurs in reading the request
      * body or storing any bodies
      */
-    public FormSubmission get(RequestableSession session) throws IOException {
+    public FormSubmission get(RequestBodySession session) throws IOException {
         return FormSubmission.fromCGI(session.parameters(), session::in,
                                       assumedCharset, parser);
     }

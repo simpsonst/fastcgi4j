@@ -33,30 +33,22 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *
- *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
+ *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
 package uk.ac.lancs.fastcgi;
 
-import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Presents the context of a FastCGI session to an application in a role
- * which receives a request body.
+ * Provides a session context with a request body and a possible request
+ * trailer, and with the possibility of setting raw response fields.
  *
  * @author simpsons
  */
-public interface RequestableSession extends FieldSession {
-    /**
-     * Get the stream for reading the request body.
-     * 
-     * @return the input stream providing the request body
-     */
-    InputStream in();
-
+public interface RequestableSession extends FieldSession, RequestBodySession {
     /**
      * Get the request trailer.
      * 
@@ -88,7 +80,7 @@ public interface RequestableSession extends FieldSession {
      * @return an immutable set of trailer fields
      * 
      * @throws IllegalStateException if called before EOF has been
-     * delivered on {@link RequestableSession#in()}, when a trailer is
+     * delivered on {@link RequestBodySession#in()}, when a trailer is
      * expected
      * 
      * @throws InterruptedException if interrupted while waiting for the

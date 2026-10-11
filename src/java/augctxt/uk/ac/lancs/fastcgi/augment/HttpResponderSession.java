@@ -64,9 +64,9 @@ import uk.ac.lancs.cgi.CGIParameters;
 import uk.ac.lancs.cgi.Http;
 import uk.ac.lancs.cgi.ServerProtocol;
 import uk.ac.lancs.fastcgi.Diagnostics;
+import uk.ac.lancs.fastcgi.RequestBodySession;
 import uk.ac.lancs.fastcgi.RequestableSession;
 import uk.ac.lancs.fastcgi.ResponderSession;
-import uk.ac.lancs.fastcgi.Session;
 import uk.ac.lancs.fastcgi.ots.OTSControl;
 import uk.ac.lancs.http.FieldNameSets;
 import uk.ac.lancs.http.FieldNames;
@@ -106,7 +106,7 @@ import uk.ac.lancs.mime.Tokenizer;
  * 
  * @author simpsons
  */
-public class HttpResponderSession implements AutoCloseable, Session {
+public class HttpResponderSession implements AutoCloseable, RequestBodySession {
     /**
      * The FastCGI responder session on which this HTTP session is based
      */
@@ -408,6 +408,7 @@ public class HttpResponderSession implements AutoCloseable, Session {
      * @throws IOException if there was an error in decoding the input
      * stream
      */
+    @Override
     public InputStream in() throws IOException {
         if (in == null) in = makeIn();
         return in;
@@ -613,7 +614,7 @@ public class HttpResponderSession implements AutoCloseable, Session {
      * 
      * <p>
      * To extract a field from the trailer, the body must first have
-     * been read in with {@link RequestableSession#in()}, and the stream
+     * been read in with {@link RequestBodySession#in()}, and the stream
      * closed. Otherwise, an {@link IllegalStateException} may be
      * thrown.
      * 

@@ -49,7 +49,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import uk.ac.lancs.mime.Disposition;
@@ -72,6 +71,22 @@ public final class FormSubmission {
     private final Map<String, List<Message>> map;
 
     private final boolean bodyConsumed;
+
+    /**
+     * Provides an input stream, assuming an I/O error doesn't occur.
+     */
+    @FunctionalInterface
+    public interface InputStreamSupplier {
+        /**
+         * Get the input stream.
+         * 
+         * @return the requested stream
+         * 
+         * @throws IOException if an I/O error occurs in acquiring the
+         * stream
+         */
+        InputStream get() throws IOException;
+    }
 
     /**
      * Determine whether the request body was consumed.
@@ -274,8 +289,8 @@ public final class FormSubmission {
      */
     public static FormSubmission
         fromCGI(Map<? super String, ? extends CharSequence> params,
-                Supplier<? extends InputStream> inSupply,
-                Charset assumedCharset, MessageParser parser)
+                InputStreamSupplier inSupply, Charset assumedCharset,
+                MessageParser parser)
             throws IOException {
         final var qs = params.get(CGIParameters.QUERY_STRING);
         final List<Map.Entry<? extends String, ? extends Message>> list =
