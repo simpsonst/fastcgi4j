@@ -40,6 +40,7 @@ package uk.ac.lancs.fastcgi.pattern;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandleProxies;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -49,18 +50,117 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import uk.ac.lancs.fastcgi.SessionException;
 
 /**
  * Dispatches paths to a sequence of candidates, matching on regular
- * expressions and HTTP methods.
+ * expressions and request methods. A dispatcher centres around a
+ * user-defined interface type that performs different actions in each
+ * method, and where method selection is based on some accessed
+ * resource's path and request method, as derived from a CGI context.
+ * For example, one might define an interface such as this:
  * 
- * @param <T> the application-defined type
+ * <pre class="java">
+ * interface Actions {
+ *   Void action1(Matcher m);
+ * 
+ *   Void action2(Matcher m);
+ * }
+ * </pre>
+ * 
+ * <p>
+ * <code class="java">action1</code> is to be invoked for paths
+ * beginning with <samp>/action</samp>, while
+ * <code class="java">action2</code> is is for paths beginning with
+ * <samp>/stuff</samp>.
+ * 
+ * <p>
+ * Given this information, a dispatcher can be built statically. During
+ * the handling of a specific request, an instance of
+ * <code class="java">Actions</code> can be provided:
+ * 
+ * <pre class="java">
+ * static final PatternDispatcher&lt;Actions, Void&gt; dispatcher;
+ * 
+ * // per request
+ * ResponderSession session = ...;
+ * Navigator nav = ...;
+ * dispatcher.dispatch(session.parameters.get(CGIParameters.REQUEST_METHOD),
+ *                     nav.resource(),
+ *                     null,
+ *                     new Actions() {
+ *   public Void action1(Matcher m) {
+ *     ...
+ *   }
+ * 
+ *   public Void action2(Matcher m) {
+ *     ...
+ *   }
+ * });
+ * </pre>
+ * 
+ * <p>
+ * There are two options for building a dispatcher:
+ * 
+ * <ul>
+ * 
+ * <li>
+ * <p>
+ * A dispatcher can be created with a manual mapping by using
+ * {@link #start()}:
+ * 
+ * <pre class="java">
+ * PatternDispatcher.&lt;Actions, Void&gt;start()
+ *                  .with(Pattern.compile("/action(/.*)?"),
+ *                        method -> true,
+ *                        receiver -> receiver::action1)
+ *                  .with(Pattern.compile("/stuff(/.*)?"),
+ *                        method -> true,
+ *                        receiver -> receiver::action2))
+ *                  .create();
+ * </pre>
+ * 
+ * <li>
+ * <p>
+ * A dispatcher can be created from an annotated receiver type with
+ * {@link #of(Class, Class)}:
+ * 
+ * <pre class="java">
+ * interface Actions {
+ *   &#64;ForPath("/action(/.*)?$")
+ *   &#64;Priority(1)
+ *   Void action1(Matcher m);
+ * 
+ *   &#64;ForPath("/stuff(/.*)?")
+ *   Void action2(Matcher m);
+ * }
+ * PatternDispatcher&lt;Actions, Void&gt; testDisp =
+ *       PatternDispatcher.of(Actions.class, Void.class);
+ * </pre>
+ * 
+ * <p>
+ * Methods on the interface type are scanned for the presence of the
+ * annotation {@link ForPath}. These must have the same or compatible
+ * arguments, return type and exceptions as <code class=
+ * "java">{@linkplain PatternHandler PatternHandler}&lt;R&gt;.{@linkplain PatternHandler#accept(Matcher) accept}({@linkplain Matcher})</code>.
+ * Methods are added to the test sequence in priority order as
+ * determined by the annotation {@link Priority}.
+ * 
+ * <p>
+ * Java methods with the annotation {@link ForMethod} (which may appear
+ * more than once) are restricted to those specific request methods.
+ * 
+ * </ul>
+ * 
+ * @param <T> the application-defined receiver type
  * 
  * @param <R> the result type of submissions
  * 
@@ -72,13 +172,21 @@ public final class PatternDispatcher<T, R> {
 
         Predicate<? super String> methods;
 
-        PatternAction<? super T, ? extends R> action;
+        Function<? super T, ? extends PatternHandler<? extends R>> selector;
 
         public Entry(Pattern pattern, Predicate<? super String> methods,
-                     PatternAction<? super T, ? extends R> action) {
+                     Function<? super T,
+                              ? extends PatternHandler<? extends R>> selector) {
             this.pattern = pattern;
             this.methods = methods;
-            this.action = action;
+            this.selector = selector;
+        }
+
+        public R accept(T receiver, Matcher matcher)
+            throws SessionException,
+                IOException,
+                InterruptedException {
+            return selector.apply(receiver).accept(matcher);
         }
     }
 
@@ -136,24 +244,26 @@ public final class PatternDispatcher<T, R> {
          * 
          * @param pattern the pattern to match against the path
          * 
-         * @param methods a test for matching methods
+         * @param methods a test for matching request methods
          * 
-         * @param action the action to invoke on a match
+         * @param selector a means to select the method to be invoked on
+         * the application-specific receiver
          * 
          * @return this object
          */
         public Builder<T, R>
             with(Pattern pattern, Predicate<? super String> methods,
-                 PatternAction<? super T, ? extends R> action) {
-            entries.add(new Entry<>(pattern, methods, action));
+                 Function<? super T,
+                          ? extends PatternHandler<? extends R>> selector) {
+            entries.add(new Entry<>(pattern, methods, selector));
             return this;
         }
     }
 
     /**
-     * Dispatch to an action matching a given HTTP method and path.
+     * Dispatch to an action matching a given request method and path.
      * 
-     * @param method the HTTP method
+     * @param method the request method
      * 
      * @param target the path to match against the actions' regular
      * expressions
@@ -180,10 +290,44 @@ public final class PatternDispatcher<T, R> {
         throws SessionException,
             IOException,
             InterruptedException {
+        return dispatch(method, target, defaultValue, () -> receiver);
+    }
+
+    /**
+     * Dispatch to an action matching a given request method and path,
+     * creating the receiver on demand.
+     * 
+     * @param method the request method
+     * 
+     * @param target the path to match against the actions' regular
+     * expressions
+     * 
+     * @param receiver provider of the object to pass the matching
+     * regular expression on to
+     * 
+     * @param defaultValue the value to return if no action is invoked
+     * 
+     * @return the value of the first matching action, or the default
+     * value
+     * 
+     * @throws InterruptedException if the application was interrupted
+     * (usually by the server or the remote client aborting the session)
+     * 
+     * @throws SessionException if the application is temporarily unable
+     * to respond to the request
+     * 
+     * @throws IOException if an I/O error occurs in processing any of
+     * the streams of the session context
+     */
+    public R dispatch(String method, CharSequence target, R defaultValue,
+                      Supplier<? extends T> receiver)
+        throws SessionException,
+            IOException,
+            InterruptedException {
         for (var opt : entries) {
             if (!opt.methods.test(method)) continue;
             var m = opt.pattern.matcher(target);
-            if (m.matches()) return opt.action.accept(receiver, m);
+            if (m.matches()) return opt.accept(receiver.get(), m);
         }
         return defaultValue;
     }
@@ -195,7 +339,7 @@ public final class PatternDispatcher<T, R> {
         acceptable.add(RuntimeException.class);
         acceptable.add(Error.class);
         acceptable.addAll(Arrays
-            .asList(PatternAction.class.getMethods()[0].getExceptionTypes()));
+            .asList(PatternHandler.class.getMethods()[0].getExceptionTypes()));
         THROWN_TYPES = Set.copyOf(acceptable);
     }
 
@@ -213,48 +357,6 @@ public final class PatternDispatcher<T, R> {
 
     /**
      * Create a dispatcher for an interface type with annotated methods.
-     * Methods on the interface type are scanned for the presence of the
-     * annotation {@link ForPath}. These must return {@code R}, take a
-     * single {@link Matcher} argument, and throw only the exceptions
-     * listed on {@link PatternAction#accept(Object, Matcher)}. Methods
-     * are added to the test sequence in priority order as determine by
-     * the annotation {@link Priority}.
-     * 
-     * <p>
-     * Methods with the annotation {@link ForMethod} (which may appear
-     * more than once) are restricted to those specific HTTP methods.
-     * 
-     * <p>
-     * A dispatcher can be created statically:
-     * 
-     * <pre class="java">
-     * interface MyStuff {
-     *   &#64;ForPath("/action(/.*)?$")
-     *   Void action1(Matcher m);
-     *   &#64;ForPath("/stuff(/.*)?")
-     *   Void action2(Matcher m);
-     * }
-     * 
-     * static final PatternDispatcher&lt;MyStuff, Void&gt; dispatcher =
-     *   PatternDispatcher.of(MyStuff.class, Void.class);
-     * </pre>
-     * 
-     * <p>
-     * It can be used later with a newly created instance of {@code T}:
-     * 
-     * <pre class="java">
-     * ResponderSession session = ...;
-     * Navigator nav = ...;
-     * dispatch(session.parameters.get(CGIParameters.REQUEST_METHOD),
-     *          nav.resource(), null, new MyStuff() {
-     *   public Void action1(Matcher m) {
-     *     ...
-     *   }
-     *   public Void action2(Matcher m) {
-     *     ...
-     *   }
-     * });
-     * </pre>
      * 
      * @param <T> the interface type
      * 
@@ -269,6 +371,11 @@ public final class PatternDispatcher<T, R> {
      * @throws IllegalArgumentException if an annotated method has the
      * wrong signature, including return type and thrown exceptions, or
      * is inaccessible
+     * 
+     * @throws PatternSyntaxException if the pattern applied to a Java
+     * method with {@link ForPath} is not a valid regular expression
+     * 
+     * @constructor
      */
     public static <T, R> PatternDispatcher<T, R> of(Class<T> type,
                                                     Class<R> returnType) {
@@ -279,6 +386,10 @@ public final class PatternDispatcher<T, R> {
             try {
                 var pathAnnot = method.getAnnotation(ForPath.class);
                 if (pathAnnot == null) continue;
+
+                /* Check that the method has the right signature. TODO:
+                 * Formally check this against
+                 * PatternHandler.accept(Matcher). */
                 var params = method.getParameterTypes();
                 if (params.length != 1)
                     throw new IllegalArgumentException("bad number of params: "
@@ -294,7 +405,10 @@ public final class PatternDispatcher<T, R> {
                         throw new IllegalArgumentException("bad exception "
                             + ext + " on " + method);
 
+                /* Compile the pattern. */
                 var pattern = Pattern.compile(pathAnnot.value());
+
+                /* Establish which methods the method is limited to. */
                 var methsAnnot = method.getAnnotation(ForMethods.class);
                 final Predicate<String> methods;
                 if (methsAnnot == null) {
@@ -310,20 +424,14 @@ public final class PatternDispatcher<T, R> {
                         .map(ForMethod::value)
                         .collect(Collectors.toSet())::contains;
                 }
+
+                /* Get a reference to the method, and a way to bind it
+                 * to the receiver supplied later. */
                 MethodHandle ref = lookup.unreflect(method);
-                PatternAction<T, R> action = (m, r) -> {
-                    try {
-                        return returnType.cast(ref.invoke(m, r));
-                    } catch (SessionException | IOException |
-                             InterruptedException | RuntimeException |
-                             Error ex) {
-                        throw ex;
-                    } catch (Throwable ex) {
-                        throw new AssertionError("unreachable", ex);
-                    }
-                };
+                Function<T, PatternHandler<R>> selector =
+                    (receiver) -> toPatternHandler(ref, receiver);
                 options.add(Map.entry(priority(method),
-                                      new Entry<>(pattern, methods, action)));
+                                      new Entry<>(pattern, methods, selector)));
             } catch (IllegalAccessException ex) {
                 throw new IllegalArgumentException("inaccessible", ex);
             }
@@ -344,6 +452,13 @@ public final class PatternDispatcher<T, R> {
     private static final PatternDispatcher<Test, Integer> testDisp =
         PatternDispatcher.of(Test.class, Integer.class);
 
+    @SuppressWarnings("unchecked")
+    private static <T, R> PatternHandler<R> toPatternHandler(MethodHandle ref,
+                                                             T receiver) {
+        return MethodHandleProxies.asInterfaceInstance(PatternHandler.class,
+                                                       ref.bindTo(receiver));
+    }
+
     /**
      * @hidden
      */
@@ -358,5 +473,8 @@ public final class PatternDispatcher<T, R> {
 
         int rc = testDisp.dispatch("GET", "/foo/bar/baz", 0, rcv);
         System.out.printf("rc=%d%n", rc);
+
+        PatternDispatcher.<Test, Integer>start()
+            .with(Pattern.compile(""), s -> true, r -> r::m1).create();
     }
 }
