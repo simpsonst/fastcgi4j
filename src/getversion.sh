@@ -2,20 +2,21 @@
 # -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
 
 ## Parse command-line arguments.
+FILENAME=()
 while [ $# -gt 0 ] ; do
     arg="$1" ; shift
     case "$arg" in
         (--prefix=*)
             prefix="${arg#--prefix=}"
             ;;
+
+        (-*|+*)
+            printf >&2 '%s: unknown switch: %s\n' "$0" "$arg"
+            exit 1
+            ;;
+
         (*)
-            if [ -z "$major_file" ] ; then
-                major_file="$arg"
-            elif [ -z "$minor_file" ] ; then
-                minor_file="$arg"
-            elif [ -z "$patch_file" ] ; then
-                patch_file="$arg"
-            fi
+            FILENAME+=("$arg")
             ;;
     esac
 done
@@ -32,7 +33,7 @@ if [[ "$release" =~ ^(.*)-([0-9]+)-g([0-9a-f]+)$ ]] ; then
 fi
 
 ## Detect untracked files or uncommitted changes.
-if git diff-index --quiet HEAD 2> /dev/null ; then
+if git diff-index --quiet HEAD ; then
     unset alpha
 else
     ## There's something to commit.
@@ -40,26 +41,33 @@ else
 fi
 
 unset longext
-if [[ "$release" =~ ^([0-9]+)[^0-9\.]*\.([0-9]+)[^0-9\.]*\.([0-9]+) ]] ; then
-    if [ -n "$major_file" -a -r "$major_file" ] ; then
+digits='[0-9]+'
+expr=""
+
+for i in "${!FILENAME[@]}" ; do
+    fn="${FILENAME[i]}"
+    re='^('"$expr"')'"${expr:+\.}"'('"$digits"')'
+    if [ -n "$fn" -a -r "$fn" ] && [[ "$release" =~ $re ]] ; then
         longext="$alpha"
-        release="$((BASH_REMATCH[1] + 1)).0.0"
-    elif [ -n "$minor_file" -a -r "$minor_file" ] ; then
-        longext="$alpha"
-        release="${BASH_REMATCH[1]}.$((BASH_REMATCH[2] + 1)).0"
-    elif [ -n "$patch_file" -a -r "$patch_file" ] ; then
-        longext="$alpha"
-        release="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.$((BASH_REMATCH[3] + 1))"
-    elif [ -n "$gitadv" ] ; then
-        longext=".$((${alpha:+1} + gitadv))$alpha"
-        release="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.${BASH_REMATCH[3]}"
-    else
-        longext=".$((${alpha:+1} + 0))$alpha"
-        release="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.${BASH_REMATCH[3]}"
+        result="${BASH_REMATCH[1]}${BASH_REMATCH[1]:+.}$((BASH_REMATCH[2]+1))"
+        ((i++))
+        while (( i < ${#FILENAME[@]} )) ; do
+            result+=".0"
+            ((i++))
+        done
+        break
     fi
+
+    expr+="${expr:+\.}${digits}"
+done
+re='^('"$expr"')'
+if [ -z "$result" -a -n "$gitadv" ] && [[ "$release" =~ $re ]] ; then
+    longext=".$((gitadv + 1))$alpha"
+    result="${BASH_REMATCH[1]}"
+fi
+if [ -z "$result" ] ; then
+    result="$release"
 fi
 
-longrelease="${release}$longext${gitrev:+-g"$gitrev"}"
-
-
-printf '%s %s\n' "$release" "$longrelease"
+longrelease="${result}$longext${gitrev:+-g"$gitrev"}"
+printf '%s %s\n' "$result" "$longrelease"
