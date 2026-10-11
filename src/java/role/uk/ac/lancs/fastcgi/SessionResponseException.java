@@ -39,26 +39,27 @@
 package uk.ac.lancs.fastcgi;
 
 /**
- * Indicates that a role implementation has not been configured
- * correctly. This would typically trigger (say) a 500 response to an
- * HTTP request.
+ * Indicates that a role implementation has failed in an
+ * application-specific way. This would typically trigger (say) a 500
+ * response to an HTTP request (provided no response has actually be
+ * sent), and some detailed logging.
  *
  * @author simpsons
  */
-public class ConfigurationException extends SessionException {
+public class SessionResponseException extends SessionException {
     /**
      * Create an exception with a detail message.
      * 
      * @param message the detail message
      */
-    public ConfigurationException(String message) {
+    public SessionResponseException(String message) {
         super(message);
     }
 
     /**
      * Create an exception.
      */
-    public ConfigurationException() {}
+    public SessionResponseException() {}
 
     /**
      * Create an exception with a detail message and a cause.
@@ -67,7 +68,7 @@ public class ConfigurationException extends SessionException {
      * 
      * @param cause the cause
      */
-    public ConfigurationException(String message, Throwable cause) {
+    public SessionResponseException(String message, Throwable cause) {
         super(message, cause);
     }
 
@@ -76,7 +77,7 @@ public class ConfigurationException extends SessionException {
      * 
      * @param cause the cause
      */
-    public ConfigurationException(Throwable cause) {
+    public SessionResponseException(Throwable cause) {
         super(cause);
     }
 
@@ -94,9 +95,9 @@ public class ConfigurationException extends SessionException {
      * @param writableStackTrace {@code true} if the stack trace is
      * writable; {@code false} if not
      */
-    public ConfigurationException(String message, Throwable cause,
-                                  boolean enableSuppression,
-                                  boolean writableStackTrace) {
+    public SessionResponseException(String message, Throwable cause,
+                                    boolean enableSuppression,
+                                    boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 }

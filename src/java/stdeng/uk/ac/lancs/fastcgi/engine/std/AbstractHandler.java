@@ -61,11 +61,11 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import uk.ac.lancs.fastcgi.ConfigurationException;
 import uk.ac.lancs.fastcgi.Diagnostics;
 import uk.ac.lancs.fastcgi.FieldSession;
 import uk.ac.lancs.fastcgi.OverloadException;
 import uk.ac.lancs.fastcgi.SessionException;
+import uk.ac.lancs.fastcgi.SessionResponseException;
 import uk.ac.lancs.fastcgi.proto.ProtocolStatuses;
 import uk.ac.lancs.fastcgi.proto.RecordTypes;
 import uk.ac.lancs.fastcgi.proto.serial.ParamReader;
@@ -409,9 +409,18 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
      * terminated with exit status {@code 1} and
      * {@link ProtocolStatuses#OVERLOADED}.
      * 
-     * @throws ConfigurationException if the application encounters an
-     * internal error it cannot handle. The request is terminated with
+     * @throws SessionResponseException if the application encounters an
+     * internal error it cannot handle. If output has been generated
+     * ({@link #statusCode} is negative), then the request is simply
+     * terminated with {@code 4} and
+     * {@link ProtocolStatuses#REQUEST_COMPLETE}. Otherwise, a 500
+     * response is generated (TODO), and the request is terminated with
      * {@code 3} and {@link ProtocolStatuses#REQUEST_COMPLETE}.
+     * 
+     * @throws SessionResponseException if the application encounters an
+     * internal error it cannot handle after it has generated output.
+     * The request is terminated with {@code 4} and
+     * {@link ProtocolStatuses#REQUEST_COMPLETE}.
      * 
      * @throws Throwable if any other abnormal event occurs. An attempt
      * is made to send an HTTP 501 Server Error response with diagnostic
@@ -454,9 +463,18 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
                 appStatus = 2;
                 pStat = ProtocolStatuses.OVERLOADED;
                 completed = true;
-            } catch (ConfigurationException ex) {
-                logger.warning(() -> msg("misconfiguration"));
-                appStatus = 3;
+            } catch (SessionResponseException ex) {
+                if (statusCode < 0) {
+                    logger.warning(() -> msg("response"));
+                    appStatus = 4;
+                } else {
+                    logger.warning(() -> msg("misconfiguration"));
+                    appStatus = 3;
+                    /* TODO: The application hasn't generated a response
+                     * yet, so genreate a server error, perhaps with a
+                     * diagnostic reference, while not revealing
+                     * server/application internals. */
+                }
                 pStat = ProtocolStatuses.REQUEST_COMPLETE;
                 completed = true;
             } catch (Exception | Error ex) {

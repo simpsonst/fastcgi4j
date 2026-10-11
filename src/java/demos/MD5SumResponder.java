@@ -53,10 +53,10 @@ import java.util.TreeMap;
 import uk.ac.lancs.cgi.path.Navigator;
 import uk.ac.lancs.cgi.path.PathConfiguration;
 import uk.ac.lancs.cgi.path.PathContext;
-import uk.ac.lancs.fastcgi.ConfigurationException;
 import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.ResponderSession;
 import uk.ac.lancs.fastcgi.SessionException;
+import uk.ac.lancs.fastcgi.SessionResponseException;
 import uk.ac.lancs.fastcgi.augment.HttpResponderContext;
 import uk.ac.lancs.fastcgi.augment.HttpResponderSession;
 import uk.ac.lancs.fastcgi.ots.OTSResponses;
@@ -136,7 +136,7 @@ public class MD5SumResponder implements Responder {
                     }
                     dig = md.digest();
                 } catch (NoSuchAlgorithmException ex) {
-                    throw new ConfigurationException("obtaining digest", ex);
+                    throw new SessionResponseException("obtaining digest", ex);
                 }
             }
 
