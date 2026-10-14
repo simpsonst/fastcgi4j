@@ -52,6 +52,7 @@ import uk.ac.lancs.fastcgi.engine.std.threading.ThreadingManager;
 import uk.ac.lancs.fastcgi.engine.std.threading.ThreadingManagerFactory;
 import uk.ac.lancs.fastcgi.proto.ApplicationVariables;
 import uk.ac.lancs.fastcgi.transport.Transport;
+import uk.ac.lancs.http.ResponseCodes;
 import uk.ac.lancs.scc.jardeps.Service;
 
 /**
@@ -90,6 +91,53 @@ import uk.ac.lancs.scc.jardeps.Service;
  * an experimental extension to FastCGI/1.0.
  * 
  * </ul>
+ * 
+ * <p>
+ * The following non-zero exit statuses are defined:
+ * 
+ * <dl>
+ * 
+ * <dt>{@value AbstractHandler#APP_STATUS_UNKNOWN}
+ * <dd>The application raised a session exception unknown to this
+ * engine. The exception was logged. A blank
+ * {@link ResponseCodes#INTERNAL_SERVER_ERROR} response was delivered.
+ * 
+ * <dt>{@value AbstractHandler#APP_STATUS_UNKNOWN_LATE}
+ * <dd>The application raised a session exception unknown to this
+ * engine. The exception was logged. A partial response from the
+ * application might have been delivered.
+ * 
+ * <dt>{@value AbstractHandler#APP_STATUS_IO}
+ * <dd>The application encountered an I/O error from elsewhere than the
+ * underlying connection. A blank
+ * {@link ResponseCodes#INTERNAL_SERVER_ERROR} response was delivered.
+ * 
+ * <dt>{@value AbstractHandler#APP_STATUS_IO_LATE}
+ * <dd>The application encountered an I/O error from elsewhere than the
+ * underlying connection. A partial response from the application might
+ * have been delivered.
+ * 
+ * <dt>{@value AbstractHandler#APP_STATUS_INTERRUPT}
+ * <dd>The application was interrupted. A blank
+ * {@link ResponseCodes#INTERNAL_SERVER_ERROR} response was delivered.
+ * 
+ * <dt>{@value AbstractHandler#APP_STATUS_INTERRUPT_LATE}
+ * <dd>The application was interrupted. A partial response from the
+ * application might have been delivered.
+ * 
+ * <dt>{@value AbstractHandler#APP_STATUS_ERROR}
+ * <dd>The application aborted the request because of an
+ * application-specific condition that it could not recover from. The
+ * exception was logged. A blank
+ * {@link ResponseCodes#INTERNAL_SERVER_ERROR} response was delivered.
+ * 
+ * <dt>{@value AbstractHandler#APP_STATUS_ERROR_LATE}
+ * <dd>The application aborted the request because of an
+ * application-specific condition that it could not recover from. The
+ * exception was logged. A partial response from the application might
+ * have been delivered.
+ * 
+ * </dl>
  * 
  * @author simpsons
  */

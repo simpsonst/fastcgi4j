@@ -42,9 +42,7 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -59,6 +57,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import uk.ac.lancs.fastcgi.Diagnostics;
@@ -82,6 +81,24 @@ import uk.ac.lancs.io.UnclosedOutputStream;
  * @author simpsons
  */
 abstract class AbstractHandler implements SessionHandler, FieldSession {
+    private final int APP_STATUS_OKAY = 0;
+
+    private final int APP_STATUS_UNKNOWN = 1;
+
+    private final int APP_STATUS_UNKNOWN_LATE = APP_STATUS_UNKNOWN + 1;
+
+    private final int APP_STATUS_IO = 3;
+
+    private final int APP_STATUS_IO_LATE = APP_STATUS_IO + 1;
+
+    private final int APP_STATUS_INTERRUPT = 5;
+
+    private final int APP_STATUS_INTERRUPT_LATE = APP_STATUS_INTERRUPT + 1;
+
+    private final int APP_STATUS_ERROR = 7;
+
+    private final int APP_STATUS_ERROR_LATE = APP_STATUS_ERROR + 1;
+
     /**
      * Holds the session id (or request id in FastCGI parlance).
      */
@@ -176,7 +193,7 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
      * Holds the 'exit' status of the application for this
      * session/request.
      */
-    int appStatus = 0;
+    int appStatus = APP_STATUS_OKAY;
 
     /**
      * Holds the CGI/HTTP response code for this session/request. This
@@ -396,36 +413,70 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
      * 
      * @throws RecordIOException if the invoking thread encounters an
      * I/O error in accessing the connection. For example, an attempt to
-     * write a record could fail.
+     * write a record could fail. This will terminate the connection,
+     * and abort other sessions still active.
+     * 
+     * @throws IOException if the application encountered an I/O
+     * exception not caused by the underlying connection. The request is
+     * terminated with CGI status
+     * {@value ResponseCodes#INTERNAL_SERVER_ERROR} and exit status
+     * {@value #APP_STATUS_IO} (or just {@value #APP_STATUS_IO_LATE} if
+     * a partial response message was sent by the application), and
+     * {@link ProtocolStatuses#REQUEST_COMPLETE}.
      * 
      * @throws InterruptedException if the invoking thread was
      * interrupted. This can happen if another session detects failure
      * in the transport connection, for example. The request is
-     * terminated with exit status {@code -2} and
+     * terminated with CGI status
+     * {@value ResponseCodes#INTERNAL_SERVER_ERROR} and exit status
+     * {@value #APP_STATUS_INTERRUPT} (or just
+     * {@value #APP_STATUS_INTERRUPT_LATE} if a partial response message
+     * was sent by the application), and
      * {@link ProtocolStatuses#REQUEST_COMPLETE}.
      * 
      * @throws OverloadException if the application deems itself too
      * busy to handle new (or even current) requests. The request is
-     * terminated with exit status {@code 1} and
+     * terminated with exit status {@value #APP_STATUS_OKAY} and
      * {@link ProtocolStatuses#OVERLOADED}.
      * 
      * @throws SessionResponseException if the application encounters an
-     * internal error it cannot handle. If output has been generated
-     * ({@link #statusCode} is negative), then the request is simply
-     * terminated with {@code 4} and
-     * {@link ProtocolStatuses#REQUEST_COMPLETE}. Otherwise, a 500
-     * response is generated (TODO), and the request is terminated with
-     * {@code 3} and {@link ProtocolStatuses#REQUEST_COMPLETE}.
+     * internal error it cannot handle. The request is terminated with
+     * CGI status {@value ResponseCodes#INTERNAL_SERVER_ERROR} and exit
+     * status {@value #APP_STATUS_ERROR} (or just
+     * {@value #APP_STATUS_ERROR_LATE} if a partial response message was
+     * sent by the application), and
+     * {@link ProtocolStatuses#REQUEST_COMPLETE}. The cause of the
+     * exception is logged.
      * 
-     * @throws SessionResponseException if the application encounters an
-     * internal error it cannot handle after it has generated output.
-     * The request is terminated with {@code 4} and
-     * {@link ProtocolStatuses#REQUEST_COMPLETE}.
+     * @throws SessionException if the application encounters a
+     * session-related problem that this engine does not recognize. The
+     * request is terminated with CGI status
+     * {@value ResponseCodes#INTERNAL_SERVER_ERROR} and exit status
+     * {@value #APP_STATUS_UNKNOWN} (or just
+     * {@value #APP_STATUS_UNKNOWN_LATE} if a partial response message
+     * was sent by the application), and
+     * {@link ProtocolStatuses#REQUEST_COMPLETE}. The cause of the
+     * exception is logged.
      * 
-     * @throws Throwable if any other abnormal event occurs. An attempt
-     * is made to send an HTTP 501 Server Error response with diagnostic
-     * information. The request is then terminated with exit status
-     * {@code 2} and {@link ProtocolStatuses#REQUEST_COMPLETE}.
+     * @throws RuntimeException if the application encounters a
+     * session-related problem that this engine does not recognize. The
+     * request is terminated with CGI status
+     * {@value ResponseCodes#INTERNAL_SERVER_ERROR} and exit status
+     * {@value #APP_STATUS_UNCHECKED_ERROR} (or just
+     * {@value #APP_STATUS_UNCHECKED_ERROR_LATE} if a partial response
+     * message was sent by the application), and
+     * {@link ProtocolStatuses#REQUEST_COMPLETE}. The cause of the
+     * exception is logged.
+     * 
+     * @throws Error if the application encounters a session-related
+     * problem that this engine does not recognize. The request is
+     * terminated with CGI status
+     * {@value ResponseCodes#INTERNAL_SERVER_ERROR} and exit status
+     * {@value #APP_STATUS_UNCHECKED_ERROR} (or just
+     * {@value #APP_STATUS_UNCHECKED_ERROR_LATE} if a partial response
+     * message was sent by the application), and
+     * {@link ProtocolStatuses#REQUEST_COMPLETE}. The cause of the
+     * exception is logged.
      */
     abstract void
         innerRun() throws IOException, SessionException, InterruptedException;
@@ -453,92 +504,88 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
                     Thread.interrupted();
                 }
             } catch (RecordIOException ex) {
-                ex.unpack();
+                throw ex;
+            } catch (IOException ex) {
+                logger.warning(() -> msg("I/O error"));
+                if (statusCode < 0) {
+                    appStatus = APP_STATUS_IO;
+                    setStatus(ResponseCodes.INTERNAL_SERVER_ERROR);
+                    outHeaders.clear();
+                } else {
+                    appStatus = APP_STATUS_IO_LATE;
+                    completed = true;
+                }
             } catch (InterruptedException ex) {
                 logger.warning(() -> msg("interrupt"));
-                appStatus = 1;
-                completed = true;
+                if (statusCode < 0) {
+                    appStatus = APP_STATUS_INTERRUPT;
+                    setStatus(ResponseCodes.INTERNAL_SERVER_ERROR);
+                    outHeaders.clear();
+                } else {
+                    appStatus = APP_STATUS_INTERRUPT_LATE;
+                    completed = true;
+                }
             } catch (OverloadException ex) {
                 logger.warning(() -> msg("overload"));
-                appStatus = 2;
                 pStat = ProtocolStatuses.OVERLOADED;
                 completed = true;
             } catch (SessionResponseException ex) {
+                logger.log(Level.SEVERE, "application exception",
+                           ex.getCause());
                 if (statusCode < 0) {
-                    logger.warning(() -> msg("response"));
-                    appStatus = 4;
-                } else {
-                    logger.warning(() -> msg("misconfiguration"));
-                    appStatus = 3;
-                    /* TODO: The application hasn't generated a response
-                     * yet, so genreate a server error, perhaps with a
-                     * diagnostic reference, while not revealing
-                     * server/application internals. */
-                }
-                pStat = ProtocolStatuses.REQUEST_COMPLETE;
-                completed = true;
-            } catch (Exception | Error ex) {
-                logger.severe(() -> {
-                    StringBuilder st = new StringBuilder();
-                    for (var se : ex.getStackTrace()) {
-                        st.append(' ').append(se.getClassName()).append(':')
-                            .append(se.getLineNumber());
-                    }
-                    return msg("ex:%s %s %s", st, ex, ex.getMessage());
-                });
-                /* TODO: Instead of (or in addition to) detecting the
-                 * illegal state exception, we should know whether it's
-                 * safe to write a message of our own, because
-                 * statusCode will be non-negative.
-                 * ensureResponseHeader() sets it to -1 after sending
-                 * the header. */
-                try {
-                    setStatus(501);
+                    appStatus = APP_STATUS_ERROR;
+                    setStatus(ResponseCodes.INTERNAL_SERVER_ERROR);
                     outHeaders.clear();
-                    setField("Content-Type", "text/plain; charset=UTF-8");
-                    try (PrintWriter out =
-                        new PrintWriter(new OutputStreamWriter(out(),
-                                                               StandardCharsets.UTF_8))) {
-                        out.printf("Internal Server Error\n");
-                        /* TODO: Provide a more detailed and run-time
-                         * configurable error. Use XSLT. */
-                    }
-                } catch (IllegalStateException ise) {
-                    err().printf("Could not send error response; "
-                        + "response body partially sent%n");
+                } else {
+                    appStatus = APP_STATUS_ERROR_LATE;
+                    completed = true;
                 }
-                ex.printStackTrace(err());
-                appStatus = 2;
-                completed = true;
+            } catch (SessionException ex) {
+                logger.log(Level.SEVERE, "unknown session exception", ex);
+                if (statusCode < 0) {
+                    appStatus = APP_STATUS_UNKNOWN;
+                    setStatus(ResponseCodes.INTERNAL_SERVER_ERROR);
+                    outHeaders.clear();
+                } else {
+                    appStatus = APP_STATUS_UNKNOWN_LATE;
+                    completed = true;
+                }
+            } catch (RuntimeException | Error ex) {
+                logger.log(Level.SEVERE, "unchecked application error",
+                           ex.getCause());
+                if (statusCode < 0) {
+                    appStatus = APP_STATUS_ERROR;
+                    setStatus(ResponseCodes.INTERNAL_SERVER_ERROR);
+                    outHeaders.clear();
+                } else {
+                    appStatus = APP_STATUS_ERROR_LATE;
+                    completed = true;
+                }
             } finally {
                 try {
-                    final boolean wasCleaned;
-                    try {
-                        if (!completed) {
-                            logger.finer(() -> msg("exit"));
-                            ensureResponseHeader();
-                        }
-                    } finally {
-                        wasCleaned = cleanUp.test(this);
+                    if (!completed) {
+                        logger.finer(() -> msg("exit"));
+                        ensureResponseHeader();
+                        out.close();
                     }
-                    if (wasCleaned) {
+                } finally {
+                    if (cleanUp.test(this)) {
                         /* We removed our session id from the index. We
                          * need to send the last message for this
                          * session. */
                         final var fpStat = pStat;
                         logger
-                            .fine(() -> msg("req=%d rc=%d ps=%s", id, appStatus,
+                            .fine(() -> msg("rc=%d ps=%s", appStatus,
                                             ProtocolStatuses.toString(fpStat)));
                         recordsOut.writeEndRequest(id, appStatus, pStat);
                         checkLastSession.run();
                     }
-                } catch (RecordIOException ex2) {
-                    ex2.unpack();
                 }
             }
-        } catch (IOException ex) {
-            /* The application was unable to write a record, so we have
-             * to terminate all handlers on this connection. */
+        } catch (IOException | RuntimeException | Error ex) {
+            /* The application was unable to write a record, or we had a
+             * problem generating a response, so we have to terminate
+             * all handlers on this connection. */
             logger.warning(() -> msg("aborting connection"));
             connAbort.run();
         } finally {
