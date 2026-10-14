@@ -315,6 +315,40 @@ public final class PathConfiguration<C> {
     }
 
     /**
+     * Generate a subset of properties with a common prefix. The prefix
+     * is removed, so if the prefix is <samp>foo.</samp>, and the source
+     * properties include <samp>foo.bar.baz</samp>, the result will
+     * contain <samp>bar.baz</samp> with the same value.
+     * 
+     * <p>
+     * A new {@link Properties} object is created (not merely a view of
+     * the source properties), copying only fields matching the given
+     * prefix.
+     * 
+     * @param props the source properties
+     * 
+     * @param prefix the prefix to filter properties, and to be removed
+     * from the resultant properties' names
+     * 
+     * @param backup properties used to back up the generated ones; or
+     * {@code null} if not required
+     * 
+     * @return the sub-properties
+     */
+    public static Properties copySubproperties(Properties props, String prefix,
+                                               Properties backup) {
+        final int len = prefix.length();
+        Properties result = new Properties(backup);
+        for (String inKey : props.stringPropertyNames()) {
+            if (!inKey.startsWith(prefix)) continue;
+            String value = props.getProperty(inKey);
+            String outKey = inKey.substring(len);
+            result.setProperty(outKey, value);
+        }
+        return result;
+    }
+
+    /**
      * Start building navigation.
      * 
      * @param <C> the context type
