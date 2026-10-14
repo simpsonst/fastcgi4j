@@ -269,8 +269,43 @@ public final class PathConfiguration<C> {
          * <pre class="java-props">
          * apache.internal=http://localhost/test
          * apache.external=https://foo.example.com
+         * apache.db.conf=/etc/myapp.d/apache.properties
+         * apache.db.creds=/etc/myapp.d/secrets/apache.properties
          * nginx.internal=http://localhost:8000/test
          * nginx.external=https://bar.example.com
+         * nginx.db.conf=/etc/myapp.d/nginx.properties
+         * nginx.db.creds=/etc/myapp.d/secrets/nginx.properties
+         * </pre>
+         * 
+         * <p>
+         * Note that the virtual paths of the URIs are taken to be
+         * <em>path</em> prefixes, not <em>lexical</em> prefixes, i.e.,
+         * to match an incoming request, the next character if present
+         * must be a forward slash. If the configured prefix ends with a
+         * slash, it is normalized by removing it.
+         * 
+         * <p>
+         * Other properties in the file are ignored, but the instance
+         * mapping can use the supplied <var>instance</var> string to
+         * select configuration from the same source featuring that
+         * prefix.
+         * {@link #copySubproperties(Properties, String, Properties)} is
+         * provided as a convenience for selecting sub-properties with a
+         * given prefix. One could use a method like this to provide the
+         * instance mapping, for example (where
+         * <code class="java">MyAppContext</code> is the context type):
+         * 
+         * <pre class="java">
+         * static Function&lt;String, MyAppContext&gt;
+         *   makerFor(Properties props, String prefix, Path base) {
+         *   return s -&gt; {
+         *     var subs =
+         *         PathConfiguration.copySubproperties(props,
+         *                                             prefix + s + ".",
+         *                                             props);
+         *     return new MyAppContext(subs, base);
+         *   };
+         * }
          * </pre>
          * 
          * @param props container of the properties
