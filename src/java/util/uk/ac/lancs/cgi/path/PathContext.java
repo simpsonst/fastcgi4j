@@ -162,7 +162,8 @@ public final class PathContext<C> {
     /**
      * Get the instance context.
      * 
-     * @return the instance context
+     * @return the instance context, which could be {@code null} if the
+     * context was not recognized
      */
     public C instance() {
         return instance;

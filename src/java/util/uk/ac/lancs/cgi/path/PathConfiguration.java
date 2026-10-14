@@ -218,9 +218,14 @@ public final class PathConfiguration<C> {
          * @param internalService the internal service URI prefix
          * 
          * @return this object
+         * 
+         * @throws NullPointerException if the instance context is
+         * {@code null}
          */
         public Builder<C> instance(C context, String externalService,
                                    String internalService) {
+            Objects.requireNonNull(context, "context");
+
             /* Parse the internal service URI prefix as a URI, separate
              * the path elements from the server, and index on server
              * and path elements to yield the instance details. */
@@ -276,6 +281,9 @@ public final class PathConfiguration<C> {
          * context
          * 
          * @return this object
+         * 
+         * @throws NullPointerException if the mapping returns
+         * {@code null}
          */
         public Builder<C> instances(Properties props, String prefix,
                                     Function<? super String, C> instanceMap) {
