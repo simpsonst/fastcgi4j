@@ -72,10 +72,11 @@ import uk.ac.lancs.scc.jardeps.Application;
 /**
  * Acts as an entry point for FastCGI applications. Such an application
  * should extend this class, override
- * {@link #init(FastCGIConfiguration, String[])} if it needs to perform
- * any initialization, and await sessions. To indicate the roles it
- * supports, it must either implement them directly, or specifying them
- * during the {@link #init(FastCGIConfiguration, String[])} call.
+ * {@link #init(FastCGIConfiguration, String[])} (if it needs to perform
+ * any initialization or receive command-line arguments), and await
+ * sessions. To indicate the roles it supports, it must either implement
+ * them directly, or specifying them during the
+ * {@link #init(FastCGIConfiguration, String[])} call.
  * 
  * @author simpsons
  */
@@ -93,10 +94,10 @@ public class FastCGIApplication {
      * {@code false} if it should exit with a non-zero code
      * 
      * @implNote This method does nothing by default, and returns
-     * {@code false}.
+     * {@code true}.
      */
     public boolean init(FastCGIConfiguration config, String[] args) {
-        return false;
+        return true;
     }
 
     /**
