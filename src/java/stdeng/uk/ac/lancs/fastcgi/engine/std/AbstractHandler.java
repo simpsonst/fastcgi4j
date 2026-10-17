@@ -250,6 +250,17 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
     /**
      * Ensures that the response header has been transmitted. This
      * object is presented to the application as its standard output.
+     * It's underlying stream is {@link #bufferedOut}, which each method
+     * either tests for {@code null}, or ensures is not {@code null} by
+     * calling {@link #ensureResponseHeader()} first. In particular, the
+     * {@link OutputStream#close()} method does not close the underlying
+     * stream, but merely flushes it, and only if set. This means, if
+     * the application throws an exception before any header is sent,
+     * and the handling of the exception auto-closes this stream, this
+     * class can generate a full error response (such a a 500)
+     * internally. If nothing has gone wrong, {@link #run()} (which runs
+     * the application) will ensure the header is written, and close the
+     * underlying stream.
      */
     private final OutputStream headeredOut = new OutputStream() {
         @Override
@@ -268,9 +279,7 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
 
         @Override
         public void close() throws IOException {
-            ensureResponseHeader();
-            bufferedOut.close();
-            logger.fine(() -> msg("rsp-bdy:sent"));
+            if (bufferedOut != null) bufferedOut.flush();
         }
 
         @Override
