@@ -263,8 +263,15 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
      * underlying stream.
      */
     private final OutputStream headeredOut = new OutputStream() {
+        private boolean closed = false;
+
+        private void check() throws IOException {
+            if (closed) throw new IOException("closed");
+        }
+
         @Override
         public void write(byte[] b, int off, int len) throws IOException {
+            check();
             ensureResponseHeader();
             bufferedOut.write(b, off, len);
             logger.finer(() -> msg("rsp-bdy:%d", len));
@@ -272,6 +279,7 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
 
         @Override
         public void write(int b) throws IOException {
+            check();
             ensureResponseHeader();
             bufferedOut.write(b);
             logger.finer(() -> msg("rsp-bdy:1 (single)"));
@@ -279,11 +287,14 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
 
         @Override
         public void close() throws IOException {
+            if (closed) return;
+            closed = true;
             if (bufferedOut != null) bufferedOut.flush();
         }
 
         @Override
         public void flush() throws IOException {
+            check();
             ensureResponseHeader();
             bufferedOut.flush();
         }
