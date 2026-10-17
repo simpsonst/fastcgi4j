@@ -53,8 +53,8 @@ public interface EngineFactory {
      * 
      * @param config the required configuration
      * 
-     * @return a supplier of the engine if it can be created, given a
-     * supplier of connections; or {@code null} otherwise
+     * @return an engine supply if this factory's engines can be for the
+     * given configuration; or {@code null} otherwise
      */
     Function<? super Transport, ? extends Engine>
         test(EngineConfiguration config);

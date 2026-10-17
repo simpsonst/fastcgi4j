@@ -153,20 +153,23 @@ public class FastCGIApplication {
      * <dt><kbd>+c</kbd> (to reset)
      * 
      * <dd>Limit the number of concurrent transport connections. The
-     * equivalent property is <samp>uk.ac.lancs.fastcgi.nconn</samp>.
+     * equivalent property is <samp>{@value "%s" #NCONN_PROP}</samp>,
+     * and it maps to {@link Attribute#MAX_CONN}.
      * 
      * <dt><kbd>-s <var>num</var></kbd>
      * <dt><kbd>+s</kbd> (to reset)
      * 
      * <dd>Limit the number of concurrent sessions. The equivalent
-     * property is <samp>uk.ac.lancs.fastcgi.nsess</samp>.
+     * property is <samp>{@value "%s" #NSESS_PROP}</samp>, and it maps
+     * to {@link Attribute#MAX_SESS}.
      * 
      * <dt><kbd>-p <var>num</var></kbd>
      * <dt><kbd>+p</kbd> (to reset)
      * 
      * <dd>Limit the number of concurrent sessions per transport
-     * connection. The equivalent property is
-     * <samp>uk.ac.lancs.fastcgi.nspc</samp>.
+     * connection. The equivalent property is <samp>{@value "%s"
+     * #NSPC_PROP}</samp>, and it maps to
+     * {@link Attribute#MAX_SESS_PER_CONN}.
      * 
      * <dt><kbd>-b <var>cap</var></kbd>
      * <dt><kbd>+b</kbd> (to reset)
@@ -174,7 +177,8 @@ public class FastCGIApplication {
      * <dd>Set the default standard output buffer capacity. This must be
      * an integer followed by an optional scale, one of
      * <samp>kKmMgG</samp>, e.g., <samp>100k</samp>. The equivalent
-     * property is <samp>uk.ac.lancs.fastcgi.buffer</samp>.
+     * property is <samp>{@value "%s" #BUFFER_PROP}</samp>, and it maps
+     * to {@link Attribute#BUFFER_SIZE}.
      * 
      * <dt><kbd>-D<var>name</var>=<var>value</var></kbd>
      * 
@@ -184,14 +188,15 @@ public class FastCGIApplication {
      * <dt><kbd>-U<var>name</var></kbd>
      * 
      * <dd>Remove the configuration property <var>name</var> from the
-     * top of the stack.
+     * top of the stack. Note that this does not prevent the name from
+     * showing through from a lower stack element.
      * 
      * <dt><kbd>--seek</kbd>
      * 
-     * <dd>Do not look for <var>class-name</var>. Instead, seek the
-     * first service of type {@link FastCGIApplication} as per
-     * {@link ServiceLoader}. Abort if more than one service is found,
-     * or no service is found.
+     * <dd>Do not look for <var>class-name</var> (which is then omitted
+     * from the arguments). Instead, seek the first service of type
+     * {@link FastCGIApplication} as per {@link ServiceLoader}. Abort if
+     * more than one service is found, or no service is found.
      * 
      * </dl>
      * 

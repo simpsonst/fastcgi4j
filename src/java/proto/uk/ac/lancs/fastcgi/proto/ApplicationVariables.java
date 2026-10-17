@@ -39,7 +39,29 @@
 package uk.ac.lancs.fastcgi.proto;
 
 /**
- * Identifies names of application variables.
+ * Identifies names of application variables. These are textual
+ * key-value pairs passed from a FastCGI application to the web server
+ * on request, usually shortly after the application starts up, on the
+ * first connection before any requests are sent. They control how the
+ * server will interact with the application, expressing the
+ * application's capabilities. The standard application variables are
+ * used to limit the concurrency load on the application.
+ * 
+ * <p>
+ * Although application variables can be set programmatically, they are
+ * most likely to be set at deployment.
+ * {@link uk.ac.lancs.fastcgi.app.FastCGIApplication#main(String[])}
+ * provides a number of switches that influence standard application
+ * variables.
+ * 
+ * <p>
+ * The purpose of this class is to provide symbolic constants for the
+ * names of standard application variables and tokens that may appear in
+ * their values. These symbols can then be documented, and reference the
+ * relevant section of their specification. Non-standard extensions need
+ * not appear here, nor are they excluded. (For example,
+ * {@link #FIELD_HANDLING} is a non-standard, experimental extension
+ * provided by this library.)
  * 
  * @author simpsons
  * 

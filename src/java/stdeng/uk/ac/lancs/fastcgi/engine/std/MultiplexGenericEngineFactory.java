@@ -61,17 +61,17 @@ import uk.ac.lancs.scc.jardeps.Service;
  * 
  * <p>
  * This implementation reads the attributes {@link Attribute#RESPONDER},
- * {@link Attribute#AUTHORIZER}, {@link Attribute#FILTER},
- * {@link Attribute#MAX_CONN} (must be positive if set),
- * {@link Attribute#MAX_SESS} (positive if set) and
+ * {@link Attribute#AUTHORIZER}, {@link Attribute#FILTER} (the three
+ * standard role types), {@link Attribute#MAX_CONN} (must be positive if
+ * set), {@link Attribute#MAX_SESS} (positive if set) and
  * {@link Attribute#MAX_SESS_PER_CONN} (positive if set). All are
  * optional, except that at least one role must be specified. The
- * attribute {@link Attribute#BUFFER_SIZE} is also read, and is not
+ * attribute {@link Attribute#BUFFER_SIZE} is also read, and is
  * optional.
  * 
  * <p>
- * This implementation also recognizes the following application
- * variables:
+ * This implementation also recognizes the following
+ * {@linkplain ApplicationVariables application variables}:
  * 
  * <ul>
  * 

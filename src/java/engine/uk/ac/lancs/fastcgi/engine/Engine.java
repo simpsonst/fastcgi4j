@@ -158,7 +158,7 @@ public interface Engine {
         }
 
         /**
-         * Include a required attribute of the engine.
+         * Include a required textual attribute of the engine.
          * 
          * @param <V> the attribute value type
          * 
@@ -192,7 +192,7 @@ public interface Engine {
         }
 
         /**
-         * Include a preferred attribute of the engine.
+         * Include a preferred textual attribute of the engine.
          * 
          * @param <V> the attribute value type
          * 
@@ -225,10 +225,10 @@ public interface Engine {
          * Create an engine with the current configuration from the
          * context class loader of the calling thread.
          * 
-         * @return the new engine
+         * @return the new engine supply
          * 
-         * @throws EngineConfigurationException if no engine could be
-         * found with the specified attributes
+         * @throws EngineConfigurationException if no engine supply
+         * could be found with the specified attributes
          * 
          * @throws UnsupportedOperationException if no connection
          * supplier could be found
@@ -240,8 +240,8 @@ public interface Engine {
         }
 
         /**
-         * Create an engine with the current configuration from a given
-         * class loader.
+         * Create an engine supply with the current configuration from a
+         * given class loader.
          * 
          * @param loader the class loader to be used to load
          * provider-configuration files and provider classes for
@@ -249,10 +249,10 @@ public interface Engine {
          * loader (or, failing that, the bootstrap class loader) is to
          * be used
          * 
-         * @return the new engine
+         * @return the new engine supply
          * 
-         * @throws EngineConfigurationException if no engine could be
-         * found with the specified attributes
+         * @throws EngineConfigurationException if no engine supply
+         * could be found with the specified attributes
          * 
          * @throws UnsupportedOperationException if no connection
          * supplier could be found
