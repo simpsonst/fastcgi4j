@@ -40,6 +40,7 @@ package uk.ac.lancs.fastcgi.app;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -201,7 +202,7 @@ public class FastCGIApplication {
      * 
      * @throws Exception if an error occurs, duh
      */
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         class MyConfig implements FastCGIConfiguration {
             Properties props = new Properties(System.getProperties());
 
@@ -238,13 +239,7 @@ public class FastCGIApplication {
                 return builder;
             }
 
-            boolean run()
-                throws InstantiationException,
-                    IllegalAccessException,
-                    InvocationTargetException,
-                    ClassNotFoundException,
-                    NoSuchMethodException,
-                    IOException {
+            boolean run() {
                 /* Process arguments using these defaults. */
                 String className = null;
                 List<String> appArgs = new ArrayList<>();
@@ -266,6 +261,13 @@ public class FastCGIApplication {
                         props = new Properties(props);
                         try (InputStream in = new FileInputStream(f)) {
                             props.load(in);
+                        } catch (FileNotFoundException ex) {
+                            System.err.printf("no such file: %s", f);
+                            return false;
+                        } catch (IOException ex) {
+                            System.err.printf("I/O: %s: %s", ex.getMessage(),
+                                              f);
+                            return false;
                         }
                         continue;
                     }
@@ -357,9 +359,30 @@ public class FastCGIApplication {
                     if (app == null) throw new IllegalArgumentException("no"
                         + " application found");
                 } else {
-                    Class<?> clazz = Class.forName(className);
-                    app = clazz.asSubclass(FastCGIApplication.class)
-                        .getConstructor().newInstance();
+                    try {
+                        Class<?> clazz = Class.forName(className);
+                        app = clazz.asSubclass(FastCGIApplication.class)
+                            .getConstructor().newInstance();
+                    } catch (ClassNotFoundException ex) {
+                        System.err.printf("no such class: %s%n", className);
+                        return false;
+                    } catch (NoSuchMethodException ex) {
+                        System.err.printf("no default constructor: %s%n",
+                                          className);
+                        return false;
+                    } catch (InstantiationException ex) {
+                        System.err.printf("abstract class: %s%n", className);
+                        return false;
+                    } catch (IllegalAccessException ex) {
+                        System.err.printf("no public default constructor: %s%n",
+                                          className);
+                        return false;
+                    } catch (InvocationTargetException ex) {
+                        System.err.printf("constructor failure: %s%n",
+                                          className);
+                        ex.getCause().printStackTrace(System.err);
+                        return false;
+                    }
                 }
                 assert app != null;
                 boolean okay =
@@ -405,8 +428,13 @@ public class FastCGIApplication {
                             } catch (ExecutionException ex) {
                                 try {
                                     throw ex.getCause();
-                                } catch (IOException ex2) {
+                                } catch (Error | RuntimeException ex2) {
                                     throw ex2;
+                                } catch (IOException ex2) {
+                                    System.err
+                                        .printf("processing on a transport failed:%n");
+                                    ex2.printStackTrace(System.err);
+                                    return false;
                                 } catch (Throwable t) {
                                     throw new AssertionError("unreachable", t);
                                 }
