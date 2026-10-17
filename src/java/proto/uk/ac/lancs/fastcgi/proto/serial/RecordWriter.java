@@ -105,10 +105,9 @@ public class RecordWriter {
      * length, reducing by the minimum amount to achieve optimum
      * alignment, and then subtracting the header length. For example, a
      * header length of 8, a maximum payload of 65535, and an alignment
-     * of 8 yields 65528. The user should consider offering multiples of
-     * this amount when doing large transfers with
-     * {@link #writeStdout(int, byte[], int, int)} or
-     * {@link #writeStderr(int, byte[], int, int)}, to avoid padding.
+     * of 8 yields 65528. The user should consider this as a buffer size
+     * when writing using a {@link RecordOutputStream} on this object to
+     * avoid padding.
      * 
      * @return the optimum payload length
      */
@@ -152,6 +151,8 @@ public class RecordWriter {
         checkAlignment(buf.position());
     }
 
+    private final Runnable failureAction;
+
     /**
      * Prepare to write records.
      * 
@@ -161,11 +162,16 @@ public class RecordWriter {
      * pairs
      * 
      * @param tag a tag to include in logging messages
+     * 
+     * @param failureAction an action to perform on failure of the
+     * underlying stream
      */
-    public RecordWriter(OutputStream out, Charset charset, String tag) {
+    public RecordWriter(OutputStream out, Charset charset, String tag,
+                        Runnable failureAction) {
         this.out = out;
         this.charset = charset;
         this.tag = tag;
+        this.failureAction = failureAction;
     }
 
     /**
@@ -326,12 +332,13 @@ public class RecordWriter {
      * 
      * @param values the name-value pairs to be written
      * 
-     * @throws RecordIOException if an I/O error occurred
+     * @throws IOException if an I/O error occurred, having first
+     * invoked the failure action
      * 
      * @see RecordTypes#GET_VALUES_RESULT
      */
     public void writeValues(Map<? extends String, ? extends String> values)
-        throws RecordIOException {
+        throws IOException {
         ByteBuffer buf = getBuffer(8 + MAX_CONTENT_LENGTH);
         buf.clear();
 
@@ -376,7 +383,8 @@ public class RecordWriter {
                 lock.unlock();
             }
         } catch (IOException ex) {
-            throw new RecordIOException("writeValues", ex);
+            failureAction.run();
+            throw ex;
         }
     }
 
@@ -386,11 +394,12 @@ public class RecordWriter {
      * 
      * @param type the unknown record type
      * 
-     * @throws RecordIOException if an I/O error occurred
+     * @throws IOException if an I/O error occurred, having first
+     * invoked the failure action
      * 
      * @see RecordTypes#UNKNOWN_TYPE
      */
-    public void writeUnknownType(int type) throws RecordIOException {
+    public void writeUnknownType(int type) throws IOException {
         ByteBuffer buf = getBuffer(16);
         buf.clear();
 
@@ -410,7 +419,8 @@ public class RecordWriter {
                 lock.unlock();
             }
         } catch (IOException ex) {
-            throw new RecordIOException("writeUnknownType", ex);
+            failureAction.run();
+            throw ex;
         }
     }
 
@@ -425,12 +435,13 @@ public class RecordWriter {
      * @param protoStatus the reason for closing the request; see
      * {@link ProtocolStatuses}
      * 
-     * @throws RecordIOException if an I/O error occurred
+     * @throws IOException if an I/O error occurred, having first
+     * invoked the failure action
      * 
      * @see RecordTypes#END_REQUEST
      */
     public void writeEndRequest(int id, int appStatus, int protoStatus)
-        throws RecordIOException {
+        throws IOException {
         ByteBuffer buf = getBuffer(16);
         buf.clear();
 
@@ -452,7 +463,8 @@ public class RecordWriter {
                 lock.unlock();
             }
         } catch (IOException ex) {
-            throw new RecordIOException("writeEndRequest", ex);
+            failureAction.run();
+            throw ex;
         }
     }
 
@@ -476,10 +488,11 @@ public class RecordWriter {
      * 
      * @return the number of bytes from the array that were written
      * 
-     * @throws RecordIOException if an I/O error occurred
+     * @throws IOException if an I/O error occurred, having first
+     * invoked the failure action
      */
     int writeStream(String label, byte rt, int id, byte[] buf, int off, int len)
-        throws RecordIOException {
+        throws IOException {
         logger.fine(() -> msg("%s(%d, %d)", label, id, len));
         /* We must not send a zero-length message, as this is
          * interpreted as EOF. */
@@ -543,7 +556,8 @@ public class RecordWriter {
                 lock.unlock();
             }
         } catch (IOException ex) {
-            throw new RecordIOException("write" + label + ":" + pos, ex);
+            failureAction.run();
+            throw ex;
         }
         return amount;
     }
@@ -560,9 +574,10 @@ public class RecordWriter {
      * 
      * @param id the request id
      * 
-     * @throws RecordIOException if an I/O error occurred
+     * @throws IOException if an I/O error occurred, having first
+     * invoked the failure action
      */
-    void writeEnd(String label, byte rt, int id) throws RecordIOException {
+    void writeEnd(String label, byte rt, int id) throws IOException {
         logger.fine(() -> msg("%s(%d) end", label, id));
         ByteBuffer bf = getBuffer(8);
         bf.clear();
@@ -579,109 +594,9 @@ public class RecordWriter {
                 lock.unlock();
             }
         } catch (IOException ex) {
-            throw new RecordIOException("write" + label + ":hdr0", ex);
+            failureAction.run();
+            throw ex;
         }
-    }
-
-    /**
-     * Write bytes to the standard output of a request. An
-     * <code>FCGI_STDOUT</code> record is transmitted. If the provided
-     * length is 0, no record is sent. Call {@link #writeStdoutEnd(int)}
-     * to indicate the end of the stream.
-     * 
-     * @param id the request id
-     * 
-     * @param buf the array containing the bytes to be written
-     * 
-     * @param off the index into the array of the first byte to be
-     * written
-     * 
-     * @param len the number of bytes to be written
-     * 
-     * @return the number of bytes written
-     * 
-     * @throws RecordIOException if an I/O error occurred
-     * 
-     * @see RecordTypes#STDOUT
-     * 
-     * @deprecated Create a {@link RecordOutputStream} using
-     * {@link RecordTypes#STDOUT} and a label of <code>"STDOUT"</code>
-     * instead.
-     * 
-     */
-    @Deprecated
-    public int writeStdout(int id, byte[] buf, int off, int len)
-        throws RecordIOException {
-        return writeStream("STDOUT", RecordTypes.STDOUT, id, buf, off, len);
-    }
-
-    /**
-     * Indicate the end of standard output of a request. An empty
-     * <code>FCGI_STDOUT</code> record is transmitted.
-     * 
-     * @param id the request id
-     * 
-     * @throws RecordIOException if an I/O error occurred
-     * 
-     * @see RecordTypes#STDOUT
-     * 
-     * @deprecated Create a {@link RecordOutputStream} using
-     * {@link RecordTypes#STDOUT} and a label of <code>"STDOUT"</code>
-     * instead.
-     */
-    @Deprecated
-    public void writeStdoutEnd(int id) throws RecordIOException {
-        writeEnd("STDOUT", RecordTypes.STDOUT, id);
-    }
-
-    /**
-     * Write bytes to the standard error output of a request. An
-     * <code>FCGI_STDERR</code> record is transmitted. If the provided
-     * length is 0, no record is sent. Call {@link #writeStderrEnd(int)}
-     * to indicate the end of the stream.
-     * 
-     * @param id the request id
-     * 
-     * @param buf the array containing the bytes to be written
-     * 
-     * @param off the index into the array of the first byte to be
-     * written
-     * 
-     * @param len the number of bytes to be written
-     * 
-     * @return the number of bytes written
-     * 
-     * @throws RecordIOException if an I/O error occurred
-     * 
-     * @see RecordTypes#STDERR
-     * 
-     * @deprecated Create a {@link RecordOutputStream} using
-     * {@link RecordTypes#STDERR} and a label of <code>"STDERR"</code>
-     * instead.
-     */
-    @Deprecated
-    public int writeStderr(int id, byte[] buf, int off, int len)
-        throws RecordIOException {
-        return writeStream("STDERR", RecordTypes.STDERR, id, buf, off, len);
-    }
-
-    /**
-     * Indicate the end of standard error output of a request. An empty
-     * <code>FCGI_STDERR</code> record is transmitted.
-     * 
-     * @param id the request id
-     * 
-     * @throws RecordIOException if an I/O error occurred
-     * 
-     * @see RecordTypes#STDERR
-     * 
-     * @deprecated Create a {@link RecordOutputStream} using
-     * {@link RecordTypes#STDERR} and a label of <code>"STDERR"</code>
-     * instead.
-     */
-    @Deprecated
-    public void writeStderrEnd(int id) throws RecordIOException {
-        writeEnd("STDERR", RecordTypes.STDERR, id);
     }
 
     private String msg(String fmt, Object... args) {

@@ -208,7 +208,8 @@ class MultiplexGenericEngine implements Engine {
             this.recordsIn =
                 new RecordReader(conn.input(), charset, this, "conn-" + id);
             this.recordsOut =
-                new RecordWriter(conn.output(), charset, "conn-" + id);
+                new RecordWriter(conn.output(), charset, "conn-" + id,
+                                 this::abortConnection);
             this.optimizedBufferSize =
                 optimizeBufferSize(stdoutBufferSize,
                                    this.recordsOut.optimumPayloadLength(),
@@ -237,6 +238,7 @@ class MultiplexGenericEngine implements Engine {
                     /* There was an error reading to or writing from the
                      * connection. */
                     logger.severe(() -> msg("I/O error: %s", ex.getMessage()));
+                    abortConnection();
                 }
             } finally {
                 logger.fine(() -> msg("closed"));

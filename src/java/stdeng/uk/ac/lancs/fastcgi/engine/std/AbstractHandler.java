@@ -68,7 +68,6 @@ import uk.ac.lancs.fastcgi.SessionResponseException;
 import uk.ac.lancs.fastcgi.proto.ProtocolStatuses;
 import uk.ac.lancs.fastcgi.proto.RecordTypes;
 import uk.ac.lancs.fastcgi.proto.serial.ParamReader;
-import uk.ac.lancs.fastcgi.proto.serial.RecordIOException;
 import uk.ac.lancs.fastcgi.proto.serial.RecordOutputStream;
 import uk.ac.lancs.fastcgi.proto.serial.RecordWriter;
 import uk.ac.lancs.http.ResponseCodes;
@@ -432,14 +431,8 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
      * {@link uk.ac.lancs.fastcgi.role} to implement
      * application-specific behaviour.
      * 
-     * @throws RecordIOException if the invoking thread encounters an
-     * I/O error in accessing the connection. For example, an attempt to
-     * write a record could fail. This will terminate the connection,
-     * and abort other sessions still active.
-     * 
      * @throws IOException if the application encountered an I/O
-     * exception not caused by the underlying connection. The request is
-     * terminated with CGI status
+     * exception. The request is terminated with CGI status
      * {@value ResponseCodes#INTERNAL_SERVER_ERROR} and exit status
      * {@value #APP_STATUS_IO} (or just {@value #APP_STATUS_IO_LATE} if
      * a partial response message was sent by the application), and
@@ -515,6 +508,7 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
         byte pStat = ProtocolStatuses.REQUEST_COMPLETE;
         thread = Thread.currentThread();
         try {
+            boolean recordsFailed = false;
             boolean completed = false;
             try {
                 try {
@@ -524,11 +518,9 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
                     /* Discard any remaining interruptions. */
                     Thread.interrupted();
                 }
-            } catch (RecordIOException ex) {
-                throw ex;
             } catch (IOException ex) {
-                logger.warning(() -> msg("I/O error"));
-                if (statusCode < 0) {
+                logger.log(Level.SEVERE, ex.getCause(), () -> msg("I/O error"));
+                if (statusCode >= 0) {
                     appStatus = APP_STATUS_IO;
                     setStatus(ResponseCodes.INTERNAL_SERVER_ERROR);
                     outHeaders.clear();
@@ -537,8 +529,8 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
                     completed = true;
                 }
             } catch (InterruptedException ex) {
-                logger.warning(() -> msg("interrupt"));
-                if (statusCode < 0) {
+                logger.log(Level.SEVERE, ex.getCause(), () -> msg("interrupt"));
+                if (statusCode >= 0) {
                     appStatus = APP_STATUS_INTERRUPT;
                     setStatus(ResponseCodes.INTERNAL_SERVER_ERROR);
                     outHeaders.clear();
@@ -551,9 +543,9 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
                 pStat = ProtocolStatuses.OVERLOADED;
                 completed = true;
             } catch (SessionResponseException ex) {
-                logger.log(Level.SEVERE, "application exception",
-                           ex.getCause());
-                if (statusCode < 0) {
+                logger.log(Level.SEVERE, ex.getCause(),
+                           () -> msg("application exception"));
+                if (statusCode >= 0) {
                     appStatus = APP_STATUS_ERROR;
                     setStatus(ResponseCodes.INTERNAL_SERVER_ERROR);
                     outHeaders.clear();
@@ -562,8 +554,9 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
                     completed = true;
                 }
             } catch (SessionException ex) {
-                logger.log(Level.SEVERE, "unknown session exception", ex);
-                if (statusCode < 0) {
+                logger.log(Level.SEVERE, ex,
+                           () -> msg("unknown session exception"));
+                if (statusCode >= 0) {
                     appStatus = APP_STATUS_UNKNOWN;
                     setStatus(ResponseCodes.INTERNAL_SERVER_ERROR);
                     outHeaders.clear();
@@ -572,9 +565,9 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
                     completed = true;
                 }
             } catch (RuntimeException | Error ex) {
-                logger.log(Level.SEVERE, "unchecked application error",
-                           ex.getCause());
-                if (statusCode < 0) {
+                logger.log(Level.SEVERE, ex.getCause(),
+                           () -> msg("unchecked application error"));
+                if (statusCode >= 0) {
                     appStatus = APP_STATUS_ERROR;
                     setStatus(ResponseCodes.INTERNAL_SERVER_ERROR);
                     outHeaders.clear();
@@ -587,19 +580,27 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
                     if (!completed) {
                         logger.finer(() -> msg("exit"));
                         ensureResponseHeader();
-                        out.close();
+                        bufferedOut.close();
+                        logger.fine(() -> msg("rsp-bdy:sent"));
                     }
+                } catch (IOException ex) {
+                    logger.log(Level.SEVERE, ex,
+                               () -> msg("I/O error in clean-up"));
+                    appStatus = APP_STATUS_IO_LATE;
                 } finally {
                     if (cleanUp.test(this)) {
-                        /* We removed our session id from the index. We
-                         * need to send the last message for this
-                         * session. */
-                        final var fpStat = pStat;
-                        logger
-                            .fine(() -> msg("rc=%d ps=%s", appStatus,
-                                            ProtocolStatuses.toString(fpStat)));
-                        recordsOut.writeEndRequest(id, appStatus, pStat);
-                        checkLastSession.run();
+                        try {
+                            /* We removed our session id from the index.
+                             * We need to send the last message for this
+                             * session. */
+                            final var fpStat = pStat;
+                            logger.fine(() -> msg("rc=%d ps=%s", appStatus,
+                                                  ProtocolStatuses
+                                                      .toString(fpStat)));
+                            recordsOut.writeEndRequest(id, appStatus, pStat);
+                        } finally {
+                            checkLastSession.run();
+                        }
                     }
                 }
             }
@@ -816,11 +817,21 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
         return true;
     }
 
+    /**
+     * Wrap the record output stream with a buffer, and write out the
+     * response header on it. The last action is to set
+     * {@link #statusCode} negative. If already negative on entry, this
+     * method has already been run successfully, so do nothing.
+     * 
+     * @throws IOException if there's an error in creating the buffered
+     * stream
+     */
     private void ensureResponseHeader() throws IOException {
         /* A negative status code means we've already done this. */
         if (statusCode < 0) return;
 
-        assert bufferedOut == null;
+        if (bufferedOut != null)
+            throw new IOException("buffer already created");
         bufferedOut =
             bufferSize == 0 ? out : new BufferedOutputStream(out, bufferSize);
 
