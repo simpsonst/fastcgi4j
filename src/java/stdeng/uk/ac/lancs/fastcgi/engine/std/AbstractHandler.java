@@ -298,7 +298,17 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
         this.charset = ctxt.charset;
         this.checkLastSession = ctxt.checkLastSession;
         this.out = new RecordOutputStream("STDOUT", RecordTypes.STDOUT, id,
-                                          recordsOut);
+                                          recordsOut) {
+            @Override
+            public void close() throws IOException {
+                super.close();
+                if (responseTrailer == null) return;
+
+                /* Write trailer PARAMS stream immediately after closing
+                 * STDOUT. */
+                writeTrailer();
+            }
+        };
 
         if (ctxt.expectTrailer) {
             /* Create a case-insensitive trailer reader. */
@@ -328,18 +338,9 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
                             ctxt.paramBufs::returnParamBuf,
                             "conn-" + this.connId + "-" + this.id);
         this.bufferSize = ctxt.stdoutBufferSize;
-        var recErr = new RecordOutputStream("STDERR", RecordTypes.STDERR, id,
-                                            recordsOut) {
-            @Override
-            public void close() throws IOException {
-                super.close();
-                if (responseTrailer == null) return;
 
-                /* Write trailer PARAMS stream immediately after closing
-                 * STDOUT. */
-                writeTrailer();
-            }
-        };
+        var recErr = new RecordOutputStream("STDERR", RecordTypes.STDERR, id,
+                                            recordsOut);
         this.err =
             new PrintStream(new BufferedOutputStream(recErr,
                                                      ctxt.stderrBufferSize),
