@@ -82,7 +82,7 @@ import uk.ac.lancs.scc.jardeps.Service;
  * to {@link Attribute#MAX_SESS} if positive.
  * 
  * <li><samp>{@value "%s" ApplicationVariables#MPXS_CONNS}</samp> is set
- * to <samp>1</samp> if {@link Attribute#MAX_SESS_PER_CONN} is 1, or to
+ * to <samp>1</samp> if {@link Attribute#MAX_SESS_PER_CONN} is 0, or to
  * <samp>0</samp> otherwise.
  * 
  * <li><samp>{@value "%s" ApplicationVariables#FIELD_HANDLING}</samp> is

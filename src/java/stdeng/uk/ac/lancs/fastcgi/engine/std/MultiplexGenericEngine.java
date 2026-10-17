@@ -265,9 +265,9 @@ class MultiplexGenericEngine implements Engine {
 
             if (names.contains(ApplicationVariables.MPXS_CONNS)) {
                 if (maxReqsPerConn == 1)
-                    outMap.put(ApplicationVariables.MPXS_CONNS, "1");
-                else
                     outMap.put(ApplicationVariables.MPXS_CONNS, "0");
+                else
+                    outMap.put(ApplicationVariables.MPXS_CONNS, "1");
             }
 
             if (names.contains(ApplicationVariables.FIELD_HANDLING)) {
