@@ -46,6 +46,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -449,7 +450,10 @@ class MultiplexGenericEngine implements Engine {
             if (sess != null) sess.abortRequest();
         }
 
+        private final AtomicBoolean aborted = new AtomicBoolean(false);
+
         private void abortConnection() {
+            if (aborted.getAndSet(true)) return;
             keepGoing = false;
             logger.warning(() -> msg("aborting"));
             sessions.forEach((k, v) -> v
