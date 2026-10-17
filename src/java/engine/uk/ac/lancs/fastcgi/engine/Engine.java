@@ -46,8 +46,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.ServiceLoader;
-import java.util.function.Function;
-import uk.ac.lancs.fastcgi.transport.Transport;
 
 /**
  * Processes FastCGI requests from the server and responses from the
@@ -68,7 +66,7 @@ public interface Engine {
     }
 
     /**
-     * Builds an engine from a set of required attributes.
+     * Builds engine configurations from a set of required attributes.
      */
     public final static class Builder {
         private Builder() {}
@@ -222,26 +220,28 @@ public interface Engine {
         }
 
         /**
-         * Create an engine with the current configuration from the
-         * context class loader of the calling thread.
+         * Create an engine configuration with the current specification
+         * from the context class loader of the calling thread.
          * 
-         * @return the new engine supply
+         * @return the new engine configuration
          * 
-         * @throws EngineConfigurationException if no engine supply
-         * could be found with the specified attributes
+         * @throws EngineConfigurationException if no factory could
+         * configure its engine with the specified attributes
          * 
          * @throws UnsupportedOperationException if no connection
          * supplier could be found
+         * 
+         * @constructor
          */
-        public Function<? super Transport, ? extends Engine> build() {
+        public EngineConfiguration build() {
             ClassLoader ctxtLoader =
                 Thread.currentThread().getContextClassLoader();
             return build(ctxtLoader);
         }
 
         /**
-         * Create an engine supply with the current configuration from a
-         * given class loader.
+         * Create an engine configuration with the current specification
+         * from a given class loader.
          * 
          * @param loader the class loader to be used to load
          * provider-configuration files and provider classes for
@@ -249,17 +249,18 @@ public interface Engine {
          * loader (or, failing that, the bootstrap class loader) is to
          * be used
          * 
-         * @return the new engine supply
+         * @return the new engine configuration
          * 
-         * @throws EngineConfigurationException if no engine supply
-         * could be found with the specified attributes
+         * @throws EngineConfigurationException if no factory could
+         * configure its engine with the specified attributes
          * 
          * @throws UnsupportedOperationException if no connection
          * supplier could be found
+         * 
+         * @constructor
          */
-        public Function<? super Transport, ? extends Engine>
-            build(ClassLoader loader) {
-            class MyConfig implements EngineConfiguration {
+        public EngineConfiguration build(ClassLoader loader) {
+            class MySpec implements EngineSpecification {
                 @Override
                 public <V> V get(Attribute<V> key) {
                     unchecked.remove(key);
@@ -279,21 +280,21 @@ public interface Engine {
                     unchecked.addAll(attrs.keySet());
                 }
             }
-            MyConfig config = new MyConfig();
+            MySpec spec = new MySpec();
 
             for (EngineFactory factory : ServiceLoader.load(EngineFactory.class,
                                                             loader)) {
                 /* See if this factory can meet the required
                  * configuration. */
-                config.reset();
-                var sup = factory.test(config);
+                spec.reset();
+                var sup = factory.test(spec);
                 if (sup == null) continue;
-                if (!config.unchecked.isEmpty()) continue;
+                if (!spec.unchecked.isEmpty()) continue;
 
                 return sup;
             }
 
-            throw new EngineConfigurationException(config);
+            throw new EngineConfigurationException(spec);
         }
     }
 

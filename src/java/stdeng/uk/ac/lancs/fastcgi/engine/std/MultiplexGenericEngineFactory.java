@@ -40,18 +40,16 @@ package uk.ac.lancs.fastcgi.engine.std;
 
 import java.nio.charset.Charset;
 import java.util.ServiceLoader;
-import java.util.function.Function;
 import uk.ac.lancs.fastcgi.Authorizer;
 import uk.ac.lancs.fastcgi.Filter;
 import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.engine.Attribute;
-import uk.ac.lancs.fastcgi.engine.Engine;
 import uk.ac.lancs.fastcgi.engine.EngineConfiguration;
 import uk.ac.lancs.fastcgi.engine.EngineFactory;
+import uk.ac.lancs.fastcgi.engine.EngineSpecification;
 import uk.ac.lancs.fastcgi.engine.std.threading.ThreadingManager;
 import uk.ac.lancs.fastcgi.engine.std.threading.ThreadingManagerFactory;
 import uk.ac.lancs.fastcgi.proto.ApplicationVariables;
-import uk.ac.lancs.fastcgi.transport.Transport;
 import uk.ac.lancs.http.ResponseCodes;
 import uk.ac.lancs.scc.jardeps.Service;
 
@@ -143,7 +141,7 @@ import uk.ac.lancs.scc.jardeps.Service;
  */
 @Service(EngineFactory.class)
 public class MultiplexGenericEngineFactory implements EngineFactory {
-    private ThreadingManager getThreading(EngineConfiguration config,
+    private ThreadingManager getThreading(EngineSpecification config,
                                           int maxConn, int maxSessPerConn) {
         for (ThreadingManagerFactory factory : ServiceLoader
             .load(ThreadingManagerFactory.class,
@@ -155,27 +153,26 @@ public class MultiplexGenericEngineFactory implements EngineFactory {
     }
 
     @Override
-    public Function<? super Transport, ? extends Engine>
-        test(EngineConfiguration config) {
+    public EngineConfiguration test(EngineSpecification spec) {
         /* Identify the roles. */
-        Responder responder = config.get(Attribute.RESPONDER);
-        Authorizer authorizer = config.get(Attribute.AUTHORIZER);
-        Filter filter = config.get(Attribute.FILTER);
+        Responder responder = spec.get(Attribute.RESPONDER);
+        Authorizer authorizer = spec.get(Attribute.AUTHORIZER);
+        Filter filter = spec.get(Attribute.FILTER);
         if (responder == null && authorizer == null && filter == null)
             return null;
 
         /* Get and validate performance parameters. */
-        Integer maxConn = config.get(Attribute.MAX_CONN);
-        Integer maxSess = config.get(Attribute.MAX_SESS);
-        Integer maxSessPerConn = config.get(Attribute.MAX_SESS_PER_CONN);
+        Integer maxConn = spec.get(Attribute.MAX_CONN);
+        Integer maxSess = spec.get(Attribute.MAX_SESS);
+        Integer maxSessPerConn = spec.get(Attribute.MAX_SESS_PER_CONN);
         if (maxConn != null && maxConn < 1) return null;
         if (maxSess != null && maxSess < 1) return null;
         if (maxSessPerConn != null && maxSessPerConn < 1) return null;
-        int outBufSize = config.getPreferred(Attribute.BUFFER_SIZE);
+        int outBufSize = spec.getPreferred(Attribute.BUFFER_SIZE);
         if (outBufSize < 0) return null;
 
         final ThreadingManager threading =
-            getThreading(config, maxConn == null ? 0 : maxConn,
+            getThreading(spec, maxConn == null ? 0 : maxConn,
                          maxSessPerConn == null ? 0 : maxSessPerConn);
 
         /* Create the factory for creating the engine from a connection

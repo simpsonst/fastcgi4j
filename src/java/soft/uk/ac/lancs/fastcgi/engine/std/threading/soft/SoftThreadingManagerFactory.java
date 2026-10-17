@@ -39,10 +39,10 @@
 package uk.ac.lancs.fastcgi.engine.std.threading.soft;
 
 import uk.ac.lancs.fastcgi.engine.Attribute;
-import uk.ac.lancs.fastcgi.engine.EngineConfiguration;
 import uk.ac.lancs.fastcgi.engine.std.threading.ThreadingManager;
 import uk.ac.lancs.fastcgi.engine.std.threading.ThreadingManagerFactory;
 import uk.ac.lancs.scc.jardeps.Service;
+import uk.ac.lancs.fastcgi.engine.EngineSpecification;
 
 /**
  * Allows the use of soft threads. Soft threads are also known as
@@ -59,7 +59,7 @@ import uk.ac.lancs.scc.jardeps.Service;
 @Service(ThreadingManagerFactory.class)
 public class SoftThreadingManagerFactory implements ThreadingManagerFactory {
     @Override
-    public ThreadingManager getManager(EngineConfiguration config) {
+    public ThreadingManager getManager(EngineSpecification config) {
         Integer maxConnObj = config.get(Attribute.MAX_CONN);
         Integer maxSessPerConnObj = config.get(Attribute.MAX_SESS_PER_CONN);
         Boolean allSess = config.get(Attribute.SOFT_SESS_THREAD);

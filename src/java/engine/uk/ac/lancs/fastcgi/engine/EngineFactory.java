@@ -38,24 +38,21 @@
 
 package uk.ac.lancs.fastcgi.engine;
 
-import java.util.function.Function;
-import uk.ac.lancs.fastcgi.transport.Transport;
-
 /**
- * Creates engines from configuration.
+ * Creates engine configurations for given specifications.
  * 
  * @author simpsons
  */
+@FunctionalInterface
 public interface EngineFactory {
     /**
-     * Test whether an engine with the given configuration can be
-     * created by this factory.
+     * Test whether engines with the given configuration can be created
+     * by this factory.
      * 
-     * @param config the required configuration
+     * @param spec the engine specification
      * 
-     * @return an engine supply if this factory's engines can be for the
-     * given configuration; or {@code null} otherwise
+     * @return an engine configuration meeting the specification if
+     * possible; or {@code null} otherwise
      */
-    Function<? super Transport, ? extends Engine>
-        test(EngineConfiguration config);
+    EngineConfiguration test(EngineSpecification spec);
 }

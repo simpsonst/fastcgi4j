@@ -64,6 +64,7 @@ import uk.ac.lancs.fastcgi.Filter;
 import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.engine.Attribute;
 import uk.ac.lancs.fastcgi.engine.Engine;
+import uk.ac.lancs.fastcgi.engine.EngineConfiguration;
 import uk.ac.lancs.fastcgi.engine.EngineConfigurationException;
 import uk.ac.lancs.fastcgi.transport.Transport;
 import uk.ac.lancs.scc.jardeps.Application;
@@ -418,8 +419,7 @@ public class FastCGIApplication {
                     .tryingProperty(Attribute.BUFFER_SIZE, BUFFER_PROP);
 
                 /* Build the engine and start it. */
-                Function<? super Transport, ? extends Engine> engineMaker =
-                    builder.build();
+                EngineConfiguration engineMaker = builder.build();
                 final List<Future<Void>> results;
                 try (ExecutorService exec =
                     Executors.newVirtualThreadPerTaskExecutor()) {
@@ -465,15 +465,13 @@ public class FastCGIApplication {
     }
 
     private static Function<Transport, Callable<Void>>
-        mapToEngineExhaust(Function<? super Transport,
-                                    ? extends Engine> maker) {
-        return t -> exhaustEngine(maker, t);
+        mapToEngineExhaust(EngineConfiguration config) {
+        return t -> exhaustEngine(config, t);
     }
 
-    private static Callable<Void>
-        exhaustEngine(Function<? super Transport, ? extends Engine> maker,
-                      Transport t) {
-        Engine engine = maker.apply(t);
+    private static Callable<Void> exhaustEngine(EngineConfiguration config,
+                                                Transport t) {
+        Engine engine = config.install(t);
         return () -> {
             while (engine.process())
                 ;

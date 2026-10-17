@@ -69,7 +69,7 @@
  *     .with(Attribute.MAX_CONN, 10)
  *     .with(Attribute.RESPONDER, myResponder)
  *     .build()
- *     .apply(transport);
+ *     .install(transport);
  * while (engine.process())
  *   ;
  * </pre>

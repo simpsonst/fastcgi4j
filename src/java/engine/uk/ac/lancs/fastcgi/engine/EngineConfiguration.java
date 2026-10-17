@@ -1,7 +1,7 @@
 // -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
 
 /*
- * Copyright (c) 2022,2023,2026, Lancaster University
+ * Copyright (c) 2026, Lancaster University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,39 +33,26 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *
- *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
+ *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
 package uk.ac.lancs.fastcgi.engine;
 
+import uk.ac.lancs.fastcgi.transport.Transport;
+
 /**
- * Provides configuration to a factory.
- * 
+ * Creates engines per transports.
+ *
  * @author simpsons
  */
+@FunctionalInterface
 public interface EngineConfiguration {
     /**
-     * Get an attribute required of the engine. Calling this method
-     * indicates that the factory understands the attribute, and meets
-     * it if it later responds positively.
+     * Create an engine to handle connections on a given transport.
      * 
-     * @param <V> the attribute value type
+     * @param transport the transport
      * 
-     * @param key the attribute key
-     * 
-     * @return the attribute value; or {@code null} if not present
+     * @return the engine to use the transport
      */
-    <V> V get(Attribute<V> key);
-
-    /**
-     * Get a preferred attribute of the engine.
-     * 
-     * @param <V> the attribute value type
-     * 
-     * @param key the attribute key
-     * 
-     * @return the preferred attribute value; or the required value if
-     * no preference; or {@code null} if not present
-     */
-    <V> V getPreferred(Attribute<V> key);
+    Engine install(Transport transport);
 }

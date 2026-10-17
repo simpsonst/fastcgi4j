@@ -48,14 +48,14 @@ public class EngineConfigurationException extends RuntimeException {
     /**
      * The configuration that could not be met
      */
-    public final EngineConfiguration config;
+    public final EngineSpecification config;
 
     /**
      * Create an exception.
      * 
      * @param config the configuration that could not be met
      */
-    public EngineConfigurationException(EngineConfiguration config) {
+    public EngineConfigurationException(EngineSpecification config) {
         this.config = config;
     }
 
@@ -66,7 +66,7 @@ public class EngineConfigurationException extends RuntimeException {
      * 
      * @param message the detail message
      */
-    public EngineConfigurationException(EngineConfiguration config,
+    public EngineConfigurationException(EngineSpecification config,
                                         String message) {
         super(message);
         this.config = config;
@@ -81,7 +81,7 @@ public class EngineConfigurationException extends RuntimeException {
      * 
      * @param cause the cause of the exception
      */
-    public EngineConfigurationException(EngineConfiguration config,
+    public EngineConfigurationException(EngineSpecification config,
                                         String message, Throwable cause) {
         super(message, cause);
         this.config = config;
@@ -94,7 +94,7 @@ public class EngineConfigurationException extends RuntimeException {
      * 
      * @param cause the cause of the exception
      */
-    public EngineConfigurationException(EngineConfiguration config,
+    public EngineConfigurationException(EngineSpecification config,
                                         Throwable cause) {
         super(cause);
         this.config = config;
@@ -117,7 +117,7 @@ public class EngineConfigurationException extends RuntimeException {
      * @param writableStackTrace whether or not the stack trace should
      * be writable
      */
-    protected EngineConfigurationException(EngineConfiguration config,
+    protected EngineConfigurationException(EngineSpecification config,
                                            String message, Throwable cause,
                                            boolean enableSuppression,
                                            boolean writableStackTrace) {

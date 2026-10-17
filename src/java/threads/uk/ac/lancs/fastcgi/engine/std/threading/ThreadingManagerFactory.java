@@ -39,7 +39,7 @@
 package uk.ac.lancs.fastcgi.engine.std.threading;
 
 import uk.ac.lancs.fastcgi.engine.Attribute;
-import uk.ac.lancs.fastcgi.engine.EngineConfiguration;
+import uk.ac.lancs.fastcgi.engine.EngineSpecification;
 
 /**
  * Provides threading managers according to configuration.
@@ -57,5 +57,5 @@ public interface ThreadingManagerFactory {
      * @return the requested threading manager; or {@code null} if the
      * configuration is not recognized
      */
-    ThreadingManager getManager(EngineConfiguration config);
+    ThreadingManager getManager(EngineSpecification config);
 }

@@ -47,6 +47,7 @@ import java.util.stream.Collectors;
 import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.engine.Attribute;
 import uk.ac.lancs.fastcgi.engine.Engine;
+import uk.ac.lancs.fastcgi.engine.EngineConfiguration;
 import uk.ac.lancs.fastcgi.transport.Transport;
 import uk.ac.lancs.scc.jardeps.Application;
 
@@ -76,15 +77,13 @@ public class MD5SumApp {
     }
 
     private static Function<Transport, Callable<Void>>
-        mapToEngineExhaust(Function<? super Transport,
-                                    ? extends Engine> maker) {
-        return t -> exhaustEngine(maker, t);
+        mapToEngineExhaust(EngineConfiguration config) {
+        return t -> exhaustEngine(config, t);
     }
 
-    private static Callable<Void>
-        exhaustEngine(Function<? super Transport, ? extends Engine> maker,
-                      Transport t) {
-        Engine engine = maker.apply(t);
+    private static Callable<Void> exhaustEngine(EngineConfiguration config,
+                                                Transport t) {
+        Engine engine = config.install(t);
         return () -> {
             while (engine.process())
                 ;
