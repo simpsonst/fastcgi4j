@@ -46,6 +46,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -155,14 +157,32 @@ class MultiplexGenericEngine implements Engine {
         this.connExecutor = threading.newConnectionExecutor(conntg);
     }
 
-    private final Executor connExecutor;
+    private final ExecutorService connExecutor;
 
     private final BufferPool paramBufs = new BufferPool();
 
+    /**
+     * {@inheritDoc}
+     * 
+     * @implNote This call attempts to get a new connection from the
+     * transport. On success, it submits a task to an executor to
+     * process that connection to exhaustion. On failure, that executor
+     * is shutdown, and then tits termination is awaited for several
+     * minutes. On success, {@code false} is returned to signal that
+     * there is no further processing. If a timeout occurs, {@code true}
+     * is returned, which will usually cause the caller to immediately
+     * call again.
+     */
     @Override
-    public boolean process() throws IOException {
+    public boolean process() throws IOException, InterruptedException {
         Connection conn = connections.nextConnection();
-        if (conn == null) return false;
+        if (conn == null) {
+            connExecutor.shutdown();
+            if (connExecutor.awaitTermination(10, TimeUnit.MINUTES))
+                return false;
+            logger.info(() -> msg("termination pending"));
+            return true;
+        }
         ConnHandler ch = new ConnHandler(conn);
         connExecutor.execute(ch);
         return true;
