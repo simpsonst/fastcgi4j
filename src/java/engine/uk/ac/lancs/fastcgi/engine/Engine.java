@@ -299,12 +299,16 @@ public interface Engine {
     }
 
     /**
-     * Perform some unit of processing.
+     * Perform some unit of processing. This call may block, while
+     * awaiting either a new transport, or termination of processing of
+     * existing transports.
      * 
      * @return {@code true} if more processing is expected;
      * {@code false} if the application should terminate
      * 
      * @throws IOException if an I/O error occurs
+     * 
+     * @throws InterruptedException if interrupted
      */
-    boolean process() throws IOException;
+    boolean process() throws IOException, InterruptedException;
 }
