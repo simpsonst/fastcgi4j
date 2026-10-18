@@ -41,7 +41,7 @@ package uk.ac.lancs.fastcgi.engine;
 import uk.ac.lancs.fastcgi.transport.Transport;
 
 /**
- * Creates engines per transports.
+ * Creates engines per transport.
  *
  * @author simpsons
  */

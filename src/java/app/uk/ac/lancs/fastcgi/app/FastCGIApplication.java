@@ -406,7 +406,7 @@ public class FastCGIApplication {
 
                 /* Prepare to receive connections, and build the
                  * engine. */
-                Collection<? extends Transport> conns = Transport.get();
+                Collection<? extends Transport> transports = Transport.get();
                 var builder = Engine.start();
 
                 /* Indicate which roles the application supports. */
@@ -419,12 +419,12 @@ public class FastCGIApplication {
                     .withProperty(Attribute.MAX_SESS_PER_CONN, NSPC_PROP)
                     .tryingProperty(Attribute.BUFFER_SIZE, BUFFER_PROP);
 
-                /* Build the engine and start it. */
+                /* Build an engine for each transport and start it. */
                 EngineConfiguration engineMaker = builder.build();
                 final List<Future<Void>> results;
                 try (ExecutorService exec =
                     Executors.newVirtualThreadPerTaskExecutor()) {
-                    results = exec.invokeAll(conns.stream()
+                    results = exec.invokeAll(transports.stream()
                         .map(mapToEngineExhaust(engineMaker))
                         .collect(Collectors.toList()));
                     try {
