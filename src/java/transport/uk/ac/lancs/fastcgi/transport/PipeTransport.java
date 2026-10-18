@@ -1,7 +1,7 @@
 // -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
 
 /*
- * Copyright (c) 2022,2023,2026, Lancaster University
+ * Copyright (c) 2026, Lancaster University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,41 +33,30 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *
- *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
+ *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.transport.iis;
+package uk.ac.lancs.fastcgi.transport;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.Logger;
-import uk.ac.lancs.fastcgi.transport.Connection;
-import uk.ac.lancs.fastcgi.transport.Transport;
 
 /**
- * Supplies a single connection over a named pipe. Attempts to obtain a
- * second connection will block indefinitely.
- * 
+ * Supplies a single connection over a named pipe. The pipe is accessed
+ * using {@link RandomAccessFile}. To form the connection, an input
+ * stream is wrapped around its methods {@link RandomAccessFile#read()},
+ * {@link RandomAccessFile#read(byte[], int, int)} and
+ * {@link RandomAccessFile#skipBytes(int)}, and an output stream is
+ * wrapped around {@link RandomAccessFile#write(int)} and
+ * {@link RandomAccessFile#write(byte[], int, int)}.
+ *
  * @author simpsons
  */
-class ForkedIISTransport implements Transport {
-    private static final String DESCR = "iis";
-
-    /**
-     * Create a transport over a named pipe. Only one connection will be
-     * provided. Its description will be <code>{@value #DESCR}</code>.
-     * 
-     * @param file the named pipe
-     * 
-     * @param intDescr the sensitive description of the connection, such
-     * as the name of the pipe
-     */
-    public ForkedIISTransport(RandomAccessFile file, String intDescr) {
+public class PipeTransport extends SingletonTransport {
+    private static Connection makeConnection(RandomAccessFile file,
+                                             String descr, String intDescr) {
         final InputStream in = new InputStream() {
             @Override
             public int read() throws IOException {
@@ -97,7 +86,7 @@ class ForkedIISTransport implements Transport {
             }
         };
 
-        primary = new Connection() {
+        return new Connection() {
             @Override
             public InputStream input() throws IOException {
                 return in;
@@ -115,7 +104,7 @@ class ForkedIISTransport implements Transport {
 
             @Override
             public String description() {
-                return DESCR;
+                return descr;
             }
 
             @Override
@@ -125,58 +114,18 @@ class ForkedIISTransport implements Transport {
         };
     }
 
-    private Connection primary;
-
-    private boolean more = true;
-
-    private final Lock lock = new ReentrantLock();
-
-    private final Condition ready = lock.newCondition();
-
     /**
-     * Stop blocking on subsequent requests for the next connection.
-     */
-    public void terminate() {
-        try {
-            lock.lock();
-            more = false;
-            ready.signalAll();
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    /**
-     * {@inheritDoc}
+     * Create a transport over a named pipe. Only one connection will be
+     * provided.
      * 
-     * @implNote On the first call, the sole connection is returned. A
-     * subsequent call will block until {@link #terminate() } is called.
+     * @param file the named pipe
+     * 
+     * @param descr the connection description
+     * 
+     * @param intDescr the sensitive description of the connection, such
+     * as the name of the pipe
      */
-    @Override
-    public Connection nextConnection() throws IOException {
-        if (primary != null) {
-            Connection result = primary;
-            primary = null;
-            logger
-                .info(() -> String.format("accepted sole connection as %s (%s)",
-                                          result.description(),
-                                          result.internalDescription()));
-            return result;
-        }
-
-        logger.warning("awaiting indefinitely");
-        try {
-            lock.lock();
-            while (more)
-                ready.await();
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-        } finally {
-            lock.unlock();
-        }
-        return null;
+    public PipeTransport(RandomAccessFile file, String descr, String intDescr) {
+        super(makeConnection(file, descr, intDescr));
     }
-
-    private static final Logger logger =
-        Logger.getLogger(ForkedIISTransport.class.getPackageName());
 }
