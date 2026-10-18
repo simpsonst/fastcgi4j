@@ -311,4 +311,16 @@ public interface Engine {
      * @throws InterruptedException if interrupted
      */
     boolean process() throws IOException, InterruptedException;
+
+    /**
+     * Process continuously until no more processing is expected.
+     * 
+     * @throws IOException if an I/O error occurs
+     * 
+     * @throws InterruptedException if interrupted
+     */
+    default void processAll() throws IOException, InterruptedException {
+        while (process())
+            ;
+    }
 }

@@ -474,8 +474,7 @@ public class FastCGIApplication {
                                                 Transport t) {
         Engine engine = config.install(t);
         return () -> {
-            while (engine.process())
-                ;
+            engine.processAll();
             return null;
         };
     }
