@@ -42,6 +42,7 @@ import java.io.FileNotFoundException;
 import java.io.RandomAccessFile;
 import java.util.Collection;
 import java.util.Collections;
+import uk.ac.lancs.fastcgi.transport.PipeTransport;
 import uk.ac.lancs.fastcgi.transport.Transport;
 import uk.ac.lancs.fastcgi.transport.TransportConfigurationException;
 import uk.ac.lancs.fastcgi.transport.TransportFactory;
@@ -49,7 +50,9 @@ import uk.ac.lancs.scc.jardeps.Service;
 
 /**
  * Recognizes invocation by IIS as a FastCGI process, if the environment
- * variable <samp>{@value "%s" #ENV_NAME}</samp> is set.
+ * variable <samp>{@value "%s" #ENV_NAME}</samp> is set. The named pipe
+ * is opened as a {@link RandomAccessFile}, and a {@link PipeTransport}
+ * is created from it, which will yield only one connection.
  * 
  * @author simpsons
  */
@@ -62,7 +65,7 @@ public class ForkedIISTransportFactory implements TransportFactory {
         try {
             RandomAccessFile file = new RandomAccessFile(pipeName, "rw");
             return Collections
-                .singleton(new ForkedIISTransport(file, pipeName));
+                .singleton(new PipeTransport(file, DESCR, pipeName));
         } catch (FileNotFoundException ex) {
             throw new TransportConfigurationException(pipeName, ex);
         }
@@ -73,4 +76,6 @@ public class ForkedIISTransportFactory implements TransportFactory {
      * requests and responses are carried.
      */
     public static final String ENV_NAME = "_FCGI_X_PIPE_";
+
+    private static final String DESCR = "iis";
 }
