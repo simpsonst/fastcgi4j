@@ -46,13 +46,19 @@
  * interleaved requests.
  * 
  * <p>
- * <strong>This package is completely untested!</strong>
+ * <strong>This package is completely untested!</strong> It's possibly
+ * also redundant, as the link to <cite>Configuring the FastCGI
+ * Extension for IIS 6.0 | Microsoft Docs</cite> is dead:
+ * 
+ * <pre style="white-space: pre-wrap">
+ * &lt;https://docs.microsoft.com/<span class=
+"wbr"><!-- --></span>en-us/<span class=
+"wbr"><!-- --></span>iis/<span class=
+"wbr"><!-- --></span>application-frameworks/<span class=
+"wbr"><!-- --></span>install-and-configure-php-on-iis/<span class=
+"wbr"><!-- --></span>configuring-the-fastcgi-extension-for-iis-60#FastCGI_Extension_1.5&gt;
+ * </pre>
  * 
  * @author simpsons
- * 
- * @see <a href=
- * "https://docs.microsoft.com/en-us/iis/application-frameworks/install-and-configure-php-on-iis/configuring-the-fastcgi-extension-for-iis-60#FastCGI_Extension_1.5"
- * title="Configuring the FastCGI Extension for IIS 6.0 | Microsoft Docs">IIS
- * FastCGI Extension</a>
  */
 package uk.ac.lancs.fastcgi.transport.iis;
