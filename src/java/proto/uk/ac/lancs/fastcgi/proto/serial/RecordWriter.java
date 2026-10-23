@@ -416,6 +416,111 @@ public class RecordWriter {
     }
 
     /**
+     * Write a string in FastCGI format to a stream. After conversion to
+     * bytes according to the character encoding, each string is
+     * preceded by its length in bytes, which is either a single byte up
+     * to 127, or 4 bytes, big-ending, with the top bit of the first
+     * byte set so that it doesn't look like a 1-byte length.
+     * 
+     * <p>
+     * This method writes the length out inefficiently as single bytes.
+     * It is recommended to provide a
+     * {@link java.io.BufferedOutputStream} as the first argument to
+     * help coalesce individual writes into block writes.
+     * 
+     * @param out the destination stream
+     * 
+     * @param text the text to be transmitted
+     * 
+     * @param charset the encoding to be used
+     * 
+     * @throws IOException if an I/O error occurs in writing the encoded
+     * string
+     * 
+     * @throws NullPointerException if the text is {@code null}
+     */
+    public static void write(OutputStream out, String text, Charset charset)
+        throws IOException {
+        write(out, text.getBytes(charset));
+    }
+
+    /**
+     * Write a byte array as a FastCGI byte array to a stream. Each
+     * array is preceded by its length, which is either a single byte up
+     * to 127, or 4 bytes, big-ending, with the top bit of the first
+     * byte set so that it doesn't look like a 1-byte length.
+     * 
+     * <p>
+     * This method writes the length out inefficiently as single bytes.
+     * It is recommended to provide a
+     * {@link java.io.BufferedOutputStream} as the first argument to
+     * help coalesce individual writes into block writes.
+     * 
+     * @param out the destination stream
+     * 
+     * @param b the array containing the bytes to be transmitted
+     * 
+     * @throws IOException if an I/O error occurs in writing the encoded
+     * array
+     * 
+     * @throws NullPointerException if the byte array is {@code null}
+     */
+    public static void write(OutputStream out, byte[] b) throws IOException {
+        writeInternal(out, b, 0, b.length);
+    }
+
+    /**
+     * Write part of a byte array as a FastCGI byte array to a stream.
+     * Each FastCGI array is preceded by its length, which is either a
+     * single byte up to 127, or 4 bytes, big-ending, with the top bit
+     * of the first byte set so that it doesn't look like a 1-byte
+     * length.
+     * 
+     * <p>
+     * This method writes the length out inefficiently as single bytes.
+     * It is recommended to provide a
+     * {@link java.io.BufferedOutputStream} as the first argument to
+     * help coalesce individual writes into block writes.
+     * 
+     * @param out the destination stream
+     * 
+     * @param b the array containing the bytes to be transmitted
+     * 
+     * @param off the index into the array of the first byte to be
+     * transmitted
+     * 
+     * @param len the number of bytes to be transmitted
+     * 
+     * @throws IOException if an I/O error occurs in writing the encoded
+     * array
+     * 
+     * @throws NullPointerException if the byte array is {@code null}
+     * 
+     * @throws IndexOutOfBoundsException if the offset is negative or
+     * greater than the array length; or if the offset plus the buffer
+     * length is greater than the array length
+     */
+    public static void write(OutputStream out, byte[] b, int off, int len)
+        throws IOException {
+        checkBufferRange(b, "b", off, len);
+        writeInternal(out, b, off, len);
+    }
+
+    private static void writeInternal(OutputStream out, byte[] b, int off,
+                                      int len)
+        throws IOException {
+        if (len <= 127) {
+            out.write(len & 0x7f);
+        } else {
+            out.write((len >> 24) | 128);
+            out.write(len >> 16);
+            out.write(len >> 8);
+            out.write(len);
+        }
+        out.write(b, off, len);
+    }
+
+    /**
      * Report that an unknown record type was received. An
      * <code>FCGI_UNKNOWN_TYPE</code> record is transmitted.
      * 

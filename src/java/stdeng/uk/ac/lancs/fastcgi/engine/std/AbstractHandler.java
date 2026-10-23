@@ -44,7 +44,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -367,40 +366,6 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
     }
 
     /**
-     * Write a string in FastCGI format to a stream. Each string is
-     * preceded by a length, which is either a single byte up to 127, or
-     * 4 bytes, big-ending, with the top bit of the first byte set so
-     * that it doesn't look like a 1-byte length. The string itself is
-     * encoded using the context-defined character encoding
-     * {@link HandlerContext#charset}.
-     * 
-     * <p>
-     * This method writes the length out inefficiently as single bytes.
-     * It is recommended to write the provided stream in a
-     * {@link BufferedOutputStream} to help coalesce individual writes
-     * into block writes.
-     * 
-     * @param out the destination stream
-     * 
-     * @param text the text to be transmitted
-     * 
-     * @throws IOException if an I/O error occurs in writing the encoded
-     * string
-     */
-    private void write(OutputStream out, String text) throws IOException {
-        byte[] buf = text.getBytes(StandardCharsets.UTF_8);
-        if (buf.length <= 127) {
-            out.write(buf.length & 0x7f);
-        } else {
-            out.write((buf.length >> 24) | 128);
-            out.write(buf.length >> 16);
-            out.write(buf.length >> 8);
-            out.write(buf.length);
-        }
-        out.write(buf);
-    }
-
-    /**
      * Write out a trailer as a PARAMS stream. A large buffer is used,
      * so even a sizeable trailer will fit in a single record.
      * 
@@ -413,8 +378,8 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
             for (var ent : responseTrailer.entrySet()) {
                 String key = ent.getKey();
                 for (var val : ent.getValue()) {
-                    write(tout, key);
-                    write(tout, val);
+                    RecordWriter.write(tout, key, charset);
+                    RecordWriter.write(tout, val, charset);
                 }
             }
         }
