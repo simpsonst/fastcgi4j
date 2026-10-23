@@ -43,6 +43,7 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
@@ -312,6 +313,32 @@ public class RecordWriter {
         buf.put((byte) 0); // unknown padding length
         buf.put((byte) 0); // reserved
         return new Offsets(lenPos, padPos);
+    }
+
+    /**
+     * Check that the offset and length of a buffer are completely
+     * within an array.
+     * 
+     * @param b the array containing the buffer
+     * 
+     * @param bName a diagnostic name for the buffer parameter
+     * 
+     * @param off the offset into the array of the first byte of the
+     * buffer
+     * 
+     * @param len the number of bytes in the buffer
+     * 
+     * @throws NullPointerException if the byte array is {@code null}
+     * 
+     * @throws IndexOutOfBoundsException if the offset is negative or
+     * greater than the array length; or if the offset plus the buffer
+     * length is greater than the array length
+     */
+    static void checkBufferRange(byte[] b, String bName, int off, int len) {
+        Objects.requireNonNull(b, bName);
+        if (off < 0 || off > b.length) throw new IndexOutOfBoundsException(off);
+        if (off + len > b.length)
+            throw new IndexOutOfBoundsException(off + len);
     }
 
     /**
