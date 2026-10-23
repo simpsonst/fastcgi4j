@@ -326,7 +326,7 @@ public class RecordWriter {
      * won't the server assume they are unrecognized? It could ask again
      * for anything missing, and only stop when an empty result is
      * returned. (Then, the only problem would be if a single variable's
-     * name and value could not fit into a single record) The
+     * name and value could not fit into a single record.) The
      * alternative would be to send multiple records for only one
      * request.
      * 
