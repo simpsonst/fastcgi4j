@@ -40,7 +40,6 @@ package uk.ac.lancs.fastcgi.proto.serial;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Objects;
 import uk.ac.lancs.fastcgi.proto.RecordTypes;
 
 /**
@@ -118,14 +117,6 @@ public class RecordOutputStream extends OutputStream {
         base.writeEnd(label, type, id);
     }
 
-    private static void checkBufferRange(byte[] b, String bName, int off,
-                                         int len) {
-        Objects.requireNonNull(b, bName);
-        if (off < 0 || off > b.length) throw new IndexOutOfBoundsException(off);
-        if (off + len > b.length)
-            throw new IndexOutOfBoundsException(off + len);
-    }
-
     /**
      * Write a portion of an array to the stream. Multiple record types
      * of non-zero length may be sent, using the configured record type
@@ -144,7 +135,7 @@ public class RecordOutputStream extends OutputStream {
     @Override
     public void write(byte[] b, int off, int len) throws IOException {
         if (closed) throw new IOException("closed");
-        checkBufferRange(b, "b", off, len);
+        RecordWriter.checkBufferRange(b, "b", off, len);
 
         /* Repeatedly write some data, and consume whatever was sent.
          * The data might be longer than what can be sent in a single
