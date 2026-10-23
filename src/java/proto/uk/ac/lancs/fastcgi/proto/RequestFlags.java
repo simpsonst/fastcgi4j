@@ -90,13 +90,21 @@ public final class RequestFlags {
      * Specifies whether the standard input is followed by a request
      * trailer. If set, then the application should await a second
      * sequence of {@link RecordTypes#PARAMS} immediately after
-     * completing the {@link RecordTypes#STDIN} sequence.
+     * completing the {@link RecordTypes#STDIN} sequence. The keys of
+     * these parameters are trailer field names, may be
+     * case-insensitive, and do not have to be unique, as is appropriate
+     * for the server protocol.
      * 
      * <p>
      * This flag will not be set unless the application has provided
      * {@link ApplicationVariables#FIELD_HANDLING} with a value that
      * includes the token <samp>{@value "%s"
-     * ApplicationVariables#FIELD_HANDLING_REQUEST_TRAILER}</samp>.
+     * ApplicationVariables#FIELD_HANDLING_REQUEST_TRAILER}</samp>, and
+     * this variable will not even be requested by incapable servers. In
+     * this way, applications that do not understand request trailers
+     * will not receive them, and applications that do will not
+     * anticipate a trailer from a server that is incapable of sending
+     * it.
      * 
      * <p>
      * This is an experimental extension to FastCGI/1.0.
@@ -108,7 +116,20 @@ public final class RequestFlags {
      * after completing standard output. If set, the application may
      * send a {@link RecordTypes#PARAMS} sequence immediately after
      * completing the {@link RecordTypes#STDOUT} sequence but before the
-     * {@link RecordTypes#END_REQUEST} record.
+     * {@link RecordTypes#END_REQUEST} record. The server may use these
+     * as a response trailer, with the keys being trailer field names.
+     * They may be case-insensitive, and do not have to be unique, as is
+     * appropriate for the server protocol. That protocol may impose
+     * additional restrictions, such as requiring a header field to list
+     * names of fields expected in the trailer.
+     * 
+     * <p>
+     * This flag will not be set by a server that does not support
+     * response trailers, so applications capable of sending trailers
+     * can detect at run time whether to make use of a trailer.
+     * Incapable or unwilling applications invoked by a capable server
+     * will simply not recognize this bit, and will send
+     * {@link RecordTypes#END_REQUEST} without a prior trailer.
      * 
      * <p>
      * This is an experimental extension to FastCGI/1.0.
