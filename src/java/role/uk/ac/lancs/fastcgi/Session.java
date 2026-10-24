@@ -93,14 +93,14 @@ public interface Session {
      * it usually does not constitute a functional failure. An exception
      * is thrown if the argument is invalid.
      *
-     * @param amount the buffer size in bytes; 0 to disable buffering
+     * @param size the buffer size in bytes; 0 to disable buffering
      *
      * @return {@code true} if the buffer size was set to the requested
      * value; {@code false} otherwise
      *
      * @throws IllegalArgumentException if the size is negative
      */
-    boolean setBufferSize(int amount);
+    boolean setBufferSize(int size);
 
     /**
      * Set the response status. The default is 200.
