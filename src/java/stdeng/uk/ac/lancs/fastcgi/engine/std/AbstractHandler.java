@@ -66,6 +66,7 @@ import uk.ac.lancs.fastcgi.SessionException;
 import uk.ac.lancs.fastcgi.SessionResponseException;
 import uk.ac.lancs.fastcgi.proto.ProtocolStatuses;
 import uk.ac.lancs.fastcgi.proto.RecordTypes;
+import uk.ac.lancs.fastcgi.proto.RoleTypes;
 import uk.ac.lancs.fastcgi.proto.serial.ParamReader;
 import uk.ac.lancs.fastcgi.proto.serial.RecordOutputStream;
 import uk.ac.lancs.fastcgi.proto.serial.RecordWriter;
@@ -170,6 +171,14 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
      * Holds the response trailer. Set to {@code null} if not available.
      */
     Map<String, List<String>> responseTrailer;
+
+    /**
+     * Indicates whether a second {@link RecordTypes#PARAMS} stream is
+     * expected after {@link RecordTypes#STDIN} has closed. This can
+     * only be set for {@link RoleTypes#RESPONDER} and
+     * {@link RoleTypes#FILTER} role types.
+     */
+    final boolean expectTrailer;
 
     @Override
     public Map<String, List<String>> responseTrailer() {
@@ -328,6 +337,7 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
             }
         };
 
+        this.expectTrailer = ctxt.expectTrailer;
         if (ctxt.expectTrailer) {
             /* Create a case-insensitive trailer reader. */
             this.requestTrailer = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);

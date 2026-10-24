@@ -148,6 +148,11 @@ class ResponderHandler extends AbstractHandler implements ResponderSession {
     }
 
     @Override
+    public boolean requestTrailerExpected() {
+        return expectTrailer;
+    }
+
+    @Override
     public Map<String, List<String>> requestTrailer()
         throws InterruptedException {
         if (!stdinEnded) throw new IllegalStateException("STDIN incomplete");

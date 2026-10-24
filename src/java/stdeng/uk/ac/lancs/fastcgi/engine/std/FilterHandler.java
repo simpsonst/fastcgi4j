@@ -161,6 +161,11 @@ class FilterHandler extends AbstractHandler implements FilterSession {
     }
 
     @Override
+    public boolean requestTrailerExpected() {
+        return expectTrailer;
+    }
+
+    @Override
     public Map<String, List<String>> requestTrailer()
         throws InterruptedException {
         if (!stdinEnded) throw new IllegalStateException("STDIN incomplete");

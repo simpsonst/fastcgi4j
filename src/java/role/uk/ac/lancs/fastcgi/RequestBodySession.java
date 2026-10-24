@@ -49,6 +49,27 @@ import java.io.InputStream;
  */
 public interface RequestBodySession extends Session {
     /**
+     * Determine whether a request trailer is to be expected. This
+     * allows an application to determine whether a claim by the
+     * protocol to provide a trailer (as implied by the HTTP field
+     * {@value "%s" uk.ac.lancs.http.FieldNames#TRAILER}, for example)
+     * is likely to be honoured by the interface, without having to wait
+     * for the complete request body.
+     * 
+     * @return {@code true} if a request trailer is to be expected;
+     * {@code false} otherwise
+     * 
+     * @implNote By default, {@code false} is returned.
+     * 
+     * @see RequestableSession#requestTrailer()
+     * 
+     * @see uk.ac.lancs.fastcgi.augment.HttpResponderSession#requestTrailer()
+     */
+    default boolean requestTrailerExpected() {
+        return false;
+    }
+
+    /**
      * Get the stream for reading the request body.
      * 
      * @return the input stream providing the request body

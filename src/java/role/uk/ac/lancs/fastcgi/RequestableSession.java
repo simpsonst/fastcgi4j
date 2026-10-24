@@ -87,6 +87,8 @@ public interface RequestableSession extends FieldSession, RequestBodySession {
      * trailer to be received
      * 
      * @implNote By default, this method returns an empty map.
+     * 
+     * @see RequestBodySession#requestTrailerExpected()
      */
     default Map<String, List<String>> requestTrailer()
         throws InterruptedException {
