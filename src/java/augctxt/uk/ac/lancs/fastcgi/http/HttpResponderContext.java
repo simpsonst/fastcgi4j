@@ -36,7 +36,7 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.augment;
+package uk.ac.lancs.fastcgi.http;
 
 import java.util.Collections;
 import java.util.Map;

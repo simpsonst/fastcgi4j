@@ -36,7 +36,7 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.augment;
+package uk.ac.lancs.fastcgi.http;
 
 import java.io.FilterOutputStream;
 import java.io.IOException;
@@ -67,7 +67,7 @@ import uk.ac.lancs.fastcgi.Diagnostics;
 import uk.ac.lancs.fastcgi.RequestBodySession;
 import uk.ac.lancs.fastcgi.RequestableSession;
 import uk.ac.lancs.fastcgi.ResponderSession;
-import uk.ac.lancs.fastcgi.ots.OTSControl;
+import uk.ac.lancs.fastcgi.http.ots.OTSControl;
 import uk.ac.lancs.http.FieldNameSets;
 import uk.ac.lancs.http.FieldNames;
 import uk.ac.lancs.http.Negotiation;

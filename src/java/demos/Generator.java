@@ -45,7 +45,7 @@ import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.ResponderSession;
 import uk.ac.lancs.fastcgi.app.FastCGIApplication;
 import uk.ac.lancs.fastcgi.app.FastCGIConfiguration;
-import uk.ac.lancs.fastcgi.augment.FormHandler;
+import uk.ac.lancs.fastcgi.form.FormHandler;
 import uk.ac.lancs.io.DiagnosticInputStream;
 import uk.ac.lancs.io.LimitedInputStream;
 import uk.ac.lancs.mime.MessageParser;

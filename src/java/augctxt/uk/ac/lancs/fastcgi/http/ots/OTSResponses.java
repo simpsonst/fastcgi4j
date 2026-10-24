@@ -36,7 +36,7 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.ots;
+package uk.ac.lancs.fastcgi.http.ots;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;

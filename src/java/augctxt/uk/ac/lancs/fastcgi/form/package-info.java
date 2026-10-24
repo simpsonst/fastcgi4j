@@ -1,7 +1,7 @@
 // -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
 
 /*
- * Copyright (c) 2022,2023,2026, Lancaster University
+ * Copyright (c) 2026, Lancaster University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,8 +37,8 @@
  */
 
 /**
- * Provides a means for creating off-the-shelf responses.
- *
+ * Provides tools for parsing form data in a FastCGI context.
+ * 
  * @author simpsons
  */
-package uk.ac.lancs.fastcgi.ots;
+package uk.ac.lancs.fastcgi.form;

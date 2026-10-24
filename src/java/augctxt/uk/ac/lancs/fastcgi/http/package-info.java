@@ -1,7 +1,7 @@
 // -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
 
 /*
- * Copyright (c) 2022,2023,2026, Lancaster University
+ * Copyright (c) 2026, Lancaster University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,13 +33,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *
- *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
+ *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
 /**
- * Augments the basic session contexts provided to FastCGI role
- * implementations.
+ * Provides augmented session context for HTTP interactions over
+ * FastCGI.
  * 
  * @author simpsons
  */
-package uk.ac.lancs.fastcgi.augment;
+package uk.ac.lancs.fastcgi.http;

@@ -63,7 +63,7 @@ public interface RequestBodySession extends Session {
      * 
      * @see RequestableSession#requestTrailer()
      * 
-     * @see uk.ac.lancs.fastcgi.augment.HttpResponderSession#requestTrailer()
+     * @see uk.ac.lancs.fastcgi.http.HttpResponderSession#requestTrailer()
      */
     default boolean requestTrailerExpected() {
         return false;

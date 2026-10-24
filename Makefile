@@ -230,9 +230,11 @@ DOC_CLASSPATH += $(jars:%=$(JARDEPS_OUTDIR)/%.jar)
 DOC_SRC=$(call jardeps_srcdirs4jars,$(SELECTED_JARS))
 DOC_CORE=fastcgi4j
 DOC_PKGS += uk.ac.lancs.fastcgi
-DOC_PKGS += uk.ac.lancs.fastcgi.ots
-DOC_PKGS += uk.ac.lancs.fastcgi.augment
+DOC_PKGS += uk.ac.lancs.fastcgi.http.ots
+DOC_PKGS += uk.ac.lancs.fastcgi.http
+DOC_PKGS += uk.ac.lancs.fastcgi.filter
 DOC_PKGS += uk.ac.lancs.fastcgi.pattern
+DOC_PKGS += uk.ac.lancs.fastcgi.form
 DOC_PKGS += uk.ac.lancs.io
 DOC_PKGS += uk.ac.lancs.io.infpipe
 DOC_PKGS += uk.ac.lancs.mime

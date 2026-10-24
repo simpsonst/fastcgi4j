@@ -57,9 +57,9 @@ import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.ResponderSession;
 import uk.ac.lancs.fastcgi.SessionException;
 import uk.ac.lancs.fastcgi.SessionResponseException;
-import uk.ac.lancs.fastcgi.augment.HttpResponderContext;
-import uk.ac.lancs.fastcgi.augment.HttpResponderSession;
-import uk.ac.lancs.fastcgi.ots.OTSResponses;
+import uk.ac.lancs.fastcgi.http.HttpResponderContext;
+import uk.ac.lancs.fastcgi.http.HttpResponderSession;
+import uk.ac.lancs.fastcgi.http.ots.OTSResponses;
 import uk.ac.lancs.http.field.FieldExtension;
 import uk.ac.lancs.http.field.FieldId;
 

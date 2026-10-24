@@ -1,3 +1,5 @@
+// -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
+
 /*
  * Copyright (c) 2022,2023,2026, Lancaster University
  * All rights reserved.
@@ -31,67 +33,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *
- *  Author: Steven Simpson <https://github.com/simpsonst>
+ *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
-
-package uk.ac.lancs.fastcgi.ots;
-
-import java.io.IOException;
-import java.io.OutputStream;
-import java.net.URI;
-import uk.ac.lancs.http.FieldNames;
-import uk.ac.lancs.mime.MediaType;
 
 /**
- * Controls aspects of the response.
+ * Provides an augmented context for FastCGI filters.
+ * 
+ * @author simpsons
  */
-public interface OTSControl {
-    /**
-     * Set the status code.
-     *
-     * @param code the new status code
-     */
-    void setStatus(int code);
-
-    /**
-     * Remove the <samp>{@value "%s" FieldNames#CONTENT_TYPE}</samp>
-     * field.
-     */
-    void clearContentType();
-
-    /**
-     * Remove the <samp>{@value "%s" FieldNames#CONTENT_LENGTH}</samp>
-     * field.
-     */
-    void clearContentLength();
-
-    /**
-     * Remove the <samp>{@value "%s" FieldNames#CONTENT_ENCODING}</samp>
-     * field.
-     */
-    void clearContentEncoding();
-
-    /**
-     * Get the output stream.
-     *
-     * @return the output stream
-     *
-     * @throws IOException if an I/O errors in setting up the stream
-     */
-    OutputStream out() throws IOException;
-
-    /**
-     * Set the <samp>{@value "%s" FieldNames#LOCATION}</samp> field.
-     *
-     * @param location the new value for the field
-     */
-    void setLocation(URI location);
-
-    /**
-     * Set the <samp>{@value "%s" FieldNames#CONTENT_TYPE}</samp> field.
-     *
-     * @param type the new content type
-     */
-    void setContentType(MediaType type);
-
-}
+package uk.ac.lancs.fastcgi.filter;
