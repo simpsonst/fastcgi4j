@@ -97,9 +97,9 @@ public final class RequestFlags {
      * 
      * <p>
      * This flag will not be set unless the application has provided
-     * {@link ApplicationVariables#FIELD_HANDLING} with a value that
+     * {@link CapabilityVariables#FIELD_HANDLING} with a value that
      * includes the token <samp>{@value "%s"
-     * ApplicationVariables#FIELD_HANDLING_REQUEST_TRAILER}</samp>, and
+     * CapabilityVariables#FIELD_HANDLING_REQUEST_TRAILER}</samp>, and
      * this variable will not even be requested by incapable servers. In
      * this way, applications that do not understand request trailers
      * will not receive them, and applications that do will not

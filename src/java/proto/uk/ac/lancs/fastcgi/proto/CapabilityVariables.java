@@ -39,24 +39,25 @@
 package uk.ac.lancs.fastcgi.proto;
 
 /**
- * Identifies names of application variables. These are textual
- * key-value pairs passed from a FastCGI application to the web server
- * on request, usually shortly after the application starts up, on the
- * first connection before any requests are sent. They control how the
- * server will interact with the application, expressing the
- * application's capabilities. The standard application variables are
- * used to limit the concurrency load on the application.
+ * Identifies names of capability variables. These are textual key-value
+ * pairs passed from a FastCGI application to the web server on request,
+ * usually shortly after the application starts up, on the first
+ * connection before any requests are sent. They control how the server
+ * will interact with the application, expressing the application's
+ * library capabilities. The standard capability variables are used to
+ * limit the concurrency load on the application.
  * 
  * <p>
- * Although application variables can be set programmatically, they are
- * most likely to be set at deployment.
+ * Capabilities are primarily expressed by the library, not the
+ * application. However, a library may expose run-time controls that
+ * influence its capabilities. For example,
  * {@link uk.ac.lancs.fastcgi.app.FastCGIApplication#main(String[])}
- * provides a number of switches that influence standard application
+ * provides a number of switches that influence standard capability
  * variables.
  * 
  * <p>
  * The purpose of this class is to provide symbolic constants for the
- * names of standard application variables and tokens that may appear in
+ * names of standard capability variables and tokens that may appear in
  * their values. These symbols can then be documented, and reference the
  * relevant section of their specification. Non-standard extensions need
  * not appear here, nor are they excluded. (For example,
@@ -69,8 +70,8 @@ package uk.ac.lancs.fastcgi.proto;
  * FastCGI Specification &mdash; <samp>FCGI_GET_VALUES</samp>,
  * <samp>FCGI_GET_VALUES_RESULT</samp>
  */
-public final class ApplicationVariables {
-    private ApplicationVariables() {}
+public final class CapabilityVariables {
+    private CapabilityVariables() {}
 
     /**
      * Identifies the variable that specifies the maximum number of
