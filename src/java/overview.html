@@ -9,8 +9,11 @@
     If you're concerned merely with application logic of responding to
     requests, you only need to concern yourself with {@link
     uk.ac.lancs.fastcgi}, which defines role types and basic session
-    contexts. {@link uk.ac.lancs.fastcgi.augment} then provides
-    augmented contexts for specific circumstances.
+    contexts.  {@link uk.ac.lancs.fastcgi.http}, {@link
+    uk.ac.lancs.fastcgi.http.ots}, {@link
+    uk.ac.lancs.fastcgi.pattern}, {@link uk.ac.lancs.fastcgi.form} and
+    {@link uk.ac.lancs.fastcgi.filter} then provide augmented contexts
+    for specific circumstances.
   </p>
 
   <p>
@@ -52,11 +55,15 @@
 
   @package service uk.ac.lancs.fastcgi
 
-  @package service uk.ac.lancs.fastcgi.augment
+  @package service uk.ac.lancs.fastcgi.filter
 
   @package service uk.ac.lancs.fastcgi.pattern
 
-  @package service uk.ac.lancs.fastcgi.ots
+  @package service uk.ac.lancs.fastcgi.http.ots
+
+  @package service uk.ac.lancs.fastcgi.http
+
+  @package service uk.ac.lancs.fastcgi.form
 
   @group transport Transports
 

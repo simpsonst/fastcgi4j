@@ -36,64 +36,9 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.ots;
-
-import java.io.IOException;
-import java.io.OutputStream;
-import java.net.URI;
-import uk.ac.lancs.fastcgi.ResponderSession;
-import uk.ac.lancs.http.FieldNames;
-import uk.ac.lancs.mime.MediaType;
-
 /**
- * Adapts a raw responder session to off-the-shelf responses.
- * 
+ * Provides a means for creating off-the-shelf HTTP responses.
+ *
  * @author simpsons
  */
-public class RawResponseControl implements OTSControl {
-    final ResponderSession base;
-
-    /**
-     * Adapt a raw session to off-the-shelf responses.
-     * 
-     * @param base the base session
-     */
-    public RawResponseControl(ResponderSession base) {
-        this.base = base;
-    }
-
-    @Override
-    public void setStatus(int code) {
-        base.setStatus(code);
-    }
-
-    @Override
-    public void clearContentType() {
-        base.clearField(FieldNames.CONTENT_TYPE);
-    }
-
-    @Override
-    public void clearContentLength() {
-        base.clearField(FieldNames.CONTENT_LENGTH);
-    }
-
-    @Override
-    public void clearContentEncoding() {
-        base.clearField(FieldNames.CONTENT_ENCODING);
-    }
-
-    @Override
-    public OutputStream out() throws IOException {
-        return base.out();
-    }
-
-    @Override
-    public void setLocation(URI location) {
-        base.setField(FieldNames.LOCATION, location.toASCIIString());
-    }
-
-    @Override
-    public void setContentType(MediaType type) {
-        base.setField(FieldNames.CONTENT_TYPE, type.toString());
-    }
-}
+package uk.ac.lancs.fastcgi.http.ots;

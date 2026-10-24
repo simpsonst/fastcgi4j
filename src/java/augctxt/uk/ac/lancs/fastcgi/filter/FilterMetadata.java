@@ -36,7 +36,7 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.augment;
+package uk.ac.lancs.fastcgi.filter;
 
 import java.util.Objects;
 import uk.ac.lancs.fastcgi.FilterSession;

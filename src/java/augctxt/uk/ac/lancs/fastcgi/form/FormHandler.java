@@ -36,7 +36,7 @@
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
-package uk.ac.lancs.fastcgi.augment;
+package uk.ac.lancs.fastcgi.form;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
