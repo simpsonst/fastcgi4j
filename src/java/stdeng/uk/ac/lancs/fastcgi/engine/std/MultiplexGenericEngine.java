@@ -58,7 +58,7 @@ import uk.ac.lancs.fastcgi.Filter;
 import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.engine.Engine;
 import uk.ac.lancs.fastcgi.engine.std.threading.ThreadingManager;
-import uk.ac.lancs.fastcgi.proto.ApplicationVariables;
+import uk.ac.lancs.fastcgi.proto.CapabilityVariables;
 import uk.ac.lancs.fastcgi.proto.ProtocolStatuses;
 import uk.ac.lancs.fastcgi.proto.RequestFlags;
 import uk.ac.lancs.fastcgi.proto.RoleTypes;
@@ -273,28 +273,28 @@ class MultiplexGenericEngine implements Engine {
              * a table, and write it out. */
             Map<String, String> outMap = new HashMap<>();
 
-            if (names.contains(ApplicationVariables.MAX_CONNS)) {
-                if (maxConns >= 1) outMap.put(ApplicationVariables.MAX_CONNS,
+            if (names.contains(CapabilityVariables.MAX_CONNS)) {
+                if (maxConns >= 1) outMap.put(CapabilityVariables.MAX_CONNS,
                                               Integer.toString(maxConns));
             }
 
-            if (names.contains(ApplicationVariables.MAX_REQS)) {
-                if (maxReqs >= 1) outMap.put(ApplicationVariables.MAX_REQS,
+            if (names.contains(CapabilityVariables.MAX_REQS)) {
+                if (maxReqs >= 1) outMap.put(CapabilityVariables.MAX_REQS,
                                              Integer.toString(maxReqs));
             }
 
-            if (names.contains(ApplicationVariables.MPXS_CONNS)) {
+            if (names.contains(CapabilityVariables.MPXS_CONNS)) {
                 if (maxReqsPerConn == 1)
-                    outMap.put(ApplicationVariables.MPXS_CONNS, "0");
+                    outMap.put(CapabilityVariables.MPXS_CONNS, "0");
                 else
-                    outMap.put(ApplicationVariables.MPXS_CONNS, "1");
+                    outMap.put(CapabilityVariables.MPXS_CONNS, "1");
             }
 
-            if (names.contains(ApplicationVariables.FIELD_HANDLING)) {
+            if (names.contains(CapabilityVariables.FIELD_HANDLING)) {
                 /* We recognize the flag indicating that a request
                  * trailer will be available. */
-                outMap.put(ApplicationVariables.FIELD_HANDLING,
-                           ApplicationVariables.FIELD_HANDLING_REQUEST_TRAILER);
+                outMap.put(CapabilityVariables.FIELD_HANDLING,
+                           CapabilityVariables.FIELD_HANDLING_REQUEST_TRAILER);
             }
 
             recordsOut.writeValues(outMap);

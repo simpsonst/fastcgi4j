@@ -70,11 +70,11 @@ public interface RequestableSession extends FieldSession, RequestBodySession {
      * 
      * <p>
      * This is an experimental extension to FastCGI/1.0. It will only be
-     * enabled if the server requests an application value
+     * enabled if the server requests a capability value
      * <samp>{@value "%s"
-     * uk.ac.lancs.fastcgi.proto.ApplicationVariables#FIELD_HANDLING}</samp>,
+     * uk.ac.lancs.fastcgi.proto.CapabilityVariables#FIELD_HANDLING}</samp>,
      * and recognizes the token <samp>{@value "%s"
-     * uk.ac.lancs.fastcgi.proto.ApplicationVariables#FIELD_HANDLING_REQUEST_TRAILER}</samp>
+     * uk.ac.lancs.fastcgi.proto.CapabilityVariables#FIELD_HANDLING_REQUEST_TRAILER}</samp>
      * in response.
      * 
      * @return an immutable set of trailer fields

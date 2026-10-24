@@ -233,9 +233,9 @@ public final class Attribute<V> {
      * Indicates how many concurrent connections the application will
      * accept. Unset to handle unlimited connections. An engine will
      * normally send this value to the server as the
-     * {@linkplain uk.ac.lancs.fastcgi.proto.ApplicationVariables
-     * application variable} <samp>{@value "%s"
-     * uk.ac.lancs.fastcgi.proto.ApplicationVariables#MAX_CONNS}</samp>
+     * {@linkplain uk.ac.lancs.fastcgi.proto.CapabilityVariables
+     * capability variable} <samp>{@value "%s"
+     * uk.ac.lancs.fastcgi.proto.CapabilityVariables#MAX_CONNS}</samp>
      * if set, so the server should not open more connections than this.
      */
     public static final Attribute<Integer> MAX_CONN = ofInt().define();
@@ -244,9 +244,9 @@ public final class Attribute<V> {
      * Indicates how many concurrent sessions will be handled per
      * connection. Set to 1 to turn off multiplexing; even an engine
      * capable of concurrent sessions will likely send the
-     * {@linkplain uk.ac.lancs.fastcgi.proto.ApplicationVariables
-     * application variable}
-     * <samp>{@value uk.ac.lancs.fastcgi.proto.ApplicationVariables#MPXS_CONNS}=0</samp>.
+     * {@linkplain uk.ac.lancs.fastcgi.proto.CapabilityVariables
+     * capability variable}
+     * <samp>{@value uk.ac.lancs.fastcgi.proto.CapabilityVariables#MPXS_CONNS}=0</samp>.
      * Unset to handle unlimited sessions. Otherwise, the engine will
      * abort further requests with
      * {@link uk.ac.lancs.fastcgi.proto.ProtocolStatuses#OVERLOADED} if
@@ -257,11 +257,11 @@ public final class Attribute<V> {
     /**
      * Indicates how many concurrent sessions across all connections an
      * application will accept. This value is sent to the server as the
-     * {@linkplain uk.ac.lancs.fastcgi.proto.ApplicationVariables
-     * application variable} <samp>{@value "%s"
-     * uk.ac.lancs.fastcgi.proto.ApplicationVariables#MAX_REQS}</samp>
-     * if set, so the server should queue other sessions when the
-     * maximum is reached.
+     * {@linkplain uk.ac.lancs.fastcgi.proto.CapabilityVariables
+     * capability variable} <samp>{@value "%s"
+     * uk.ac.lancs.fastcgi.proto.CapabilityVariables#MAX_REQS}</samp> if
+     * set, so the server should queue other sessions when the maximum
+     * is reached.
      */
     public static final Attribute<Integer> MAX_SESS = ofInt().define();
 

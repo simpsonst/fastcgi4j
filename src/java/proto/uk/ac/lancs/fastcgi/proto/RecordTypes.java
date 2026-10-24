@@ -134,8 +134,8 @@ public final class RecordTypes {
      * Indicates that the content is a list of application variable
      * names requested by the server. The value is
      * <code>{@value}</code>, corresponding to
-     * <code>FCGI_GET_VALUES</code>. See {@link ApplicationVariables}
-     * for standard variable names.
+     * <code>FCGI_GET_VALUES</code>. See {@link CapabilityVariables} for
+     * standard variable names.
      * 
      * @spec https://fastcgi-archives.github.io/FastCGI_Specification.html#S4.1
      * FastCGI Specification &mdash; <code>FCGI_GET_VALUES</code>
@@ -146,7 +146,7 @@ public final class RecordTypes {
      * Indicates that the content is a list of application variables and
      * values. The value is <code>{@value}</code>, corresponding to
      * <code>FCGI_GET_VALUES_RESULT</code>. See
-     * {@link ApplicationVariables} for standard variable names.
+     * {@link CapabilityVariables} for standard variable names.
      * 
      * @spec https://fastcgi-archives.github.io/FastCGI_Specification.html#S4.1
      * FastCGI Specification &mdash; <code>FCGI_GET_VALUES_RESULT</code>

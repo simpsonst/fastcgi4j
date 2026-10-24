@@ -49,7 +49,7 @@ import uk.ac.lancs.fastcgi.engine.EngineFactory;
 import uk.ac.lancs.fastcgi.engine.EngineSpecification;
 import uk.ac.lancs.fastcgi.engine.std.threading.ThreadingManager;
 import uk.ac.lancs.fastcgi.engine.std.threading.ThreadingManagerFactory;
-import uk.ac.lancs.fastcgi.proto.ApplicationVariables;
+import uk.ac.lancs.fastcgi.proto.CapabilityVariables;
 import uk.ac.lancs.http.ResponseCodes;
 import uk.ac.lancs.scc.jardeps.Service;
 
@@ -69,23 +69,23 @@ import uk.ac.lancs.scc.jardeps.Service;
  * 
  * <p>
  * This implementation also recognizes the following
- * {@linkplain ApplicationVariables application variables}:
+ * {@link CapabilityVariables application variables}:
  * 
  * <ul>
  * 
- * <li><samp>{@value "%s" ApplicationVariables#MAX_CONNS}</samp> is set
+ * <li><samp>{@value "%s" CapabilityVariables#MAX_CONNS}</samp> is set
  * to {@link Attribute#MAX_CONN} if positive.
  * 
- * <li><samp>{@value "%s" ApplicationVariables#MAX_REQS}</samp> is set
- * to {@link Attribute#MAX_SESS} if positive.
+ * <li><samp>{@value "%s" CapabilityVariables#MAX_REQS}</samp> is set to
+ * {@link Attribute#MAX_SESS} if positive.
  * 
- * <li><samp>{@value "%s" ApplicationVariables#MPXS_CONNS}</samp> is set
+ * <li><samp>{@value "%s" CapabilityVariables#MPXS_CONNS}</samp> is set
  * to <samp>1</samp> if {@link Attribute#MAX_SESS_PER_CONN} is 0, or to
  * <samp>0</samp> otherwise.
  * 
- * <li><samp>{@value "%s" ApplicationVariables#FIELD_HANDLING}</samp> is
+ * <li><samp>{@value "%s" CapabilityVariables#FIELD_HANDLING}</samp> is
  * set to <samp>{@value "%s"
- * ApplicationVariables#FIELD_HANDLING_REQUEST_TRAILER}</samp>. This is
+ * CapabilityVariables#FIELD_HANDLING_REQUEST_TRAILER}</samp>. This is
  * an experimental extension to FastCGI/1.0.
  * 
  * </ul>
