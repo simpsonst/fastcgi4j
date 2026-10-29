@@ -40,17 +40,12 @@
  * Provides threading managers that exploit soft/virtual/lightweight
  * threads. As virtual threads are introduced in JDK19 as a preview
  * feature, and finalized in JDK21, their use is provided here as a
- * separate source tree and jar to avoid making the main code base
- * dependent on JDK19+.
+ * separate source tree and jar to avoid making the main codebase
+ * dependent on JDK19+. Including the jar in the classpath makes soft
+ * threading available.
  * 
- * @see <a href="https://openjdk.org/jeps/444">JEP 44: Virtual
+ * @see <a href="https://openjdk.org/jeps/444">JEP 444: Virtual
  * Threads</a>
- * 
- * @see <a href="https://openjdk.org/jeps/436">JEP 436: Virtual Threads
- * (Second Preview)</a>
- * 
- * @see <a href="https://openjdk.org/jeps/425">JEP 425: Virtual Threads
- * (Preview)</a>
  * 
  * @author simpsons
  */

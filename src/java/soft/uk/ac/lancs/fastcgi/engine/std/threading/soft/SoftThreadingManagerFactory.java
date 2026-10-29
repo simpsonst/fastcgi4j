@@ -39,13 +39,13 @@
 package uk.ac.lancs.fastcgi.engine.std.threading.soft;
 
 import uk.ac.lancs.fastcgi.engine.Attribute;
+import uk.ac.lancs.fastcgi.engine.EngineSpecification;
 import uk.ac.lancs.fastcgi.engine.std.threading.ThreadingManager;
 import uk.ac.lancs.fastcgi.engine.std.threading.ThreadingManagerFactory;
 import uk.ac.lancs.scc.jardeps.Service;
-import uk.ac.lancs.fastcgi.engine.EngineSpecification;
 
 /**
- * Allows the use of soft threads. Soft threads are also known as
+ * Enables the use of soft threads. Soft threads are also known as
  * virtual or lightweight threads, as introduced in JDK19. If
  * {@link Attribute#MAX_CONN} is not set, or
  * {@link Attribute#SOFT_CONN_THREAD} is {@code true} (the default),
