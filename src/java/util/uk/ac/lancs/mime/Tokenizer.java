@@ -138,18 +138,18 @@ public final class Tokenizer {
     private int pos = 0;
 
     /**
-     * Marks a position in a tokenizer. As an auto-closeable, you can
-     * use it as follows, calling {@link #pass()} only if a compound
+     * Marks a position in a tokenizer. As an auto-closable, you can use
+     * it as follows, calling {@link #pass()} only if a compound
      * structure completely parses:
      * 
      * <pre>
      * Tokenizer tok = ...;
      * try (var m = tok.mark()) {
-     *   tok.whitespace(0);
+     *   tok.spaces(0);
      *   String major, minor;
-     *   if ((major = tok.atom()) != null &&
-     *       tok.symbol('/') &&
-     *       (minor = tok.atom()) {
+     *   if ((major = tok.token(Tokenizer.RFC2045_TOKEN_CHARS)) != null &amp;&amp;
+     *       tok.punctuation("/") &amp;&amp;
+     *       (minor = tok.token(Tokenizer.RFC2045_TOKEN_CHARS)) {
      *     m.pass();
      *     return MediaType.of(major, minor);
      *   }

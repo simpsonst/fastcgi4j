@@ -82,7 +82,7 @@ final class FieldSomething {
 
     private static final int BASE64_ILLEGAL_ASCII = -3;
 
-    private static final int BASE64_WHITESPACE = -2;
+    private static final int BASE64_WHITE_SPACE = -2;
 
     private static final int BASE64_NON_ASCII = -4;
 
@@ -124,7 +124,7 @@ final class FieldSomething {
      *
      * @return the Base64 value of the byte in the range [0, 63]; or
      * {@link #BASE64_PADDING} if the byte is padding; or
-     * {@link #BASE64_WHITESPACE} if the byte is white space; or
+     * {@link #BASE64_WHITE_SPACE} if the byte is white space; or
      * {@link #BASE64_ILLEGAL_ASCII} if the byte is not a Base64
      * character; or {@link #BASE64_NON_ASCII} if the byte is not
      * US-ASCII
@@ -135,7 +135,7 @@ final class FieldSomething {
         if (b >= 48 && b < 48 + 10) return b - (48 - 52);
         if (b < 0) return BASE64_NON_ASCII;
         return switch (b) {
-        case 32, 10, 13, 8 -> BASE64_WHITESPACE;
+        case 32, 10, 13, 8 -> BASE64_WHITE_SPACE;
         case 43 -> 62;
         case 47 -> 63;
         case 61 -> BASE64_PADDING;
@@ -150,7 +150,7 @@ final class FieldSomething {
      *
      * @return the Base64 value of the character in the range [0, 63];
      * or {@link #BASE64_PADDING} if the byte is padding; or
-     * {@link #BASE64_WHITESPACE} if the byte is white space; or
+     * {@link #BASE64_WHITE_SPACE} if the byte is white space; or
      * {@link #BASE64_ILLEGAL_ASCII} if the byte is not a Base64
      * character; or {@link #BASE64_NON_ASCII} if the byte is not
      * US-ASCII
@@ -167,7 +167,7 @@ final class FieldSomething {
         case '+' -> 62;
         case '/' -> 63;
         case '=' -> BASE64_PADDING;
-        case '\t', '\r', '\n', ' ' -> BASE64_WHITESPACE;
+        case '\t', '\r', '\n', ' ' -> BASE64_WHITE_SPACE;
         default -> BASE64_ILLEGAL_ASCII;
         };
     }
