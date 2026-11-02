@@ -872,11 +872,6 @@ public class HttpResponderSession implements AutoCloseable, RequestBodySession {
                 base.addField(FieldNames.VARY, v.prefixedName(responseExtMgr));
         }
 
-        base.clearField(FieldNames.CACHE_CONTROL);
-        var outCache = responseCacheControl();
-        outCache.write(new OutCacheContext(responseExtMgr),
-                       s -> base.addField(FieldNames.CACHE_CONTROL, s));
-
         /* Set raw response header fields based on our local namespaced
          * collection. */
         for (var ent : responseHeaderFields.entrySet()) {
@@ -889,22 +884,10 @@ public class HttpResponderSession implements AutoCloseable, RequestBodySession {
             if (ns.scope() == FieldScope.HOP_BY_HOP) hopByHopFields.add(field);
         }
 
-        /* Label explicit hop-by-hop fields. */
-        base.clearField(FieldNames.CONNECTION);
-        for (var field : hopByHopFields) {
-            if (FieldNameSets.IMPLICIT_HOP_BY_HOP.contains(field)) continue;
-            base.addField(FieldNames.CONNECTION, field);
-        }
-
-        /* Set a raw header field to express what is expected in the
-         * trailer. */
-        base.clearField(FieldNames.TRAILER);
-        for (var id : responseTrailerExpectation) {
-            FieldNamespace ns = id.namespace();
-            final String field = id.prefixedName(responseExtMgr);
-            base.addField(FieldNames.TRAILER, field);
-            if (ns.scope() == FieldScope.HOP_BY_HOP) hopByHopFields.add(field);
-        }
+        base.clearField(FieldNames.CACHE_CONTROL);
+        var outCache = responseCacheControl();
+        outCache.write(new OutCacheContext(responseExtMgr),
+                       s -> base.addField(FieldNames.CACHE_CONTROL, s));
 
         /* Find out what encodings the client prefers, and record
          * them. */
@@ -932,8 +915,28 @@ public class HttpResponderSession implements AutoCloseable, RequestBodySession {
          * required. If there is any transfer encoding, Content-Length
          * cannot be set. */
         setEncodingField(FieldNames.CONTENT_ENCODING, contentEncodings);
-        if (setEncodingField(FieldNames.TRANSFER_ENCODING, transferEncodings))
+        if (setEncodingField(FieldNames.TRANSFER_ENCODING, transferEncodings)) {
+            System.err.println("clearing content length");
             base.clearField(FieldNames.CONTENT_LENGTH);
+            hopByHopFields.remove(FieldNames.CONTENT_LENGTH);
+        }
+
+        /* Label explicit hop-by-hop fields. */
+        base.clearField(FieldNames.CONNECTION);
+        for (var field : hopByHopFields) {
+            if (FieldNameSets.IMPLICIT_HOP_BY_HOP.contains(field)) continue;
+            base.addField(FieldNames.CONNECTION, field);
+        }
+
+        /* Set a raw header field to express what is expected in the
+         * trailer. */
+        base.clearField(FieldNames.TRAILER);
+        for (var id : responseTrailerExpectation) {
+            FieldNamespace ns = id.namespace();
+            final String field = id.prefixedName(responseExtMgr);
+            base.addField(FieldNames.TRAILER, field);
+            if (ns.scope() == FieldScope.HOP_BY_HOP) hopByHopFields.add(field);
+        }
 
         OutputStream out = base.out();
         if (!responseTrailerExpectation.isEmpty()) {
