@@ -42,6 +42,7 @@ import java.net.URI;
 import java.util.Objects;
 import java.util.Optional;
 import uk.ac.lancs.http.FieldNames;
+import uk.ac.lancs.http.Syntax;
 import uk.ac.lancs.mime.Tokenizer;
 
 /**
@@ -386,7 +387,8 @@ public final class FieldExtension extends FieldNamespace {
      * Determine whether a proposed attribute name is forbidden. The
      * name <code>{@value #PREFIX_ATTRIBUTE}</code> is forbidden, as it
      * already has a role in a namespace definition. All non-token
-     * strings, as defined by {@link Tokenizer#isAtom(CharSequence)},
+     * strings, as defined by
+     * {@link Tokenizer#isToken(CharSequence, java.util.function.IntPredicate)},
      * are also forbidden.
      * 
      * @param name the attribute name
@@ -396,6 +398,6 @@ public final class FieldExtension extends FieldNamespace {
      */
     public static boolean forbiddenAttribute(CharSequence name) {
         if (PREFIX_ATTRIBUTE.contentEquals(name)) return true;
-        return !Tokenizer.isAtom(name);
+        return !Tokenizer.isToken(name, Syntax.RFC9110_TOKEN_CHARS);
     }
 }

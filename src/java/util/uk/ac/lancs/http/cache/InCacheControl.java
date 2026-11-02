@@ -43,6 +43,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import uk.ac.lancs.http.Syntax;
 import uk.ac.lancs.mime.Tokenizer;
 
 /**
@@ -57,7 +58,7 @@ public final class InCacheControl extends AbstractCacheControl {
         Tokenizer tokens = new Tokenizer(line);
         boolean expected = false;
         for (;; expected = true) {
-            tokens.whitespace(0);
+            tokens.spaces(0);
             if (tokens.end()) {
                 if (expected) {
                     tokens.abort("more directives expected");
@@ -66,23 +67,23 @@ public final class InCacheControl extends AbstractCacheControl {
                 return;
             }
 
-            var key = tokens.atom();
+            var key = tokens.token(Syntax.RFC9110_TOKEN_CHARS);
             if (key == null) {
                 tokens.abort("directive key expected");
                 throw new AssertionError("unreachable");
             }
-            tokens.whitespace(0);
+            tokens.spaces(0);
             if (tokens.end()) {
                 unqualified.add(key.toString());
                 break;
             }
-            if (tokens.character(',')) {
+            if (tokens.punctuation(",")) {
                 unqualified.add(key.toString());
                 continue;
             }
-            if (tokens.character('=')) {
-                tokens.whitespace(0);
-                var val = tokens.atom();
+            if (tokens.punctuation("=")) {
+                tokens.spaces(0);
+                var val = tokens.token(Syntax.RFC9110_TOKEN_CHARS);
                 if (val == null) val = tokens.quotedString();
                 if (val == null) {
                     tokens.abort("directive value expected");
@@ -90,9 +91,9 @@ public final class InCacheControl extends AbstractCacheControl {
                 }
                 qualified.put(key.toString(), val.toString());
             }
-            tokens.whitespace(0);
+            tokens.spaces(0);
             if (tokens.end()) break;
-            if (tokens.character(',')) continue;
+            if (tokens.punctuation(",")) continue;
             tokens.abort("comma/end expected");
             throw new AssertionError("unreachable");
         }

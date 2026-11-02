@@ -45,9 +45,10 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.Predicate;
+import uk.ac.lancs.http.FieldNames;
+import uk.ac.lancs.http.Syntax;
 import uk.ac.lancs.http.field.ExtensionIndex;
 import uk.ac.lancs.http.field.FieldId;
-import uk.ac.lancs.http.FieldNames;
 import uk.ac.lancs.http.field.FieldResolver;
 import uk.ac.lancs.http.field.RejectionReason;
 import uk.ac.lancs.mime.Tokenizer;
@@ -65,8 +66,8 @@ final class CacheInstruction {
         if (line == null) return;
         Tokenizer tokens = new Tokenizer(line);
         boolean expected = false;
-        for (;; expected = true) {
-            tokens.whitespace(0);
+        next_element: for (;; expected = true) {
+            tokens.spaces(0);
             if (tokens.end()) {
                 if (expected) {
                     tokens.abort("more directives expected");
@@ -75,19 +76,19 @@ final class CacheInstruction {
                 return;
             }
 
-            var key = tokens.atom();
+            var key = tokens.token(Syntax.RFC9110_TOKEN_CHARS);
             if (key == null) {
                 tokens.abort("directive key expected");
                 throw new AssertionError("unreachable");
             }
-            tokens.whitespace(0);
-            if (tokens.character(',')) {
+            tokens.spaces(0);
+            if (tokens.punctuation(",")) {
                 unqualified.add(key.toString());
                 continue;
             }
-            if (tokens.character('=')) {
-                tokens.whitespace(0);
-                var val = tokens.atom();
+            if (tokens.punctuation("=")) {
+                tokens.spaces(0);
+                var val = tokens.token(Syntax.RFC9110_TOKEN_CHARS);
                 if (val == null) val = tokens.quotedString();
                 if (val == null) {
                     tokens.abort("directive value expected");
@@ -96,11 +97,15 @@ final class CacheInstruction {
                 qualified.put(key.toString(), val.toString());
                 continue;
             }
-            tokens.whitespace(0);
-            if (tokens.end()) break;
-            if (tokens.character(',')) continue;
-            tokens.abort("comma/end expcected");
-            throw new AssertionError("unreachable");
+
+            switch (tokens.separator(0, ",")) {
+            case END:
+                break next_element;
+
+            case UNEXPECTED:
+                tokens.abort("comma/end expcected");
+                throw new AssertionError("unreachable");
+            }
         }
     }
 
@@ -266,17 +271,18 @@ final class CacheInstruction {
                     new Tokenizer(qualifiedDirectives.get(Directives.NO_CACHE));
                 Collection<String> rawNames =
                     new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-                var f = vtoks.whitespaceAtom(0);
+                var f = vtoks.spacesToken(0, Syntax.RFC9110_TOKEN_CHARS);
                 if (f == null) {
                     vtoks.abort("token expected");
                     throw new AssertionError("unreachable");
                 }
                 rawNames.add(f.toString());
-                while (vtoks.whitespaceCharacter(0, ',') &&
-                    (f = vtoks.whitespaceAtom(0)) != null) {
+                while (vtoks.spacesPunctuation(0, ",") &&
+                    (f = vtoks.spacesToken(0, Syntax.RFC9110_TOKEN_CHARS))
+                        != null) {
                     rawNames.add(f.toString());
                 }
-                vtoks.whitespace(0);
+                vtoks.spaces(0);
                 if (!vtoks.end()) {
                     vtoks.abort("end or \",\" expected");
                     throw new AssertionError("unreachable");

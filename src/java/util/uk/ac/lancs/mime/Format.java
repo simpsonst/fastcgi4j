@@ -227,14 +227,14 @@ public final class Format<T> {
         final CharSequence first = parts.get(len - 1);
         Tokenizer toks = new Tokenizer(first);
         CharSequence tok;
-        if ((tok = toks.whitespaceAtom(0)) != null && toks.whitespace(0) &&
-            toks.end()) return tok.toString();
+        if ((tok = toks.spacesToken(0, Tokenizer.RFC2045_TOKEN_CHARS))
+            != null && toks.spaces(0) && toks.end()) return tok.toString();
         throw new IllegalAtomException(first.toString());
     }
 
     private static List<String> encodeAtom(CharSequence atom) {
         if (atom == null) return Collections.emptyList();
-        if (!Tokenizer.isAtom(atom))
+        if (!Tokenizer.isToken(atom, Tokenizer.RFC2045_TOKEN_CHARS))
             throw new IllegalAtomException(atom.toString());
         return Collections.singletonList(atom.toString());
     }

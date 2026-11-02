@@ -101,7 +101,7 @@ public final class Disposition {
         Tokenizer tok = new Tokenizer(text);
         Map<String, String> params = new HashMap<>();
         CharSequence type =
-            tok.whitespaceAtomParameters(0, params, Tokenizer.PARAMS_END);
+            tok.spacesTokenParameters(0, Tokenizer.RFC2045_TOKEN_CHARS, params);
         if (type == null)
             throw new IllegalArgumentException("not disposition: " + text);
         return new Disposition(type.toString(), params.get("name"),

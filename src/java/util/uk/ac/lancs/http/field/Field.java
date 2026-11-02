@@ -46,6 +46,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import uk.ac.lancs.http.FieldNames;
+import uk.ac.lancs.http.QualitySelector;
+import uk.ac.lancs.http.Syntax;
 import uk.ac.lancs.http.Timing;
 import uk.ac.lancs.mime.MediaGroup;
 import uk.ac.lancs.mime.MediaType;
@@ -286,8 +288,8 @@ public abstract class Field<T> {
 
     private static Long decimalLong(Tokenizer t) {
         try (Tokenizer.Mark m = t.mark()) {
-            var a = t.whitespaceAtom(0);
-            t.whitespace(0);
+            var a = t.spacesToken(0, Syntax.RFC9110_TOKEN_CHARS);
+            t.spaces(0);
             if (t.end()) {
                 m.pass();
                 return Long.valueOf(a.toString(), 10);
@@ -298,8 +300,8 @@ public abstract class Field<T> {
 
     private static BigInteger decimalBigInteger(Tokenizer t) {
         try (Tokenizer.Mark m = t.mark()) {
-            var a = t.whitespaceAtom(0);
-            t.whitespace(0);
+            var a = t.spacesToken(0, Syntax.RFC9110_TOKEN_CHARS);
+            t.spaces(0);
             if (t.end()) {
                 m.pass();
                 return new BigInteger(a.toString(), 10);
@@ -318,21 +320,20 @@ public abstract class Field<T> {
 
     private static Map.Entry<MediaGroup, Float>
         parseQualifiedMediaGroup(Tokenizer t) {
-        t.whitespace(0);
+        t.spaces(0);
         var mg = MediaGroup.from(t);
         if (mg == null) return null;
-        float[] qa = { 1.0f };
-        if (!t.parameters((k, v) -> {
-            if (k.equals("q")) qa[0] = Float.parseFloat(v);
-        }, 0)) qa[0] = 1.0f;
-        return Map.entry(mg, qa[0]);
+        var qs = new QualitySelector();
+        t.parameters(Syntax.RFC9110_TOKEN_CHARS, qs);
+        return Map.entry(mg, qs.get());
     }
 
     private static String fromMediaGroup(Map.Entry<MediaGroup, Float> ent) {
         StringBuilder r = new StringBuilder(ent.getKey().toString());
         float v = ent.getValue();
         if (v >= 0.0f && v < 1.0f)
-            r.append("; q=").append(String.format("%.3f", v));
+            r.append("; ").append(QualitySelector.QUALITY_PARAMETER).append("=")
+                .append(String.format("%.3f", v));
         return r.toString();
     }
 
@@ -341,7 +342,8 @@ public abstract class Field<T> {
      */
     public static final SequentialField<String> ALLOW =
         Field.<String>of(FieldId.ALLOW).outward(s -> s)
-            .inward(t -> t.atom().toString()).sequential();
+            .inward(t -> t.token(Syntax.RFC9110_TOKEN_CHARS).toString())
+            .sequential();
 
     /**
      * Defines the <samp>{@value "%s"
@@ -349,7 +351,8 @@ public abstract class Field<T> {
      */
     public static final SequentialField<String> CONTENT_ENCODING =
         Field.<String>of(FieldId.CONTENT_ENCODING).outward(s -> s)
-            .inward(t -> t.atom().toString()).sequential();
+            .inward(t -> t.token(Syntax.RFC9110_TOKEN_CHARS).toString())
+            .sequential();
 
     /**
      * Defines the <samp>{@value "%s"
@@ -357,7 +360,8 @@ public abstract class Field<T> {
      */
     public static final SequentialField<String> TRANSFER_ENCODING =
         Field.<String>of(FieldId.TRANSFER_ENCODING).outward(s -> s)
-            .inward(t -> t.atom().toString()).sequential();
+            .inward(t -> t.token(Syntax.RFC9110_TOKEN_CHARS).toString())
+            .sequential();
 
     /**
      * Defines the <samp>{@value "%s" FieldNames#CONTENT_TYPE}</samp>
@@ -365,7 +369,7 @@ public abstract class Field<T> {
      */
     public static final FlatField<MediaType> CONTENT_TYPE =
         Field.<MediaType>of(FieldId.CONTENT_TYPE).outward(Object::toString)
-            .inward(t -> MediaType.from(t, Tokenizer.PARAMS_END)).flat();
+            .inward(t -> MediaType.ending(t)).flat();
 
     /**
      * Defines the <samp>{@value "%s" FieldNames#CONTENT_LENGTH}</samp>
@@ -497,8 +501,7 @@ public abstract class Field<T> {
     }
 
     private static URI toURI(Tokenizer t) {
-        t.whitespace(0);
-        CharSequence x = t.set((c) -> !Character.isSpaceChar(c));
+        var x = t.spacesToken(0, c -> !Character.isSpaceChar(c));
         try {
             return URI.create(x.toString());
         } catch (IllegalArgumentException ex) {

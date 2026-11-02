@@ -44,6 +44,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.DeflaterInputStream;
 import java.util.zip.GZIPInputStream;
+import uk.ac.lancs.http.Syntax;
 import uk.ac.lancs.io.EmptyInputStream;
 import uk.ac.lancs.mime.Tokenizer;
 
@@ -107,9 +108,10 @@ public class ResponseHeader extends Header {
         if (conTxt != null) {
             Tokenizer tokenizer = new Tokenizer(conTxt);
             CharSequence token;
-            while ((token = tokenizer.whitespaceAtom(0)) != null) {
+            while ((token =
+                tokenizer.spacesToken(0, Syntax.RFC9110_TOKEN_CHARS)) != null) {
                 connectionTokens.add(token.toString());
-                if (!tokenizer.whitespaceCharacter(0, ',')) break;
+                if (!tokenizer.spacesPunctuation(0, ",")) break;
             }
         }
     }

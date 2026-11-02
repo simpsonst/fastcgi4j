@@ -58,8 +58,7 @@ public final class MediaGroup {
 
     private static boolean parseAny(Tokenizer tokenizer) {
         try (var mark = tokenizer.mark()) {
-            if (tokenizer.character('*') && tokenizer.character('/') &&
-                tokenizer.character('*')) {
+            if (tokenizer.punctuation("*/*")) {
                 mark.pass();
                 return true;
             }
@@ -130,15 +129,15 @@ public final class MediaGroup {
     public static MediaGroup from(Tokenizer tokenizer) {
         if (parseAny(tokenizer)) return new MediaGroup(null, null);
         try (var mark = tokenizer.mark()) {
-            CharSequence major = tokenizer.atom();
+            CharSequence major = tokenizer.token(Tokenizer.RFC2045_TOKEN_CHARS);
             if (major == null) return null;
-            if (!tokenizer.character('/')) return null;
-            if (tokenizer.character('*')) {
+            if (!tokenizer.punctuation("/")) return null;
+            if (tokenizer.punctuation("*")) {
                 var r = new MediaGroup(major.toString(), null);
                 mark.pass();
                 return r;
             }
-            CharSequence minor = tokenizer.atom();
+            CharSequence minor = tokenizer.token(Tokenizer.RFC2045_TOKEN_CHARS);
             if (minor == null) return null;
             var r = new MediaGroup(major.toString(), minor.toString());
             mark.pass();

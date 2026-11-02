@@ -86,7 +86,7 @@ public class AtomSequence extends AbstractList<String> {
         base = new String[src.size()];
         int i = 0;
         for (var e : src) {
-            if (!Tokenizer.isAtom(e))
+            if (!Tokenizer.isToken(e, Tokenizer.RFC2045_TOKEN_CHARS))
                 throw new IllegalAtomException(e.toString());
             base[i++] = e.toString();
         }
@@ -112,13 +112,13 @@ public class AtomSequence extends AbstractList<String> {
         List<String> result = new ArrayList<>();
         for (var cs : parts) {
             Tokenizer toks = new Tokenizer(cs);
-            toks.whitespace(0);
+            toks.spaces(0);
             CharSequence tok;
-            while ((tok = toks.atom()) != null) {
+            while ((tok = toks.token(Tokenizer.RFC2045_TOKEN_CHARS)) != null) {
                 result.add(tok.toString());
-                toks.whitespace(0);
-                if (!toks.character(',')) break;
-                toks.whitespace(0);
+                toks.spaces(0);
+                if (!toks.punctuation(",")) break;
+                toks.spaces(0);
             }
             if (!toks.end())
                 throw new IllegalArgumentException("not atom sequence: " + cs);
