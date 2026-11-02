@@ -1186,6 +1186,8 @@ public final class Tokenizer {
         System.out.println(Tokenizer.quoteOptionally("foobar"));
         System.out.println(Tokenizer.quoteOptionally("\"foobar"));
         System.out.println(Tokenizer.quoteOptionally("foobar\""));
+        System.out.println(Tokenizer.quoteOptionally("foo bar"));
+        System.out.println(Tokenizer.quoteOptionally("foo\\bar"));
         System.out.println(Tokenizer.quoteOptionally("\"foo\"bar"));
         System.out.println(Tokenizer.quoteOptionally("foo\"bar\""));
         System.out.println(Tokenizer.quote("foobar"));
