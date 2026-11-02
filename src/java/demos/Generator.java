@@ -38,7 +38,6 @@
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import uk.ac.lancs.cgi.FormSubmission;
 import uk.ac.lancs.fastcgi.Responder;
@@ -46,8 +45,14 @@ import uk.ac.lancs.fastcgi.ResponderSession;
 import uk.ac.lancs.fastcgi.app.FastCGIApplication;
 import uk.ac.lancs.fastcgi.app.FastCGIConfiguration;
 import uk.ac.lancs.fastcgi.form.FormHandler;
+import uk.ac.lancs.fastcgi.http.HttpResponderContext;
+import uk.ac.lancs.fastcgi.http.HttpResponderSession;
+import uk.ac.lancs.fastcgi.http.ots.OTSResponses;
+import uk.ac.lancs.http.cache.CacheDirective;
+import uk.ac.lancs.http.field.Field;
 import uk.ac.lancs.io.DiagnosticInputStream;
 import uk.ac.lancs.io.LimitedInputStream;
+import uk.ac.lancs.mime.MediaType;
 import uk.ac.lancs.mime.MessageParser;
 import uk.ac.lancs.mime.TextMessage;
 import uk.ac.lancs.mime.body.Morgue;
@@ -60,8 +65,15 @@ import uk.ac.lancs.mime.body.SmartMorgue;
  * @author simpsons
  */
 public class Generator extends FastCGIApplication implements Responder {
+    private static final HttpResponderContext httpContext =
+        new HttpResponderContext() {};
+
     @Override
     public boolean init(FastCGIConfiguration config, String[] args) {
+        System.err.printf("transfer decoders = %s%n",
+                          httpContext.transferDecoders().keySet());
+        System.err.printf("transfer encoders = %s%n",
+                          httpContext.transferEncoders());
         return true;
     }
 
@@ -74,31 +86,52 @@ public class Generator extends FastCGIApplication implements Responder {
     @Override
     public void respond(ResponderSession session) throws IOException {
         final FormSubmission submission = formHandler.get(session);
-        int lineLength = 64;
+
+        /* Get the requested line length, or use the default. */
+        final int lineLength;
         {
             var wMsg = submission.getFirst("width");
             if (wMsg instanceof TextMessage tmsg)
                 lineLength = Integer.parseInt(tmsg.textBody().get(), 10);
+            else
+                lineLength = 64;
         }
+
+        /* Get the requested file size, if specified. */
+        final Long size;
         var szMsg = submission.getFirst("size");
         if (szMsg instanceof TextMessage tmsg) {
-            long size = Long.parseLong(tmsg.textBody().get(), 10);
-            session.setField("Content-Length", Long.toString(size, 10));
-            session.setField("Content-Type", "text/plain; charset=US-ASCII");
-            session.setField("Cache-Control", "no-cache");
-            try (var out = new BufferedOutputStream(session.out(), 4096);
-                 var source =
-                     new LimitedInputStream(DiagnosticInputStream.start()
-                         .width(lineLength).withCarriageReturns(true).build(),
-                                            size)) {
-                source.transferTo(out);
-            }
-            return;
+            size = Long.valueOf(tmsg.textBody().get(), 10);
+        } else {
+            size = null;
         }
-        session.setField("Content-Type", "text/plain; charset=UTF-8");
-        try (var out =
-            new PrintStream(session.out(), false, StandardCharsets.UTF_8)) {
-            out.println("Specify form parameter 'size' as decimal.");
+
+        try (var httpSession = new HttpResponderSession(session, httpContext)) {
+            /* Generate the requested content if the size is
+             * specified. */
+            if (size != null) {
+                Field.CONTENT_TYPE.set(httpSession.responseHeader(),
+                                       MediaType.of("text", "plain").modify()
+                                           .set("charset", "US-ASCII").apply());
+                Field.CONTENT_LENGTH_LONG.set(httpSession.responseHeader(),
+                                              size);
+                CacheDirective.NO_CACHE.set(httpSession.responseCacheControl());
+                try (var out =
+                    new BufferedOutputStream(httpSession.out(), 4096);
+                     var source = new LimitedInputStream(DiagnosticInputStream
+                         .start().width(lineLength).withCarriageReturns(true)
+                         .build(), size)) {
+                    source.transferTo(out);
+                }
+                return;
+            }
+
+            /* Generate an informative message if no size is
+             * specified. */
+            var ots = new OTSResponses(httpSession.otsResponseControl());
+            try (var out = ots.textOut("plain")) {
+                out.println("Specify form parameter 'size' as decimal.");
+            }
         }
     }
 }
