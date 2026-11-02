@@ -508,4 +508,27 @@ public final class Negotiation {
     }
 
     private Negotiation() {}
+
+    private static void showTest(CharSequence text) {
+        var r = Negotiation.getTokenPreference(text);
+        System.err.printf("%s => %s%n", text, r);
+    }
+
+    /**
+     * @hidden
+     */
+    public static void main(String[] args) {
+        System.err.print("Token chars:");
+        for (char i = 33; i < 128; i++)
+            if (Syntax.RFC9110_TOKEN_CHARS.test(i)) System.err.printf(" %c", i);
+        System.err.println();
+        System.err.print("Atom chars:");
+        for (char i = 33; i < 128; i++)
+            if (Tokenizer.RFC2045_TOKEN_CHARS.test(i))
+                System.err.printf(" %c", i);
+        System.err.println();
+        showTest("gzip");
+        showTest("gzip, deflate, foo");
+        showTest("gzip; q=0.8");
+    }
 }
