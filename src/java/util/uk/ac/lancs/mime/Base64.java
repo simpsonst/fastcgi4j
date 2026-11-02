@@ -57,15 +57,15 @@ final class Base64 {
     /**
      * Indicates a byte that represents a US-ASCII character, or a
      * character that is present in US-ASCII, but which cannot be
-     * interpreted as a significant Base64 character, padding or
-     * whitespace.
+     * interpreted as a significant Base64 character, padding or white
+     * space.
      */
     public static final int ILLEGAL_ASCII = -3;
 
     /**
-     * Indicates a byte or character classed as whitespace.
+     * Indicates a byte or character classed as white space.
      */
-    public static final int WHITESPACE = -2;
+    public static final int WHITE_SPACE = -2;
 
     /**
      * Indicates a byte that doesn't represent a US-ASCII character.
@@ -78,8 +78,8 @@ final class Base64 {
      * @param b the byte to decode
      *
      * @return the Base64 value of the byte in the range [0, 63]; or
-     * {@link #PADDING} if the byte is padding; or {@link #WHITESPACE}
-     * if the byte is whitespace; or {@link #ILLEGAL_ASCII} if the byte
+     * {@link #PADDING} if the byte is padding; or {@link #WHITE_SPACE}
+     * if the byte is white space; or {@link #ILLEGAL_ASCII} if the byte
      * is ASCII but is not a Base64 character; or {@link #NON_ASCII} if
      * the byte is not US-ASCII
      */
@@ -89,7 +89,7 @@ final class Base64 {
         if (b >= 48 && b < 48 + 10) return b - (48 - 52);
         if (b < 0) return NON_ASCII;
         return switch (b) {
-        case 32, 10, 13, 8 -> WHITESPACE;
+        case 32, 10, 13, 8 -> WHITE_SPACE;
         case 43 -> 62;
         case 47 -> 63;
         case 61 -> PADDING;
@@ -104,7 +104,7 @@ final class Base64 {
      *
      * @return the Base64 value of the character in the range [0, 63];
      * or {@link #PADDING} if the character is padding; or
-     * {@link #WHITESPACE} if the character is whitespace; or
+     * {@link #WHITE_SPACE} if the character is white space; or
      * {@link #ILLEGAL_ASCII} if the character is ASCII but not a Base64
      * character; or {@link #NON_ASCII} if the character is not US-ASCII
      */
@@ -116,7 +116,7 @@ final class Base64 {
         case '+' -> 62;
         case '/' -> 63;
         case '=' -> PADDING;
-        case '\t', '\r', '\n', ' ' -> WHITESPACE;
+        case '\t', '\r', '\n', ' ' -> WHITE_SPACE;
         default -> ILLEGAL_ASCII;
         };
     }
@@ -177,9 +177,10 @@ final class Base64 {
             case PADDING -> {
                 continue;
             }
-            case WHITESPACE, ILLEGAL_ASCII, NON_ASCII ->
+            case WHITE_SPACE, ILLEGAL_ASCII, NON_ASCII ->
                 throw new IllegalArgumentException("bad base64: "
                     + text.charAt(i));
+
             }
             value <<= 6;
             value |= sextet;

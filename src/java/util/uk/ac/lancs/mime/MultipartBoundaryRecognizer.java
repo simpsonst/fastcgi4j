@@ -57,8 +57,8 @@ import uk.ac.lancs.io.BoundarySequence;
  * parameter, usually of around 20-60 US-ASCII bytes. The boundary
  * itself consists of a carriage return (CR), linefeed (LF), two dashes
  * (0x2d), the boundary parameter, optionally two more dashes, then
- * linear whitespace terminated by another CRLF. (This implementation
- * recognizes CR and LF in the whitespace that do not form a CR-LF
+ * linear white space terminated by another CRLF. (This implementation
+ * recognizes CR and LF in the white space that do not form a CR-LF
  * sequence.) The optional trailing dashes indicate the terminal
  * boundary. Once this has been identified, no more boundaries are
  * recognized.
@@ -77,7 +77,7 @@ public final class MultipartBoundaryRecognizer implements BoundaryRecognizer {
      * 
      * @param boundary an array containing the bytes of the boundary,
      * excluding the leading CR LF and dash pair, or any trailing linear
-     * whitespace and CR LF
+     * white space and CR LF
      * 
      * @param off the offset into the array of the first byte of the
      * boundary
@@ -252,13 +252,13 @@ public final class MultipartBoundaryRecognizer implements BoundaryRecognizer {
             terminal = true;
         }
 
-        /* Skip whitespace, but scan for CRLF. */
+        /* Skip white space, but scan for CRLF. */
         byte last = -1;
         byte c;
         while (pos < limit && isLinearWhiteSpace(c = buf[pos])) {
             pos++;
             if (last == ASCII.CR && c == ASCII.LF) {
-                /* We've found whitespace terminated by a CRLF. We have
+                /* We've found white space terminated by a CRLF. We have
                  * a boundary. */
                 if (terminal) terminated = true;
                 return expand(pos - done);
