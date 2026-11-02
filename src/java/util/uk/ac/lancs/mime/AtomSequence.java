@@ -49,7 +49,7 @@ import java.util.List;
  *
  * @author simpsons
  */
-public class AtomSequence extends AbstractList<String> {
+class AtomSequence extends AbstractList<String> {
     private final String[] base;
 
     /**
