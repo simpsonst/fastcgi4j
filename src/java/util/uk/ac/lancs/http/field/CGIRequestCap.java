@@ -49,6 +49,7 @@ import java.util.stream.Stream;
 import uk.ac.lancs.cgi.Http;
 import uk.ac.lancs.http.FieldNameSets;
 import uk.ac.lancs.http.FieldNames;
+import uk.ac.lancs.http.Syntax;
 import uk.ac.lancs.mime.Tokenizer;
 
 /**
@@ -192,8 +193,10 @@ public class CGIRequestCap implements Cap {
          * like "close" and "keep-alive", convert the rest to CGI
          * variable names, and add in the connection field itself. */
         this.hopByHopKeys = Stream
-            .concat(Tokenizer.atomSequenceOf(env.get(CONNECTION_PARAM)).stream()
-                .filter(CGIRequestCap::isConnectionFieldName)
+            .concat(Tokenizer
+                .tokenSequenceOf(env.get(CONNECTION_PARAM),
+                                 Syntax.RFC9110_TOKEN_CHARS)
+                .stream().filter(CGIRequestCap::isConnectionFieldName)
                 .map(Http::fieldNameAsCGI), FieldNameSets.HOP_BY_HOP.stream())
             .collect(Collectors.toSet());
 
@@ -228,8 +231,9 @@ public class CGIRequestCap implements Cap {
             do {
                 /* Attempt to parse a parameterized quoted string. */
                 Map<String, String> params = new HashMap<>();
-                var nsuri =
-                    tokens.whitespaceQuotedStringParameters(0, params, 0);
+                var nsuri = tokens
+                    .spacesQuotedStringParameters(0, Syntax.RFC9110_TOKEN_CHARS,
+                                                  params);
                 String pfxTxt = params.remove("ns");
                 var pfx = InternalId.of(pfxTxt);
                 var ext = FieldExtension.in(nsuri).hopByHop(conn)
@@ -239,8 +243,8 @@ public class CGIRequestCap implements Cap {
 
                 /* Detect another extension declaration, the end of
                  * declarations, or something unexpected. */
-                tokens.whitespace(0);
-                if (tokens.character(',')) continue;
+                tokens.spaces(0);
+                if (tokens.punctuation(",")) continue;
                 if (tokens.end()) break;
                 throw new IllegalArgumentException("bad extension definition: "
                     + key + " -> " + val);

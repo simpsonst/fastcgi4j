@@ -71,6 +71,7 @@ import uk.ac.lancs.fastcgi.http.ots.OTSControl;
 import uk.ac.lancs.http.FieldNameSets;
 import uk.ac.lancs.http.FieldNames;
 import uk.ac.lancs.http.Negotiation;
+import uk.ac.lancs.http.Syntax;
 import uk.ac.lancs.http.cache.CacheDirective;
 import uk.ac.lancs.http.cache.InCacheContext;
 import uk.ac.lancs.http.cache.InCacheControl;
@@ -166,7 +167,7 @@ public class HttpResponderSession implements AutoCloseable, RequestBodySession {
         /* Get the transfer encodings accepted by the client. */
         {
             Map<String, Float> result =
-                Negotiation.getAtomPreference(base.parameters().get(TE_PARAM));
+                Negotiation.getTokenPreference(base.parameters().get(TE_PARAM));
 
             if (protocol.isMinimally("HTTP", 2, 0) &&
                 (!result.containsKey(TRAILERS_TOKEN) || result.size() == 1)) {
@@ -280,7 +281,7 @@ public class HttpResponderSession implements AutoCloseable, RequestBodySession {
      */
     public Map<String, Float> contentPreference() {
         if (contentPreference == null) contentPreference = Negotiation
-            .getAtomPreference(base.parameters().get(ACCEPT_ENCODING_PARAM));
+            .getTokenPreference(base.parameters().get(ACCEPT_ENCODING_PARAM));
         return contentPreference;
     }
 
@@ -302,18 +303,22 @@ public class HttpResponderSession implements AutoCloseable, RequestBodySession {
         /* TODO: We should really use an *HTTP* tokenizer, not MIME.
          * However, how different are they really? */
         Tokenizer tokens = new Tokenizer(field);
-        tokens.whitespace(0);
-        for (;;) {
-            var token = tokens.atom();
+        tokens.spaces(0);
+        next_element: for (;;) {
+            var token = tokens.token(Syntax.RFC9110_TOKEN_CHARS);
             if (token == null) throw new IllegalArgumentException("no atom at "
                 + tokens.remnant());
             result.add(token.toString());
-            tokens.whitespace(0);
-            if (tokens.end()) break;
-            if (!tokens.character(','))
+
+            switch (tokens.separator(0, ",")) {
+            case END:
+                break next_element;
+
+            case UNEXPECTED:
                 throw new IllegalArgumentException("no comma at "
                     + tokens.remnant());
-            tokens.whitespace(0);
+            }
+            tokens.spaces(0);
         }
         return result;
     }

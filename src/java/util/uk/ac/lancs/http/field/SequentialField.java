@@ -110,20 +110,25 @@ public final class SequentialField<T> extends Field<T> {
         return raw.stream().map(s -> {
             var t = new Tokenizer(s);
             List<T> r = new ArrayList<>();
-            for (;;) {
+            next_element: for (;;) {
                 T v = parse(t);
                 if (v == null) {
                     if (r.isEmpty()) {
-                        t.whitespace(0);
+                        t.spaces(0);
                         if (t.end()) break;
                         t.abort(id.toString() + ": unterminated sequence");
                     }
                     t.abort(id.toString() + ": wrong type");
                 }
-                t.whitespace(0);
-                if (t.end()) break;
-                if (t.character(',')) continue;
-                t.abort(id.toString() + ": comma in sequence");
+
+                switch (t.separator(0, ",")) {
+                case END:
+                    break next_element;
+
+                case UNEXPECTED:
+                    t.abort(id.toString() + ": comma in sequence");
+                    throw new AssertionError("unreachable");
+                }
             }
             return r;
         }).flatMap(List::stream).collect(Collectors.toList());

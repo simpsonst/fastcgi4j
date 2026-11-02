@@ -154,14 +154,6 @@ public class ChunkedInputStream extends FilterInputStream {
      */
     private boolean closed = false;
 
-    /**
-     * Specifies the characters that form the chunk length in a header.
-     * The index of each character gives its value, except for those
-     * from position 16 onwards, whose values are 6 less than their
-     * position.
-     */
-    private static final String DIGIT_CHARS = "0123456789abcdefABCDEF";
-
     private long total = 0;
 
     /**
@@ -234,14 +226,13 @@ public class ChunkedInputStream extends FilterInputStream {
         /* Parse the length line as a hex number followed by optional
          * parameters. */
         var tokens = new Tokenizer(text);
-        int dig;
-        while ((dig = tokens.character(DIGIT_CHARS)) >= 0) {
-            remaining *= 16;
-            if (dig >= 16) dig -= 6;
-            remaining += dig;
-        }
+        var digText =
+            tokens.match(Tokenizer.US_ASCII_HEX_DIGITS, 1, Integer.MAX_VALUE);
+        remaining += Long.parseUnsignedLong(digText, 0, digText.length(), 16);
         final Map<String, String> exts = new HashMap<>();
-        if (!tokens.parameters(exts, Tokenizer.PARAMS_END)) {
+        tokens.parameters(Syntax.RFC9110_TOKEN_CHARS, exts);
+        tokens.spaces(0);
+        if (!tokens.end()) {
             abort("bad chunk header: %s", text);
             throw new AssertionError("unreachable");
         }

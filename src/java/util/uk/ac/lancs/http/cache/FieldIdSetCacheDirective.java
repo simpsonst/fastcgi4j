@@ -45,6 +45,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import uk.ac.lancs.http.Syntax;
 import uk.ac.lancs.http.field.FieldId;
 import uk.ac.lancs.http.field.FieldResolver;
 import uk.ac.lancs.mime.Tokenizer;
@@ -92,17 +93,17 @@ public class FieldIdSetCacheDirective extends SetCacheDirective<FieldId> {
         Tokenizer vtoks = new Tokenizer(qualification);
         Collection<String> rawNames =
             new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-        var f = vtoks.whitespaceAtom(0);
+        var f = vtoks.spacesToken(0, Syntax.RFC9110_TOKEN_CHARS);
         if (f == null) {
             vtoks.abort("token expected");
             throw new AssertionError("unreachable");
         }
         rawNames.add(f.toString());
-        while (vtoks.whitespaceCharacter(0, ',') &&
-            (f = vtoks.whitespaceAtom(0)) != null) {
+        while (vtoks.spacesPunctuation(0, ",") &&
+            (f = vtoks.spacesToken(0, Syntax.RFC9110_TOKEN_CHARS)) != null) {
             rawNames.add(f.toString());
         }
-        vtoks.whitespace(0);
+        vtoks.spaces(0);
         if (!vtoks.end()) {
             vtoks.abort("end or \",\" expected");
             throw new AssertionError("unreachable");

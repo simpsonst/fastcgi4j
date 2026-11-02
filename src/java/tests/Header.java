@@ -40,6 +40,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import uk.ac.lancs.http.ChunkedInputStream;
+import uk.ac.lancs.http.Syntax;
 import uk.ac.lancs.io.CompletingInputStream;
 import uk.ac.lancs.io.EmptyInputStream;
 import uk.ac.lancs.io.LimitedInputStream;
@@ -84,9 +85,10 @@ public abstract class Header extends FieldSet {
             Tokenizer tokenizer = new Tokenizer(teTxt);
             List<String> tokens = new ArrayList<>();
             CharSequence token;
-            while ((token = tokenizer.whitespaceAtom(0)) != null) {
+            while ((token =
+                tokenizer.spacesToken(0, Syntax.RFC9110_TOKEN_CHARS)) != null) {
                 tokens.add(token.toString());
-                if (!tokenizer.whitespaceCharacter(0, ',')) break;
+                if (!tokenizer.spacesPunctuation(0, ",")) break;
             }
             if (!tokens.isEmpty() &&
                 tokens.get(tokens.size() - 1).equals("chunked")) {

@@ -115,36 +115,30 @@ public final class Negotiation {
      * @throws NumberFormatException if a <samp>q</samp> parameter value
      * cannot be parsed as a {@code float}
      */
-    public static Map<String, Float> getAtomPreference(CharSequence text) {
+    public static Map<String, Float> getTokenPreference(CharSequence text) {
         if (text == null) return Collections.emptyMap();
         Map<String, Float> result = new HashMap<>();
         result.put(IdentityProvider.NAME, 1.0F);
         Tokenizer toks = new Tokenizer(text);
-        while (true) {
-            toks.whitespace(0);
-            CharSequence name = toks.atom();
-            if (name == null) {
-                if (toks.character('*'))
-                    name = "*";
-                else
-                    throw new IllegalArgumentException("bad atom preference: "
-                        + text);
+        var qs = new QualitySelector();
+        next_element: while (true) {
+            qs.reset();
+            System.err.printf("remaining: [%s]%n", toks.remnant());
+            CharSequence name =
+                toks.spacesTokenParameters(0, Syntax.RFC9110_TOKEN_CHARS, qs);
+            if (name == null)
+                throw new IllegalArgumentException("bad atom preference: "
+                    + text);
+            result.put(name.toString(), qs.get());
+
+            switch (toks.separator(0, ",")) {
+            case END:
+                break next_element;
+
+            case UNEXPECTED:
+                throw new IllegalArgumentException("bad atom preference: "
+                    + text);
             }
-            toks.whitespace(0);
-            Map.Entry<String, String> param;
-            float q = 1.0F;
-            while (toks.character(';') && toks.whitespace(0) &&
-                (param = toks.parameter()) != null) {
-                if (param.getKey().equals("q"))
-                    q = Float.parseFloat(param.getValue());
-                toks.whitespace(0);
-            }
-            if (toks.character(',')) {
-                result.put(name.toString(), q);
-                continue;
-            }
-            if (toks.end()) break;
-            throw new IllegalArgumentException("bad atom preference: " + text);
         }
         return Map.copyOf(result);
     }
@@ -164,24 +158,22 @@ public final class Negotiation {
         if (text == null) return Collections.emptyMap();
         Map<MediaGroup, Float> result = new HashMap<>();
         Tokenizer toks = new Tokenizer(text);
-        while (true) {
+        var qs = new QualitySelector();
+        next_element: while (true) {
+            qs.reset();
+
             MediaGroup group = MediaGroup.from(toks);
-            toks.whitespace(0);
-            Map.Entry<String, String> param;
-            float q = 1.0F;
-            while (toks.character(';') && toks.whitespace(0) &&
-                (param = toks.parameter()) != null) {
-                if (param.getKey().equals("q"))
-                    q = Float.parseFloat(param.getValue());
-                toks.whitespace(0);
+            toks.parameters(Syntax.RFC9110_TOKEN_CHARS, qs);
+            result.put(group, qs.get());
+
+            switch (toks.separator(0, ",")) {
+            case END:
+                break next_element;
+
+            case UNEXPECTED:
+                throw new IllegalArgumentException("bad media-group preference: "
+                    + text);
             }
-            if (toks.character(',')) {
-                result.put(group, q);
-                continue;
-            }
-            if (toks.end()) break;
-            throw new IllegalArgumentException("bad media-group preference: "
-                + text);
         }
         return Map.copyOf(result);
     }

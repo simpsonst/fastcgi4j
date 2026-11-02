@@ -76,7 +76,7 @@ public final class FlatField<T> extends Field<T> {
         try {
             var r = parse(t);
             if (r == null) t.abort(id.toString());
-            t.whitespace(0);
+            t.spaces(0);
             if (!t.end()) t.abort(id.toString());
             return r;
         } catch (IllegalArgumentException ex) {
