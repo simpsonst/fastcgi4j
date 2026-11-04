@@ -839,9 +839,15 @@ public class HttpResponderSession implements AutoCloseable, RequestBodySession {
         base.clearField(FieldNames.C_OPT);
         var extDefs = responseExtMgr.freeze();
         for (var ent : extDefs.entrySet()) {
-            /* What extension is this? What field from RFC2774 do we
-             * define it with? What is its scope and strength? */
+            /* What extension is this? */
             FieldExtension ext = ent.getKey();
+
+            /* TODO: If we decide to forbid most hop-by-hop fields, we
+             * should detect hop-by-hop extensions here and skip
+             * them. */
+
+            /* What field from RFC2774 do we define this namespace
+             * with? */
             final String field = ext.definingField();
 
             /* Form the namespace extension definition. This begins with
@@ -878,6 +884,13 @@ public class HttpResponderSession implements AutoCloseable, RequestBodySession {
         for (var ent : responseHeaderFields.entrySet()) {
             FieldId fieldId = ent.getKey();
             FieldNamespace ns = fieldId.namespace();
+
+            /* TODO: If we decide to forbid most hop-by-hop fields, we
+             * should detect a hop-by-hop namespace here, and skip. As
+             * an exception, we must still allow Content-Length through.
+             * It's considered an implicit hop-by-hpo field, so it won't
+             * generate a Connection field. */
+
             final String field = fieldId.prefixedName(responseExtMgr);
             var values = ent.getValue();
             for (var value : values)
@@ -926,12 +939,18 @@ public class HttpResponderSession implements AutoCloseable, RequestBodySession {
         base.clearField(FieldNames.TRAILER);
         for (var id : responseTrailerExpectation) {
             FieldNamespace ns = id.namespace();
+
+            /* TODO: If we decide to forbid most hop-by-hop fields, we
+             * should detect a hop-by-hop namespace here, and skip. */
+
             final String field = id.prefixedName(responseExtMgr);
             base.addField(FieldNames.TRAILER, field);
             if (ns.scope() == FieldScope.HOP_BY_HOP) hopByHopFields.add(field);
         }
 
-        /* Label explicit hop-by-hop fields. */
+        /* Label explicit hop-by-hop fields. NOOP: If hop-by-hop fields
+         * are going to be forbidden, our set of field names should be
+         * empty, so this will be a no-op. */
         base.clearField(FieldNames.CONNECTION);
         for (var field : hopByHopFields) {
             if (FieldNameSets.IMPLICIT_HOP_BY_HOP.contains(field)) continue;
