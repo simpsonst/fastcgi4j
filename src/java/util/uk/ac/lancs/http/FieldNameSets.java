@@ -266,10 +266,28 @@ public class FieldNameSets {
 
     /**
      * An immutable case-insensitive set of entity hop-by-hop field
+     * names that may only appear in a header, and that need not be
+     * declared in a <samp>{@value "%s" FieldNames#CONNECTION}</samp>
+     * field
+     */
+    public static final Set<String> HEADER_ENTITY_IMPLICIT_HOP_BY_HOP =
+        nameSet(CONTENT_LENGTH);
+
+    /**
+     * An immutable case-insensitive set of entity hop-by-hop field
+     * names that may only appear in a header, and that must be declared
+     * in a <samp>{@value "%s" FieldNames#CONNECTION}</samp> field
+     */
+    public static final Set<String> HEADER_ENTITY_EXPLICIT_HOP_BY_HOP =
+        nameSet();
+
+    /**
+     * An immutable case-insensitive set of entity hop-by-hop field
      * names that may only appear in a header
      */
     public static final Set<String> HEADER_ENTITY_HOP_BY_HOP =
-        nameSet(CONTENT_LENGTH);
+        nameSet(Set.of(HEADER_ENTITY_IMPLICIT_HOP_BY_HOP,
+                       HEADER_ENTITY_EXPLICIT_HOP_BY_HOP));
 
     /**
      * An immutable case-insensitive set of entity hop-by-hop field
@@ -291,6 +309,7 @@ public class FieldNameSets {
      */
     public static final Set<String> IMPLICIT_HOP_BY_HOP =
         nameSet(Set.of(HEADER_GENERAL_IMPLICIT_HOP_BY_HOP,
+                       HEADER_ENTITY_IMPLICIT_HOP_BY_HOP,
                        HEADER_RESPONSE_IMPLICIT_HOP_BY_HOP));
 
     private static TreeSet<String> newSet() {
