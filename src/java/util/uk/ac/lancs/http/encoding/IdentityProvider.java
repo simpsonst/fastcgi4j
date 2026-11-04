@@ -50,8 +50,8 @@ import uk.ac.lancs.scc.jardeps.Service;
 
 /**
  * Provides identity encoding. This goes by the sole name
- * <samp>{@value "%s" #NAME}</samp>, and is used for both content
- * encoding. It is not listed in <samp>{@value "%s"
+ * <samp>{@value "%s" #NAME}</samp>, and is used for content encoding.
+ * It is not listed in <samp>{@value "%s"
  * FieldNames#CONTENT_ENCODING}</samp>. It is also not available for
  * transfer encoding.
  * 
@@ -108,11 +108,17 @@ public class IdentityProvider implements EncodingProvider {
     }
 
     /**
-     * Get an identity encoder with a given name.
+     * Get an identity encoder with a given name. Other providers may
+     * use this to fake {@link OutputEncoding}s that nevertheless tag an
+     * output stream with their name. See
+     * {@link GZIPProvider#fakeEncoding()} and
+     * {@link DeflateProvider#fakeEncoding(int)}, for example.
      * 
      * @param name the name, which may be {@code null}
      * 
      * @return the requested encoder
+     * 
+     * @constructor
      */
     public static Encoder encoder(CharSequence name) {
         var n = Objects.toString(name, null);
@@ -154,13 +160,16 @@ public class IdentityProvider implements EncodingProvider {
      * <p>
      * This is intended for use with
      * {@link ResponseEncodingControl#force(List)} for responses that
-     * are already encoded with
+     * are already encoded, and therefore need to be tagged as such,
+     * without actually applying any further encoding.
      * 
      * @param name the declared name of the encoding
      * 
      * @param factor the compression factor
      * 
      * @return the requested encoding
+     * 
+     * @constructor
      */
     public static OutputEncoding encoding(CharSequence name, float factor) {
         Objects.requireNonNull(name, "name");
@@ -183,6 +192,8 @@ public class IdentityProvider implements EncodingProvider {
      * @param factor the compression factor
      * 
      * @return the requested encoding
+     * 
+     * @constructor
      */
     public static OutputEncoding encoding(float factor) {
         return internalEncoding(null, factor);

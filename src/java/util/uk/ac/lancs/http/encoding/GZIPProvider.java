@@ -157,8 +157,8 @@ public class GZIPProvider implements EncodingProvider {
         internalEncoding(IdentityProvider.encoder(NAME));
 
     /**
-     * Get an identity encoding using the canonical name
-     * <samp>{@value "%s" #NAME}</samp>.
+     * Get an identity encoding using the name <samp>{@value "%s"
+     * #NAME}</samp>.
      * 
      * <p>
      * This is intended for use with
