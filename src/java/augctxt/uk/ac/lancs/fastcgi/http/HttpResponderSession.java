@@ -232,7 +232,7 @@ public class HttpResponderSession implements AutoCloseable, RequestBodySession {
     }
 
     /**
-     * Holds the parsed value of the <samp>{@value "%S"
+     * Holds the parsed value of the <samp>{@value "%s"
      * FieldNames#TE}</samp> HTTP/1.1 request header field, mapping to
      * the (possibly implicit) <samp>q</samp> value.
      */
