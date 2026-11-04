@@ -353,7 +353,7 @@ public class HttpResponderSession implements AutoCloseable, RequestBodySession {
 
             /* Only the last element can be 'chunked'. Handle it
              * first. */
-            var last = transferEncodings.get(sz);
+            var last = transferEncodings.get(sz - 1);
             if (last.equalsIgnoreCase(CHUNKED_TOKEN)) {
                 transferEncodings.remove(--sz);
 
