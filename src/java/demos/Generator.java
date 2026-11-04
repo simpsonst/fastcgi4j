@@ -43,7 +43,6 @@ import uk.ac.lancs.cgi.FormSubmission;
 import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.ResponderSession;
 import uk.ac.lancs.fastcgi.app.FastCGIApplication;
-import uk.ac.lancs.fastcgi.app.FastCGIConfiguration;
 import uk.ac.lancs.fastcgi.form.FormHandler;
 import uk.ac.lancs.fastcgi.http.HttpResponderContext;
 import uk.ac.lancs.fastcgi.http.HttpResponderSession;
@@ -67,15 +66,6 @@ import uk.ac.lancs.mime.body.SmartMorgue;
 public class Generator extends FastCGIApplication implements Responder {
     private static final HttpResponderContext httpContext =
         new HttpResponderContext() {};
-
-    @Override
-    public boolean init(FastCGIConfiguration config, String[] args) {
-        System.err.printf("transfer decoders = %s%n",
-                          httpContext.transferDecoders().keySet());
-        System.err.printf("transfer encoders = %s%n",
-                          httpContext.transferEncoders());
-        return true;
-    }
 
     private static final Morgue morgue =
         SmartMorgue.start().singleThreshold(20).build();
