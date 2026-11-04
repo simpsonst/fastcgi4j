@@ -58,6 +58,18 @@ public interface ResponseEncodingControl {
      * 
      * <p>
      * By default, an empty map is assumed.
+     * 
+     * <p>
+     * Do not offer content encoding <em>and</em> set <samp>{@value "%s"
+     * FieldNames#CONTENT_LENGTH}</samp>, as the length provided must
+     * match the encoded content, which you don't know until the
+     * encoding has been chosen and applied, by which time it's too late
+     * to set the length. If the content is already encoded, and you
+     * know the <em>encoded length</em>, you can set <samp>{@value "%s"
+     * FieldNames#CONTENT_LENGTH}</samp> to that value, and indicate
+     * that the content is encoded with {@link #force(List)}. Use
+     * {@link IdentityProvider#encoding(CharSequence, float)} to provide
+     * an identity encoder that spoofs the already-applied encoding.
      *
      * @param offer a description of available content encodings
      */

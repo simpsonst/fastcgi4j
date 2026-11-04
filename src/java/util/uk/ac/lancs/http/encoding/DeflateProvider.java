@@ -124,6 +124,23 @@ public class DeflateProvider implements EncodingProvider {
         };
     }
 
+    /**
+     * Get an encoding using an existing encoder and a compression
+     * level.
+     * 
+     * @implNote The compression level is currently unused, but could be
+     * made to affect the reported
+     * {@linkplain OutputEncoding#compressionFactor() compression
+     * factor} in future.
+     * 
+     * @param encoder the encoder to be provided
+     * 
+     * @param level the compression level, 0-9
+     * 
+     * @return the requested encoding
+     * 
+     * @constructor
+     */
     private static OutputEncoding encoding(Encoder encoder, int lvl) {
         return new OutputEncoding() {
             @Override
@@ -144,7 +161,7 @@ public class DeflateProvider implements EncodingProvider {
     }
 
     /**
-     * Get a DEFALTE output encoding using the canonical name
+     * Get a DEFLATE output encoding using the canonical name
      * <samp>{@value "%s" #NAME}</samp>.
      * 
      * <p>
@@ -155,14 +172,16 @@ public class DeflateProvider implements EncodingProvider {
      * @param level the compression level, 0-9
      * 
      * @return the requested encoding
+     * 
+     * @constructor
      */
     public static OutputEncoding encoding(int level) {
         return encoding(NAME, level);
     }
 
     /**
-     * Get an identity encoding using the canonical name
-     * <samp>{@value "%s" #NAME}</samp>.
+     * Get an identity encoding using the name <samp>{@value "%s"
+     * #NAME}</samp>.
      * 
      * <p>
      * This is intended for use with
@@ -172,6 +191,8 @@ public class DeflateProvider implements EncodingProvider {
      * @param level the compression level, 0-9
      * 
      * @return the requested encoding
+     * 
+     * @constructor
      */
     public static OutputEncoding fakeEncoding(int level) {
         return encoding(IdentityProvider.encoder(NAME), level);
