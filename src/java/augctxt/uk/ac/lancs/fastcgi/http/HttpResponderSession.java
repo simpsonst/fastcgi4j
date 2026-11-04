@@ -346,8 +346,15 @@ public class HttpResponderSession implements AutoCloseable, RequestBodySession {
     private InputStream makeIn() throws IOException {
         InputStream in = base.in();
 
-        /* Apply all transfer encodings. */
-        List<String> transferEncodings = tokens(TRANSFER_ENCODING_PARAM);
+        /* Apply all transfer encodings. NOOP: Actually, no. The field
+         * has no reliable meaning in (Fast)CGI, at least with Apache.
+         * If you send something gzipped and chunked, the field won't be
+         * present, yet the gzipping won't have been undone. In other
+         * cases, 'chunked' is present, but it has been undone. For now,
+         * we leave the code in place, but treat the field as absent,
+         * providing an empty list of transfer encodings. */
+        List<String> transferEncodings =
+            false ? tokens(TRANSFER_ENCODING_PARAM) : Collections.emptyList();
         if (!transferEncodings.isEmpty()) {
             var sz = transferEncodings.size();
 
@@ -905,32 +912,34 @@ public class HttpResponderSession implements AutoCloseable, RequestBodySession {
         outCache.write(new OutCacheContext(responseExtMgr),
                        s -> base.addField(FieldNames.CACHE_CONTROL, s));
 
-        /* Find out what encodings the client prefers, and record
-         * them. */
-        responseEncodingPlanner.transferPreference(transferPreference);
+        /* Find out what content encodings the client prefers, and
+         * record them. Determine what content encoding should be
+         * applied, based on what the application has supplied in the
+         * context, and on what the Accept-Encoding request field
+         * permits. Record what content encodings are going to be
+         * applied. Set the Content-Encoding header field, or clear it
+         * if not required. */
         responseEncodingPlanner.contentPreference(contentPreference());
+        List<Encoder> contentPlan = responseEncodingPlanner.contentPlan();
+        List<String> contentEncodings = Encoder.declare(contentPlan);
+        setEncodingField(FieldNames.CONTENT_ENCODING, contentEncodings);
 
         /* Find out what transfer encoding implementations are available
-         * to us by context. */
-        responseEncodingPlanner.transferOffer(ctxt.transferEncoders());
-
-        /* Determine what non-chunked transfer/content encoding should
-         * be applied, based on what the application has supplied in the
-         * context, and on what the TE/Accept-Encoding request fields
-         * permitted. */
+         * to us by context. Determine what non-chunked transfer
+         * encoding should be applied, based on what the application has
+         * supplied in the context, and on what the TE request field
+         * permits. Record what encodings are going to be applied. Set
+         * the Transfer-Encoding header field. If there is any transfer
+         * encoding, Content-Length cannot be set. NOOP: We force this
+         * to apply *no* transfer encoding on the response, as it
+         * doesn't seem to be tolerated by HTTP servers. */
+        responseEncodingPlanner.transferPreference(transferPreference);
+        responseEncodingPlanner.transferOffer(false ? ctxt.transferEncoders() :
+            Collections.emptyMap());
         List<Encoder> transferPlan = responseEncodingPlanner.transferPlan();
-        List<Encoder> contentPlan = responseEncodingPlanner.contentPlan();
-
-        /* Record what encodings are going to be applied. Transfer
-         * codings must be mutable, because we might add a final
-         * 'chunked' encoding. */
+        assert transferPlan.isEmpty();
         List<String> transferEncodings = Encoder.declare(transferPlan);
-        List<String> contentEncodings = Encoder.declare(contentPlan);
-
-        /* Set the encoding header fields, or clear them if not
-         * required. If there is any transfer encoding, Content-Length
-         * cannot be set. */
-        setEncodingField(FieldNames.CONTENT_ENCODING, contentEncodings);
+        assert transferEncodings.isEmpty();
         if (setEncodingField(FieldNames.TRANSFER_ENCODING, transferEncodings)) {
             base.clearField(FieldNames.CONTENT_LENGTH);
             hopByHopFields.remove(FieldNames.CONTENT_LENGTH);
@@ -1000,7 +1009,12 @@ public class HttpResponderSession implements AutoCloseable, RequestBodySession {
             };
         }
 
+        /* NOOP: Apache doesn't tolerate transfer encodings from the
+         * application. The code is left in place, but should be a
+         * no-op. */
+        assert transferPlan.isEmpty();
         out = Encoder.encode(out, transferPlan);
+
         for (var ent : digests.entrySet())
             out = new DigestOutputStream(out, ent.getValue());
         out = Encoder.encode(out, contentPlan);
