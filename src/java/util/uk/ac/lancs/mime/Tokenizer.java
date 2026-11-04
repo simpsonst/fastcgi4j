@@ -48,19 +48,35 @@ import java.util.function.Function;
 import java.util.function.IntPredicate;
 
 /**
- * Parses MIME header atoms, quoted strings and related structures. The
+ * Parses MIME header tokens, quoted strings and related structures. The
  * entire input is required at once. A copy of it is retained
  * internally, and a position is initialized at the start. Each time a
- * token is successfully parsed, the position advances.
+ * recognized sequence is successfully parsed, the position advances.
  * 
  * @author simpsons
  */
 public final class Tokenizer {
     /**
-     * Identifies RFC2045 special code points for tokens. These include
-     * a range of US-ASCII punctuation,
-     * <samp>()[]:;,&lt;&gt;\/?&#64;=</samp>, and are not permitted in
-     * tokens.
+     * Identifies RFC2045 code points in the US-ASCII range that are
+     * excluded for tokens. They consist of the following punctuation:
+     * 
+     * <ul>
+     *
+     * <li>U+0028 (40; <samp>&#40;</samp>), U+0029 (41;
+     * <samp>&#41;</samp>), U+005B (91; <samp>&#91;</samp>), U+005D (93;
+     * <samp>&#93;</samp>)
+     *
+     * <li>U+003C (60; <samp>&lt;</samp>), U+003E (62;
+     * <samp>&gt;</samp>), U+003D (61; <samp>=</samp>)
+     *
+     * <li>U+003A (58; <samp>:</samp>), U+003B (59; <samp>;</samp>),
+     * U+002C (44; <samp>,</samp>), U+003F (63; <samp>?</samp>)
+     *
+     * <li>U+002F (47; <samp>/</samp>), U+005C (92; <samp>\</samp>)
+     *
+     * <li>U+0040 (64; <samp>&#64;</samp>)
+     * 
+     * </ul>
      * 
      * @spec https://www.rfc-editor.org/info/rfc2045/#section-5.1
      * RFC2045 &sect;5.1
@@ -72,34 +88,52 @@ public final class Tokenizer {
     };
 
     /**
-     * Identifies digit US-ASCII code points. These are 48 to 57.
+     * Identifies digit US-ASCII code points. These are the decimal
+     * digits U+0030 (48; <samp>0</samp>) to U+0039 (57; <samp>9</samp>)
+     * inclusive.
      */
     public static final IntPredicate US_ASCII_DIGITS = c -> c >= 48 && c <= 57;
 
     /**
-     * Identifies hexadecimal digit US-ASCII code points. These are 48
-     * to 57 (the decimal digits), 65 to 70 (A-F) and 97 to 102 (a-f).
+     * Identifies hexadecimal digit US-ASCII code points. These are:
+     * 
+     * <ul>
+     * 
+     * <li>the decimal digits U+0030 (48; <samp>0</samp>) to U+0039 (57;
+     * <samp>9</samp>) inclusive;
+     * 
+     * <li>the upper-case letters U+0041 (65; <samp>A</samp>) to U+0046
+     * (70; <samp>F</samp>) inclusive; and
+     * 
+     * <li>the lower-case letters U+0061 (97; <samp>a</samp>) to U+0066
+     * (102; <samp>f</samp>) inclusive.
+     * 
+     * </ul>
      */
     public static final IntPredicate US_ASCII_HEX_DIGITS = US_ASCII_DIGITS
         .or(c -> c >= 65 && c <= 70).or(c -> c >= 97 && c <= 102);
 
     /**
      * Identifies upper-case alphabetic US-ASCII code points. These are
-     * 65 to 90.
+     * U+0041 (65; <samp>A</samp>) to U+005A (90; <samp>Z</samp>)
+     * inclusive.
      */
     public static final IntPredicate US_ASCII_UPPERCASE_LETTERS =
         c -> c >= 65 && c <= 90;
 
     /**
      * Identifies lower-case alphabetic US-ASCII code points. These are
-     * 97 to 122.
+     * U+0061 (97; <samp>a</samp>) to U+007A (122; <samp>z</samp>)
+     * inclusive.
      */
     public static final IntPredicate US_ASCII_LOWERCASE_LETTERS =
         c -> c >= 97 && c <= 122;
 
     /**
-     * Identifies alphabetic US-ASCII code points. These are 65 to 90
-     * and 97 to 122.
+     * Identifies alphabetic US-ASCII code points. These are U+0041 (65;
+     * <samp>A</samp>) to U+005A (90; <samp>Z</samp>) inclusive, and
+     * U+0061 (97; <samp>a</samp>) to U+007A (122; <samp>z</samp>)
+     * inclusive.
      * 
      * @see #US_ASCII_LOWERCASE_LETTERS
      * 
@@ -111,14 +145,16 @@ public final class Tokenizer {
     /**
      * Identifies graphic US-ASCII code points. These do not include
      * control characters, not space, and are strictly the code points
-     * from 33 to 126 inclusive.
+     * from U+0021 (33; <samp>!</samp>) to U+007E (126; <samp>~</samp>)
+     * inclusive.
      */
     public static final IntPredicate US_ASCII_GRAPHICS =
         c -> c >= 33 && c <= 126;
 
     /**
      * Identifies code points that can form RFC2045 tokens. These are
-     * graphic US-ASCII characters, except for some special ones.
+     * {@linkplain #US_ASCII_GRAPHICS graphic US-ASCII} characters,
+     * except for {@linkplain #RFC2045_TSPECIALS some special ones}.
      * 
      * @see #US_ASCII_GRAPHICS
      * 
@@ -129,7 +165,7 @@ public final class Tokenizer {
 
     /**
      * Identifies linear white-space characters. These are space U+0020
-     * and tab U+0009.
+     * (32) and tab U+0009 (9).
      */
     public static IntPredicate LWSP_CHARS = c -> c == ' ' || c == '\t';
 
