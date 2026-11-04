@@ -74,7 +74,15 @@ public interface HttpResponderContext {
      * returned. These can be configured by setting system properties
      * beginning with the prefix <samp>{@value "%s"
      * HttpResponderSession#ENCODINGS_PREFIX}</samp>.
+     * 
+     * @deprecated Transfer encoding on the request is not reliable. The
+     * {@value "%s" uk.ac.lancs.http.FieldNames#TRANSFER_ENCODING}
+     * request field is not set reliably, sometimes being absent while
+     * an encoding still applies, and often stating that the body is
+     * chunked when it has already been de-chunked. The return value of
+     * this method is therefore ignored, if invoked at all.
      */
+    @Deprecated
     default Map<String, Decoder> transferDecoders() {
         return HttpResponderSession.ALL_AVAILABLE_TRANSFER_DECODERS;
     }
@@ -92,7 +100,12 @@ public interface HttpResponderContext {
      * returned. These can be configured by setting system properties
      * beginning with the prefix <samp>{@value "%s"
      * HttpResponderSession#ENCODINGS_PREFIX}</samp>.
+     * 
+     * @deprecated Transfer encoding on the response is often not
+     * tolerated. The return value of this method is therefore not used,
+     * if invoked at all.
      */
+    @Deprecated
     default Map<String, Map.Entry<? extends OutputEncoding, ? extends Number>>
         transferEncoders() {
         return HttpResponderSession.ALL_AVAILABLE_TRANSFER_ENCODERS;
