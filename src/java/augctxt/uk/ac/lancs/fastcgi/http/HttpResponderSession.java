@@ -234,7 +234,8 @@ public class HttpResponderSession implements AutoCloseable, RequestBodySession {
     /**
      * Holds the parsed value of the <samp>{@value "%s"
      * FieldNames#TE}</samp> HTTP/1.1 request header field, mapping to
-     * the (possibly implicit) <samp>q</samp> value.
+     * the (possibly implicit) <samp>{@value "%s"
+     * uk.ac.lancs.http.QualitySelector#QUALITY_PARAMETER}</samp> value.
      */
     private final Map<String, Float> transferPreference;
 
