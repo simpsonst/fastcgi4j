@@ -123,7 +123,6 @@ public final class Negotiation {
         var qs = new QualitySelector();
         next_element: while (true) {
             qs.reset();
-            System.err.printf("remaining: [%s]%n", toks.remnant());
             CharSequence name =
                 toks.spacesTokenParameters(0, Syntax.RFC9110_TOKEN_CHARS, qs);
             if (name == null)
