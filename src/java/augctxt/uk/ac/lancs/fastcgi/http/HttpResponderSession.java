@@ -920,13 +920,6 @@ public class HttpResponderSession implements AutoCloseable, RequestBodySession {
             hopByHopFields.remove(FieldNames.CONTENT_LENGTH);
         }
 
-        /* Label explicit hop-by-hop fields. */
-        base.clearField(FieldNames.CONNECTION);
-        for (var field : hopByHopFields) {
-            if (FieldNameSets.IMPLICIT_HOP_BY_HOP.contains(field)) continue;
-            base.addField(FieldNames.CONNECTION, field);
-        }
-
         /* Set a raw header field to express what is expected in the
          * trailer. */
         base.clearField(FieldNames.TRAILER);
@@ -935,6 +928,13 @@ public class HttpResponderSession implements AutoCloseable, RequestBodySession {
             final String field = id.prefixedName(responseExtMgr);
             base.addField(FieldNames.TRAILER, field);
             if (ns.scope() == FieldScope.HOP_BY_HOP) hopByHopFields.add(field);
+        }
+
+        /* Label explicit hop-by-hop fields. */
+        base.clearField(FieldNames.CONNECTION);
+        for (var field : hopByHopFields) {
+            if (FieldNameSets.IMPLICIT_HOP_BY_HOP.contains(field)) continue;
+            base.addField(FieldNames.CONNECTION, field);
         }
 
         OutputStream out = base.out();
