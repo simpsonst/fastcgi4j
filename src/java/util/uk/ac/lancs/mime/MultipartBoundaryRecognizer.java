@@ -168,35 +168,6 @@ public final class MultipartBoundaryRecognizer implements BoundaryRecognizer {
         /* Where should the fixed part of the boundary end? */
         final int fixedEnd = start + boundary.length - candOff;
 
-        if (false) {
-            System.err.printf("%n%d-%d-%d%s fixed end=%d%n", start, done, limit,
-                              more ? "" : " (end)", fixedEnd);
-            for (int i = start; i < limit; i += 16) {
-                System.err.printf("%06X", i);
-                for (int j = 0; j < 16; j++) {
-                    final int p = i + j;
-                    if (p < limit)
-                        System.err.printf(
-                                          "%c%02X", p == fixedEnd ? '!' :
-                                              p < done ? '-' : ' ',
-                                          buf[p] & 0xff);
-                    else
-                        System.err.print("   ");
-                }
-                System.err.print(' ');
-                for (int j = 0; j < 16; j++) {
-                    final int p = i + j;
-                    if (p < limit) {
-                        int b = buf[p] & 0xff;
-                        System.err.printf("%c",
-                                          b > ASCII.SPACE && b < ASCII.DEL ?
-                                              (char) b : '.');
-                    }
-                }
-                System.err.println();
-            }
-        }
-
         int pos = done;
         terminal = false;
 

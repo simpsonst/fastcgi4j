@@ -916,7 +916,6 @@ public class HttpResponderSession implements AutoCloseable, RequestBodySession {
          * cannot be set. */
         setEncodingField(FieldNames.CONTENT_ENCODING, contentEncodings);
         if (setEncodingField(FieldNames.TRANSFER_ENCODING, transferEncodings)) {
-            System.err.println("clearing content length");
             base.clearField(FieldNames.CONTENT_LENGTH);
             hopByHopFields.remove(FieldNames.CONTENT_LENGTH);
         }
