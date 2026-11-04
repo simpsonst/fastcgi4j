@@ -863,7 +863,9 @@ public class HttpResponderSession implements AutoCloseable, RequestBodySession {
                 var attrName = attr.getKey();
                 if (FieldExtension.forbiddenAttribute(attrName)) continue;
                 value.append("; ").append(attrName).append('=')
-                    .append(Tokenizer.quoteOptionally(attr.getValue()));
+                    .append(Tokenizer
+                        .quoteOptionally(attr.getValue(),
+                                         Syntax.RFC9110_TOKEN_CHARS));
             }
             base.addField(field, value.toString());
 
