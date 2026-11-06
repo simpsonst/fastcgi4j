@@ -1102,42 +1102,7 @@ public class HttpResponderSession implements AutoCloseable, RequestBodySession {
         return responseCacheControl;
     }
 
-    private final OTSControl otsResponseControl = new OTSControl() {
-        @Override
-        public void setStatus(int code) {
-            base.setStatus(code);
-        }
-
-        @Override
-        public void clearContentType() {
-            FieldId.CONTENT_TYPE.clear(responseHeader());
-        }
-
-        @Override
-        public void clearContentLength() {
-            FieldId.CONTENT_LENGTH.clear(responseHeader());
-        }
-
-        @Override
-        public void clearContentEncoding() {
-            FieldId.CONTENT_ENCODING.clear(responseHeader());
-        }
-
-        @Override
-        public OutputStream out() throws IOException {
-            return HttpResponderSession.this.out();
-        }
-
-        @Override
-        public void setLocation(URI location) {
-            Field.LOCATION.set(responseHeader(), location);
-        }
-
-        @Override
-        public void setContentType(MediaType type) {
-            Field.CONTENT_TYPE.set(responseHeader(), type);
-        }
-    };
+    private OTSControl otsResponseControl;
 
     /**
      * Get a view of this session for off-the-shelf responses.
@@ -1145,6 +1110,45 @@ public class HttpResponderSession implements AutoCloseable, RequestBodySession {
      * @return the requested view
      */
     public OTSControl otsResponseControl() {
+        if (otsResponseControl == null) {
+            final var header = responseHeader();
+            otsResponseControl = new OTSControl() {
+                @Override
+                public void setStatus(int code) {
+                    base.setStatus(code);
+                }
+
+                @Override
+                public void clearContentType() {
+                    FieldId.CONTENT_TYPE.clear(header);
+                }
+
+                @Override
+                public void clearContentLength() {
+                    FieldId.CONTENT_LENGTH.clear(header);
+                }
+
+                @Override
+                public void clearContentEncoding() {
+                    FieldId.CONTENT_ENCODING.clear(header);
+                }
+
+                @Override
+                public OutputStream out() throws IOException {
+                    return HttpResponderSession.this.out();
+                }
+
+                @Override
+                public void setLocation(URI location) {
+                    Field.LOCATION.set(header, location);
+                }
+
+                @Override
+                public void setContentType(MediaType type) {
+                    Field.CONTENT_TYPE.set(header, type);
+                }
+            };
+        }
         return otsResponseControl;
     }
 
