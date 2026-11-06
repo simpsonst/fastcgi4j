@@ -344,9 +344,9 @@ public class HttpResponderSession implements AutoCloseable, BodySession {
     private static final String TRANSFER_ENCODING_PARAM =
         Http.fieldNameAsCGI(FieldNames.TRANSFER_ENCODING);
 
-    private InputStream makeIn() throws IOException {
-        InputStream in = base.in();
-
+    @SuppressWarnings("unused")
+    @Deprecated
+    private InputStream transferDecode(InputStream in) throws IOException {
         /* Apply all transfer encodings. NOOP: Actually, no. The field
          * has no reliable meaning in (Fast)CGI, at least with Apache.
          * If you send something gzipped and chunked, the field won't be
@@ -390,6 +390,14 @@ public class HttpResponderSession implements AutoCloseable, BodySession {
                 throw new IOException("unknown transfer encoding "
                     + transferEncodings);
         }
+
+        return in;
+    }
+
+    private InputStream makeIn() throws IOException {
+        InputStream in = base.in();
+
+        // in = transferDecode(in); // deprecated
 
         /* Apply unhandled content decoding, according to what the
          * application wants. */
@@ -821,6 +829,12 @@ public class HttpResponderSession implements AutoCloseable, BodySession {
         return parts.stream().flatMap(e -> e.stream());
     }
 
+    @Deprecated
+    @SuppressWarnings("unused")
+    private void applyTransferEncoding() {
+        responseEncodingPlanner.transferOffer(ctxt.transferEncoders());
+    }
+
     private OutputStream makeOut() throws IOException {
         final var rawHeader = base.responseHeader();
         if (!digests.isEmpty()) expectInTrailer(FieldId.CONTENT_DIGEST);
@@ -938,8 +952,8 @@ public class HttpResponderSession implements AutoCloseable, BodySession {
          * to apply *no* transfer encoding on the response, as it
          * doesn't seem to be tolerated by HTTP servers. */
         responseEncodingPlanner.transferPreference(transferPreference);
-        responseEncodingPlanner.transferOffer(false ? ctxt.transferEncoders() :
-            Collections.emptyMap());
+        responseEncodingPlanner.transferOffer(Collections.emptyMap());
+        // applyTransferEncoding(); // deprecated
         List<Encoder> transferPlan = responseEncodingPlanner.transferPlan();
         assert transferPlan.isEmpty();
         List<String> transferEncodings = Encoder.declare(transferPlan);
