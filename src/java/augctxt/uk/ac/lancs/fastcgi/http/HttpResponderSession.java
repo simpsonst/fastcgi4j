@@ -67,6 +67,7 @@ import uk.ac.lancs.fastcgi.Diagnostics;
 import uk.ac.lancs.fastcgi.RequestBodySession;
 import uk.ac.lancs.fastcgi.RequestableSession;
 import uk.ac.lancs.fastcgi.ResponderSession;
+import uk.ac.lancs.fastcgi.ResponseFieldSet;
 import uk.ac.lancs.fastcgi.http.ots.OTSControl;
 import uk.ac.lancs.http.FieldNameSets;
 import uk.ac.lancs.http.FieldNames;
@@ -792,13 +793,14 @@ public class HttpResponderSession implements AutoCloseable, RequestBodySession {
         return responseEncodingPlanner;
     }
 
-    private boolean setEncodingField(String name, List<String> encodings) {
+    private boolean setEncodingField(ResponseFieldSet header, String name,
+                                     List<String> encodings) {
         if (encodings.isEmpty()) {
-            base.clearField(name);
+            header.clear(name);
             return false;
         } else {
             var val = encodings.stream().collect(Collectors.joining(", "));
-            base.setField(name, val);
+            header.set(name, val);
             return true;
         }
     }
@@ -820,6 +822,7 @@ public class HttpResponderSession implements AutoCloseable, RequestBodySession {
     }
 
     private OutputStream makeOut() throws IOException {
+        final var rawHeader = base.responseHeader();
         if (!digests.isEmpty()) expectInTrailer(FieldId.CONTENT_DIGEST);
 
         /* Build up a collection of used hop-by-hop raw field names.
@@ -840,10 +843,10 @@ public class HttpResponderSession implements AutoCloseable, RequestBodySession {
         /* Set the raw response header fields that define the necessary
          * namespaces. Include any additional parameters specified for
          * each namespace by the application. */
-        base.clearField(FieldNames.MAN);
-        base.clearField(FieldNames.OPT);
-        base.clearField(FieldNames.C_MAN);
-        base.clearField(FieldNames.C_OPT);
+        rawHeader.clear(FieldNames.MAN);
+        rawHeader.clear(FieldNames.OPT);
+        rawHeader.clear(FieldNames.C_MAN);
+        rawHeader.clear(FieldNames.C_OPT);
         var extDefs = responseExtMgr.freeze();
         for (var ent : extDefs.entrySet()) {
             /* What extension is this? */
@@ -874,7 +877,7 @@ public class HttpResponderSession implements AutoCloseable, RequestBodySession {
                         .quoteOptionally(attr.getValue(),
                                          Syntax.RFC9110_TOKEN_CHARS));
             }
-            base.addField(field, value.toString());
+            rawHeader.add(field, value.toString());
 
             /* Ensure that the field defining this extension is labelled
              * as hop-by-hop, if the extension is hop-by-hop. */
@@ -883,9 +886,9 @@ public class HttpResponderSession implements AutoCloseable, RequestBodySession {
 
         /* Set varying field ids. */
         if (!varyingFields.isEmpty()) {
-            base.clearField(FieldNames.VARY);
+            rawHeader.clear(FieldNames.VARY);
             for (var v : varyingFields)
-                base.addField(FieldNames.VARY, v.prefixedName(responseExtMgr));
+                rawHeader.add(FieldNames.VARY, v.prefixedName(responseExtMgr));
         }
 
         /* Set raw response header fields based on our local namespaced
@@ -903,14 +906,14 @@ public class HttpResponderSession implements AutoCloseable, RequestBodySession {
             final String field = fieldId.prefixedName(responseExtMgr);
             var values = ent.getValue();
             for (var value : values)
-                base.addField(field, value);
+                rawHeader.add(field, value);
             if (ns.scope() == FieldScope.HOP_BY_HOP) hopByHopFields.add(field);
         }
 
-        base.clearField(FieldNames.CACHE_CONTROL);
+        rawHeader.clear(FieldNames.CACHE_CONTROL);
         var outCache = responseCacheControl();
         outCache.write(new OutCacheContext(responseExtMgr),
-                       s -> base.addField(FieldNames.CACHE_CONTROL, s));
+                       s -> rawHeader.add(FieldNames.CACHE_CONTROL, s));
 
         /* Find out what content encodings the client prefers, and
          * record them. Determine what content encoding should be
@@ -922,7 +925,8 @@ public class HttpResponderSession implements AutoCloseable, RequestBodySession {
         responseEncodingPlanner.contentPreference(contentPreference());
         List<Encoder> contentPlan = responseEncodingPlanner.contentPlan();
         List<String> contentEncodings = Encoder.declare(contentPlan);
-        setEncodingField(FieldNames.CONTENT_ENCODING, contentEncodings);
+        setEncodingField(rawHeader, FieldNames.CONTENT_ENCODING,
+                         contentEncodings);
 
         /* Find out what transfer encoding implementations are available
          * to us by context. Determine what non-chunked transfer
@@ -940,14 +944,15 @@ public class HttpResponderSession implements AutoCloseable, RequestBodySession {
         assert transferPlan.isEmpty();
         List<String> transferEncodings = Encoder.declare(transferPlan);
         assert transferEncodings.isEmpty();
-        if (setEncodingField(FieldNames.TRANSFER_ENCODING, transferEncodings)) {
-            base.clearField(FieldNames.CONTENT_LENGTH);
+        if (setEncodingField(rawHeader, FieldNames.TRANSFER_ENCODING,
+                             transferEncodings)) {
+            rawHeader.clear(FieldNames.CONTENT_LENGTH);
             hopByHopFields.remove(FieldNames.CONTENT_LENGTH);
         }
 
         /* Set a raw header field to express what is expected in the
          * trailer. */
-        base.clearField(FieldNames.TRAILER);
+        rawHeader.clear(FieldNames.TRAILER);
         for (var id : responseTrailerExpectation) {
             FieldNamespace ns = id.namespace();
 
@@ -955,17 +960,17 @@ public class HttpResponderSession implements AutoCloseable, RequestBodySession {
              * should detect a hop-by-hop namespace here, and skip. */
 
             final String field = id.prefixedName(responseExtMgr);
-            base.addField(FieldNames.TRAILER, field);
+            rawHeader.add(FieldNames.TRAILER, field);
             if (ns.scope() == FieldScope.HOP_BY_HOP) hopByHopFields.add(field);
         }
 
         /* Label explicit hop-by-hop fields. NOOP: If hop-by-hop fields
          * are going to be forbidden, our set of field names should be
          * empty, so this will be a no-op. */
-        base.clearField(FieldNames.CONNECTION);
+        rawHeader.clear(FieldNames.CONNECTION);
         for (var field : hopByHopFields) {
             if (FieldNameSets.IMPLICIT_HOP_BY_HOP.contains(field)) continue;
-            base.addField(FieldNames.CONNECTION, field);
+            rawHeader.add(FieldNames.CONNECTION, field);
         }
 
         OutputStream out = base.out();
@@ -1000,9 +1005,9 @@ public class HttpResponderSession implements AutoCloseable, RequestBodySession {
                         FieldId fieldId = ent.getKey();
                         final String field =
                             fieldId.prefixedName(responseExtMgr::seek);
-                        var dest = rawTrailer.get(field);
-                        dest.clear();
-                        dest.addAll(ent.getValue());
+                        rawTrailer.clear(field);
+                        for (var val : ent.getValue())
+                            rawTrailer.add(field, val);
                     }
                     super.close();
                 }

@@ -49,7 +49,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.TreeMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.locks.Condition;
@@ -62,6 +61,7 @@ import java.util.stream.Collectors;
 import uk.ac.lancs.fastcgi.Diagnostics;
 import uk.ac.lancs.fastcgi.FieldSession;
 import uk.ac.lancs.fastcgi.OverloadException;
+import uk.ac.lancs.fastcgi.ResponseFieldSet;
 import uk.ac.lancs.fastcgi.SessionException;
 import uk.ac.lancs.fastcgi.SessionResponseException;
 import uk.ac.lancs.fastcgi.proto.ProtocolStatuses;
@@ -168,9 +168,17 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
     Map<String, List<String>> requestTrailer;
 
     /**
-     * Holds the response trailer. Set to {@code null} if not available.
+     * Holds the raw response trailer. Set to {@code null} if not
+     * available. Set at the same time as {@link #responseTrailer}.
      */
-    Map<String, List<String>> responseTrailer;
+    final Map<String, List<String>> rawResponseTrailer;
+
+    /**
+     * Provides a sanitized view of the response trailer. Set to
+     * {@code null} if not available. Set at the same time as
+     * {@link #rawResponseTrailer}.
+     */
+    final ResponseFieldSet responseTrailer;
 
     /**
      * Indicates whether a second {@link RecordTypes#PARAMS} stream is
@@ -181,7 +189,7 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
     final boolean expectTrailer;
 
     @Override
-    public Map<String, List<String>> responseTrailer() {
+    public ResponseFieldSet responseTrailer() {
         return responseTrailer;
     }
 
@@ -210,11 +218,11 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
     int statusCode = ResponseCodes.OK;
 
     /**
-     * Holds the CGI/HTTP response headers. Names are case-insensitive.
-     * This is not transmitted until the standard output is written to,
-     * flushed or closed.
+     * Holds the CGI/HTTP response header fields. Names are
+     * case-insensitive. This is not transmitted until the standard
+     * output is written to, flushed or closed.
      */
-    private final Map<String, List<String>> outHeaders =
+    final Map<String, List<String>> rawOutHeader =
         new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
     /**
@@ -307,6 +315,8 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
         }
     };
 
+    private boolean trailerFrozen = false;
+
     /**
      * Create a request handler.
      * 
@@ -329,10 +339,11 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
             @Override
             public void close() throws IOException {
                 super.close();
-                if (responseTrailer == null) return;
+                if (rawResponseTrailer == null) return;
 
                 /* Write trailer PARAMS stream immediately after closing
                  * STDOUT. */
+                trailerFrozen = true;
                 writeTrailer();
             }
         };
@@ -355,8 +366,16 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
         }
 
         if (ctxt.supplyTrailer) {
-            this.responseTrailer = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+            this.rawResponseTrailer =
+                new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+            this.responseTrailer =
+                new BasicResponseFieldSet(this.rawResponseTrailer,
+                                          ArrayList::new,
+                                          () -> trailerFrozen ?
+                                              "trailer frozen" : null,
+                                          n -> null, () -> {});
         } else {
+            this.rawResponseTrailer = null;
             this.responseTrailer = null;
         }
 
@@ -385,7 +404,7 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
         try (var rout = new RecordOutputStream("PARAMS", RecordTypes.PARAMS, id,
                                                recordsOut);
              var tout = new BufferedOutputStream(rout, 0xffff)) {
-            for (var ent : responseTrailer.entrySet()) {
+            for (var ent : rawResponseTrailer.entrySet()) {
                 String key = ent.getKey();
                 for (var val : ent.getValue()) {
                     RecordWriter.write(tout, key, charset);
@@ -498,7 +517,7 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
                 if (statusCode >= 0) {
                     appStatus = APP_STATUS_IO;
                     setStatus(ResponseCodes.INTERNAL_SERVER_ERROR);
-                    outHeaders.clear();
+                    rawOutHeader.clear();
                 } else {
                     appStatus = APP_STATUS_IO_LATE;
                     completed = true;
@@ -508,7 +527,7 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
                 if (statusCode >= 0) {
                     appStatus = APP_STATUS_INTERRUPT;
                     setStatus(ResponseCodes.INTERNAL_SERVER_ERROR);
-                    outHeaders.clear();
+                    rawOutHeader.clear();
                 } else {
                     appStatus = APP_STATUS_INTERRUPT_LATE;
                     completed = true;
@@ -523,7 +542,7 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
                 if (statusCode >= 0) {
                     appStatus = APP_STATUS_ERROR;
                     setStatus(ResponseCodes.INTERNAL_SERVER_ERROR);
-                    outHeaders.clear();
+                    rawOutHeader.clear();
                 } else {
                     appStatus = APP_STATUS_ERROR_LATE;
                     completed = true;
@@ -534,7 +553,7 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
                 if (statusCode >= 0) {
                     appStatus = APP_STATUS_UNKNOWN;
                     setStatus(ResponseCodes.INTERNAL_SERVER_ERROR);
-                    outHeaders.clear();
+                    rawOutHeader.clear();
                 } else {
                     appStatus = APP_STATUS_UNKNOWN_LATE;
                     completed = true;
@@ -545,7 +564,7 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
                 if (statusCode >= 0) {
                     appStatus = APP_STATUS_ERROR;
                     setStatus(ResponseCodes.INTERNAL_SERVER_ERROR);
-                    outHeaders.clear();
+                    rawOutHeader.clear();
                 } else {
                     appStatus = APP_STATUS_ERROR_LATE;
                     completed = true;
@@ -734,43 +753,22 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
     }
 
     @Override
-    public void clearField(String name) {
-        Objects.requireNonNull(name, "name");
-        outHeaders.remove(name);
+    public ResponseFieldSet responseHeader() {
+        return outHeader;
     }
 
-    @Override
-    public void setField(String name, String value) {
-        Objects.requireNonNull(name, "name");
-        Objects.requireNonNull(value, "value");
-        name = name.trim();
-        setFieldInternal(name, value);
+    boolean responseFieldIsReserved(String name) {
+        return name.equalsIgnoreCase(FieldSession.STATUS_FIELD);
     }
 
-    void setFieldInternal(String name, String value) {
-        if (name.equalsIgnoreCase(FieldSession.STATUS_FIELD))
-            throw new IllegalArgumentException("reserved name " + name);
-        if (statusCode < 0) throw new IllegalStateException("header sent");
-        List<String> aval =
-            outHeaders.computeIfAbsent(name, k -> new ArrayList<>());
-        aval.clear();
-        aval.add(value);
-    }
+    void responseHeaderFieldSet() {}
 
-    @Override
-    public void addField(String name, String value) {
-        Objects.requireNonNull(name, "name");
-        Objects.requireNonNull(value, "value");
-        name = name.trim();
-        addFieldInternal(name, value);
-    }
-
-    void addFieldInternal(String name, String value) {
-        if (name.equalsIgnoreCase(FieldSession.STATUS_FIELD))
-            throw new IllegalArgumentException("reserved name " + name);
-        if (statusCode < 0) throw new IllegalStateException("header sent");
-        outHeaders.computeIfAbsent(name, k -> new ArrayList<>()).add(value);
-    }
+    private final ResponseFieldSet outHeader =
+        new BasicResponseFieldSet(rawOutHeader, ArrayList::new,
+                                  () -> statusCode < 0 ? "header sent" : null,
+                                  n -> responseFieldIsReserved(n) ?
+                                      "reserved name" : null,
+                                  this::responseHeaderFieldSet);
 
     @Override
     public void setStatus(int code) {
@@ -818,7 +816,7 @@ abstract class AbstractHandler implements SessionHandler, FieldSession {
             new PrintStream(new UnclosedOutputStream(bufferedOut), false,
                             charset)) {
             pout.printf("Status: %d %s%n", statusCode, fsm);
-            for (var entry : outHeaders.entrySet()) {
+            for (var entry : rawOutHeader.entrySet()) {
                 List<String> values = entry.getValue();
                 if (values.isEmpty()) continue;
                 String name = entry.getKey();

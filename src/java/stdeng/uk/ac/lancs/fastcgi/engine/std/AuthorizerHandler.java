@@ -39,6 +39,8 @@
 package uk.ac.lancs.fastcgi.engine.std;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import uk.ac.lancs.fastcgi.Authorizer;
 import uk.ac.lancs.fastcgi.AuthorizerSession;
@@ -70,34 +72,13 @@ class AuthorizerHandler extends AbstractHandler implements AuthorizerSession {
     }
 
     @Override
-    public void addField(String name, String value) {
-        Objects.requireNonNull(name, "name");
-        Objects.requireNonNull(value, "value");
-        name = name.trim();
-        if (isVariable(name))
-            throw new IllegalArgumentException("reserved name " + name);
-        addFieldInternal(name, value);
-        if (statusCode == 200) statusCode = 401;
+    boolean responseFieldIsReserved(String name) {
+        return super.responseFieldIsReserved(name) || isVariable(name);
     }
 
     @Override
-    public void setField(String name, String value) {
-        Objects.requireNonNull(name, "name");
-        Objects.requireNonNull(value, "value");
-        name = name.trim();
-        if (isVariable(name))
-            throw new IllegalArgumentException("reserved name " + name);
-        setFieldInternal(name, value);
+    void responseHeaderFieldSet() {
         if (statusCode == 200) statusCode = 401;
-    }
-
-    @Override
-    public void clearField(String name) {
-        Objects.requireNonNull(name, "name");
-        name = name.trim();
-        if (isVariable(name))
-            throw new IllegalArgumentException("reserved name " + name);
-        super.clearField(name);
     }
 
     @Override
@@ -105,7 +86,11 @@ class AuthorizerHandler extends AbstractHandler implements AuthorizerSession {
         Objects.requireNonNull(name, "name");
         Objects.requireNonNull(value, "value");
         name = name.trim();
-        setFieldInternal(AuthorizerSession.VARIABLE_PREFIX + name, value);
+        if (statusCode < 0) throw new IllegalStateException("header sent");
+        List<String> aval =
+            rawOutHeader.computeIfAbsent(name, k -> new ArrayList<>());
+        aval.clear();
+        aval.add(value);
     }
 
     private static final int VARIABLE_PREFIX_LENGTH =

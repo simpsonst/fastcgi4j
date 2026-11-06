@@ -38,72 +38,35 @@
 
 package uk.ac.lancs.fastcgi;
 
-import java.util.List;
-import java.util.Map;
-
 /**
  * Allows an application to set raw response fields. All pure FastCGI
  * sessions support application-defined fields.
  * 
  * <p>
- * An application may set, modify and clear fields up until it calls
+ * An application may modify header fields up until it calls
  * {@link Session#out()}, which is when the fields are committed. The
  * meaning of these fields is largely protocol-dependent, except that
  * the field <samp>{@value "%s" #STATUS_FIELD}</samp> may not be set.
+ * 
+ * <p>
+ * An application may modify trailer fields up until it calls
+ * {@link java.io.OutputStream#close()} on the result of
+ * {@link Session#out()}. As an extension to FastCGI/1.0, this feature
+ * is subject to availability of supporting servers.
  * 
  * @author simpsons
  */
 public interface FieldSession extends Session {
     /**
-     * Set a response header field, replacing any existing values.
-     * Leading and trailing spaces are trimmed from the name.
+     * Get the response field header. This forbids the name
+     * <code>{@value #STATUS_FIELD}</code>, which is used by (Fast)CGI,
+     * throwing {@link IllegalArgumentException}. If {@link #out()} has
+     * been invoked, the methods of the returned object throw
+     * {@link IllegalStateException}.
      * 
-     * @param name the header field name
-     * 
-     * @param value the new value
-     * 
-     * @throws IllegalArgumentException if the field name is
-     * <code>{@value #STATUS_FIELD}</code>
-     * 
-     * @throws IllegalStateException if the response output has been
-     * started (with {@link #out()})
+     * @return the response header
      */
-    void setField(String name, String value);
-
-    /**
-     * Specifies the header field name used to set the response status
-     * code. The value is <code>{@value}</code>.
-     */
-    String STATUS_FIELD = "Status";
-
-    /**
-     * Add a response header field, retaining earlier values as distinct
-     * fields. Leading and trailing spaces are trimmed from the name.
-     * 
-     * @param name the header field name
-     * 
-     * @param value the additional value
-     * 
-     * @throws IllegalArgumentException if the field name is
-     * <code>{@value #STATUS_FIELD}</code>
-     * 
-     * @throws IllegalStateException if the response output has been
-     * started (with {@link #out()})
-     */
-    void addField(String name, String value);
-
-    /**
-     * Remove all instances of a response header field.
-     * 
-     * @param name the header field name
-     * 
-     * @throws IllegalArgumentException if the field name is
-     * <code>{@value #STATUS_FIELD}</code>
-     * 
-     * @throws IllegalStateException if the response output has been
-     * started (with {@link #out()})
-     */
-    void clearField(String name);
+    ResponseFieldSet responseHeader();
 
     /**
      * Get the request trailer. All fields must be set before closing
@@ -121,13 +84,17 @@ public interface FieldSession extends Session {
      * {@link uk.ac.lancs.fastcgi.proto.RequestFlags#SUPPLY_TRAILER}
      * flag set.
      * 
-     * @return a mutable set of field names mapping to sequences of
-     * values; or {@code null} if a response trailer is not permitted
+     * @return a mutable field set; or {@code null} if a response
+     * trailer is not permitted
      * 
      * @implNote By default, this method returns {@code null}, denoting
      * that the response trailer cannot be set.
      */
-    default Map<String, List<String>> responseTrailer() {
-        return null;
-    }
+    ResponseFieldSet responseTrailer();
+
+    /**
+     * Specifies the header field name used to set the response status
+     * code. The value is <code>{@value}</code>.
+     */
+    String STATUS_FIELD = "Status";
 }

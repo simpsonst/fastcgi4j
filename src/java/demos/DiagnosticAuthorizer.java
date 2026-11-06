@@ -81,7 +81,8 @@ public class DiagnosticAuthorizer implements Authorizer {
                 return;
             }
             System.err.printf("   naughty user%n");
-            session.setField("Content-Type", "text/plain; charset=UTF-8");
+            session.responseHeader().set("Content-Type",
+                                         "text/plain; charset=UTF-8");
             session.setStatus(ResponseCodes.FORBIDDEN);
             try (var out =
                 new PrintWriter(session.out(), false, StandardCharsets.UTF_8)) {
