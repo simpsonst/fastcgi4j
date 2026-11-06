@@ -60,7 +60,8 @@ public class RequestEchoer extends FastCGIApplication implements Responder {
 
     @Override
     public void respond(ResponderSession session) throws IOException {
-        session.setField("Content-Type", "text/plain; charset=UTF-8");
+        session.responseHeader().set("Content-Type",
+                                     "text/plain; charset=UTF-8");
         var outCounter = new Counter();
         var inCounter = new Counter();
         try (var out =

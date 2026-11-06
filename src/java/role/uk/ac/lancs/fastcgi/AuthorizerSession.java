@@ -43,50 +43,22 @@ public interface AuthorizerSession extends FieldSession {
     void setVariable(String name, String value);
 
     /**
-     * {@inheritDoc} The status is set to 401 if currently 200.
+     * {@inheritDoc}
      * 
-     * @throws IllegalArgumentException if the name case-insensitively
-     * begins with <code>{@value #VARIABLE_PREFIX}</code> or matches
-     * <code>{@value FieldSession#STATUS_FIELD}</code>
+     * <p>
+     * The methods of the returned implementation also forbid fields
+     * whose names case-insensitively begin with
+     * <code>{@value #VARIABLE_PREFIX}</code>.
      * 
-     * @throws IllegalStateException if the response output has been
-     * started (with {@link #out()})
+     * @return {@inheritDoc}
      */
     @Override
-    void setField(String name, String value);
-
-    /**
-     * {@inheritDoc} The response status is not changed.
-     * 
-     * @throws IllegalArgumentException if the name case-insensitively
-     * begins with <code>{@value #VARIABLE_PREFIX}</code> or matches
-     * <code>{@value FieldSession#STATUS_FIELD}</code>
-     * 
-     * @throws IllegalStateException if the response output has been
-     * started (with {@link #out()})
-     */
-    @Override
-    public void clearField(String name);
-
-    /**
-     * {@inheritDoc} The status is set to 401 if currently 200.
-     * 
-     * @throws IllegalArgumentException if the name case-insensitively
-     * begins with <code>{@value #VARIABLE_PREFIX}</code> or matches
-     * <code>{@value FieldSession#STATUS_FIELD}</code>
-     * 
-     * @throws IllegalStateException if the response output has been
-     * started (with {@link #out()})
-     */
-    @Override
-    public void addField(String name, String value);
+    ResponseFieldSet responseHeader();
 
     /**
      * Specifies the prefix for special header field names that
      * configure the server on a successful authorization. These fields
-     * cannot be modified through {@link #setField(String, String)},
-     * {@link #addField(String, String)} and
-     * {@link #clearField(String)}. Use
+     * cannot be modified through {@link #responseHeader()}. Use
      * {@link #setVariable(String, String)} instead, without the prefix.
      * The prefix is <code>{@value}</code>.
      */

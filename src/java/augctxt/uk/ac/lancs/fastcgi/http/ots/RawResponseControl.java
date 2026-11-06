@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import uk.ac.lancs.fastcgi.ResponderSession;
+import uk.ac.lancs.fastcgi.ResponseFieldSet;
 import uk.ac.lancs.http.FieldNames;
 import uk.ac.lancs.mime.MediaType;
 
@@ -53,6 +54,8 @@ import uk.ac.lancs.mime.MediaType;
 public class RawResponseControl implements OTSControl {
     final ResponderSession base;
 
+    final ResponseFieldSet header;
+
     /**
      * Adapt a raw session to off-the-shelf responses.
      * 
@@ -60,6 +63,7 @@ public class RawResponseControl implements OTSControl {
      */
     public RawResponseControl(ResponderSession base) {
         this.base = base;
+        this.header = this.base.responseHeader();
     }
 
     @Override
@@ -69,17 +73,17 @@ public class RawResponseControl implements OTSControl {
 
     @Override
     public void clearContentType() {
-        base.clearField(FieldNames.CONTENT_TYPE);
+        header.clear(FieldNames.CONTENT_TYPE);
     }
 
     @Override
     public void clearContentLength() {
-        base.clearField(FieldNames.CONTENT_LENGTH);
+        header.clear(FieldNames.CONTENT_LENGTH);
     }
 
     @Override
     public void clearContentEncoding() {
-        base.clearField(FieldNames.CONTENT_ENCODING);
+        header.clear(FieldNames.CONTENT_ENCODING);
     }
 
     @Override
@@ -89,11 +93,11 @@ public class RawResponseControl implements OTSControl {
 
     @Override
     public void setLocation(URI location) {
-        base.setField(FieldNames.LOCATION, location.toASCIIString());
+        header.set(FieldNames.LOCATION, location.toASCIIString());
     }
 
     @Override
     public void setContentType(MediaType type) {
-        base.setField(FieldNames.CONTENT_TYPE, type.toString());
+        header.set(FieldNames.CONTENT_TYPE, type.toString());
     }
 }

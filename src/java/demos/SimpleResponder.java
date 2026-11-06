@@ -56,7 +56,8 @@ public class SimpleResponder extends FastCGIApplication implements Responder {
         throws SessionException,
             IOException,
             InterruptedException {
-        session.setField(FieldNames.CONTENT_TYPE, "text/plain; charset=UTF-8");
+        session.responseHeader().set(FieldNames.CONTENT_TYPE,
+                                     "text/plain; charset=UTF-8");
         try (var out =
             new PrintStream(session.out(), false, StandardCharsets.UTF_8)) {
             out.println("This is a test.");
