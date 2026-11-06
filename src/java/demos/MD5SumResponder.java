@@ -164,7 +164,6 @@ public class MD5SumResponder implements Responder {
                 }
 
                 out.printf("\nPath computations:\n");
-                out.printf("Script: %s (deprecated)\n", pathCtxt.script());
                 out.printf("Script: %s\n", navigator.locate("").local());
                 out.printf("Subpath: %s\n", navigator.resource());
                 for (String sp : subpaths) {
