@@ -47,7 +47,7 @@ import java.io.InputStream;
  *
  * @author simpsons
  */
-public interface RequestBodySession extends Session {
+public interface BodySession extends Session {
     /**
      * Determine whether a request trailer is to be expected. This
      * allows an application to determine whether a claim by the
@@ -61,7 +61,7 @@ public interface RequestBodySession extends Session {
      * 
      * @implNote By default, {@code false} is returned.
      * 
-     * @see RequestableSession#requestTrailer()
+     * @see FieldBodySession#requestTrailer()
      * 
      * @see uk.ac.lancs.fastcgi.http.HttpResponderSession#requestTrailer()
      */
