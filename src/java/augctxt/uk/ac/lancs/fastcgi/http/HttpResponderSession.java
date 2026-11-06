@@ -63,9 +63,9 @@ import java.util.stream.Stream;
 import uk.ac.lancs.cgi.CGIParameters;
 import uk.ac.lancs.cgi.Http;
 import uk.ac.lancs.cgi.ServerProtocol;
+import uk.ac.lancs.fastcgi.BodySession;
 import uk.ac.lancs.fastcgi.Diagnostics;
-import uk.ac.lancs.fastcgi.RequestBodySession;
-import uk.ac.lancs.fastcgi.RequestableSession;
+import uk.ac.lancs.fastcgi.FieldBodySession;
 import uk.ac.lancs.fastcgi.ResponderSession;
 import uk.ac.lancs.fastcgi.ResponseFieldSet;
 import uk.ac.lancs.fastcgi.http.ots.OTSControl;
@@ -108,7 +108,7 @@ import uk.ac.lancs.mime.Tokenizer;
  * 
  * @author simpsons
  */
-public class HttpResponderSession implements AutoCloseable, RequestBodySession {
+public class HttpResponderSession implements AutoCloseable, BodySession {
     /**
      * The FastCGI responder session on which this HTTP session is based
      */
@@ -628,7 +628,7 @@ public class HttpResponderSession implements AutoCloseable, RequestBodySession {
      * 
      * <p>
      * To extract a field from the trailer, the body must first have
-     * been read in with {@link RequestBodySession#in()}, and the stream
+     * been read in with {@link BodySession#in()}, and the stream
      * closed. Otherwise, an {@link IllegalStateException} may be
      * thrown.
      * 
@@ -643,7 +643,7 @@ public class HttpResponderSession implements AutoCloseable, RequestBodySession {
      * trailer to be received
      * 
      * @implNote This depends on
-     * {@link RequestableSession#requestTrailer()}.
+     * {@link FieldBodySession#requestTrailer()}.
      */
     public Cap requestTrailer() throws IOException, InterruptedException {
         if (requestTrailer == null) {

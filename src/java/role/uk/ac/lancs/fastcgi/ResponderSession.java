@@ -47,4 +47,4 @@ package uk.ac.lancs.fastcgi;
  * @spec https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.2
  * FastCGI Specification &mdash; Responder
  */
-public interface ResponderSession extends RequestableSession {}
+public interface ResponderSession extends FieldBodySession {}

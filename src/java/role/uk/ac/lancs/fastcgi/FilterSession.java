@@ -49,7 +49,7 @@ import java.io.InputStream;
  * @spec https://fastcgi-archives.github.io/FastCGI_Specification.html#S6.4
  * FastCGI Specification &mdash; Filter
  */
-public interface FilterSession extends RequestableSession {
+public interface FilterSession extends FieldBodySession {
     /**
      * Get the stream for reading the file data.
      * 

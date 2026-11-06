@@ -42,7 +42,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Map;
 import uk.ac.lancs.cgi.FormSubmission;
-import uk.ac.lancs.fastcgi.RequestBodySession;
+import uk.ac.lancs.fastcgi.BodySession;
 import uk.ac.lancs.mime.MessageParser;
 
 /**
@@ -85,7 +85,7 @@ public final class FormHandler {
      * @throws IOException if an I/O error occurs in reading the request
      * body or storing any bodies
      */
-    public FormSubmission get(RequestBodySession session) throws IOException {
+    public FormSubmission get(BodySession session) throws IOException {
         return FormSubmission.fromCGI(session.parameters(), session::in,
                                       assumedCharset, parser);
     }

@@ -48,7 +48,7 @@ import java.util.Map;
  *
  * @author simpsons
  */
-public interface RequestableSession extends FieldSession, RequestBodySession {
+public interface FieldBodySession extends FieldSession, BodySession {
     /**
      * Get the request trailer.
      * 
@@ -80,15 +80,14 @@ public interface RequestableSession extends FieldSession, RequestBodySession {
      * @return an immutable set of trailer fields
      * 
      * @throws IllegalStateException if called before EOF has been
-     * delivered on {@link RequestBodySession#in()}, when a trailer is
-     * expected
+     * delivered on {@link BodySession#in()}, when a trailer is expected
      * 
      * @throws InterruptedException if interrupted while waiting for the
      * trailer to be received
      * 
      * @implNote By default, this method returns an empty map.
      * 
-     * @see RequestBodySession#requestTrailerExpected()
+     * @see BodySession#requestTrailerExpected()
      */
     default Map<String, List<String>> requestTrailer()
         throws InterruptedException {
