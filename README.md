@@ -15,11 +15,11 @@ It features:
 
 - MIME form parsing;
 
-- negotiation of content and transfer encodings;
+- negotiation of content encodings;
 
-- path-based instance selection and local navigation.
+- path-based instance selection and internal navigation.
 
-There's also support for an experimental extension to FastCGI allowing request and response trailers, but you probably won't find a web server that supports it.
+There's also support for an experimental extension to FastCGI allowing [request and response trailers](trailers.md), but you probably won't find a web server that supports it.
 
 So far, the code is *hardly tested*, so good luck, and please let me know how you get on!
 
