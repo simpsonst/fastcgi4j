@@ -48,21 +48,6 @@ import uk.ac.lancs.fastcgi.FilterSession;
  */
 public final class FilterMetadata {
     /**
-     * Identifies the request parameter that a filter receives giving
-     * the last-modification time of the data. The parameter is
-     * <samp>{@value "%s"}</samp>, and is used by
-     * {@link #dataLastModified()}.
-     */
-    public static final String DATA_LAST_MOD_PARAM = "FCGI_DATA_LAST_MOD";
-
-    /**
-     * Identifies the request parameter that a filter receives giving
-     * the length of the data in bytes. The parameter is
-     * <samp>{@value "%s"}</samp>, and is used by {@link #dataLength()}.
-     */
-    public static final String DATA_LENGTH_PARAM = "FCGI_DATA_LENGTH";
-
-    /**
      * Holds the base session context.
      */
     public final FilterSession base;
@@ -82,8 +67,8 @@ public final class FilterMetadata {
     /**
      * Get the last-modified time of the data if specified. This is
      * obtained through the request parameter <samp>{@value "%s"
-     * #DATA_LAST_MOD_PARAM}</samp>, which is parsed as a non-negative
-     * integer.
+     * FilterSession#DATA_LAST_MOD_PARAM}</samp>, which is parsed as a
+     * non-negative integer.
      * 
      * @return the number of seconds after 1970-01-01T00:00:00Z when the
      * data was last modified
@@ -94,19 +79,20 @@ public final class FilterMetadata {
      * non-negative decimal integer
      */
     public long dataLastModified() {
-        var text = base.parameters().get(DATA_LAST_MOD_PARAM);
-        if (text == null)
-            throw new NullPointerException("missing " + DATA_LAST_MOD_PARAM);
+        var text = base.parameters().get(FilterSession.DATA_LAST_MOD_PARAM);
+        if (text == null) throw new NullPointerException("missing "
+            + FilterSession.DATA_LAST_MOD_PARAM);
         long rc = Long.parseLong(text, 10);
-        if (rc < 0) throw new NumberFormatException("-ve " + DATA_LAST_MOD_PARAM
-            + ": " + text);
+        if (rc < 0) throw new NumberFormatException("-ve "
+            + FilterSession.DATA_LAST_MOD_PARAM + ": " + text);
         return rc;
     }
 
     /**
      * Get the data length if specified. This is obtained through the
-     * request parameter <samp>{@value "%s" #DATA_LENGTH_PARAM}</samp>,
-     * which is parsed as a non-negative decimal integer.
+     * request parameter <samp>{@value "%s"
+     * FilterSession#DATA_LENGTH_PARAM}</samp>, which is parsed as a
+     * non-negative decimal integer.
      * 
      * @return the data length in bytes
      * 
@@ -116,12 +102,12 @@ public final class FilterMetadata {
      * non-negative decimal integer
      */
     public long dataLength() {
-        var text = base.parameters().get(DATA_LENGTH_PARAM);
-        if (text == null)
-            throw new NullPointerException("missing " + DATA_LENGTH_PARAM);
+        var text = base.parameters().get(FilterSession.DATA_LENGTH_PARAM);
+        if (text == null) throw new NullPointerException("missing "
+            + FilterSession.DATA_LENGTH_PARAM);
         long rc = Long.parseLong(text, 10);
-        if (rc < 0) throw new NumberFormatException("-ve " + DATA_LENGTH_PARAM
-            + ": " + text);
+        if (rc < 0) throw new NumberFormatException("-ve "
+            + FilterSession.DATA_LENGTH_PARAM + ": " + text);
         return rc;
     }
 
