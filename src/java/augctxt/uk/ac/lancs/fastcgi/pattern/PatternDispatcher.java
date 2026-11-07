@@ -66,99 +66,10 @@ import uk.ac.lancs.fastcgi.SessionException;
  * user-defined interface type (the <dfn>receiver type</dfn>) that
  * performs different actions in each method, and where method selection
  * is based on some accessed resource's path and request method, as
- * derived from a CGI context. For example, one might define an
- * interface such as this:
- * 
- * <pre class="java">
- * interface Actions {
- *   void action1(Matcher m);
- * 
- *   void action2(Matcher m);
- * }
- * </pre>
- * 
- * <p>
- * <code class="java">action1</code> is to be invoked for paths
- * beginning with <samp>/action</samp>, while
- * <code class="java">action2</code> is is for paths beginning with
- * <samp>/stuff</samp>.
- * 
- * <p>
- * Given this information, a dispatcher can be built statically. During
- * the handling of a specific request, an instance of
- * <code class="java">Actions</code> can be provided:
- * 
- * <pre class="java">
- * static final PatternDispatcher&lt;Actions&gt; dispatcher;
- * 
- * // per request
- * ResponderSession session = ...;
- * Navigator nav = ...;
- * dispatcher.dispatch(session.parameters.get(CGIParameters.REQUEST_METHOD),
- *                     nav.resource(),
- *                     new Actions() {
- *   public void action1(Matcher m) {
- *     ...
- *   }
- * 
- *   public void action2(Matcher m) {
- *     ...
- *   }
- * });
- * </pre>
- * 
- * <p>
- * There are two options for building a dispatcher:
- * 
- * <ul>
- * 
- * <li>
- * <p>
- * A dispatcher can be created with a manual mapping by using
- * {@link #start()}:
- * 
- * <pre class="java">
- * PatternDispatcher.&lt;Actions&gt;start()
- *                  .with(Pattern.compile("/action(/.*)?"),
- *                        method -> true,
- *                        receiver -> receiver::action1)
- *                  .with(Pattern.compile("/stuff(/.*)?"),
- *                        method -> true,
- *                        receiver -> receiver::action2))
- *                  .create();
- * </pre>
- * 
- * <li>
- * <p>
- * A dispatcher can be created from an annotated receiver type with
- * {@link #of(Class)}:
- * 
- * <pre class="java">
- * interface Actions {
- *   &#64;ForPath("/action(/.*)?$")
- *   &#64;Priority(1)
- *   void action1(Matcher m);
- * 
- *   &#64;ForPath("/stuff(/.*)?")
- *   void action2(Matcher m);
- * }
- * PatternDispatcher&lt;Actions&gt; testDisp =
- *       PatternDispatcher.of(Actions.class);
- * </pre>
- * 
- * <p>
- * Methods on the interface type are scanned for the presence of the
- * annotation {@link ForPath}. These must have the same or compatible
- * arguments, return type and exceptions as
- * {@link PatternHandler#accept(Matcher)}. Methods are added to the test
- * sequence in priority order as determined by the annotation
- * {@link Priority}.
- * 
- * <p>
- * Java methods with the annotation {@link ForMethod} (which may appear
- * more than once) are restricted to those specific request methods.
- * 
- * </ul>
+ * derived from a CGI context. A dispatcher is built either by
+ * annotating the receiver type's methods and passing the type to
+ * {@link #of(Class)}, or by building it in stages, starting with
+ * {@link #start()}.
  * 
  * @param <T> the receiver type
  * 
