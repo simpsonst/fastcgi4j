@@ -51,6 +51,24 @@ import java.io.InputStream;
  */
 public interface FilterSession extends FieldBodySession {
     /**
+     * Identifies the request parameter that a filter receives giving
+     * the length of the data in bytes. The parameter is
+     * <samp>{@value "%s"}</samp>.
+     * 
+     * @see #parameters()
+     */
+    final String DATA_LENGTH_PARAM = "FCGI_DATA_LENGTH";
+
+    /**
+     * Identifies the request parameter that a filter receives giving
+     * the last-modification time of the data. The parameter is
+     * <samp>{@value "%s"}</samp>.
+     * 
+     * @see #parameters()
+     */
+    final String DATA_LAST_MOD_PARAM = "FCGI_DATA_LAST_MOD";
+
+    /**
      * Get the stream for reading the file data.
      * 
      * @return the input stream providing the file data
