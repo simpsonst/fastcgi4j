@@ -220,16 +220,15 @@ public class TestCacheControl extends TestCase {
 
     @Test
     public void testGenerating() {
-        var ouCtrl = OutCacheControl.forResponse();
-        CacheDirective.MUST_UNDERSTAND.set(ouCtrl);
-        CacheDirective.MAX_AGE.set(ouCtrl, 23);
-        CacheDirective.NO_CACHE_FIELDS.include(ouCtrl, FieldId.LOCATION);
-        CacheDirective.NO_CACHE_FIELDS.include(ouCtrl, FieldId.CONTENT_DIGEST);
+        var outCtrl = OutCacheControl.forResponse();
+        CacheDirective.MUST_UNDERSTAND.set(outCtrl);
+        CacheDirective.MAX_AGE.set(outCtrl, 23);
+        CacheDirective.NO_CACHE_FIELDS.include(outCtrl, FieldId.LOCATION);
+        CacheDirective.NO_CACHE_FIELDS.include(outCtrl, FieldId.CONTENT_DIGEST);
 
         {
             List<String> elems = new ArrayList<>();
-            ouCtrl.write(outCtxt, elems::add);
-            System.err.println(elems);
+            outCtrl.write(outCtxt, elems::add);
             var inCtrl = InCacheControl
                 .ofResponse(inCtxt, CacheDirective.ALL_DIRECTIVES, elems);
             assertTrue("must-understand present",
