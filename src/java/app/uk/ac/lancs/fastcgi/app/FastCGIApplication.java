@@ -46,7 +46,6 @@ import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import java.util.ServiceLoader;
@@ -398,7 +397,7 @@ public class FastCGIApplication {
 
                 /* Prepare to receive connections, and build the
                  * engine. */
-                Collection<? extends Transport> transports = Transport.get();
+                var transports = Transport.get();
                 var builder = EngineTemplate.start();
 
                 /* Indicate which roles the application supports. */

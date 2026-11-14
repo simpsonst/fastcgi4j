@@ -79,7 +79,7 @@ public interface Transport {
      * @throws UnsupportedOperationException if no suitable service
      * exists
      */
-    static Collection<? extends Transport> get(ClassLoader loader) {
+    static Collection<Transport> get(ClassLoader loader) {
         Collection<Transport> result = new ArrayList<>();
         for (var cfact : ServiceLoader.load(TransportFactory.class, loader))
             result.addAll(cfact.getTransports());
@@ -105,7 +105,7 @@ public interface Transport {
      * @throws UnsupportedOperationException if no suitable service
      * exists
      */
-    static Collection<? extends Transport> get() {
+    static Collection<Transport> get() {
         return get(Thread.currentThread().getContextClassLoader());
     }
 }
