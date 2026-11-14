@@ -36,7 +36,6 @@
  *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
  */
 
-import java.util.Collection;
 import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.engine.Attribute;
 import uk.ac.lancs.fastcgi.engine.EngineTemplate;
@@ -52,7 +51,7 @@ import uk.ac.lancs.scc.jardeps.Application;
 public class MD5SumApp {
     @SuppressWarnings("empty-statement")
     public static void main(String[] args) throws Exception {
-        Collection<? extends Transport> transports = Transport.get();
+        var transports = Transport.get();
         Responder rsper = new MD5SumResponder();
         var termplate = EngineTemplate.start().with(Attribute.MAX_CONN, 10)
             .with(Attribute.MAX_SESS_PER_CONN, 10)

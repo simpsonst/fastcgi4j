@@ -65,7 +65,7 @@
  * Responder myResponder = <var>...</var>;
  * 
  * // Get environmentally-defined transports.
- * Collection&lt;? extends Transport&gt; transports = Transport.get();
+ * var transports = Transport.get();
  * 
  * // Build an engine template.
  * var template = {@linkplain EngineTemplate}.start()
