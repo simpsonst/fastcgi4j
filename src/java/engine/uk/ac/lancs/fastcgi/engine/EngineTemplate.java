@@ -33,12 +33,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *
- *  Author: Steven Simpson <s.simpson@lancaster.ac.uk>
+ *  Author: Steven Simpson <https://github.com/simpsonst>
  */
 
 package uk.ac.lancs.fastcgi.engine;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -46,14 +45,17 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.ServiceLoader;
+import java.util.stream.Collectors;
+import uk.ac.lancs.fastcgi.transport.Transport;
 
 /**
- * Processes FastCGI requests from the server and responses from the
- * application.
- * 
+ * Deploys clusters of identical engines for sets of transports. Each
+ * created engine differs from others created from the same template
+ * only in which transport it processes.
+ *
  * @author simpsons
  */
-public interface Engine {
+public interface EngineTemplate {
     /**
      * Create a builder with no attributes.
      * 
@@ -61,15 +63,15 @@ public interface Engine {
      * 
      * @constructor
      */
-    public static Builder start() {
+    static Builder start() {
         return new Builder();
     }
 
     /**
-     * Builds engine configurations from a set of required attributes.
+     * Builds engine templates from a set of required attributes.
      */
-    public final static class Builder {
-        private Builder() {}
+    static final class Builder {
+        Builder() {}
 
         private final Map<Attribute<?>, Object> attrs = new HashMap<>();
 
@@ -80,16 +82,16 @@ public interface Engine {
         /**
          * Specify the properties from which attributes shall be
          * extracted.
-         * 
+         *
          * @see #withProperty(Attribute, String)
-         * 
+         *
          * @see #tryingProperty(Attribute, String)
-         * 
+         *
          * @param <V> the attribute value type
-         * 
+         *
          * @param props the properties from which attributes will be
          * extracted
-         * 
+         *
          * @return this builder
          */
         public <V> Builder using(Properties props) {
@@ -102,13 +104,13 @@ public interface Engine {
          * The property value is extracted from the set provided to the
          * most call to {@link #using(Properties)}. If the property is
          * not defined, no value is set.
-         * 
+         *
          * @param <V> the attribute value type
-         * 
+         *
          * @param key the attribute key
-         * 
+         *
          * @param propName the property name
-         * 
+         *
          * @return this builder
          */
         public <V> Builder withProperty(Attribute<V> key, String propName) {
@@ -122,13 +124,13 @@ public interface Engine {
          * The property value is extracted from the set provided to the
          * most call to {@link #using(Properties)}. If the property is
          * not defined, no value is set.
-         * 
+         *
          * @param <V> the attribute value type
-         * 
+         *
          * @param key the attribute key
-         * 
+         *
          * @param propName the property name
-         * 
+         *
          * @return this builder
          */
         public <V> Builder tryingProperty(Attribute<V> key, String propName) {
@@ -139,13 +141,13 @@ public interface Engine {
 
         /**
          * Include a required attribute of the engine.
-         * 
+         *
          * @param <V> the attribute value type
-         * 
+         *
          * @param key the attribute key
-         * 
+         *
          * @param value the attribute value
-         * 
+         *
          * @return this builder
          */
         public <V> Builder with(Attribute<V> key, V value) {
@@ -157,13 +159,13 @@ public interface Engine {
 
         /**
          * Include a required textual attribute of the engine.
-         * 
+         *
          * @param <V> the attribute value type
-         * 
+         *
          * @param key the attribute key
-         * 
+         *
          * @param text the text from which a value shall be parsed
-         * 
+         *
          * @return this builder
          */
         public <V> Builder withText(Attribute<V> key, String text) {
@@ -173,13 +175,13 @@ public interface Engine {
 
         /**
          * Include a preferred attribute of the engine.
-         * 
+         *
          * @param <V> the attribute value type
-         * 
+         *
          * @param key the attribute key
-         * 
+         *
          * @param value the attribute value
-         * 
+         *
          * @return this builder
          */
         public <V> Builder trying(Attribute<V> key, V value) {
@@ -191,13 +193,13 @@ public interface Engine {
 
         /**
          * Include a preferred textual attribute of the engine.
-         * 
+         *
          * @param <V> the attribute value type
-         * 
+         *
          * @param key the attribute key
-         * 
+         *
          * @param text the text from which a value shall be parsed
-         * 
+         *
          * @return this builder
          */
         public <V> Builder tryingText(Attribute<V> key, String text) {
@@ -208,9 +210,9 @@ public interface Engine {
         /**
          * Exclude an attribute neither required nor preferred of the
          * engine.
-         * 
+         *
          * @param key the attribute key
-         * 
+         *
          * @return this builder
          */
         public Builder without(Attribute<?> key) {
@@ -220,46 +222,46 @@ public interface Engine {
         }
 
         /**
-         * Create an engine configuration with the current specification
-         * from the context class loader of the calling thread.
-         * 
-         * @return the new engine configuration
-         * 
+         * Create an engine template with the current specification from
+         * the context class loader of the calling thread.
+         *
+         * @return the new engine template
+         *
          * @throws EngineConfigurationException if no factory could
-         * configure its engine with the specified attributes
-         * 
+         * configure its engines with the specified attributes
+         *
          * @throws UnsupportedOperationException if no connection
          * supplier could be found
-         * 
+         *
          * @constructor
          */
-        public EngineConfiguration build() {
+        public EngineTemplate build() {
             ClassLoader ctxtLoader =
                 Thread.currentThread().getContextClassLoader();
             return build(ctxtLoader);
         }
 
         /**
-         * Create an engine configuration with the current specification
-         * from a given class loader.
-         * 
+         * Create an engine template with the current specification from
+         * a given class loader.
+         *
          * @param loader the class loader to be used to load
          * provider-configuration files and provider classes for
          * {@link EngineFactory}, or {@code null} if the system class
          * loader (or, failing that, the bootstrap class loader) is to
          * be used
-         * 
-         * @return the new engine configuration
-         * 
+         *
+         * @return the new engine template
+         *
          * @throws EngineConfigurationException if no factory could
-         * configure its engine with the specified attributes
-         * 
+         * configure its engines with the specified attributes
+         *
          * @throws UnsupportedOperationException if no connection
          * supplier could be found
-         * 
+         *
          * @constructor
          */
-        public EngineConfiguration build(ClassLoader loader) {
+        public EngineTemplate build(ClassLoader loader) {
             class MySpec implements EngineSpecification {
                 @Override
                 public <V> V get(Attribute<V> key) {
@@ -281,46 +283,48 @@ public interface Engine {
                 }
             }
             MySpec spec = new MySpec();
-
             for (EngineFactory factory : ServiceLoader.load(EngineFactory.class,
                                                             loader)) {
                 /* See if this factory can meet the required
                  * configuration. */
                 spec.reset();
-                var sup = factory.test(spec);
+                EngineTemplate sup = factory.configure(spec);
                 if (sup == null) continue;
                 if (!spec.unchecked.isEmpty()) continue;
-
                 return sup;
             }
-
             throw new EngineConfigurationException(spec);
         }
     }
 
     /**
-     * Perform some unit of processing. This call may block, while
-     * awaiting either a new transport, or termination of processing of
-     * existing transports.
+     * Create and start engines for a set of transports.
      * 
-     * @return {@code true} if more processing is expected;
-     * {@code false} if the application should terminate
+     * @param <K> the transport key type
      * 
-     * @throws IOException if an I/O error occurs
+     * @param transports a mapping from key to transport
      * 
-     * @throws InterruptedException if interrupted
+     * @return an object that allows the created engines to be treated
+     * as a unit
      */
-    boolean process() throws IOException, InterruptedException;
+    <K> EngineCluster<K> deploy(Map<K, ? extends Transport> transports);
 
     /**
-     * Process continuously until no more processing is expected.
+     * Create and start engines for a set of transports acting as their
+     * own keys.
      * 
-     * @throws IOException if an I/O error occurs
+     * @param transports the set of transports to build engines from
      * 
-     * @throws InterruptedException if interrupted
+     * @return an object that allows the created engines to be treated
+     * as a unit
+     * 
+     * @implNote The default implementation converts the supplied
+     * connection to an identity mapping, and then passes this to
+     * {@link #deploy(Map)}.
      */
-    default void processAll() throws IOException, InterruptedException {
-        while (process())
-            ;
+    default EngineCluster<Transport>
+        deploy(Collection<? extends Transport> transports) {
+        return this.deploy(transports.stream()
+            .collect(Collectors.toMap(k -> k, k -> k)));
     }
 }

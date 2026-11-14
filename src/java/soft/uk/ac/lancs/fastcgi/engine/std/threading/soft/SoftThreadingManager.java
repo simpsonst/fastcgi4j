@@ -122,4 +122,9 @@ final class SoftThreadingManager implements ThreadingManager {
             return Executors.newFixedThreadPool(maxReqsPerConn, tf);
         }
     }
+
+    @Override
+    public ExecutorService newTransportExecutor(ThreadGroup group, int count) {
+        return Executors.newVirtualThreadPerTaskExecutor();
+    }
 }

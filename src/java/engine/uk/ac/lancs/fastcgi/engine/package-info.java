@@ -41,8 +41,8 @@
  * implementations of FastCGI.
  * 
  * <p>
- * An application should first obtain a
- * {@link uk.ac.lancs.fastcgi.transport.Transport}. If this fails with
+ * An application should first obtain a set of
+ * {@link uk.ac.lancs.fastcgi.transport.Transport}s. If this fails with
  * {@link UnsupportedOperationException}, then the application is not
  * being invoked using FastCGI, or not using a supported transport.
  * 
@@ -53,25 +53,33 @@
  * {@link uk.ac.lancs.fastcgi.Filter}. It may provide one of each.
  * 
  * <p>
- * An engine can be built by specifying various required and optional
- * attributes, using {@link Engine.Builder#with(Attribute, Object)} and
- * {@link Engine.Builder#trying(Attribute, Object)}, and then submitting
- * the connection supply to it.
- * 
- * <p>
- * Finally, the engine should be invoked repeatedly until it indicates
- * otherwise. The application should then shutdown gracefully.
+ * An engine template can be built by specifying various required and
+ * optional attributes, using
+ * {@link EngineTemplate.Builder#with(Attribute, Object)} and
+ * {@link EngineTemplate.Builder#trying(Attribute, Object)}. Submitting
+ * the transports to it yields an {@link EngineCluster}, which allows
+ * the user to await the termination of any engine in the cluster. The
+ * application should then shutdown gracefully.
  * 
  * <pre>
- * Transport transport = Transport.get();
  * Responder myResponder = <var>...</var>;
- * Engine engine = Engine.start()
+ * 
+ * // Get environmentally-defined transports.
+ * Collection&lt;? extends Transport&gt; transports = Transport.get();
+ * 
+ * // Build an engine template.
+ * var template = {@linkplain EngineTemplate}.start()
  *     .with(Attribute.MAX_CONN, 10)
  *     .with(Attribute.RESPONDER, myResponder)
- *     .build()
- *     .install(transport);
- * while (engine.process())
- *   ;
+ *     .build();
+ * 
+ * // Create an engine cluster for the set of transports, and await
+ * // first completion of an engine.
+ * try (var cluster = template.deploy(transports)) {
+ *   cluster.await().test();
+ * }
  * </pre>
+ * 
+ * @see uk.ac.lancs.fastcgi.app
  */
 package uk.ac.lancs.fastcgi.engine;

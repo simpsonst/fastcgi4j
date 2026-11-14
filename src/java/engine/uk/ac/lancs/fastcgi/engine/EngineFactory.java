@@ -46,13 +46,12 @@ package uk.ac.lancs.fastcgi.engine;
 @FunctionalInterface
 public interface EngineFactory {
     /**
-     * Test whether engines with the given configuration can be created
-     * by this factory.
+     * Create an engine configuration to meet a specification.
      * 
      * @param spec the engine specification
      * 
      * @return an engine configuration meeting the specification if
      * possible; or {@code null} otherwise
      */
-    EngineConfiguration test(EngineSpecification spec);
+    EngineTemplate configure(EngineSpecification spec);
 }

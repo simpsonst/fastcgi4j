@@ -52,7 +52,7 @@ import uk.ac.lancs.scc.jardeps.Service;
  * connections use virtual threads. If
  * {@link Attribute#MAX_SESS_PER_CONN} is not set, or
  * {@link Attribute#SOFT_SESS_THREAD} is {@code true} (the default),
- * sessions use virtual threads.
+ * sessions use virtual threads. Transports always use virtual threads.
  * 
  * @author simpsons
  */

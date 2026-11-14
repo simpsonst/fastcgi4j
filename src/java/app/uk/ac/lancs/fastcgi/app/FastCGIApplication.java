@@ -50,22 +50,16 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import java.util.ServiceLoader;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import uk.ac.lancs.fastcgi.Authorizer;
 import uk.ac.lancs.fastcgi.Filter;
 import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.engine.Attribute;
-import uk.ac.lancs.fastcgi.engine.Engine;
-import uk.ac.lancs.fastcgi.engine.EngineConfiguration;
+import uk.ac.lancs.fastcgi.engine.EngineCluster;
 import uk.ac.lancs.fastcgi.engine.EngineConfigurationException;
+import uk.ac.lancs.fastcgi.engine.EngineTemplate;
+import uk.ac.lancs.fastcgi.engine.EngineTemplate.Builder;
 import uk.ac.lancs.fastcgi.transport.Transport;
 import uk.ac.lancs.scc.jardeps.Application;
 
@@ -125,8 +119,8 @@ public class FastCGIApplication {
      * is invoked on the created instance. A set of {@link Transport}s
      * is obtained with {@link Transport#get()}, and then an engine is
      * created for each one, and set to invoke the
-     * {@link FastCGIApplication}. A virtual thread continuously calls
-     * {@link Engine#process()} on each engine until exhausted.
+     * {@link FastCGIApplication}. Exhaustion or failure of any of the
+     * engines is awaited.
      * 
      * @param args command-line arguments. These take the form
      * <kbd><var>options</var> <var>class-name</var>
@@ -206,8 +200,6 @@ public class FastCGIApplication {
      * The application exits with 0 if it has terminated naturally, 1 if
      * the application failed to start, 2 if engine configuration
      * failed, and 3 if command-line switches failed to parse.
-     * 
-     * @throws Exception if an error occurs, duh
      */
     public static void main(String[] args) {
         class MyConfig implements FastCGIConfiguration {
@@ -236,7 +228,7 @@ public class FastCGIApplication {
                 this.filter = app;
             }
 
-            Engine.Builder applyHandlers(Engine.Builder builder) {
+            Builder applyHandlers(Builder builder) {
                 if (responder != null)
                     builder = builder.with(Attribute.RESPONDER, responder);
                 if (filter != null)
@@ -407,7 +399,7 @@ public class FastCGIApplication {
                 /* Prepare to receive connections, and build the
                  * engine. */
                 Collection<? extends Transport> transports = Transport.get();
-                var builder = Engine.start();
+                var builder = EngineTemplate.start();
 
                 /* Indicate which roles the application supports. */
                 builder = applyHandlers(builder);
@@ -420,39 +412,24 @@ public class FastCGIApplication {
                     .tryingProperty(Attribute.BUFFER_SIZE, BUFFER_PROP);
 
                 /* Build an engine for each transport and start it. */
-                EngineConfiguration engineMaker = builder.build();
-                final List<Future<Void>> results;
-                try (ExecutorService exec =
-                    Executors.newVirtualThreadPerTaskExecutor()) {
-                    results = exec.invokeAll(transports.stream()
-                        .map(mapToEngineExhaust(engineMaker))
-                        .collect(Collectors.toList()));
-                    try {
-                        for (var fb : results) {
-                            try {
-                                fb.get();
-                            } catch (ExecutionException ex) {
-                                try {
-                                    throw ex.getCause();
-                                } catch (Error | RuntimeException ex2) {
-                                    throw ex2;
-                                } catch (IOException ex2) {
-                                    System.err
-                                        .printf("processing on a transport failed:%n");
-                                    ex2.printStackTrace(System.err);
-                                    return false;
-                                } catch (Throwable t) {
-                                    throw new AssertionError("unreachable", t);
-                                }
-                            }
-                        }
-                        return true;
-                    } finally {
-                        app.term();
-                    }
-                } catch (InterruptedException ex) {
+                EngineTemplate configuration = builder.build();
+                Transport failing = null;
+                try (EngineCluster<Transport> room =
+                    configuration.deploy(transports)) {
+                    var result = room.await();
+                    failing = result.key();
+                    result.test();
+                } catch (IOException | InterruptedException | RuntimeException |
+                         Error ex) {
+                    ex.printStackTrace(System.err);
+                    System.err.printf("Engine for %s failed%n", failing);
                     return false;
+                } catch (Throwable t) {
+                    throw new AssertionError("unreachable", t);
+                } finally {
+                    app.term();
                 }
+                return true;
             }
         }
 
@@ -463,20 +440,6 @@ public class FastCGIApplication {
             System.err.printf("no suitable engine%n");
             System.exit(2);
         }
-    }
-
-    private static Function<Transport, Callable<Void>>
-        mapToEngineExhaust(EngineConfiguration config) {
-        return t -> exhaustEngine(config, t);
-    }
-
-    private static Callable<Void> exhaustEngine(EngineConfiguration config,
-                                                Transport t) {
-        Engine engine = config.install(t);
-        return () -> {
-            engine.processAll();
-            return null;
-        };
     }
 
     private static final Pattern DEF_PATTERN =
