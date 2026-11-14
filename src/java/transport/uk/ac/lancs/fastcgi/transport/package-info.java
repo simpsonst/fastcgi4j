@@ -37,21 +37,21 @@
  */
 
 /**
- * Defines how an application receives connections from the server. The
- * aim is to provide a {@link Transport} according to the FastCGI
- * initial process state. This can then be used to complete an
- * {@link uk.ac.lancs.fastcgi.engine.Engine} which processes
- * connections.
+ * Defines how an application receives connections. One or more
+ * {@linkplain Transport transports} are provided to the application,
+ * usually derived from the environment, according to the FastCGI
+ * initial process state. These can then be used to deploy an
+ * {@linkplain uk.ac.lancs.fastcgi.engine.EngineCluster engine cluster},
+ * which processes connections yielded by transports.
  * 
  * <p>
- * This package provides the framework for locating implementations
- * using {@link Transport#get()}, using the
- * {@link java.util.ServiceLoader} mechanism, but provides no
- * implementations of its own. Implementations of
+ * This package provides the framework for locating transport
+ * implementations using {@link Transport#get()}, which uses the
+ * {@linkplain java.util.ServiceLoader service loader} mechanism, but
+ * provides no implementations of its own. Implementations of
  * {@link TransportFactory} should examine the environment and yield a
- * non-{@code null} result only if they recognize it. The first factory
- * to do so, in the arbitrary order provided by the service loader,
- * &lsquo;wins&rsquo;.
+ * non-empty result only if they recognize it. Results from all
+ * factories are combined.
  * 
  * @author simpsons
  * 

@@ -41,8 +41,8 @@ package uk.ac.lancs.fastcgi.engine.std.threading;
 import java.util.concurrent.ExecutorService;
 
 /**
- * Creates executor services for handling individual connections and
- * sessions.
+ * Creates executor services for handling individual connections,
+ * sessions and transports.
  * 
  * @author simpsons
  */
@@ -66,4 +66,14 @@ public interface ThreadingManager {
      * @return the requested executor service
      */
     ExecutorService newSessionExecutor(ThreadGroup group);
+
+    /**
+     * Create an executor service for handling transports.
+     * 
+     * @param group the group to which created threads should belong if
+     * possible; or {@code null} if not required
+     * 
+     * @return the requested executor service
+     */
+    ExecutorService newTransportExecutor(ThreadGroup group, int count);
 }

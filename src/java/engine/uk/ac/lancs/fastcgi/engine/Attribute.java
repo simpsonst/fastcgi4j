@@ -59,9 +59,9 @@ import uk.ac.lancs.fastcgi.Responder;
  * 
  * @param <V> the value type
  * 
- * @see Engine.Builder#with(Attribute, Object)
+ * @see EngineTemplate.Builder#with(Attribute, Object)
  * 
- * @see Engine.Builder#trying(Attribute, Object)
+ * @see EngineTemplate.Builder#trying(Attribute, Object)
  * 
  * @author simpsons
  */

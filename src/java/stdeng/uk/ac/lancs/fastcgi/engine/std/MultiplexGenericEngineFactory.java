@@ -39,17 +39,25 @@
 package uk.ac.lancs.fastcgi.engine.std;
 
 import java.nio.charset.Charset;
+import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
 import uk.ac.lancs.fastcgi.Authorizer;
 import uk.ac.lancs.fastcgi.Filter;
 import uk.ac.lancs.fastcgi.Responder;
 import uk.ac.lancs.fastcgi.engine.Attribute;
-import uk.ac.lancs.fastcgi.engine.EngineConfiguration;
+import uk.ac.lancs.fastcgi.engine.CompletionEngineCluster;
+import uk.ac.lancs.fastcgi.engine.EngineCluster;
 import uk.ac.lancs.fastcgi.engine.EngineFactory;
+import uk.ac.lancs.fastcgi.engine.EngineResult;
 import uk.ac.lancs.fastcgi.engine.EngineSpecification;
+import uk.ac.lancs.fastcgi.engine.EngineTemplate;
 import uk.ac.lancs.fastcgi.engine.std.threading.ThreadingManager;
 import uk.ac.lancs.fastcgi.engine.std.threading.ThreadingManagerFactory;
 import uk.ac.lancs.fastcgi.proto.CapabilityVariables;
+import uk.ac.lancs.fastcgi.transport.Transport;
 import uk.ac.lancs.http.ResponseCodes;
 import uk.ac.lancs.scc.jardeps.Service;
 
@@ -153,7 +161,7 @@ public class MultiplexGenericEngineFactory implements EngineFactory {
     }
 
     @Override
-    public EngineConfiguration test(EngineSpecification spec) {
+    public EngineTemplate configure(EngineSpecification spec) {
         /* Identify the roles. */
         Responder responder = spec.get(Attribute.RESPONDER);
         Authorizer authorizer = spec.get(Attribute.AUTHORIZER);
@@ -177,13 +185,22 @@ public class MultiplexGenericEngineFactory implements EngineFactory {
 
         /* Create the factory for creating the engine from a connection
          * supply. */
-        return cs -> new MultiplexGenericEngine(cs, threading,
-                                                Charset.defaultCharset(),
-                                                responder, authorizer, filter,
-                                                maxConn != null ? maxConn : 0,
-                                                maxSessPerConn != null ?
-                                                    maxSessPerConn : 0,
-                                                maxSess != null ? maxSess : 0,
-                                                outBufSize, 1024 * 1);
+        return new EngineTemplate() {
+            @Override
+            public <K> EngineCluster<K>
+                deploy(Map<K, ? extends Transport> transports) {
+                ExecutorService exec =
+                    threading.newTransportExecutor(null, transports.size());
+                CompletionService<EngineResult<K>> cs =
+                    new ExecutorCompletionService<>(exec);
+                transports
+                    .entrySet().stream().map(
+                                             ent -> new MultiplexGenericEngine(ent
+                                                 .getValue(), threading, Charset.defaultCharset(), responder, authorizer, filter, maxConn != null ? maxConn : 0, maxSessPerConn != null ? maxSessPerConn : 0, maxSess != null ? maxSess : 0, outBufSize, 1024 * 1).callable(ent.getKey()))
+                    .forEach(cb -> cs.submit(cb));
+                exec.shutdown();
+                return new CompletionEngineCluster<>(exec, cs);
+            }
+        };
     }
 }

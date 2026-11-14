@@ -38,10 +38,10 @@
 
 package uk.ac.lancs.fastcgi.engine.std;
 
-import uk.ac.lancs.fastcgi.engine.std.threading.ThreadingManager;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import uk.ac.lancs.fastcgi.engine.std.threading.ThreadingManager;
 
 /**
  * Yields executors that use exclusively hard threads.
@@ -86,5 +86,11 @@ final class DefaultThreadingManager implements ThreadingManager {
             ThreadFactory tf = r -> new Thread(group, r);
             return Executors.newFixedThreadPool(maxReqsPerConn, tf);
         }
+    }
+
+    @Override
+    public ExecutorService newTransportExecutor(ThreadGroup group, int count) {
+        ThreadFactory tf = r -> new Thread(group, r);
+        return Executors.newFixedThreadPool(count, tf);
     }
 }

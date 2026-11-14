@@ -1,7 +1,7 @@
 // -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
 
 /*
- * Copyright (c) 2022,2023,2026, Lancaster University
+ * Copyright (c) 2026, Lancaster University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,21 +38,56 @@
 
 package uk.ac.lancs.fastcgi.engine;
 
-import uk.ac.lancs.fastcgi.transport.Transport;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
- * Creates engines per transport.
- *
+ * Combines multiple engines as elements of a completion service.
+ * 
  * @author simpsons
  */
-@FunctionalInterface
-public interface EngineConfiguration {
+public class CompletionEngineCluster<K> implements EngineCluster<K> {
+    private final ExecutorService executor;
+
+    private final CompletionService<? extends EngineResult<K>> completion;
+
     /**
-     * Create an engine to handle connections on a given transport.
+     * Combine the engines submitted through a completion service.
      * 
-     * @param transport the transport
+     * @param executor the executor to be shut down when the room is
+     * closed
      * 
-     * @return the engine to use the transport
+     * @param completion the completion service that will yield the
+     * result of the first engine that terminates
      */
-    Engine install(Transport transport);
+    public CompletionEngineCluster(ExecutorService executor,
+                                   CompletionService<? extends EngineResult<K>> completion) {
+        this.executor = executor;
+        this.completion = completion;
+    }
+
+    @Override
+    public EngineResult<K> await() throws InterruptedException {
+        try {
+            return completion.take().get();
+        } catch (ExecutionException ex) {
+            throw new AssertionError("unreachable", ex);
+        }
+    }
+
+    /**
+     * Close the room.
+     * 
+     * @implNote The default implementation calls
+     * {@link ExecutorService#shutdownNow()} to terminate all remaining
+     * engines.
+     */
+    @Override
+    public void close() throws InterruptedException {
+        executor.shutdownNow();
+        while (!executor.awaitTermination(10, TimeUnit.SECONDS))
+            ;
+    }
 }

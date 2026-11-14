@@ -44,6 +44,7 @@ import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -56,7 +57,7 @@ import java.util.logging.Logger;
 import uk.ac.lancs.fastcgi.Authorizer;
 import uk.ac.lancs.fastcgi.Filter;
 import uk.ac.lancs.fastcgi.Responder;
-import uk.ac.lancs.fastcgi.engine.Engine;
+import uk.ac.lancs.fastcgi.engine.EngineResult;
 import uk.ac.lancs.fastcgi.engine.std.threading.ThreadingManager;
 import uk.ac.lancs.fastcgi.proto.CapabilityVariables;
 import uk.ac.lancs.fastcgi.proto.ProtocolStatuses;
@@ -76,7 +77,7 @@ import uk.ac.lancs.io.infpipe.Pipe;
  *
  * @author simpsons
  */
-class MultiplexGenericEngine implements Engine {
+class MultiplexGenericEngine {
     private final Charset charset;
 
     private final Transport connections;
@@ -162,19 +163,14 @@ class MultiplexGenericEngine implements Engine {
     private final BufferPool paramBufs = new BufferPool();
 
     /**
-     * {@inheritDoc}
-     * 
-     * @implNote This call attempts to get a new connection from the
-     * transport. On success, it submits a task to an executor to
-     * process that connection to exhaustion. On failure, that executor
-     * is shutdown, and then its termination is awaited for several
-     * minutes. On success, {@code false} is returned to signal that
-     * there is no further processing. If a timeout occurs, {@code true}
-     * is returned, which will usually cause the caller to immediately
-     * call again.
+     * Await a new connection from the transport, and submit it to the
+     * connection executor. On failure, that executor is shutdown, and
+     * then its termination is awaited for several minutes. On success,
+     * {@code false} is returned to signal that there is no further
+     * processing. If a timeout occurs, {@code true} is returned, which
+     * will usually cause the caller to immediately call again.
      */
-    @Override
-    public boolean process() throws IOException, InterruptedException {
+    boolean process() throws IOException, InterruptedException {
         Connection conn = connections.nextConnection();
         if (conn == null) {
             connExecutor.shutdown();
@@ -186,6 +182,29 @@ class MultiplexGenericEngine implements Engine {
         ConnHandler ch = new ConnHandler(conn);
         connExecutor.execute(ch);
         return true;
+    }
+
+    /**
+     * Create a callable that invokes this engine to exhaustion or
+     * error.
+     * 
+     * @param <K> the key type associated with transports
+     * 
+     * @param key the key associated with this engine's transport
+     * 
+     * @return the requested callable
+     */
+    <K> Callable<EngineResult<K>> callable(K key) {
+        return () -> {
+            try {
+                while (process())
+                    ;
+                return EngineResult.exhausted(key);
+            } catch (IOException | InterruptedException | RuntimeException |
+                     Error ex) {
+                return EngineResult.failed(key, ex);
+            }
+        };
     }
 
     private final AtomicInteger connIds = new AtomicInteger(0);
