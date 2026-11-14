@@ -1,6 +1,3 @@
-
-import java.util.function.LongConsumer;
-
 // -*- c-basic-offset: 4; indent-tabs-mode: nil -*-
 
 /*
@@ -38,6 +35,8 @@ import java.util.function.LongConsumer;
  *
  *  Author: Steven Simpson <https://github.com/simpsonst>
  */
+
+import java.util.function.LongConsumer;
 
 /**
  * Holds an incrementing counter.
