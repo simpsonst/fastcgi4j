@@ -62,8 +62,7 @@ public interface Transport {
 
     /**
      * Get the environmental connection supplies using a given class
-     * loader. This method will yield the same result for the same
-     * argument.
+     * loader.
      * 
      * <p>
      * {@linkplain ServiceLoader Services} of type
@@ -81,18 +80,14 @@ public interface Transport {
      * exists
      */
     static Collection<? extends Transport> get(ClassLoader loader) {
-        return Transports.supplies.computeIfAbsent(loader, k -> {
-            Collection<Transport> result = new ArrayList<>();
-            for (TransportFactory cfact : ServiceLoader
-                .load(TransportFactory.class, k)) {
-                result.addAll(cfact.getTransports());
-            }
+        Collection<Transport> result = new ArrayList<>();
+        for (var cfact : ServiceLoader.load(TransportFactory.class, loader))
+            result.addAll(cfact.getTransports());
 
-            if (result.isEmpty())
-                throw new UnsupportedOperationException("no service "
-                    + "for connections");
-            return result;
-        });
+        if (result.isEmpty())
+            throw new UnsupportedOperationException("no service "
+                + "for connections");
+        return result;
     }
 
     /**
