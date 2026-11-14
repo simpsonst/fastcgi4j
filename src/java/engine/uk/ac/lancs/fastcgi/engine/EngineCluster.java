@@ -47,7 +47,8 @@ public interface EngineCluster<K> extends AutoCloseable {
     /**
      * Await the termination of any engine.
      * 
-     * @return the result of the first engine to terminate
+     * @return the result of the next engine to terminate; or
+     * {@code null} if there are no more engines
      * 
      * @throws InterruptedException if the calling thread is interrupted
      */

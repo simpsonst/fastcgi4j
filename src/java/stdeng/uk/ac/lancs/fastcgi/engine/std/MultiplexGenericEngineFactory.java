@@ -199,7 +199,8 @@ public class MultiplexGenericEngineFactory implements EngineFactory {
                                                  .getValue(), threading, Charset.defaultCharset(), responder, authorizer, filter, maxConn != null ? maxConn : 0, maxSessPerConn != null ? maxSessPerConn : 0, maxSess != null ? maxSess : 0, outBufSize, 1024 * 1).callable(ent.getKey()))
                     .forEach(cb -> cs.submit(cb));
                 exec.shutdown();
-                return new CompletionEngineCluster<>(exec, cs);
+                return new CompletionEngineCluster<>(exec, cs,
+                                                     transports.size());
             }
         };
     }

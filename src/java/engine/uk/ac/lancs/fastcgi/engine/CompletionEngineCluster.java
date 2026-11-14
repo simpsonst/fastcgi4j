@@ -53,6 +53,8 @@ public class CompletionEngineCluster<K> implements EngineCluster<K> {
 
     private final CompletionService<? extends EngineResult<K>> completion;
 
+    private int count;
+
     /**
      * Combine the engines submitted through a completion service.
      * 
@@ -61,17 +63,31 @@ public class CompletionEngineCluster<K> implements EngineCluster<K> {
      * 
      * @param completion the completion service that will yield the
      * result of the first engine that terminates
+     * 
+     * @param count the number of engines to complete
      */
     public CompletionEngineCluster(ExecutorService executor,
-                                   CompletionService<? extends EngineResult<K>> completion) {
+                                   CompletionService<? extends EngineResult<K>> completion,
+                                   int count) {
         this.executor = executor;
         this.completion = completion;
+        this.count = count;
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * @implNote Each time a result is taken from the completion
+     * service, the count is decremented. If the count is already zero,
+     * {@code null} is returned.
+     */
     @Override
     public EngineResult<K> await() throws InterruptedException {
+        if (count <= 0) return null;
         try {
-            return completion.take().get();
+            var t = completion.take();
+            count--;
+            return t.get();
         } catch (ExecutionException ex) {
             throw new AssertionError("unreachable", ex);
         }
