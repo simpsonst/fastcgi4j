@@ -46,6 +46,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * Combines multiple engines as elements of a completion service.
  * 
+ * @param <K> the type for the key indexing the engine
+ * 
  * @author simpsons
  */
 public class CompletionEngineCluster<K> implements EngineCluster<K> {
@@ -61,8 +63,8 @@ public class CompletionEngineCluster<K> implements EngineCluster<K> {
      * @param executor the executor to be shut down when the room is
      * closed
      * 
-     * @param completion the completion service that will yield the
-     * result of the first engine that terminates
+     * @param completion the completion service that will successively
+     * yield the result of the next engine that terminates
      * 
      * @param count the number of engines to complete
      */
