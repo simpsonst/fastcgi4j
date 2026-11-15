@@ -186,7 +186,7 @@ function set_bind_addr () {
 function add_peer () {
   local peer="$1" ; shift
   if [[ "$peer" =~ @ ]] ; then
-    unix_peers+=("$peer")
+    unix_peers+=("${peer%@}")
   elif [[ "$peer" =~ [:.] ]] ; then
     inet_peers+=("$peer")
   elif getent passwd "$peer" > /dev/null ; then
