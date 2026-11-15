@@ -115,20 +115,35 @@ int main(int argc, char *const *argv)
       return EXIT_FAILURE;
     }
     assert(addr.un.sun_path[sizeof addr.un.sun_path - 1] == '\0');
+
+    /* Before we bind, temporarily set the umask to influence the
+       permissions of the rendezvous point on creation.  Start by
+       reading the umask (destroying it, but knowing that we'll set it
+       before doing anything influenced by it, */
+    mode_t old_mask = umask(0);
+
+    /* To connect to the rendezvous point, only write permissions are
+       required.  Use the caller's read/write bits by default, but
+       always exclude execute bits. */
+    mode_t bind_mask = old_mask | S_IXUSR | S_IXGRP | S_IXOTH;
+
+    /* Detect whether the application will perform its own
+       user-/group-based authorization.  If so, permit anyone to
+       connect through the rendezvous point, and rely on the
+       application. */
+    const char *peers = getenv(UNIX_PEER_VAR);
+    if (peers != NULL)
+      bind_mask &= ~(S_IRUSR | S_IRGRP | S_IROTH | S_IWUSR | S_IWGRP | S_IWOTH);
+
+    /* Bind using the computed umask, then ensure that the umask is
+       reset before invoking the application.  */
+    umask(bind_mask);
     if (bind(sock, &addr.plain, sizeof addr) < 0) {
       int ec = errno;
       fprintf(stderr, "%s: (bind) %s: %s\n", argv[0], strerror(ec), baddr_un);
       return EXIT_FAILURE;
     }
-    const char *peers = getenv(UNIX_PEER_VAR);
-    if (peers != NULL) {
-      /* We allow anyone to contact us, knowing that the application
-         will identify and validate the peer. */
-      chmod(addr.un.sun_path,
-            S_IRUSR | S_IWUSR | S_IXUSR |
-            S_IRGRP | S_IWGRP | S_IXGRP |
-            S_IROTH | S_IWOTH | S_IXOTH);
-    }
+    umask(old_mask);
   } else if (baddr_in != NULL) {
     /* Split the address into host:port. */
     char buf[256];
