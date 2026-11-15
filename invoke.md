@@ -69,7 +69,8 @@ Options:
 
 ## Server-managed life cycle
 
-With a server-managed life cycle, the HTTPd server invokes the application on demand, possibly several times concurrently.
+With a server-managed life cycle, the HTTP server invokes the application on demand, possibly several times concurrently.
+Do not use `--bind` with a server-managed life cycle, as this is for stand-alone only.
 
 ### Apache configuration
 
@@ -100,13 +101,25 @@ You might want to mark a suffix-less script for FastCGI, or pass additional spec
 
 ## Stand-alone life cycle
 
-In a stand-alone life cycle, starting and stopping of the application is not under the control of the HTTPd server.
-The application must bind to an agreed address to receive FastCGI connections on, and then the HTTPd server acts as a kind of reverse proxy onto it.
+In a stand-alone life cycle, starting and stopping of the application is not under the control of the HTTP server.
+The application must bind to an agreed address to receive FastCGI connections on, and then the HTTP server acts as a kind of reverse proxy onto it.
 
 You can use the `fastcgi4j` wrapper to run a stand-alone application.
-Use (say) `--bind /path/to/sock` to bind to a Unix-domain socket, or `--bind localhost:8888` to bind to an Internet-domain socket.
-In the latter case, you might want to use one or more `--peer` switches to specify HTTPd server hosts that may connect to the socket.
-Also, beware of using a path in `/tmp/`, e.g., `--bind /tmp/my.sock`, as Apache is often run with a private `/tmp/`, and can't see the real directory where your socket is.
+Use (say) `--bind /path/to/sock` to use a Unix-domain socket and bind it to the specified rendezvous point, or `--bind localhost:8888` to use an Internet-domain socket, and bind it to the specified local address.
+You can specify both using two `--bind` switches, but you cannot specify more than one of each kind.
+
+Especially for Internet-domain sockets, you might want to use one or more `--peer` switches to specify HTTP server hosts that may connect to the socket.
+
+For the Unix domain, specify users (e.g., `joe`), groups (e.g., `@wheel`), or users calling with a specific effective group (e.g., `joe@users`).
+If you specify a plain user, make sure it exists, or add a trailing `@`;
+if not, it will be treated as an authorized client hostname for the Internet-domain socket.
+When peers are specified, the rendezvous point will permit connection from all users, as the application (through its library) is expected to check authorization.
+Beware of using a path in `/tmp/`, e.g., `--bind /tmp/my.sock`, as Apache is often run with a private `/tmp/`, and can't see the real directory where your socket is.
+
+You can use `--wrap` to spoof a server-managed life cycle.
+The socket is created before the Java application starts, and is passed in as file descriptor 0, as it would be if invoked by the server.
+The main purpose of this is to detect that the application is already running by the bind address already being in use, but without starting a fresh JVM, making it more suitable for running as a cronjob.
+The wrapper process awaits the termination of the JVM, and removes any Unix-domain rendezvous point on exit.
 
 Here's some documentation for web servers that can talk to a stand-alone FastCGI application:
 
