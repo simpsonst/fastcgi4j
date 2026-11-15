@@ -106,7 +106,7 @@ public class StandaloneUnixTransportFactory implements TransportFactory {
              * have a set of allowed peers), and delete it on exit. */
             if (allowedPeers != null) {
                 Set<PosixFilePermission> perms =
-                    PosixFilePermissions.fromString("rwxrwxrwx");
+                    PosixFilePermissions.fromString("rw-rw-rw-");
                 Files.setPosixFilePermissions(path, perms);
             }
             path.toFile().deleteOnExit();
