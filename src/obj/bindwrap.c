@@ -57,7 +57,7 @@
 
 #define UNIX_BIND_VAR "FASTCGI4J_UNIX_BIND"
 #define INET_BIND_VAR "FASTCGI4J_INET_BIND"
-#define UNIX_PEER_VAR "FASTCGI4J_WEB_SERVER_ADDRS"
+#define UNIX_PEER_VAR "FASTCGI4J_UNIX_PEERS"
 
 static int match_var(const char *vname, const char *envp)
 {

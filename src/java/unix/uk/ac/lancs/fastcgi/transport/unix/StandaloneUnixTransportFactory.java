@@ -67,7 +67,7 @@ import uk.ac.lancs.scc.jardeps.Service;
  * variable <samp>{@value "%s"
  * InvocationVariables#UNIX_BIND_ADDR}</samp> must be set, specifying
  * the file of the rendezvous point. If the environment variable
- * <samp>{@value "%s" InvocationVariables#LEGIT_PEERS}</samp> is set, it
+ * <samp>{@value "%s" InvocationVariables#UNIX_PEERS}</samp> is set, it
  * must be a comma-separated list of legitimate principals, each of the
  * form <samp><var>user</var></samp>, <samp>&#64;<var>group</var></samp>
  * or <samp><var>user</var>&#64;<var>group</var></samp>, and only peers
@@ -89,7 +89,7 @@ public class StandaloneUnixTransportFactory implements TransportFactory {
 
             /* Determine who is allowed to connect. */
             Collection<PrincipalRequirement> allowedPeers =
-                InvocationVariables.getAuthorizedStandalonePrincipals();
+                InvocationVariables.getAuthorizedPrincipals();
             Predicate<UnixDomainPrincipal> peerOkay =
                 allowedPeers == null ? principal -> true : principal -> {
                     return allowedPeers.stream()

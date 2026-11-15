@@ -82,7 +82,7 @@ public class StandaloneInetTransportFactory implements TransportFactory {
 
             /* We must know what peers are permitted. */
             Collection<InetAddress> allowedPeers =
-                InvocationVariables.getAuthorizedStandaloneInetPeers();
+                InvocationVariables.getAuthorizedInetPeers();
             if (allowedPeers == null) return Collections.emptyList();
 
             /* Create a server socket for each bind address, and then a

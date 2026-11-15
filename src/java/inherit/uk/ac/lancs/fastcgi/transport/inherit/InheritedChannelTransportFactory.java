@@ -75,13 +75,14 @@ import uk.ac.lancs.scc.jardeps.Service;
  * 
  * <p>
  * In the Unix domain, <samp>{@value "%s"
- * InvocationVariables#LEGIT_PEERS}</samp> is consulted via
- * {@link InvocationVariables#getAuthorizedStandalonePrincipals()} to
- * get a list of Unix-domain principals that may connect as clients.
- * This non-standard variable is consulted, as there shouldn't be a peer
- * list for Unix-domain sockets. However, this allows for a stand-alone
- * application to inherit from an initiating process which creates the
- * socket itself, and fails early if the bind address is already in use.
+ * InvocationVariables#UNIX_PEERS}</samp> is consulted via
+ * {@link InvocationVariables#getAuthorizedPrincipals()} to get a list
+ * of Unix-domain principals that may connect as clients. This
+ * non-standard variable is not set for server-managed deployments, so
+ * consulting it should have no effect. However, this behaviour allows
+ * for a stand-alone application to inherit from an initiating process
+ * which creates the socket itself, and fails early if the bind address
+ * is already in use.
  * 
  * @author simpsons
  */
@@ -96,7 +97,7 @@ public class InheritedChannelTransportFactory implements TransportFactory {
                 SocketAddress addr = ssc.getLocalAddress();
                 if (addr instanceof UnixDomainSocketAddress) {
                     final var permittedCallers =
-                        InvocationVariables.getAuthorizedStandalonePrincipals();
+                        InvocationVariables.getAuthorizedPrincipals();
                     Predicate<UnixDomainPrincipal> peerOkay =
                         permittedCallers == null ? principal -> true :
                             principal -> {

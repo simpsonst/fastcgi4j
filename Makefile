@@ -210,6 +210,9 @@ jars += $(SELECTED_JARS)
 hidden_binaries.c += bindwrap
 bindwrap_obj += bindwrap
 
+hidden_binaries.c += testwrap
+testwrap_obj += testwrap
+
 # ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_UNIX))),)
 # hidden_libraries += main
 # endif

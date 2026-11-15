@@ -38,6 +38,13 @@ SELF="$0"
 HERE="$(realpath -Lqs "$0")"
 HERE="${HERE%/bin/*}"
 
+## Test whether we are being run with a server socket on FD 0.
+if "$HERE/libexec/fastcgi4j/testwrap" ; then
+    server_lifecycle=yes
+else
+    unset server_lifecycle
+fi
+
 function split_path () {
     local text="$1"
 
@@ -60,8 +67,10 @@ JVM=java
 JVMARGS=()
 FCGI4JARGS=()
 unset dryrun
-unset bindaddr
-peers=()
+unset inet_bindaddr
+unset unix_bindaddr
+unix_peers=()
+inet_peers=()
 unset seek
 unset demo
 unset wrap
@@ -132,7 +141,10 @@ Usage: $SELF [options] [handler|--] [args...]
 --peer PEER
 	Add PEER to set of permitted peers in stand-alone mode.  For
 	Internet-domain, PEER is a hostname or IP address.  For
-	Unix-domain, PEER is USER, @GROUP, or USER@GROUP.
+	Unix-domain, PEER is USER, @GROUP, or USER@GROUP.  Presence of
+	an @ implies Unix-domain; else presence of : or . implies
+	Internet-domain; else PEER recognized by getent passwd implies
+	Unix-domain; else Internet-domain is assumed.
 --wrap
 	With --bind, open the socket as FD 0 and bind it before
 	invoking the command, which runs as if in forked mode.  This
@@ -162,6 +174,27 @@ Usage: $SELF [options] [handler|--] [args...]
 EOF
 }
 
+function set_bind_addr () {
+    local bindaddr="$1" ; shift
+    if [[ "$bindaddr" =~ ^/ ]] ; then
+	unix_bindaddr="$bindaddr"
+    elif [ -n "$bindaddr" ] ; then
+	inet_bindaddr="$bindaddr"
+    fi
+}
+
+function add_peer () {
+    local peer="$1" ; shift
+    if [[ "$peer" =~ @ ]] ; then
+	unix_peers+=("$peer")
+    elif [[ "$peer" =~ [:.] ]] ; then
+	inet_peers+=("$peer")
+    elif getent passwd "$peer" > /dev/null ; then
+	unix_peers+=("$peer")
+    else
+	inet_peers+=("$peer")
+    fi
+}
 
 while [ $# -gt 0 ] ; do
     arg="$1"
@@ -184,21 +217,21 @@ while [ $# -gt 0 ] ; do
 	    ;;
 
 	(--bind=*)
-	    bindaddr="${arg#--bind=}"
+	    set_bind_addr "${arg#--bind=}"
 	    ;;
 
 	(--bind)
 	    shift
-	    bindaddr="$1"
+	    set_bind_addr "$1"
 	    ;;
 
 	(--peer=*)
-	    peers+=("${arg#--peer=}")
+	    add_peer "${arg#--peer=}"
 	    ;;
 
 	(--peer)
 	    shift
-	    peers+=("$1")
+	    add_peer "$1"
 	    ;;
 
 	(--seek)
@@ -343,22 +376,44 @@ if [ -n "$seek" ] ; then
     APPARGS+=(--seek)
 fi
 
-if [[ "$bindaddr" =~ ^/ ]] ; then
-    export FASTCGI4J_UNIX_BIND="$bindaddr"
-elif [ -n "$bindaddr" ] ; then
-    export FASTCGI4J_INET_BIND="$bindaddr"
-    if [ ${#peers[@]} -eq 0 ] ; then
-	## Add the host we're binding to.
-	peers+=("${bindaddr%:*}")
+if [ -n "$unix_bindaddr" ] ; then
+    if [ -n "$server_lifecycle" ] ; then
+	if [ -n "$inet_bindaddr" ] ; then
+	    printf >&2 'Cannot bind to %s or %s while server-managed\n' \
+		   "$unix_bindaddr" "$inet_bindaddr"
+	else
+	    printf >&2 'Cannot bind to %s while server-managed\n' \
+		   "$unix_bindaddr"
+	fi
+	exit 1
+    fi
+    export FASTCGI4J_UNIX_BIND="$unix_bindaddr"
+    if [ ${#unix_peers[@]} -gt 0 ] ; then
+	export FASTCGI4J_UNIX_PEERS
+	FASTCGI4J_UNIX_PEERS="$(printf ',%s' "${unix_peers[@]}")"
+	FASTCGI4J_UNIX_PEERS="${FASTCGI4J_UNIX_PEERS:1}"
+    else
+	unset FASTCGI4J_UNIX_PEERS
     fi
 fi
 
-if [ -n "$bindaddr" -a ${#peers[@]} -gt 0 ] ; then
-    export FASTCGI4J_WEB_SERVER_ADDRS
-    FASTCGI4J_WEB_SERVER_ADDRS="$(printf ',%s' "${peers[@]}")"
-    FASTCGI4J_WEB_SERVER_ADDRS="${FASTCGI4J_WEB_SERVER_ADDRS:1}"
-else
-    unset FASTCGI4J_WEB_SERVER_ADDRS
+if [ -n "$inet_bindaddr" ] ; then
+    if [ -n "$server_lifecycle" ] ; then
+	printf >&2 'Cannot bind to %s while server-managed\n' "$inet_bindaddr"
+	exit 1
+    fi
+    export FASTCGI4J_INET_BIND="$inet_bindaddr"
+    if [ ${#inet_peers[@]} -eq 0 ] ; then
+	## Add the host we're binding to.
+	inet_peers+=("${inet_bindaddr%:*}")
+    fi
+    if [ ${#inet_peers[@]} -gt 0 ] ; then
+	export FCGI_WEB_SERVER_ADDRS
+	FCGI_WEB_SERVER_ADDRS="$(printf ',%s' "${inet_peers[@]}")"
+	FCGI_WEB_SERVER_ADDRS="${FCGI_WEB_SERVER_ADDRS:1}"
+    else
+	unset FCGI_WEB_SERVER_ADDRS
+    fi
 fi
 
 if [ -n "$dryrun" ] ; then
@@ -367,13 +422,16 @@ if [ -n "$dryrun" ] ; then
     # printf '\n'
     if [ -n "$FASTCGI4J_INET_BIND" ] ; then
 	printf 'Bind address (INET): %s\n' "$FASTCGI4J_INET_BIND"
-	printf 'Stand-alone peers: %s\n' "$FASTCGI4J_WEB_SERVER_ADDRS"
+	printf 'Stand-alone peers: %s\n' "$FCGI_WEB_SERVER_ADDRS"
+    fi
+    if [ -n "$server_lifecycle" ] ; then
+	printf 'Server-managed\n'
+	printf 'INET peers: %s\n' "$FCGI_WEB_SERVER_ADDRS"
     fi
     if [ -n "$FASTCGI4J_UNIX_BIND" ] ; then
 	printf 'Bind address (UNIX): %s\n' "$FASTCGI4J_UNIX_BIND"
-	printf 'Stand-alone peers: %s\n' "$FASTCGI4J_WEB_SERVER_ADDRS"
+	printf 'Stand-alone peers: %s\n' "$FASTCGI4J_UNIX_PEERS"
     fi
-    printf 'Forked peers: %s\n' "$FCGI_WEB_SERVER_ADDRS"
 fi
 
 ## Convert arrays back into colon-separated strings.
@@ -390,10 +448,10 @@ CMD=("$JVM" "${JVMARGS[@]}" "${FCGI4JARGS[@]}"
      uk.ac.lancs.fastcgi.app.FastCGIApplication "${APPARGS[@]}" "$@")
 
 if [ -n "$wrap" ] ; then
-    if [ -n "$FASTCGI4J_INET_BIND" ] &&
-	   [ -n "$FASTCGI4J_WEB_SERVER_ADDRS" ] ; then
-	export FCGI_WEB_SERVER_ADDRS="$FASTCGI4J_WEB_SERVER_ADDRS"
-	unset FASTCGI4J_WEB_SERVER_ADDRS
+    if [ -n "$FASTCGI4J_INET_BIND" -a -n "$FASTCGI4J_UNIX_BIND" ] ; then
+	printf >&2 'Cannot wrap two bindings (%s and %s)\n' \
+	       "$FASTCGI4J_INET_BIND" "$FASTCGI4J_UNIX_BIND"
+	exit 1
     fi
     prog="$(which "${CMD[0]}")"
     if [ -z "$prog" ] ; then

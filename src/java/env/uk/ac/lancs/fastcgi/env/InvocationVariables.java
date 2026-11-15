@@ -71,6 +71,9 @@ public final class InvocationVariables {
      * addresses of legitimate peers. The variable is called
      * <samp>{@value "%s"}</samp>, and is read by
      * {@link #getAuthorizedInetPeers()}.
+     * 
+     * @spec https://fastcgi-archives.github.io/FastCGI_Specification.html#S3.2
+     * FastCGI Specification &mdash; Accepting Transport Connections
      */
     public static final String WEB_SERVER_ADDRS = "FCGI_WEB_SERVER_ADDRS";
 
@@ -173,7 +176,7 @@ public final class InvocationVariables {
 
     /**
      * Get the set of legitimate principals. This reads from the
-     * environment variable <samp>{@value "%s" #LEGIT_PEERS}</samp>. The
+     * environment variable <samp>{@value "%s" #UNIX_PEERS}</samp>. The
      * result is cached, so only the first call will actually do
      * anything.
      *
@@ -183,9 +186,8 @@ public final class InvocationVariables {
      * @throws IllegalArgumentException if an element of the variable's
      * value could not be parsed
      */
-    public static Collection<PrincipalRequirement>
-        getAuthorizedStandalonePrincipals() {
-        return getAuthorizedPrincipals(LEGIT_PEERS);
+    public static Collection<PrincipalRequirement> getAuthorizedPrincipals() {
+        return InvocationVariables.getAuthorizedPrincipals(UNIX_PEERS);
     }
 
     /**
@@ -201,35 +203,10 @@ public final class InvocationVariables {
      * 
      * @throws UnknownHostException if an element of the variable's
      * value could not be parsed
-     * 
-     * @see #getAuthorizedStandaloneInetPeers()
      */
     public static Collection<InetAddress> getAuthorizedInetPeers()
         throws UnknownHostException {
         return getAuthorizedInetPeersFromVariable(WEB_SERVER_ADDRS);
-    }
-
-    /**
-     * Get the set of IP addresses of legitimate peers as a set of
-     * structured data. This reads from the environment variable
-     * <samp>{@value "%s" #LEGIT_PEERS}</samp>, which is only to be used
-     * for the Internet domain when operating in stand-alone mode. (Use
-     * {@link #getAuthorizedInetPeers()} in forked mode.) The result is
-     * cached, so only the first call will actually do anything. An
-     * exception in the first call is preserved for other calls, so its
-     * stack trace will not be correct.
-     * 
-     * @return an unmodifiable set of IP addresses; or {@code null} if
-     * the variable is not set
-     * 
-     * @throws UnknownHostException if an element of the variable's
-     * value could not be parsed
-     * 
-     * @see #getAuthorizedInetPeers()
-     */
-    public static Collection<InetAddress> getAuthorizedStandaloneInetPeers()
-        throws UnknownHostException {
-        return getAuthorizedInetPeersFromVariable(LEGIT_PEERS);
     }
 
     /**
@@ -340,22 +317,19 @@ public final class InvocationVariables {
     }
 
     /**
-     * Specifies the name of the environment variable identifying IP
-     * addresses of legitimate peers (Internet-domain, when running in
-     * stand-alone mode) or names of legitimate users/groups
-     * (Unix-domain). The variable is called <samp>{@value "%s"}</samp>,
-     * and is read by {@link #getAuthorizedStandaloneInetPeers()} and
-     * {@link #getAuthorizedStandalonePrincipals()}.
+     * Specifies the name of the environment variable identifying names
+     * of legitimate users/groups (Unix-domain). The variable is called
+     * <samp>{@value "%s"}</samp>, and is read by
+     * {@link #getAuthorizedPrincipals()}.
      * 
      * <p>
-     * The value of the variable is a comma-separated list. For the
-     * Internet domain, each item is either an IP address or a host name
-     * to be resolved as such. For the Unix domain, each item is of the
-     * form accepted by {@link PrincipalRequirement#of(String)}, i.e.,
-     * <samp><var>user</var></samp>, <samp>@<var>group</var></samp> or
+     * The value of the variable is a comma-separated list. Each item is
+     * of the form accepted by {@link PrincipalRequirement#of(String)},
+     * i.e., <samp><var>user</var></samp>,
+     * <samp>@<var>group</var></samp> or
      * <samp><var>user</var>@<var>group</var></samp>.
      */
-    public static final String LEGIT_PEERS = "FASTCGI4J_WEB_SERVER_ADDRS";
+    public static final String UNIX_PEERS = "FASTCGI4J_UNIX_PEERS";
 
     /**
      * Specifies the name of the environment variable instructing the
