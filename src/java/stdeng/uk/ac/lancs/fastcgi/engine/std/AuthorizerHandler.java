@@ -87,8 +87,9 @@ class AuthorizerHandler extends AbstractHandler implements AuthorizerSession {
         Objects.requireNonNull(value, "value");
         name = name.trim();
         if (statusCode < 0) throw new IllegalStateException("header sent");
-        List<String> aval =
-            rawOutHeader.computeIfAbsent(name, k -> new ArrayList<>());
+        List<String> aval = rawOutHeader
+            .computeIfAbsent(AuthorizerSession.VARIABLE_PREFIX + name,
+                             k -> new ArrayList<>());
         aval.clear();
         aval.add(value);
     }
