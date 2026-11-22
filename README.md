@@ -3,11 +3,13 @@
 This library permits Java programs to serve FastCGI requests.
 It features:
 
+- support for responders, filters and authorizers;
+
 - multithreading, optionally using [virtual threads](https://openjdk.org/jeps/425);
 
 - concurrent requests per connection;
 
-- support for both stand-alone and server-managed lifecyles;
+- support for both stand-alone and server-managed life cycles;
 
 - Unix-domain and Internet-domain communication with web server;
 
@@ -81,7 +83,7 @@ Then you have three choices:
 It can also pass additional arguments to your application.
 You can invoke it either directly or with the Bash script `fastcgi4j`.
 (See [*Invocation*](invoke.md).)
-It's compatible with both stand-alone and server-managed lifecycles, but you can still consider the other options if you need something more sophisticated.
+It's compatible with both stand-alone and server-managed life cycles, but you can still consider the other options if you need something more sophisticated.
 
 
 
