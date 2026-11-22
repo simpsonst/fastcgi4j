@@ -409,7 +409,7 @@ class MultiplexGenericEngine {
                 /* No mapping was recorded, meaning that we don't
                  * recognize the role. */
                 logger.warning(() -> msg("bad role %s for %d",
-                                         ProtocolStatuses.toString(role), id));
+                                         RoleTypes.toString(role), id));
                 assert !sessions.containsKey(id);
                 recordsOut.writeEndRequest(id, -3,
                                            ProtocolStatuses.UNKNOWN_ROLE);
