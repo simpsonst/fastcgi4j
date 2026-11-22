@@ -78,6 +78,7 @@ public class DiagnosticAuthorizer implements Authorizer {
                 System.err.printf("   and the user is okay%n");
                 session.setVariable("FLONG_USER", "the-one");
                 session.setVariable("FLONG_METHOD", "lame");
+                session.setVariable("REMOTE_USER", "ponk");
                 return;
             }
             System.err.printf("   naughty user%n");
