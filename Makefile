@@ -160,14 +160,6 @@ roots_inherit += $(found_inherit)
 deps_inherit += transport
 deps_inherit += env
 
-## This transport plugin was intended to allow server-forked
-## applications, but it is obviated by the inherited-channel
-## transport.  Stakeholders: deployment
-# ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_UNIX))),)
-# SELECTED_JARS += fastcgi4j_fork
-# trees_fastcgi4j_fork += fork
-# endif
-
 ## This is the stand-alone UNIX-domain transport plugin.
 ## Stakeholders: deployment
 SELECTED_JARS += fastcgi4j_unix
@@ -263,9 +255,6 @@ DOC_PKGS += uk.ac.lancs.fastcgi.transport.inet
 DOC_PKGS += uk.ac.lancs.fastcgi.transport.iis
 DOC_PKGS += uk.ac.lancs.fastcgi.transport.unix
 DOC_PKGS += uk.ac.lancs.fastcgi.transport.inherit
-# ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_UNIX))),)
-# DOC_PKGS += uk.ac.lancs.fastcgi.transport.fork
-# endif
 
 MYCMPCP=$(CMP) -s '$1' '$2' || $(CP) '$1' '$2'
 .PHONY: prepare-version
