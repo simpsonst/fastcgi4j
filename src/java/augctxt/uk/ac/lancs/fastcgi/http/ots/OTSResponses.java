@@ -130,7 +130,7 @@ public final class OTSResponses {
         base.out().close();
     }
 
-    private void setLocation(URI location, int code) {
+    private void redirect(URI location, int code) {
         base.setLocation(location);
         base.setStatus(code);
     }
@@ -147,7 +147,7 @@ public final class OTSResponses {
      * @see ResponseCodes#SEE_OTHER
      */
     public void seeOther(URI location) {
-        setLocation(location, ResponseCodes.SEE_OTHER);
+        redirect(location, ResponseCodes.SEE_OTHER);
     }
 
     /**
@@ -161,7 +161,7 @@ public final class OTSResponses {
      * @see ResponseCodes#MOVED_PERMANENTLY
      */
     public void movedPermanently(URI location) {
-        setLocation(location, ResponseCodes.MOVED_PERMANENTLY);
+        redirect(location, ResponseCodes.MOVED_PERMANENTLY);
     }
 
     /**
@@ -179,7 +179,7 @@ public final class OTSResponses {
      * @see ResponseCodes#FOUND
      */
     public void found(URI location) {
-        setLocation(location, ResponseCodes.FOUND);
+        redirect(location, ResponseCodes.FOUND);
     }
 
     /**
@@ -192,7 +192,7 @@ public final class OTSResponses {
      * @see ResponseCodes#TEMPORARY_REDIRECT
      */
     public void temporaryRedirect(URI location) {
-        setLocation(location, ResponseCodes.TEMPORARY_REDIRECT);
+        redirect(location, ResponseCodes.TEMPORARY_REDIRECT);
     }
 
     /**
@@ -205,7 +205,7 @@ public final class OTSResponses {
      * @see ResponseCodes#PERMANENT_REDIRECT
      */
     public void permanentRedirect(URI location) {
-        setLocation(location, ResponseCodes.PERMANENT_REDIRECT);
+        redirect(location, ResponseCodes.PERMANENT_REDIRECT);
     }
 
     /**
