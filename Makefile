@@ -7,8 +7,6 @@ XARGS ?= xargs
 CMP ?= cmp -s
 CP ?= cp
 
-ENABLE_SOFT ?= yes
-
 VWORDS:=$(shell src/getversion.sh --prefix=v MAJOR MINOR PATCH)
 VERSION:=$(word 1,$(VWORDS))
 BUILD:=$(word 2,$(VWORDS))
@@ -116,13 +114,11 @@ deps_threads += engine
 
 ## These provide soft threads automatically when included in the
 ## classpath.  Stakeholders: deployment
-ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_SOFT))),)
 SELECTED_JARS += fastcgi4j_soft
 trees_fastcgi4j_soft += soft
 roots_soft += $(found_soft)
 deps_soft += engine
 deps_soft += threads
-endif
 
 ## These are engine plugins.  Stakeholders: deployment
 SELECTED_JARS += fastcgi4j_stdeng
@@ -238,9 +234,7 @@ DOC_PKGS += uk.ac.lancs.fastcgi.app
 DOC_PKGS += uk.ac.lancs.fastcgi.engine
 DOC_PKGS += uk.ac.lancs.fastcgi.engine.std
 DOC_PKGS += uk.ac.lancs.fastcgi.engine.std.threading
-ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_SOFT))),)
 DOC_PKGS += uk.ac.lancs.fastcgi.engine.std.threading.soft
-endif
 DOC_PKGS += uk.ac.lancs.fastcgi.proto
 DOC_PKGS += uk.ac.lancs.fastcgi.env
 DOC_PKGS += uk.ac.lancs.fastcgi.proto.serial

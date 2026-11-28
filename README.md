@@ -27,6 +27,9 @@ So far, the code is *hardly tested*, so good luck, and please let me know how yo
 
 # Installation
 
+Java release 21 or later is required.
+Release 19 and 20 might work with preview language features enabled.
+
 [Jardeps](https://github.com/simpsonst/jardeps) is required to build using the supplied GNU makefile.
 To build and install in `/usr/local`:
 
@@ -40,21 +43,12 @@ The main variables you might want to override are:
 
 * `PREFIX` &ndash; the installation directory, defaulting to `/usr/local`
 
-* `ENABLE_SOFT` &ndash; If set to `true`, `t`, `y`, `yes` (the default), `on` or `1`, enable compilation of code depending on virtual threads.
-  Set to something else, such as `no`, to disable use of virtual threads.
-
 * `JAVACFLAGS` &ndash; Append additional compilation switches to this variable.
 
-[Virtual threads](https://openjdk.org/jeps/425) are a preview feature for JDK19 and JDK20, so if you're using those versions, and want to exploit virtual threads, you should set this in your `config.mk` or `fastcgi4j-env.mk`:
+[Virtual threads](https://openjdk.org/jeps/425) are a preview feature for JDK19 and JDK20, so if you're using those versions, you should set this in your `config.mk` or `fastcgi4j-env.mk`:
 
 ```
 JAVACFLAGS += --enable-preview
-```
-
-If you're using JDK18 or earlier, or don't want virtual threads:
-
-```
-ENABLE_SOFT=no
 ```
 
 
