@@ -94,8 +94,10 @@ public interface Encoder {
     public static OutputStream encode(OutputStream out,
                                       List<? extends Encoder> encodings)
         throws IOException {
-        for (var ent : encodings.reversed())
-            out = ent.encode(out);
+        /* TODO: Since Java 21, encodings.reversed() will suffice. */
+        for (var iter = encodings.listIterator(encodings.size());
+             iter.hasPrevious();)
+            out = iter.previous().encode(out);
         return out;
     }
 

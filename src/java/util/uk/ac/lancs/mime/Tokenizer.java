@@ -339,8 +339,12 @@ public final class Tokenizer {
      * @param text the text to be tokenized
      */
     public Tokenizer(CharSequence text) {
-        this.text = new char[text.length()];
-        text.getChars(0, this.text.length, this.text, 0);
+        final int len = text.length();
+        this.text = new char[len];
+        /* TODO: Since Java 25, text.getChars(0, this.text.length,
+         * this.text, 0) will suffice. */
+        for (int i = 0; i < len; i++)
+            this.text[i] = text.charAt(i);
     }
 
     /**
