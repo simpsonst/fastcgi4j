@@ -7,6 +7,8 @@ XARGS ?= xargs
 CMP ?= cmp -s
 CP ?= cp
 
+ENABLE_C ?= yes
+
 VWORDS:=$(shell src/getversion.sh --prefix=v MAJOR MINOR PATCH)
 VERSION:=$(word 1,$(VWORDS))
 BUILD:=$(word 2,$(VWORDS))
@@ -194,18 +196,14 @@ deps_tests += util
 
 jars += $(SELECTED_JARS)
 
-hidden_binaries.c += bindwrap
 bindwrap_obj += bindwrap
 
-hidden_binaries.c += testwrap
 testwrap_obj += testwrap
 
-scripts += fastcgi4j
 
 SHAREDIR ?= $(PREFIX)/share/fastcgi4j
 LIBEXECDIR ?= $(PREFIX)/libexec/fastcgi4j
 
-include binodeps.mk
 
 include jardeps.mk
 -include jardeps-install.mk
@@ -257,7 +255,6 @@ VERSION: prepare-version
 	@$(call MYCMPCP,tmp/VERSION,$@)
 
 all:: VERSION BUILD installed-jars
-all:: installed-binaries
 installed-jars:: $(SELECTED_JARS:%=out/%.jar)
 installed-jars:: $(SELECTED_JARS:%=out/%-src.zip)
 
@@ -274,8 +271,16 @@ install-jar-%::
 
 install-jars:: $(SELECTED_JARS:%=install-jar-%)
 
-install:: install-jars install-scripts
-install:: install-hidden-binaries
+install:: install-jars
+
+ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_C))),)
+hidden_binaries.c += bindwrap
+hidden_binaries.c += testwrap
+scripts += fastcgi4j
+include binodeps.mk
+all:: installed-binaries
+install:: install-scripts install-hidden-binaries
+endif
 
 tidy::
 	@$(PRINTF) 'Deleting trash\n'
