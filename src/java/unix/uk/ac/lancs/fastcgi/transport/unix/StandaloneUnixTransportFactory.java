@@ -90,11 +90,9 @@ public class StandaloneUnixTransportFactory implements TransportFactory {
             /* Determine who is allowed to connect. */
             Collection<PrincipalRequirement> allowedPeers =
                 InvocationVariables.getAuthorizedPrincipals();
-            Predicate<UnixDomainPrincipal> peerOkay =
-                allowedPeers == null ? principal -> true : principal -> {
-                    return allowedPeers.stream()
-                        .anyMatch(t -> t.test(principal));
-                };
+            Predicate<UnixDomainPrincipal> peerOkay = allowedPeers == null ?
+                principal -> true : principal -> allowedPeers.stream()
+                    .anyMatch(t -> t.test(principal));
 
             /* Bind to the configured path. */
             UnixDomainSocketAddress addr = UnixDomainSocketAddress.of(path);
