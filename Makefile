@@ -8,7 +8,6 @@ CMP ?= cmp -s
 CP ?= cp
 
 ENABLE_SOFT ?= yes
-#ENABLE_UNIX ?= yes
 
 VWORDS:=$(shell src/getversion.sh --prefix=v MAJOR MINOR PATCH)
 VERSION:=$(word 1,$(VWORDS))
@@ -205,11 +204,6 @@ bindwrap_obj += bindwrap
 hidden_binaries.c += testwrap
 testwrap_obj += testwrap
 
-# ifneq ($(filter true t y yes on 1,$(call lc,$(ENABLE_UNIX))),)
-# hidden_libraries += main
-# endif
-# main_libname = fastcgi4j
-# main_mod += native
 scripts += fastcgi4j
 
 SHAREDIR ?= $(PREFIX)/share/fastcgi4j
@@ -267,8 +261,6 @@ BUILD: prepare-version
 	@$(call MYCMPCP,tmp/BUILD,$@)
 VERSION: prepare-version
 	@$(call MYCMPCP,tmp/VERSION,$@)
-
-# $(BINODEPS_OBJDIR)/native.lo: | tmp/tree-unix.compiled
 
 all:: VERSION BUILD installed-jars
 all:: installed-binaries
