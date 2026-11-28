@@ -787,7 +787,7 @@ public class HttpResponderSession implements AutoCloseable, BodySession {
         }
 
         responseTrailerExpectation.addAll(Arrays.asList(ids));
-    };
+    }
 
     private final ResponseEncodingPlanner responseEncodingPlanner =
         new ResponseEncodingPlanner();
