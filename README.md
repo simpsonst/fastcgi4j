@@ -34,6 +34,9 @@ Release 19 and 20 might work with preview language features enabled.
 To build and install in `/usr/local`:
 
 ```
+cd /tmp
+git clone https://github.com/simpsonst/jardeps.git
+cd jardeps
 make
 sudo make install
 ```
